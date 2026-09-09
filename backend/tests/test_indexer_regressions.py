@@ -182,7 +182,7 @@ def test_interrupted_initial_rebuild_reuses_verified_checkpoint_without_publishi
         with ctx.store.transaction() as tx:
             progress = tx.require("index_progress", root["root_id"])
             published = tx.require("index", root["root_id"])
-        assert progress["status"] == "SCANNING"
+        assert progress["status"] == "FAILED"
         assert progress["count"] == 1
         assert progress["checkpoint"]
         assert published["root"]["index_generation"] == old_generation

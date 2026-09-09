@@ -12,6 +12,8 @@ import errno
 import os
 import stat as stat_module
 import sys
+import time
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
@@ -48,6 +50,37 @@ class UnsupportedFilesystem(FilesystemError):
     pass
 
 
+class ScanLimitExceeded(FilesystemError):
+    """The tree cannot be completely observed within the demo scan budget."""
+
+
+@dataclass(frozen=True)
+class ScanLimits:
+    max_entries: int = 10_000
+    max_depth: int = 64
+    max_path_bytes: int = 8 * 1024 * 1024
+    max_seconds: float = 30.0
+
+
+@dataclass
+class _ScanBudget:
+    limits: ScanLimits
+    deadline: float
+    entries: int = 0
+    path_bytes: int = 0
+
+    def observe(self, path: str, depth: int) -> None:
+        self.entries += 1
+        self.path_bytes += len(os.fsencode(path))
+        if (
+            self.entries > self.limits.max_entries
+            or depth > self.limits.max_depth
+            or self.path_bytes > self.limits.max_path_bytes
+            or time.monotonic() >= self.deadline
+        ):
+            raise ScanLimitExceeded("filesystem scan budget exceeded")
+
+
 _DIRECTORY_FLAGS: Final[int] = os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC
 _FILE_FLAGS: Final[int] = os.O_RDONLY | os.O_NONBLOCK | os.O_CLOEXEC
 _NOFOLLOW: Final[int] = getattr(os, "O_NOFOLLOW", 0)
@@ -58,10 +91,11 @@ _LINUX_RENAME_NOREPLACE: Final[int] = 0x00000001
 class SafeFilesystem:
     """A descriptor-anchored filesystem view rooted at one configured directory."""
 
-    def __init__(self, sandbox: Path) -> None:
+    def __init__(self, sandbox: Path, *, scan_limits: ScanLimits | None = None) -> None:
         # ``resolve`` would silently accept a configured symlink.  Keep the
         # configured object itself and let O_NOFOLLOW reject such a root.
         self.sandbox = Path(os.path.abspath(sandbox))
+        self.scan_limits = scan_limits or ScanLimits()
         if not self.sandbox.is_dir():
             raise NotADirectoryError(self.sandbox)
         self._root_fd = os.open(self.sandbox, _DIRECTORY_FLAGS | _NOFOLLOW)
@@ -153,11 +187,12 @@ class SafeFilesystem:
         start_fd = self._open_directory(parts)
         prefix = "/".join(parts)
         found: list[tuple[str, dict[str, int]]] = []
+        budget = _ScanBudget(self.scan_limits, time.monotonic() + self.scan_limits.max_seconds)
         try:
-            self._walk_fd(start_fd, prefix, found)
+            self._walk_fd(start_fd, prefix, found, budget, 0)
         finally:
             os.close(start_fd)
-        return found
+        return sorted(found)
 
     def rename_no_replace(self, source: str, target: str, expected: dict[str, int]) -> None:
         """Atomically rename a verified regular file, refusing an occupied target."""
@@ -179,27 +214,29 @@ class SafeFilesystem:
         finally:
             os.close(source_parent)
 
-    def _walk_fd(self, directory_fd: int, prefix: str, found: list[tuple[str, dict[str, int]]]) -> None:
-        for name in sorted(os.listdir(directory_fd)):
-            try:
-                item_stat = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
-            except FileNotFoundError:
-                continue  # concurrent removal: a later reconciliation discovers the result
-            path = f"{prefix}/{name}" if prefix else name
-            if stat_module.S_ISREG(item_stat.st_mode):
-                found.append((path, self._identity(item_stat)))
-            elif stat_module.S_ISDIR(item_stat.st_mode):
-                # A directory that was readable at lstat time but cannot be
-                # opened now makes this walk incomplete.  Propagate that
-                # failure so callers retain the last complete generation.
-                # Symlinks never reach this branch because lstat above does
-                # not classify them as directories.
-                child_fd = os.open(name, _DIRECTORY_FLAGS | _NOFOLLOW, dir_fd=directory_fd)
+    def _walk_fd(self, directory_fd, prefix, found, budget, depth) -> None:
+        # Iterate directory entries before sorting the bounded result. listdir
+        # would allocate the entire directory before we could enforce a limit.
+        with os.scandir(directory_fd) as entries:
+            for entry in entries:
+                path = f"{prefix}/{entry.name}" if prefix else entry.name
+                budget.observe(path, depth)
                 try:
-                    self._walk_fd(child_fd, path, found)
-                finally:
-                    os.close(child_fd)
-            # Symlinks and every other file type are intentionally ignored.
+                    item_stat = os.stat(entry.name, dir_fd=directory_fd, follow_symlinks=False)
+                except FileNotFoundError:
+                    continue  # concurrent removal: a later reconciliation discovers the result
+                if stat_module.S_ISREG(item_stat.st_mode):
+                    found.append((path, self._identity(item_stat)))
+                elif stat_module.S_ISDIR(item_stat.st_mode):
+                    if depth >= budget.limits.max_depth:
+                        raise ScanLimitExceeded("filesystem scan depth exceeded")
+                    # An unreadable/replaced child makes the complete scan fail.
+                    child_fd = os.open(entry.name, _DIRECTORY_FLAGS | _NOFOLLOW, dir_fd=directory_fd)
+                    try:
+                        self._walk_fd(child_fd, path, found, budget, depth + 1)
+                    finally:
+                        os.close(child_fd)
+                # Links and special files are ignored, but still consume budget.
 
     def _open_parent(self, relative: str) -> tuple[int, str]:
         parts = self._parts(relative)

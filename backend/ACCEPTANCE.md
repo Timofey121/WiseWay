@@ -27,8 +27,8 @@
 | Q-021 · DICT-11, FILE-09 · M/A/E | — | NOT_RUN | NOT_RUN | NOT_RUN | Части restore: `test_dictionaries.py`; restore→simulate→publish не пройден |
 | Q-022 · QUEUE-01/02/04 · M/A/E | — | NOT_RUN | NOT_RUN | NOT_RUN | `test_indexer.py` покрывает готовность; UI/счётчики не единым сценарием |
 | Q-023 · QUEUE-03/05/10 · S/M/A/E | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | Preview покрыт частично; полный scope не пройден |
-| Q-024 · QUEUE-03 · A/E | — | — | NOT_RUN | NOT_RUN | Нет 120/1001-файлового приёмочного корпуса |
-| Q-025 · QUEUE-03 · A/E | — | — | NOT_RUN | NOT_RUN | Нет параметрического прогона snapshot до/после поступления |
+| Q-024 · QUEUE-03 · A/E | — | — | PASS | NOT_RUN | `test_bulk_acceptance.py`: 120 файлов со всех страниц выбраны и реально обработаны; точные ID/outcomes, 0 и 1001 отклоняются без частичной записи/перемещения |
+| Q-025 · QUEUE-03 · A/E | — | — | PASS | NOT_RUN | `test_bulk_acceptance.py`: SELECTION_CHANGED при устаревшем count; поздний файл и новый запрос с другим фильтром не меняют snapshot; исходные 120 ID доходят до итогов |
 | Q-026 · QUEUE-06, DICT-12 · M/A/E | — | NOT_RUN | NOT_RUN | NOT_RUN | Части stale: `test_final_review.py`; все зависимости/TTL не пройдены |
 | Q-027 · QUEUE-04/06, FILE-08 · S/M/A/E | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | Части DIRECT/source changed: `test_worker.py`; полный scope не пройден |
 | Q-028 · QUEUE-07/10, NFR-07 · A/E | — | — | NOT_RUN | NOT_RUN | `test_concurrent_batches.py` частичный: доказательство требуемого полного сценария не оформлено |
@@ -39,15 +39,15 @@
 | Q-033 · FILE-01, SRCH-24, AUD-01 · A/E | — | — | NOT_RUN | NOT_RUN | Части: `test_workflows.py`; полный индекс/поиск/аудит не пройден |
 | Q-034 · FILE-04 · M/A/E | — | NOT_RUN | NOT_RUN | NOT_RUN | Manual review покрыт частично; два исхода/UI не пройдены |
 | Q-035 · FILE-05 · M/A/E | — | NOT_RUN | NOT_RUN | NOT_RUN | Occupied manual target покрыт частично; UI/параметры не пройдены |
-| Q-036 · FILE-06, AUD-01/02 · A/E | — | — | NOT_RUN | NOT_RUN | Карантин покрыт частично; полный приёмочный сценарий не пройден |
+| Q-036 · FILE-06, AUD-01/02 · A/E | — | — | PASS | NOT_RUN | `test_mixed_acceptance.py`: контролируемый технический отказ, реальный карантин, исходник отсутствует, checksum сохранён; TECHNICAL_ERROR и автор в исходе/аудите |
 | Q-037 · FILE-06/09, AUD-01 · A/E | — | — | NOT_RUN | NOT_RUN | Recovery покрыт частично; все варианты размещения не пройдены |
 | Q-038 · FILE-07, QUEUE-01 · M/A/E | — | NOT_RUN | NOT_RUN | NOT_RUN | Return покрыт частично; весь набор параметров не пройден |
-| Q-039 · QUEUE-10, FILE-02/04/06, AUD-01 · A/E | — | — | NOT_RUN | NOT_RUN | Нет одного mixed-batch из четырёх исходов |
-| Q-040 · FILE-09, NFR-06 · A/E | — | — | NOT_RUN | NOT_RUN | Restart покрыт частично; контролируемые точки не все пройдены |
+| Q-039 · QUEUE-10, FILE-02/04/06, AUD-01 · A/E | — | — | PASS | NOT_RUN | `test_mixed_acceptance.py`: четыре исхода/точные причины в одной партии, counts и завершение, checksum, одно начало/завершение на попытку; повтор worker без мутаций |
+| Q-040 · FILE-09, NFR-06 · A/E | — | — | NOT_RUN | NOT_RUN | `test_processes.py` — restart; `test_mixed_acceptance.py` — rollback записи завершения/аудита после rename, затем recovery без второго move. Все исходные процессные failpoints вместе не пройдены |
 | Q-041 · AUD-01…05 · S/A/E | NOT_RUN | — | NOT_RUN | NOT_RUN | `test_audit_updates.py`, `test_processes.py` покрывают части; полный журнал/фильтры не пройдены |
 | Q-042 · SRCH-15/16/18, NFR-01 · M/E | — | NOT_RUN | — | NOT_RUN | Только UI/браузер; backend неприменим |
 | Q-043 · AUTH-02, NFR-05; контракт 02 целиком · S/M/A | NOT_RUN | NOT_RUN | NOT_RUN | — | Части: `test_contract.py`, `test_api.py`; mock/полная контрактная приёмка не пройдены |
 | Q-044 · FILE-08, DICT-07, AUTH-02 · S/A/E | FAIL | — | FAIL | NOT_RUN | `test_filesystem_race_review.py`: post-check symlink подмена может переместить entry внутри открытого каталога; `RECOVERY_REQUIRED` защищает восстановление, но строгий инвариант «ссылки не допускаются» не доказан |
-| Q-045 · SRCH-23, NFR-02/03/04/06 · S/A/E | NOT_RUN | — | FAIL | NOT_RUN | 250/250 успешных HTTP, p95 типового поиска 2435,380 мс > 2000 мс; нагрузочная приёмка не проходит (VALIDATION.md) |
+| Q-045 · SRCH-23, NFR-02/03/04/06 · S/A/E | NOT_RUN | — | FAIL | NOT_RUN | Повторно 250/250 успешных HTTP; p95 типового поиска 2231,308 мс > 2000 мс. Оптимизация исключена пользователем, SLA остаётся незакрытым (VALIDATION.md) |
 
 Новые backend-regression тесты не перенумеровывают исходные Q-ID: `test_pagination_retention.py`, `test_read_concurrency.py`, `test_response_validation_cache.py`, `test_auth_hardening.py`, `test_index_read_cache.py`, `test_index_failure_review.py`, `test_matching_review.py`, `test_review_regressions.py`.

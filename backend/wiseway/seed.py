@@ -48,6 +48,10 @@ def initialize(settings: Settings, password: str) -> None:
         if payload.get("product") != "Wise Way" or payload.get("synthetic") is not True:
             raise RuntimeError("Sandbox marker does not describe Wise Way synthetic data")
         if payload.get("bootstrap_complete") is True:
+            from .services import Context
+
+            context = Context(settings)
+            context.close()
             return
     else:
         marker.write_text(

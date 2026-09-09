@@ -54,6 +54,20 @@ def _json_object(pairs):
     return result
 
 
+def _reject_unpaired_surrogates(value):
+    pending = [value]
+    while pending:
+        current = pending.pop()
+        if isinstance(current, str):
+            if any(0xD800 <= ord(character) <= 0xDFFF for character in current):
+                raise ValueError("unpaired surrogate")
+        elif isinstance(current, dict):
+            pending.extend(current.keys())
+            pending.extend(current.values())
+        elif isinstance(current, list):
+            pending.extend(current)
+
+
 def create_app(settings=None):
     settings = settings or Settings()
     contract = Contract()
@@ -175,11 +189,12 @@ def create_app(settings=None):
                         raise ApiError("VALIDATION_ERROR", "Требуется application/json.", 422)
                     try:
                         body = json.loads(
-                            raw,
+                            bytes(raw).decode("utf-8"),
                             object_pairs_hook=_json_object,
                             parse_constant=lambda _: (_ for _ in ()).throw(ValueError()),
                         )
-                    except (ValueError, UnicodeDecodeError):
+                        _reject_unpaired_surrogates(body)
+                    except (RecursionError, UnicodeDecodeError, ValueError):
                         raise ApiError("VALIDATION_ERROR", "Недопустимый JSON.", 422) from None
                 response = await to_thread.run_sync(
                     execute,

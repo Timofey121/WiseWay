@@ -47,9 +47,22 @@ class Context:
     def __init__(self, settings):
         self.settings = settings
         marker = settings.sandbox_dir / ".wiseway-sandbox.json"
-        if not marker.is_file() or json.loads(marker.read_text()).get("synthetic") is not True:
+        try:
+            marker_payload = json.loads(marker.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            marker_payload = None
+        if (
+            not isinstance(marker_payload, dict)
+            or marker_payload.get("product") != "Wise Way"
+            or marker_payload.get("synthetic") is not True
+            or not settings.database.is_file()
+        ):
             raise RuntimeError("Initialize the synthetic sandbox before starting Wise Way")
         self.store = Store(settings.database)
+        with self.store.transaction(write=False) as tx:
+            bootstrap = tx.get("bootstrap", "seed-v1")
+            if not isinstance(bootstrap, dict) or bootstrap.get("complete") is not True:
+                raise RuntimeError("Initialize the synthetic sandbox before starting Wise Way")
         self._index_cache = OrderedDict()
         self._index_cache_lock = Lock()
         self.fs = SafeFilesystem(settings.sandbox_dir)

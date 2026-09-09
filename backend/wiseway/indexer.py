@@ -3,13 +3,57 @@
 from __future__ import annotations
 
 import time
+from collections import Counter, defaultdict
 from typing import Any
 
-from .common import digest, public, utc
+from .common import digest, public, uid, utc
 from .search import build_item
 
 
 CHECKPOINT_INTERVAL = 100
+IDENTITY_PROFILE_VERSION = "directory-entry-v2"
+
+
+def _inode(meta: dict[str, int]) -> tuple[int, int]:
+    return meta["dev"], meta["ino"]
+
+
+def _entry_ids(
+    root_id: str,
+    found: list[tuple[str, dict[str, int]]],
+    previous: dict[str, Any] | None,
+    staged_items: list[dict[str, Any]] | None = None,
+) -> dict[str, str]:
+    """Assign one stable ID per directory entry, retaining unambiguous renames."""
+    old = (previous or {}).get("_entry_ids", {})
+    current_paths = {path for path, _ in found}
+    current_inode_counts = Counter(_inode(meta) for _, meta in found)
+    old_by_inode: dict[tuple[int, int], list[dict[str, Any]]] = defaultdict(list)
+    old_ids = set()
+    for old_path, entry in old.items():
+        if old_path not in current_paths:
+            old_by_inode[_inode(entry)].append(entry)
+        old_ids.add(entry["item_id"])
+    assigned: set[str] = set()
+    result: dict[str, str] = {}
+    for path, item in zip((path for path, _ in found), staged_items or []):
+        result[path] = item["item_id"]
+        assigned.add(item["item_id"])
+    for path, meta in found[len(result) :]:
+        exact = old.get(path)
+        if exact and _inode(exact) == _inode(meta) and exact["item_id"] not in assigned:
+            item_id = exact["item_id"]
+        else:
+            candidates = [entry for entry in old_by_inode[_inode(meta)] if entry["item_id"] not in assigned]
+            if current_inode_counts[_inode(meta)] == 1 and len(candidates) == 1:
+                item_id = candidates[0]["item_id"]
+            else:
+                item_id = f"file-{root_id}-{meta['dev']}-{meta['ino']}"
+                if item_id in assigned or item_id in old_ids:
+                    item_id = uid("file")
+        result[path] = item_id
+        assigned.add(item_id)
+    return result
 
 
 def _strip_base(path: str, base: str) -> str:
@@ -52,11 +96,14 @@ class Indexer:
             "schema_set_version": root["schema_set_version"],
             "schema": root["_schema"],
             "prefixes": root.get("_scan_prefixes", [""]),
+            "identity_profile": IDENTITY_PROFILE_VERSION,
         }
         config_digest = digest(config)
         with self.ctx.store.transaction() as tx:
             saved = tx.get("index_progress", root["root_id"], {})
-            can_resume = saved.get("status") == "SCANNING" and saved.get("_config_digest") == config_digest
+            can_resume = (
+                saved.get("status") in {"SCANNING", "FAILED"} and saved.get("_config_digest") == config_digest
+            )
             staged_found = saved.get("_found", []) if can_resume else []
             staged_items = saved.get("_items", []) if can_resume else []
             tx.put(
@@ -99,6 +146,7 @@ class Indexer:
             verified_prefix = [[path, meta] for path, meta in found[: len(staged_found)]]
             if verified_prefix != staged_found or len(staged_found) != len(staged_items):
                 staged_found, staged_items = [], []
+            entry_ids = _entry_ids(root["root_id"], found, previous, staged_items)
             items = list(staged_items)
             for count, (path, meta) in enumerate(found[len(items) :], start=len(items) + 1):
                 items.append(
@@ -109,18 +157,23 @@ class Indexer:
                         meta["size"],
                         utc(meta["mtime_ns"] / 1e9),
                         root["_schema"],
-                        f"file-{root['root_id']}-{meta['dev']}-{meta['ino']}",
+                        entry_ids[path],
                     )
                 )
                 if count % CHECKPOINT_INTERVAL == 0 or count == len(found):
                     self._checkpoint(root, config_digest, found, items, count, started)
         except Exception:
             with self.ctx.store.transaction() as tx:
+                progress = tx.get("index_progress", root["root_id"], {})
+                # Keep the verified checkpoint for the next scan, but expose
+                # that this scan stopped instead of reporting active progress.
+                progress.update(status="FAILED", estimated_remaining_seconds=None)
+                tx.put("index_progress", root["root_id"], progress)
                 previous = tx.get("index", root["root_id"])
                 if previous:
                     previous["freshness"] = {
                         "indexed_at": previous["root"]["indexed_at"],
-                        "last_successful_sync_at": previous["root"]["indexed_at"],
+                        "last_successful_sync_at": previous["freshness"]["last_successful_sync_at"],
                         "status": "STALE",
                     }
                     tx.put("index", root["root_id"], previous)
@@ -154,6 +207,10 @@ class Indexer:
                 {
                     "root": public_root,
                     "items": items,
+                    "_entry_ids": {
+                        path: {"item_id": entry_ids[path], "dev": meta["dev"], "ino": meta["ino"]}
+                        for path, meta in found
+                    },
                     "_fingerprint_digest": fingerprint,
                     "freshness": {
                         "indexed_at": utc(now),
@@ -199,21 +256,37 @@ class Indexer:
         seen: set[str] = set()
         with self.ctx.store.transaction() as tx:
             existing = [item for item in tx.list("queue") if item["incoming_source_id"] == root["root_id"]]
+            found_paths = {relative for relative, _ in found}
+            found_inode_counts = Counter(_inode(meta) for _, meta in found)
+            existing_by_path = {item["source"]["relative_path"]: item for item in existing}
+            existing_by_inode: dict[tuple[int, int], list[dict[str, Any]]] = defaultdict(list)
+            existing_ids = set()
+            for item in existing:
+                if item["source"]["relative_path"] not in found_paths:
+                    existing_by_inode[_inode(item["_fingerprint"])].append(item)
+                existing_ids.add(item["item_id"])
+            assigned: set[str] = set()
             for relative, meta in found:
-                item_id = f"queue-{root['root_id']}-{meta['dev']}-{meta['ino']}"
-                previous = tx.get("queue", item_id)
+                previous = existing_by_path.get(relative)
+                if previous is not None and previous["item_id"] in assigned:
+                    previous = None
                 if previous is None:
-                    previous = next(
-                        (
-                            item
-                            for item in existing
-                            if item["status"] == "MISSING" and item["source"]["relative_path"] == relative
-                        ),
-                        None,
+                    candidates = [
+                        item for item in existing_by_inode[_inode(meta)] if item["item_id"] not in assigned
+                    ]
+                    previous = (
+                        candidates[0]
+                        if found_inode_counts[_inode(meta)] == 1 and len(candidates) == 1
+                        else None
                     )
-                    if previous is not None:
-                        item_id = previous["item_id"]
+                if previous is not None:
+                    item_id = previous["item_id"]
+                else:
+                    item_id = f"queue-{root['root_id']}-{meta['dev']}-{meta['ino']}"
+                    if item_id in assigned or item_id in existing_ids:
+                        item_id = uid("queue")
                 seen.add(item_id)
+                assigned.add(item_id)
                 source = {
                     "root_id": root["root_id"],
                     "relative_path": relative,
