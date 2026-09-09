@@ -1,3 +1,5 @@
+import json
+
 from .audit import emit
 from .common import ApiError, digest, public, uid, utc, timestamp
 from .dictionaries import flattened_rules, rule_set
@@ -15,15 +17,27 @@ QUEUE_STATES = (
 
 
 def queue_items(tx, company_id, filters):
+    return queue_items_from_snapshot(queue_snapshot(tx, company_id), filters)
+
+
+def queue_snapshot(tx, company_id):
+    """Return one transaction-consistent company queue snapshot."""
+    rows = tx.connection.execute(
+        "SELECT body FROM objects INDEXED BY queue_company_order WHERE kind='queue' "
+        "AND json_extract(body, '$.company_id')=? ORDER BY id",
+        (company_id,),
+    )
+    return [queue for (body,) in rows if not (queue := json.loads(body)).get("_departed")]
+
+
+def queue_items_from_snapshot(items, filters):
     states = filters["statuses"] or [s for s in QUEUE_STATES if s != "MISSING"]
     text = filters["query_text"].casefold()
     return sorted(
         [
             q
-            for q in tx.list("queue")
-            if q["company_id"] == company_id
-            and not q.get("_departed")
-            and q["status"] in states
+            for q in items
+            if q["status"] in states
             and (
                 not text or text in q["filename"].casefold() or text in q["source"]["display_path"].casefold()
             )
@@ -32,13 +46,9 @@ def queue_items(tx, company_id, filters):
     )
 
 
-def queue_generation(tx, company_id):
-    return (
-        "queue-"
-        + digest(
-            [public(q) for q in tx.list("queue") if q["company_id"] == company_id and not q.get("_departed")]
-        )[:32]
-    )
+def queue_generation(tx, company_id, *, snapshot=None):
+    items = queue_snapshot(tx, company_id) if snapshot is None else snapshot
+    return "queue-" + digest([public(q) for q in items])[:32]
 
 
 class SortingService:
@@ -48,15 +58,14 @@ class SortingService:
     def handle(self, operation, tx, actor, params, body, request_id):
         if operation == "querySortingQueue":
             self.company(tx, body["company_id"])
-            items = queue_items(tx, body["company_id"], body["filters"])
-            all_items = [
-                q
-                for q in tx.list("queue")
-                if q["company_id"] == body["company_id"] and not q.get("_departed")
-            ]
-            counts = {s: sum(q["status"] == s for q in all_items) for s in QUEUE_STATES}
+            snapshot = queue_snapshot(tx, body["company_id"])
+            items = queue_items_from_snapshot(snapshot, body["filters"])
+            counts = {s: 0 for s in QUEUE_STATES}
+            for item in snapshot:
+                if item["status"] in counts:
+                    counts[item["status"]] += 1
             payload = {
-                "queue_generation": queue_generation(tx, body["company_id"]),
+                "queue_generation": queue_generation(tx, body["company_id"], snapshot=snapshot),
                 "items": [public(q) for q in items],
                 "matching_count": len(items),
                 "eligible_count": sum(q["selectable"] for q in items),
@@ -129,10 +138,13 @@ class SortingService:
             )
         if operation == "listSortingBatches":
             self.company(tx, params["company_id"])
+            batch_rows = [b for b in tx.list("batch") if b["company_id"] == params["company_id"]]
+            attempts_by_batch = (
+                self.ctx.batch_attempts(tx, {b["batch_id"] for b in batch_rows}) if batch_rows else {}
+            )
             batches = [
-                self.ctx.batch(tx, b["batch_id"])
-                for b in tx.list("batch")
-                if b["company_id"] == params["company_id"]
+                self.ctx.batch(tx, b["batch_id"], attempts=attempts_by_batch[b["batch_id"]])
+                for b in batch_rows
             ]
             keys = (
                 "batch_id",

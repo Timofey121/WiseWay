@@ -48,12 +48,17 @@ def visible_events(tx, actor, *, events=None):
     return [e for e in source if actor["role"] == "ADMIN" or e["category"] == "BUSINESS"]
 
 
-def query_events(tx, actor, body, *, events=None):
+def query_bounds(actor, body):
     start, end = timestamp(body["from"]), timestamp(body["to"])
     if start >= end:
         raise ApiError("VALIDATION_ERROR", "Начало периода должно предшествовать концу.", 422)
     if body["action"] in SYSTEM_ACTIONS and actor["role"] != "ADMIN":
         raise ApiError("FORBIDDEN", "Системный журнал доступен администратору.", 403)
+    return start, end
+
+
+def query_events(tx, actor, body, *, events=None):
+    start, end = query_bounds(actor, body)
     events = visible_events(tx, actor) if events is None else events
     text = body["query_text"].casefold()
     return sorted(

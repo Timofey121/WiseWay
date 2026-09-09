@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse, Response
 
-from .audit import query_events, visible_events
+from .audit import query_events
 from .auth import Auth
 from .common import ApiError, Settings, public, uid
 from .contract import Contract
@@ -273,42 +273,41 @@ def dispatch(ctx, tx, name, actor, params, body, request_id):
             result["freshness"] = index["freshness"]
         return 200, result
     if name in ("queryAuditEvents", "getAuditUpdates", "listAuditActors"):
-        # Storage returns append order. Equal timestamps or a corrected system clock
-        # must not hide newly appended events from the refresh indicator.
-        events = visible_events(tx, actor, events=ctx.read_audit(tx))
+        from .audit_pagination import audit_actors, newest_visible_event_id
+
         if name == "getAuditUpdates":
             after = params.get("after_event_id")
-            return 200, {"has_new_events": bool(events) and events[0]["event_id"] != after}
+            newest = newest_visible_event_id(tx, actor)
+            return 200, {"has_new_events": newest is not None and newest != after}
+        if name == "listAuditActors":
+            items = audit_actors(tx, actor, params.get("prefix", ""))
+            return 200, ctx.page(
+                tx,
+                name,
+                actor,
+                params,
+                {"items": items},
+                cursor=params.get("cursor"),
+                limit=params.get("limit", 100),
+            )
         if name == "queryAuditEvents":
-            filtered = query_events(tx, actor, body, events=events)
+            # Keep the validation seam lightweight: scalable audit pages query
+            # SQLite directly, while pre-existing payload cursors retain their
+            # historical in-memory snapshot behavior below.
+            query_events(tx, actor, body, events=[])
+            from .audit_pagination import is_sql_cursor, query_page
+
+            if body["cursor"] is None or is_sql_cursor(tx, body["cursor"]):
+                return 200, query_page(ctx, tx, actor, body)
             return 200, ctx.page(
                 tx,
                 name,
                 actor,
                 body,
-                {"items": filtered, "newest_event_id": events[0]["event_id"] if events else None},
+                {"items": [], "newest_event_id": None},
                 cursor=body["cursor"],
                 limit=body["limit"],
             )
-        actors = {e["actor"]["user_id"]: e["actor"] for e in events if e["actor"]}
-        prefix = params.get("prefix", "").casefold()
-        items = sorted(
-            [
-                a
-                for a in actors.values()
-                if a["display_name"].casefold().startswith(prefix) or a["login"].casefold().startswith(prefix)
-            ],
-            key=lambda a: (a["display_name"].casefold(), a["user_id"]),
-        )
-        return 200, ctx.page(
-            tx,
-            name,
-            actor,
-            params,
-            {"items": items},
-            cursor=params.get("cursor"),
-            limit=params.get("limit", 100),
-        )
     if name == "listQuarantineItems":
         from .quarantine import QuarantineService
 

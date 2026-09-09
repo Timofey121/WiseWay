@@ -352,6 +352,10 @@ def _facet(candidates: list[dict[str, Any]], selected_length: int, prefix: str) 
         marker_id = marker["marker_id"]
         known, count = grouped.get(marker_id, (marker, 0))
         grouped[marker_id] = (known, count + 1)
+    return _facet_from_groups(grouped, prefix)
+
+
+def _facet_from_groups(grouped, prefix):
     if not grouped:
         return None
     choices = [
@@ -417,7 +421,11 @@ def search(
         raise ValueError("limit must be positive")
     query = _parse_query(str(request.get("query_text", "")))
     selected = list(request.get("selected_marker_ids", []))
-    candidates = prepared.selected(selected) if prepared is not None else _selected_chain(items, selected)
+    if prepared is not None:
+        selected_markers = prepared.selected_markers(selected)
+    else:
+        candidates = _selected_chain(items, selected)
+        selected_markers = candidates[0]["markers"][: len(selected)] if selected and candidates else []
     is_idle = not selected and not query.terms and not query.phrases
     if request.get("sort", {}).get("field") == "RELEVANCE" and not (query.terms or query.phrases):
         raise _error("INVALID_QUERY", "RELEVANCE требует непустой текст", 400)
@@ -430,8 +438,12 @@ def search(
                 score = _matches_and_score(item, query)
                 if score is not None:
                     matching.append((item, score))
-    facet_candidates = candidates if is_idle else [item for item, _ in matching]
-    next_facet = _facet(facet_candidates, len(selected), str(request.get("facet_prefix", "")))
+    prefix = str(request.get("facet_prefix", ""))
+    if is_idle and prepared is not None:
+        next_facet = prepared.next_facet(selected, prefix)
+    else:
+        facet_candidates = candidates if is_idle else [item for item, _ in matching]
+        next_facet = _facet(facet_candidates, len(selected), prefix)
     if is_idle:
         return {
             "request_state_id": request["request_state_id"],
@@ -450,10 +462,12 @@ def search(
             "next_facet": next_facet,
             "freshness": _freshness(root),
         }
-    result_rows = _sort_rows(matching, request.get("sort", {}))
-    total = len(result_rows)
-    returned = result_rows[:limit]
-    selected_markers = candidates[0]["markers"][: len(selected)] if selected and candidates else []
+    total = len(matching)
+    returned = (
+        prepared.sort_rows(matching, request.get("sort", {}), limit)
+        if prepared is not None
+        else _sort_rows(matching, request.get("sort", {}))[:limit]
+    )
     return {
         "request_state_id": request["request_state_id"],
         "mode": "RESULTS",
@@ -482,15 +496,20 @@ def facet(
         raise ValueError("Prepared search index belongs to another snapshot")
     query = _parse_query(str(request.get("query_text", "")))
     selected = list(request.get("selected_marker_ids", []))
-    if prepared is not None:
+    prefix = str(request.get("facet_prefix", ""))
+    if prepared is not None and not query.terms and not query.phrases:
+        result = prepared.next_facet(selected, prefix)
+    elif prepared is not None:
         matching = [item for item, _ in prepared.match(query, selected)]
+        result = _facet(matching, len(selected), prefix)
     else:
         candidates = _selected_chain(items, selected)
         matching = [item for item in candidates if _matches_and_score(item, query) is not None]
+        result = _facet(matching, len(selected), prefix)
     return {
         "request_state_id": request["request_state_id"],
         "root_id": root["root_id"],
         "schema_set_version": root["schema_set_version"],
         "index_generation": root["index_generation"],
-        "facet": _facet(matching, len(selected), str(request.get("facet_prefix", ""))),
+        "facet": result,
     }

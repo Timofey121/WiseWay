@@ -16,6 +16,7 @@ MAX_PAGE_SNAPSHOT_BYTES = 8 * 1024 * 1024
 MAX_PAGE_SNAPSHOT_TOTAL_BYTES_PER_USER = 32 * 1024 * 1024
 MAX_AUDIT_CACHE_EVENTS = 10_000
 MAX_AUDIT_CACHE_BYTES = 8 * 1024 * 1024
+MAX_INDEX_CACHE_BYTES = 32 * 1024 * 1024
 
 
 def _snapshot_bytes(payload):
@@ -66,6 +67,7 @@ class Context:
             if not isinstance(bootstrap, dict) or bootstrap.get("complete") is not True:
                 raise RuntimeError("Initialize the synthetic sandbox before starting Wise Way")
         self._index_cache = OrderedDict()
+        self._index_cache_sizes = {}
         self._prepared_indexes = OrderedDict()
         self._index_cache_lock = Lock()
         self._audit_cache = None
@@ -98,8 +100,8 @@ class Context:
     def read_index(self, tx, root_id):
         """Read-only published rows; a transactional revision binds the cached document.
 
-        Callers must not mutate these rows. Keep at most four bounded documents;
-        large installations still work without caching their oversized index.
+        Callers must not mutate these rows. Four documents share one 32 MiB
+        encoded-data budget; a larger root can use otherwise unused capacity.
         """
         revision = tx.connection.execute(
             "SELECT revision FROM index_revisions WHERE root_id=?", (root_id,)
@@ -113,19 +115,29 @@ class Context:
                 "SELECT body FROM objects WHERE kind='index' AND id=?", (root_id,)
             ).fetchone()
             if row is None:
+                self._index_cache.pop(root_id, None)
+                self._index_cache_sizes.pop(root_id, None)
+                self._prepared_indexes.pop(root_id, None)
                 return None
             encoded = row[0]
             value = json.loads(encoded)
-            if len(encoded.encode("utf-8")) > 8 * 1024 * 1024:
+            size = len(encoded.encode("utf-8"))
+            if size > MAX_INDEX_CACHE_BYTES:
+                self._index_cache.pop(root_id, None)
+                self._index_cache_sizes.pop(root_id, None)
+                self._prepared_indexes.pop(root_id, None)
                 return value
             # Freshness-only publications can retain the prepared token index.
             if saved is not None and saved[1]["items"] == value["items"]:
                 value["items"] = saved[1]["items"]
             saved = (revision, value)
             self._index_cache[root_id] = saved
+            self._index_cache_sizes[root_id] = size
             self._index_cache.move_to_end(root_id)
-            while len(self._index_cache) > 4:
-                self._index_cache.popitem(last=False)
+            while len(self._index_cache) > 4 or sum(self._index_cache_sizes.values()) > MAX_INDEX_CACHE_BYTES:
+                evicted, _ = self._index_cache.popitem(last=False)
+                self._index_cache_sizes.pop(evicted)
+                self._prepared_indexes.pop(evicted, None)
             return saved[1]
 
     def read_audit(self, tx):
@@ -303,9 +315,111 @@ class Context:
             result["next_cursor"] = key
         return result
 
-    def batch(self, tx, batch_id):
+    def reserve_audit_snapshot(self, actor, signature, cutoff_seq, newest_event_id):
+        """Persist compact immutable audit pagination metadata in a short write unit."""
+        now = self.settings.clock()
+        expires = now + PAGE_CURSOR_SECONDS
+        with self.store.transaction() as tx:
+            _delete_expired_pages(tx, now)
+            row = tx.connection.execute(
+                "SELECT body FROM objects WHERE kind='page_snapshot' "
+                "AND json_extract(body, '$.kind')='audit-seq' "
+                "AND json_extract(body, '$.owner')=? "
+                "AND json_extract(body, '$.query')=? "
+                "AND CAST(json_extract(body, '$.cutoff_seq') AS INTEGER)=? "
+                "AND CAST(json_extract(body, '$.expires') AS REAL)>? LIMIT 1",
+                (actor["user_id"], signature, cutoff_seq, now),
+            ).fetchone()
+            if row is not None:
+                saved = json.loads(row[0])
+                return saved
+            snapshot_id = (
+                "audit-page-snapshot-" + digest([actor["user_id"], signature, cutoff_seq, expires])[:32]
+            )
+            metadata = {
+                "snapshot_id": snapshot_id,
+                "kind": "audit-seq",
+                "owner": actor["user_id"],
+                "query": signature,
+                "cutoff_seq": cutoff_seq,
+                "newest_event_id": newest_event_id,
+                "expires": expires,
+            }
+            metadata["payload_bytes"] = _snapshot_bytes(metadata)
+            _check_page_quota(tx, actor["user_id"], metadata["payload_bytes"])
+            tx.put("page_snapshot", snapshot_id, metadata)
+            return metadata
+
+    def create_audit_cursor(self, actor, signature, snapshot, occurred_at, event_id):
+        """Bind one keyset position to the compact immutable audit snapshot."""
+        now = self.settings.clock()
+        key = (
+            "cursor-"
+            + digest(
+                [
+                    "queryAuditEvents",
+                    actor["user_id"],
+                    signature,
+                    snapshot["snapshot_id"],
+                    occurred_at,
+                    event_id,
+                ]
+            )[:32]
+        )
+        with self.store.transaction() as tx:
+            saved = tx.get("page_snapshot", snapshot["snapshot_id"])
+            if (
+                saved is None
+                or saved.get("kind") != "audit-seq"
+                or saved.get("owner") != actor["user_id"]
+                or saved.get("query") != signature
+                or saved.get("expires", 0) <= now
+            ):
+                raise ApiError("VALIDATION_ERROR", "Недействительный курсор страницы.", 422)
+            tx.put(
+                "cursor",
+                key,
+                {
+                    "cursor_id": key,
+                    "scope": "queryAuditEvents",
+                    "owner": actor["user_id"],
+                    "query": signature,
+                    "snapshot_id": saved["snapshot_id"],
+                    "expires": saved["expires"],
+                    "audit_keyset": True,
+                    "occurred_at": occurred_at,
+                    "event_id": event_id,
+                },
+            )
+        return key
+
+    def batch_attempts(self, tx, batch_ids):
+        """Group all attempt rows once for a batch-list snapshot."""
+        grouped = {batch_id: [] for batch_id in batch_ids}
+        batch_ids = tuple(grouped)
+        if not batch_ids:
+            return grouped
+        # SQLite accepts a bounded number of bind variables. Chunk the batch
+        # identifiers so a long retained history does not turn one API read
+        # into a Python decode of every attempt from every company.
+        for offset in range(0, len(batch_ids), 900):
+            chunk = batch_ids[offset : offset + 900]
+            placeholders = ",".join("?" for _ in chunk)
+            rows = tx.connection.execute(
+                "SELECT body FROM objects WHERE kind='attempt' "
+                f"AND json_extract(body, '$.batch_id') IN ({placeholders})",
+                chunk,
+            )
+            for (body,) in rows:
+                attempt = json.loads(body)
+                grouped[attempt["batch_id"]].append(attempt)
+        return grouped
+
+    def batch(self, tx, batch_id, *, attempts=None):
         batch = public(tx.require("batch", batch_id))
-        outcomes = [a["outcome"] for a in tx.list("attempt") if a["batch_id"] == batch_id]
+        if attempts is None:
+            attempts = self.batch_attempts(tx, {batch_id})[batch_id]
+        outcomes = [a["outcome"] for a in attempts]
         outcomes.sort(key=lambda o: o["attempt_id"])
         counts = {
             key: 0

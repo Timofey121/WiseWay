@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import json
+import fcntl
+import os
 import time
 from collections import Counter, defaultdict
+from contextlib import contextmanager
 from typing import Any
 
 from .common import digest, public, uid, utc
@@ -12,6 +16,7 @@ from .search import build_item
 
 CHECKPOINT_INTERVAL = 100
 IDENTITY_PROFILE_VERSION = "directory-entry-v2"
+_CHUNK_KIND = "index_progress_chunk"
 
 
 def _inode(meta: dict[str, int]) -> tuple[int, int]:
@@ -68,18 +73,106 @@ def _temporary_name(path: str) -> bool:
     return path.casefold().endswith((".part", ".tmp", ".crdownload"))
 
 
+def _chunk_prefix(root_id: str, run_id: str | None = None) -> str:
+    """Use a fixed internal ID prefix so SQLite's primary key orders chunks."""
+    prefix = "index-progress-" + digest(root_id)[:24] + "-"
+    return prefix if run_id is None else prefix + run_id + "-"
+
+
+def _clear_chunks(tx, root_id: str, run_id: str | None = None) -> None:
+    prefix = _chunk_prefix(root_id, run_id)
+    tx.connection.execute("DELETE FROM objects WHERE kind=? AND id LIKE ?", (_CHUNK_KIND, prefix + "%"))
+
+
+def _load_chunks(tx, root_id: str, run_id: str, count: int) -> tuple[list, list, int] | None:
+    """Load one complete, contiguous checkpoint run without trusting partial rows."""
+    if not isinstance(count, int) or isinstance(count, bool) or count < 0:
+        return None
+    rows = tx.connection.execute(
+        "SELECT id, body FROM objects WHERE kind=? AND id LIKE ? ORDER BY id",
+        (_CHUNK_KIND, _chunk_prefix(root_id, run_id) + "%"),
+    ).fetchall()
+    found, items, expected_sequence = [], [], 0
+    for _, raw in rows:
+        try:
+            chunk = json.loads(raw)
+            sequence = chunk["sequence"]
+            chunk_found = chunk["found"]
+            chunk_items = chunk["items"]
+        except (KeyError, TypeError, json.JSONDecodeError):
+            return None
+        if (
+            chunk.get("root_id") != root_id
+            or chunk.get("run_id") != run_id
+            or sequence != expected_sequence
+            or not isinstance(sequence, int)
+            or isinstance(sequence, bool)
+            or not isinstance(chunk_found, list)
+            or not isinstance(chunk_items, list)
+            or not chunk_found
+            or len(chunk_found) != len(chunk_items)
+            or len(chunk_found) > CHECKPOINT_INTERVAL
+        ):
+            return None
+        for entry, item in zip(chunk_found, chunk_items):
+            if (
+                not isinstance(entry, list)
+                or len(entry) != 2
+                or not isinstance(entry[0], str)
+                or not isinstance(entry[1], dict)
+                or not isinstance(item, dict)
+                or not isinstance(item.get("item_id"), str)
+                or not item["item_id"]
+                or not isinstance(item.get("location"), dict)
+                or item["location"].get("root_id") != root_id
+                or item["location"].get("relative_path") != entry[0]
+            ):
+                return None
+            found.append((entry[0], entry[1]))
+            items.append(item)
+        expected_sequence += 1
+    return (found, items, expected_sequence) if len(items) == count else None
+
+
+@contextmanager
+def _index_lock(ctx):
+    """One scanner owns a checkpoint run; an overlapping worker skips its cycle."""
+    path = ctx.settings.data_dir / "indexer.lock"
+    descriptor = os.open(
+        path,
+        os.O_RDWR | os.O_CREAT | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0),
+        0o600,
+    )
+    try:
+        os.fchmod(descriptor, 0o600)
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            yield False
+            return
+        try:
+            yield True
+        finally:
+            fcntl.flock(descriptor, fcntl.LOCK_UN)
+    finally:
+        os.close(descriptor)
+
+
 class Indexer:
     def __init__(self, ctx: Any) -> None:
         self.ctx = ctx
 
     def scan(self) -> None:
-        with self.ctx.store.transaction() as tx:
-            roots = tx.list("root")
-        for root in roots:
-            if root.get("_searchable"):
-                self._scan_search_root(root)
-            if root.get("_incoming_company"):
-                self._scan_incoming_root(root)
+        with _index_lock(self.ctx) as held:
+            if not held:
+                return
+            with self.ctx.store.transaction() as tx:
+                roots = tx.list("root")
+            for root in roots:
+                if root.get("_searchable"):
+                    self._scan_search_root(root)
+                if root.get("_incoming_company"):
+                    self._scan_incoming_root(root)
 
     def _walk(self, root: dict[str, Any]) -> list[tuple[str, dict[str, int]]]:
         found: list[tuple[str, dict[str, int]]] = []
@@ -88,6 +181,110 @@ class Indexer:
             for path, meta in self.ctx.fs.walk(physical):
                 found.append((_strip_base(path, root["_base"]), meta))
         return sorted(found)
+
+    @staticmethod
+    def _put_chunk(tx, root_id, run_id, sequence, found, items) -> None:
+        tx.put(
+            _CHUNK_KIND,
+            _chunk_prefix(root_id, run_id) + f"{sequence:08d}",
+            {
+                "root_id": root_id,
+                "run_id": run_id,
+                "sequence": sequence,
+                "found": found,
+                "items": items,
+            },
+        )
+
+    def _reset_search_progress(self, root, config_digest):
+        run_id = uid("index-run")
+        with self.ctx.store.transaction() as tx:
+            _clear_chunks(tx, root["root_id"])
+            tx.put(
+                "index_progress",
+                root["root_id"],
+                {
+                    "root_id": root["root_id"],
+                    "status": "SCANNING",
+                    "count": 0,
+                    "checkpoint": None,
+                    "estimated_remaining_seconds": None,
+                    "_config_digest": config_digest,
+                    "_run_id": run_id,
+                    "_chunk_count": 0,
+                },
+            )
+        return [], [], run_id, 0
+
+    def _start_search_progress(self, root, config_digest):
+        """Load a verified interrupted run or create compact linear checkpoints."""
+        with self.ctx.store.transaction() as tx:
+            saved = tx.get("index_progress", root["root_id"], {})
+            can_resume = (
+                saved.get("status") in {"SCANNING", "FAILED"} and saved.get("_config_digest") == config_digest
+            )
+            staged_found = staged_items = None
+            run_id = saved.get("_run_id") if can_resume else None
+            if isinstance(run_id, str):
+                loaded = _load_chunks(tx, root["root_id"], run_id, saved.get("count"))
+                if (
+                    loaded is not None
+                    and isinstance(saved.get("_chunk_count"), int)
+                    and not isinstance(saved["_chunk_count"], bool)
+                    and saved["_chunk_count"] == loaded[2]
+                ):
+                    staged_found, staged_items, chunk_count = loaded
+            elif can_resume:
+                # Existing deployments persisted one growing object. Upgrade it
+                # once so subsequent checkpoints append only their new slice.
+                legacy_found = saved.get("_found")
+                legacy_items = saved.get("_items")
+                if (
+                    isinstance(legacy_found, list)
+                    and isinstance(legacy_items, list)
+                    and len(legacy_found) == len(legacy_items)
+                    and saved.get("count") == len(legacy_items)
+                    and all(
+                        isinstance(entry, list)
+                        and len(entry) == 2
+                        and isinstance(entry[0], str)
+                        and isinstance(entry[1], dict)
+                        for entry in legacy_found
+                    )
+                    and all(isinstance(item, dict) for item in legacy_items)
+                ):
+                    run_id = uid("index-run")
+                    _clear_chunks(tx, root["root_id"])
+                    for sequence, start in enumerate(range(0, len(legacy_items), CHECKPOINT_INTERVAL)):
+                        self._put_chunk(
+                            tx,
+                            root["root_id"],
+                            run_id,
+                            sequence,
+                            legacy_found[start : start + CHECKPOINT_INTERVAL],
+                            legacy_items[start : start + CHECKPOINT_INTERVAL],
+                        )
+                    staged_found = [(entry[0], entry[1]) for entry in legacy_found]
+                    staged_items = legacy_items
+                    chunk_count = (len(legacy_items) + CHECKPOINT_INTERVAL - 1) // CHECKPOINT_INTERVAL
+            if staged_found is None or staged_items is None:
+                _clear_chunks(tx, root["root_id"])
+                run_id, staged_found, staged_items, chunk_count = uid("index-run"), [], [], 0
+            tx.put(
+                "index_progress",
+                root["root_id"],
+                {
+                    "root_id": root["root_id"],
+                    "status": "SCANNING",
+                    "count": len(staged_items),
+                    "checkpoint": staged_found[-1][0] if staged_found else None,
+                    "estimated_remaining_seconds": None,
+                    "_config_digest": config_digest,
+                    "_run_id": run_id,
+                    "_chunk_count": chunk_count,
+                },
+            )
+        return staged_found, staged_items, run_id, chunk_count
 
     def _scan_search_root(self, root: dict[str, Any]) -> None:
         now = self.ctx.settings.clock()
@@ -99,27 +296,7 @@ class Indexer:
             "identity_profile": IDENTITY_PROFILE_VERSION,
         }
         config_digest = digest(config)
-        with self.ctx.store.transaction() as tx:
-            saved = tx.get("index_progress", root["root_id"], {})
-            can_resume = (
-                saved.get("status") in {"SCANNING", "FAILED"} and saved.get("_config_digest") == config_digest
-            )
-            staged_found = saved.get("_found", []) if can_resume else []
-            staged_items = saved.get("_items", []) if can_resume else []
-            tx.put(
-                "index_progress",
-                root["root_id"],
-                {
-                    "root_id": root["root_id"],
-                    "status": "SCANNING",
-                    "count": len(staged_items),
-                    "checkpoint": staged_found[-1][0] if staged_found else None,
-                    "estimated_remaining_seconds": None,
-                    "_config_digest": config_digest,
-                    "_found": staged_found,
-                    "_items": staged_items,
-                },
-            )
+        staged_found, staged_items, run_id, chunk_count = self._start_search_progress(root, config_digest)
         try:
             found = [(path, meta) for path, meta in self._walk(root) if not _technical_name(path)]
             fingerprint = digest({"files": found, **config})
@@ -142,12 +319,16 @@ class Indexer:
                             "checkpoint": None,
                         },
                     )
+                    _clear_chunks(tx, root["root_id"], run_id)
                     return
-            verified_prefix = [[path, meta] for path, meta in found[: len(staged_found)]]
+            verified_prefix = found[: len(staged_found)]
             if verified_prefix != staged_found or len(staged_found) != len(staged_items):
-                staged_found, staged_items = [], []
+                staged_found, staged_items, run_id, chunk_count = self._reset_search_progress(
+                    root, config_digest
+                )
             entry_ids = _entry_ids(root["root_id"], found, previous, staged_items)
             items = list(staged_items)
+            persisted_count = len(items)
             for count, (path, meta) in enumerate(found[len(items) :], start=len(items) + 1):
                 items.append(
                     build_item(
@@ -161,7 +342,19 @@ class Indexer:
                     )
                 )
                 if count % CHECKPOINT_INTERVAL == 0 or count == len(found):
-                    self._checkpoint(root, config_digest, found, items, count, started)
+                    self._checkpoint(
+                        root,
+                        config_digest,
+                        run_id,
+                        found,
+                        items,
+                        persisted_count,
+                        chunk_count,
+                        count,
+                        started,
+                    )
+                    persisted_count = count
+                    chunk_count += 1
         except Exception:
             with self.ctx.store.transaction() as tx:
                 progress = tx.get("index_progress", root["root_id"], {})
@@ -197,6 +390,7 @@ class Indexer:
                         "checkpoint": None,
                     },
                 )
+                _clear_chunks(tx, root["root_id"], run_id)
                 return
             public_root = public(root)
             public_root["index_generation"] = "generation-" + digest([root["root_id"], fingerprint])[:24]
@@ -224,11 +418,30 @@ class Indexer:
                 root["root_id"],
                 {"root_id": root["root_id"], "status": "COMPLETE", "count": len(items), "checkpoint": None},
             )
+            _clear_chunks(tx, root["root_id"], run_id)
 
-    def _checkpoint(self, root, config_digest, found, items, count, started) -> None:
+    def _checkpoint(
+        self, root, config_digest, run_id, found, items, previous_count, chunk_count, count, started
+    ) -> None:
         elapsed = time.monotonic() - started
         remaining = None if elapsed <= 0 else max(0, round((len(found) - count) * elapsed / count, 3))
         with self.ctx.store.transaction() as tx:
+            progress = tx.get("index_progress", root["root_id"], {})
+            if (
+                progress.get("_run_id") != run_id
+                or progress.get("count") != previous_count
+                or progress.get("_chunk_count") != chunk_count
+            ):
+                raise RuntimeError("index checkpoint ownership changed")
+            sequence = chunk_count
+            self._put_chunk(
+                tx,
+                root["root_id"],
+                run_id,
+                sequence,
+                found[previous_count:count],
+                items[previous_count:count],
+            )
             tx.put(
                 "index_progress",
                 root["root_id"],
@@ -239,8 +452,8 @@ class Indexer:
                     "checkpoint": found[count - 1][0],
                     "estimated_remaining_seconds": remaining,
                     "_config_digest": config_digest,
-                    "_found": found[:count],
-                    "_items": items,
+                    "_run_id": run_id,
+                    "_chunk_count": sequence + 1,
                 },
             )
 
