@@ -144,6 +144,7 @@ class WorkerTests(unittest.TestCase):
             self.assertEqual(
                 (outcome["state"], outcome["reason_code"]), ("REQUIRES_DECISION", "TARGET_OCCUPIED")
             )
+            self.assertEqual(outcome["actual_location"], outcome["source"])
         self.assertEqual((self.root / "sandbox/incoming/team/file.txt").read_bytes(), b"content")
         self.assertEqual((self.root / "sandbox/archive/team/file.txt").read_bytes(), b"existing")
         with self.ctx.store.transaction(write=False) as tx:
@@ -285,6 +286,30 @@ class WorkerTests(unittest.TestCase):
             self.assertEqual(attempt["outcome"]["state"], "SORTED")
             starts = [e for e in tx.events() if e["action"] == "FILE_ATTEMPT_STARTED"]
             self.assertEqual(len(starts), 1)
+
+    def test_early_preflight_failure_starts_before_exactly_one_recovery_event(self) -> None:
+        target = self._location("archive-root", "team/file.txt")
+        self._attempt("WILL_MOVE", target=target)
+        real_stat = self.ctx.fs.stat
+
+        def fail_source(path):
+            if path == "incoming/team/file.txt":
+                raise OSError("synthetic preflight failure")
+            return real_stat(path)
+
+        self.ctx.fs.stat = fail_source
+        try:
+            self.assertEqual(Worker(self.ctx).run_once(), 1)
+        finally:
+            self.ctx.fs.stat = real_stat
+
+        with self.ctx.store.transaction(write=False) as tx:
+            attempt = tx.require("attempt", "attempt-1")
+            self.assertEqual(attempt["outcome"]["actual_location"], None)
+            self.assertEqual(
+                [event["action"] for event in tx.events()][::-1],
+                ["FILE_ATTEMPT_STARTED", "RECOVERY_REQUIRED"],
+            )
 
 
 if __name__ == "__main__":

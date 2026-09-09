@@ -1,4 +1,4 @@
-from .common import ApiError, uid, utc
+from .common import ApiError, timestamp, uid, utc
 
 SYSTEM_ACTIONS = {"LOGIN_SUCCEEDED", "LOGIN_FAILED", "LOGOUT", "ACCOUNT_BLOCKED"}
 
@@ -40,7 +40,8 @@ def visible_events(tx, actor):
 
 
 def query_events(tx, actor, body):
-    if body["from"] >= body["to"]:
+    start, end = timestamp(body["from"]), timestamp(body["to"])
+    if start >= end:
         raise ApiError("VALIDATION_ERROR", "Начало периода должно предшествовать концу.", 422)
     if body["action"] in SYSTEM_ACTIONS and actor["role"] != "ADMIN":
         raise ApiError("FORBIDDEN", "Системный журнал доступен администратору.", 403)
@@ -50,7 +51,7 @@ def query_events(tx, actor, body):
         [
             e
             for e in events
-            if body["from"] <= e["occurred_at"] < body["to"]
+            if start <= timestamp(e["occurred_at"]) < end
             and all(body[k] is None or e[k] == body[k] for k in ("company_id", "action", "result"))
             and (body["actor_id"] is None or (e["actor"] and e["actor"]["user_id"] == body["actor_id"]))
             and (
@@ -60,6 +61,6 @@ def query_events(tx, actor, body):
                 )
             )
         ],
-        key=lambda e: (e["occurred_at"], e["event_id"]),
+        key=lambda e: (timestamp(e["occurred_at"]), e["event_id"]),
         reverse=True,
     )

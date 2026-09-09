@@ -1,8 +1,9 @@
 import json
+import logging
 from contextlib import asynccontextmanager
 
+from anyio import CapacityLimiter, to_thread
 from fastapi import FastAPI, Request
-from starlette.concurrency import run_in_threadpool
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse, Response
 
@@ -20,6 +21,28 @@ READ_POSTS = {
     "resolveTargetDirectory",
 }
 IDEMPOTENT = {"publishDictionary", "createSortingBatch"}
+READ_ONLY = {
+    "getAppConfig",
+    "listRoots",
+    "listCompanies",
+    "searchFiles",
+    "getSearchFacet",
+    "listDictionaries",
+    "getDictionary",
+    "getDictionaryVersion",
+    "getAuditUpdates",
+    "queryAuditEvents",
+    "querySortingQueue",
+    "listAuditActors",
+    "listQuarantineItems",
+    "getSortingPreview",
+    "getSortingBatch",
+    "listSortingBatches",
+    "listTargetDirectories",
+    "resolveTargetDirectory",
+    "listDictionaryVersions",
+    "getSimulation",
+}
 
 
 def _json_object(pairs):
@@ -39,6 +62,9 @@ def create_app(settings=None):
     async def lifespan(app):
         app.state.ctx = Context(settings)
         app.state.auth = Auth(app.state.ctx.store, settings)
+        # SQLite has one writer; a large thread pool causes lock contention and
+        # competes for the GIL during metadata search/response validation.
+        app.state.request_limiter = CapacityLimiter(4)
         yield
         app.state.ctx.close()
 
@@ -72,6 +98,7 @@ def create_app(settings=None):
         )
         response_headers = {}
         cookie = None
+        validated = False
         if name == "getHealth":
             status, data = 200, {"status": "ok"}
         elif name == "login":
@@ -88,7 +115,7 @@ def create_app(settings=None):
 
             status, data = QuarantineService(ctx).return_item(actor, params, body, request_id)
         else:
-            with ctx.store.transaction() as tx:
+            with ctx.store.transaction(write=name not in READ_ONLY) as tx:
 
                 def action():
                     return dispatch(ctx, tx, name, actor, params, body, request_id)
@@ -102,7 +129,9 @@ def create_app(settings=None):
                 else:
                     status, data = action()
                 contract.response(operation, status, data)
-        contract.response(operation, status, data)
+                validated = True
+        if not validated:
+            contract.response(operation, status, data)
         if actor and name != "logout":
             auth.touch(token)
         response = (
@@ -152,23 +181,31 @@ def create_app(settings=None):
                         )
                     except (ValueError, UnicodeDecodeError):
                         raise ApiError("VALIDATION_ERROR", "Недопустимый JSON.", 422) from None
-                response = await run_in_threadpool(execute, operation, path_item, request, body, request_id)
+                response = await to_thread.run_sync(
+                    execute,
+                    operation,
+                    path_item,
+                    request,
+                    body,
+                    request_id,
+                    limiter=app.state.request_limiter,
+                )
             except ApiError as error:
                 value = error.body(request_id)
                 try:
                     contract.response(operation, error.status, value)
                 except RuntimeError:
+                    logging.getLogger("wiseway").error(
+                        "Request failed request_id=%s exception=RuntimeError", request_id
+                    )
                     error = ApiError("INTERNAL_ERROR", "Внутренняя ошибка сервиса.", 500)
                     value = error.body(request_id)
                 response = JSONResponse(value, status_code=error.status)
                 if error.status == 429:
                     response.headers["Retry-After"] = "60"
-            except Exception:
-                # No request bodies, tokens or physical paths enter the error response/log.
-                import logging
-
+            except Exception as error:
                 logging.getLogger("wiseway").error(
-                    "Request failed operation=%s request_id=%s", operation["operationId"], request_id
+                    "Request failed request_id=%s exception=%s", request_id, type(error).__name__
                 )
                 response = JSONResponse(
                     ApiError("INTERNAL_ERROR", "Внутренняя ошибка сервиса.", 500).body(request_id),
@@ -206,7 +243,7 @@ def dispatch(ctx, tx, name, actor, params, body, request_id):
         root = tx.get("root", body["root_id"])
         if root is None or not root.get("_searchable"):
             raise ApiError("ROOT_NOT_READY", "Корень не опубликован.", 409)
-        index = tx.get("index", body["root_id"])
+        index = ctx.read_index(tx, body["root_id"])
         if index is None:
             raise ApiError("ROOT_NOT_READY", "Корень ещё индексируется.", 409)
         if index.get("_unavailable"):

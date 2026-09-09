@@ -7,7 +7,7 @@ from contextlib import contextmanager
 
 from .audit import emit
 from .common import utc
-from .filesystem import SourceChanged, TargetExists
+from .filesystem import PostRenameChanged, SourceChanged, TargetExists
 
 
 @contextmanager
@@ -85,14 +85,14 @@ class Worker:
         plan = attempt["plan"]
         state = plan["predicted_state"]
         if state == "REQUIRES_DECISION":
-            self._finish(attempt_id, "REQUIRES_DECISION", plan["reason_code"], None)
+            self._finish(attempt_id, "REQUIRES_DECISION", plan["reason_code"], item["source"])
             return True
         if state == "WILL_MOVE":
             self._intent(attempt_id, plan["target"], "SORTED", None)
         elif state == "WILL_MANUAL_REVIEW":
             target = self._manual_target(attempt)
             if self._exists(target):
-                self._finish(attempt_id, "REQUIRES_DECISION", "MANUAL_REVIEW_NAME_OCCUPIED", None)
+                self._finish(attempt_id, "REQUIRES_DECISION", "MANUAL_REVIEW_NAME_OCCUPIED", item["source"])
                 return True
             self._intent(attempt_id, target, "MANUAL_REVIEW", plan["reason_code"])
         else:
@@ -155,23 +155,8 @@ class Worker:
             now = self.ctx.settings.clock()
             attempt.update(phase="INTENT", intent_target=target, intended_state=state, intended_reason=reason)
             attempt["outcome"].update(state="PROCESSING", reason_code=None)
+            self._start_attempt(tx, attempt, now, target)
             tx.put("attempt", attempt_id, attempt)
-            if attempt["outcome"]["started_at"] is None:
-                attempt["outcome"]["started_at"] = utc(now)
-                tx.put("attempt", attempt_id, attempt)
-                emit(
-                    tx,
-                    attempt["actor"],
-                    "FILE_ATTEMPT_STARTED",
-                    attempt["request_id"],
-                    now=now,
-                    company_id=attempt["company_id"],
-                    batch_id=attempt["batch_id"],
-                    attempt_id=attempt_id,
-                    item_id=attempt["item"]["item_id"],
-                    source=attempt["item"]["source"],
-                    target=target,
-                )
 
     def _execute_intent(self, attempt_id: str) -> bool:
         with self.ctx.store.transaction(write=False) as tx:
@@ -189,8 +174,12 @@ class Worker:
                 if attempt["intended_state"] == "MANUAL_REVIEW"
                 else "TARGET_OCCUPIED"
             )
-            self._finish(attempt_id, "REQUIRES_DECISION", reason, None)
+            self._finish(attempt_id, "REQUIRES_DECISION", reason, attempt["item"]["source"])
             return True
+        except PostRenameChanged:
+            # The native move may already have changed either entry.  Never
+            # reinterpret this known post-move ambiguity as a safe quarantine.
+            return self._recovery_required(attempt_id)
         except SourceChanged:
             current = self.ctx.fs.stat(source)
             self._finish(
@@ -244,21 +233,7 @@ class Worker:
                 return
             now = self.ctx.settings.clock()
             outcome = attempt["outcome"]
-            if outcome["started_at"] is None:
-                outcome["started_at"] = utc(now)
-                emit(
-                    tx,
-                    attempt["actor"],
-                    "FILE_ATTEMPT_STARTED",
-                    attempt["request_id"],
-                    now=now,
-                    company_id=attempt["company_id"],
-                    batch_id=attempt["batch_id"],
-                    attempt_id=attempt_id,
-                    item_id=attempt["item"]["item_id"],
-                    source=attempt["item"]["source"],
-                    target=attempt.get("intent_target"),
-                )
+            self._start_attempt(tx, attempt, now, attempt.get("intent_target"))
             outcome.update(state=state, reason_code=reason, actual_location=actual, finished_at=utc(now))
             attempt.update(phase="DONE", outcome=outcome)
             tx.put("attempt", attempt_id, attempt)
@@ -329,6 +304,7 @@ class Worker:
                 return False
             if attempt["phase"] != "RECOVERY_REQUIRED":
                 now = self.ctx.settings.clock()
+                self._start_attempt(tx, attempt, now, attempt.get("intent_target"))
                 attempt.update(phase="RECOVERY_REQUIRED")
                 attempt["outcome"].update(
                     state="RECOVERY_REQUIRED",
@@ -358,6 +334,25 @@ class Worker:
                     reason_code="RECOVERY_REQUIRED",
                 )
         return True
+
+    @staticmethod
+    def _start_attempt(tx, attempt: dict, now: float, target: dict | None) -> None:
+        if attempt["outcome"]["started_at"] is not None:
+            return
+        attempt["outcome"]["started_at"] = utc(now)
+        emit(
+            tx,
+            attempt["actor"],
+            "FILE_ATTEMPT_STARTED",
+            attempt["request_id"],
+            now=now,
+            company_id=attempt["company_id"],
+            batch_id=attempt["batch_id"],
+            attempt_id=attempt["attempt_id"],
+            item_id=attempt["item"]["item_id"],
+            source=attempt["item"]["source"],
+            target=target,
+        )
 
     def _put_quarantine(self, tx, attempt: dict, target: dict, now: float) -> None:
         key = f"quarantine-{attempt['attempt_id']}"

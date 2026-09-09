@@ -13,6 +13,7 @@ dependencies = [
   "PyYAML>=6.0.2,<7",
   "jsonschema[format]>=4.25,<5",
   "argon2-cffi>=23.1,<26",
+  "anyio>=4,<5",
 ]
 
 [project.scripts]

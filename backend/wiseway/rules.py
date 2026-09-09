@@ -7,7 +7,6 @@ specific storage implementation.
 
 from __future__ import annotations
 
-import re
 from collections import defaultdict
 from collections.abc import Callable
 from typing import Any
@@ -32,15 +31,34 @@ def match_rule(rule: Rule, relative_path: str) -> bool:
         return False
 
     if rule["match_field"] == "BASENAME":
-        value = re.split(r"[\\/]", relative_path)[-1]
+        value = relative_path.replace("\\", "/").rsplit("/", 1)[-1]
     else:
         value = _normalise_match_path(relative_path)
         mask = _normalise_match_path(mask)
 
-    expression = "".join(
-        ".*" if char == "*" else "." if char == "?" else re.escape(char) for char in mask.casefold()
-    )
-    return re.fullmatch(expression, value.casefold(), flags=re.DOTALL) is not None
+    return _match_glob(mask.casefold(), value.casefold())
+
+
+def _match_glob(mask: str, value: str) -> bool:
+    """Match the supported glob language without compiling a backtracking regex."""
+    mask_index = value_index = 0
+    last_star = -1
+    retry_value = 0
+    while value_index < len(value):
+        if mask_index < len(mask) and (mask[mask_index] == "?" or mask[mask_index] == value[value_index]):
+            mask_index += 1
+            value_index += 1
+        elif mask_index < len(mask) and mask[mask_index] == "*":
+            last_star = mask_index
+            mask_index += 1
+            retry_value = value_index
+        elif last_star >= 0:
+            mask_index = last_star + 1
+            retry_value += 1
+            value_index = retry_value
+        else:
+            return False
+    return all(char == "*" for char in mask[mask_index:])
 
 
 def plan_rows(

@@ -1,10 +1,12 @@
 """The checked-in OpenAPI is both the public document and wire validator."""
 
 from pathlib import Path
+from functools import lru_cache
+import json
 import sysconfig
 
 import yaml
-from jsonschema import Draft202012Validator, FormatChecker
+from jsonschema import Draft202012Validator, FormatChecker, ValidationError, validators
 from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT202012
 
@@ -21,6 +23,28 @@ class Contract:
             "urn:wiseway:api", Resource.from_contents(self.spec, default_specification=DRAFT202012)
         )
         self.validators = {}
+
+        # Repeated immutable rows dominate large result validation. Cache only
+        # exact JSON values, never object IDs; a changed field must be checked again.
+        @lru_cache(maxsize=1024)
+        def checked_row(reference, encoded):
+            schema = self.resolve({"$ref": reference})
+            return self.validator(schema).is_valid(json.loads(encoded))
+
+        base_ref = Draft202012Validator.VALIDATORS["$ref"]
+        reusable = {"#/components/schemas/SearchItem", "#/components/schemas/AuditEvent"}
+
+        def response_ref(validator, reference, instance, schema):
+            if reference in reusable:
+                encoded = json.dumps(instance, ensure_ascii=False, separators=(",", ":"))
+                if len(encoded) <= 16384:
+                    if not checked_row(reference, encoded):
+                        yield ValidationError("Invalid response row")
+                    return
+            yield from base_ref(validator, reference, instance, schema)
+
+        self.response_validator_class = validators.extend(Draft202012Validator, {"$ref": response_ref})
+        self.response_validators = {}
 
     def resolve(self, value):
         while isinstance(value, dict) and "$ref" in value:
@@ -84,7 +108,16 @@ class Contract:
     def response(self, operation, status, value):
         response = self.resolve(operation["responses"].get(str(status), {}))
         schema = response.get("content", {}).get("application/json", {}).get("schema")
-        if str(status) not in operation["responses"] or (
-            schema and not self.validator(schema).is_valid(value)
-        ):
+        valid = str(status) in operation["responses"]
+        if valid and schema:
+            key = id(schema)
+            if key not in self.response_validators:
+                self.response_validators[key] = self.response_validator_class(
+                    schema,
+                    registry=self.registry,
+                    _resolver=self.registry.resolver("urn:wiseway:api"),
+                    format_checker=FormatChecker(),
+                )
+            valid = self.response_validators[key].is_valid(value)
+        if not valid:
             raise RuntimeError(f"Invalid response contract for {operation['operationId']} status={status}")

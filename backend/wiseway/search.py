@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 from hashlib import sha256
+from functools import lru_cache
 import re
 from typing import Any
 
@@ -71,6 +72,7 @@ def _stable_id(*parts: str) -> str:
     return f"marker-{digest}"
 
 
+@lru_cache(maxsize=8192)
 def _tokens(text: str) -> tuple[str, ...]:
     """Return case-folded tokens without Unicode normalisation.
 
@@ -258,6 +260,7 @@ def _field_streams(item: dict[str, Any]) -> tuple[tuple[int, tuple[str, ...]], .
         level = marker["level_id"]
         weight = 4 if level == "level-project" else 3 if level == "level-company" else 1
         streams.append((weight, _tokens(marker["raw_value"])))
+    streams.append((1, _path_stream(item)))
     return tuple(stream for stream in streams if stream[1])
 
 
@@ -294,12 +297,13 @@ def _matches_and_score(item: dict[str, Any], query: _Query) -> int | None:
     return score
 
 
+@lru_cache(maxsize=8192)
 def _natural_key(value: str) -> tuple[tuple[int, int | str], ...]:
     result: list[tuple[int, int | str]] = []
     for chunk in _NATURAL_CHUNKS.split(value):
         if not chunk:
             continue
-        result.append((0, int(chunk)) if chunk.isdigit() else (1, chunk.casefold()))
+        result.append((0, int(chunk)) if chunk.isdecimal() else (1, chunk.casefold()))
     return tuple(result)
 
 
@@ -316,6 +320,8 @@ def _validate_context(root: dict[str, Any], request: dict[str, Any]) -> None:
 
 
 def _selected_chain(items: list[dict[str, Any]], selected: list[str]) -> list[dict[str, Any]]:
+    if not selected:
+        return items
     if len(selected) != len(set(selected)):
         raise _error("INVALID_MARKER_SELECTION", "Цепочка содержит повторный маркер", 422)
     possible = [
@@ -377,14 +383,14 @@ def _sort_rows(rows: list[tuple[dict[str, Any], int]], sort: dict[str, Any]) -> 
     elif field == "PATH":
         rows.sort(key=lambda pair: _path_tie(pair[0]), reverse=direction == "DESC")
     elif field == "NAME":
-        rows.sort(
-            key=lambda pair: (_natural_key(pair[0]["filename"]), *_path_tie(pair[0])),
-            reverse=direction == "DESC",
-        )
+        rows.sort(key=lambda pair: _path_tie(pair[0]))
+        rows.sort(key=lambda pair: _natural_key(pair[0]["filename"]), reverse=direction == "DESC")
     elif field == "MODIFIED_AT":
-        rows.sort(key=lambda pair: (pair[0]["modified_at"], *_path_tie(pair[0])), reverse=direction == "DESC")
+        rows.sort(key=lambda pair: _path_tie(pair[0]))
+        rows.sort(key=lambda pair: pair[0]["modified_at"], reverse=direction == "DESC")
     elif field == "SIZE":
-        rows.sort(key=lambda pair: (pair[0]["size_bytes"], *_path_tie(pair[0])), reverse=direction == "DESC")
+        rows.sort(key=lambda pair: _path_tie(pair[0]))
+        rows.sort(key=lambda pair: pair[0]["size_bytes"], reverse=direction == "DESC")
     else:
         raise _error("INVALID_QUERY", "Неизвестная сортировка", 400)
     return [row for row, _ in rows]

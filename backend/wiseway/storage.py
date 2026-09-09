@@ -2,15 +2,16 @@
 
 import json
 import sqlite3
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from pathlib import Path
 
 from .common import ApiError
 
 
 class UnitOfWork:
-    def __init__(self, connection):
+    def __init__(self, connection, write=True):
         self.connection = connection
+        self.write = write
 
     def get(self, kind, key, default=None):
         row = self.connection.execute(
@@ -62,9 +63,10 @@ class Store:
         self.path = path
         path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
         path.parent.chmod(0o700)
-        with self.connect() as connection:
+        with closing(self.connect()) as connection:
             connection.execute("PRAGMA journal_mode=WAL")
-            connection.executescript((Path(__file__).parent / "migrations" / "001_initial.sql").read_text())
+            for migration in sorted((Path(__file__).parent / "migrations").glob("*.sql")):
+                connection.executescript(migration.read_text())
         path.chmod(0o600)
 
     def connect(self):
@@ -79,7 +81,7 @@ class Store:
         connection = self.connect()
         try:
             connection.execute("BEGIN IMMEDIATE" if write else "BEGIN")
-            yield UnitOfWork(connection)
+            yield UnitOfWork(connection, write=write)
             connection.commit()
         except BaseException:
             connection.rollback()

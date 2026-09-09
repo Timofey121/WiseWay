@@ -76,6 +76,26 @@ class Indexer:
         try:
             found = [(path, meta) for path, meta in self._walk(root) if not _technical_name(path)]
             fingerprint = digest({"files": found, **config})
+            with self.ctx.store.transaction() as tx:
+                previous = tx.get("index", root["root_id"])
+                if previous and previous.get("_fingerprint_digest") == fingerprint:
+                    previous["freshness"] = {
+                        "indexed_at": previous["root"]["indexed_at"],
+                        "last_successful_sync_at": utc(now),
+                        "status": "CURRENT",
+                    }
+                    tx.put("index", root["root_id"], previous)
+                    tx.put(
+                        "index_progress",
+                        root["root_id"],
+                        {
+                            "root_id": root["root_id"],
+                            "status": "COMPLETE",
+                            "count": len(previous["items"]),
+                            "checkpoint": None,
+                        },
+                    )
+                    return
             verified_prefix = [[path, meta] for path, meta in found[: len(staged_found)]]
             if verified_prefix != staged_found or len(staged_found) != len(staged_items):
                 staged_found, staged_items = [], []
@@ -174,6 +194,7 @@ class Indexer:
                 (_strip_base(path, root["_base"]), meta) for path, meta in self.ctx.fs.walk(root["_base"])
             ]
         except Exception:
+            self._incoming_progress(root, "FAILED")
             return
         seen: set[str] = set()
         with self.ctx.store.transaction() as tx:
@@ -274,3 +295,18 @@ class Indexer:
                             }
                         )
                     tx.put("queue", prior["item_id"], prior)
+        self._incoming_progress(root, "COMPLETE", len(found))
+
+    def _incoming_progress(self, root: dict[str, Any], status: str, count: int | None = None) -> None:
+        with self.ctx.store.transaction() as tx:
+            tx.put(
+                "index_progress",
+                f"incoming-{root['root_id']}",
+                {
+                    "root_id": root["root_id"],
+                    "status": status,
+                    "count": count,
+                    "checkpoint": None,
+                    "source_kind": "INCOMING",
+                },
+            )

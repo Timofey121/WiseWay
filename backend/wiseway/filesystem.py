@@ -32,6 +32,14 @@ class SourceChanged(FilesystemError):
     pass
 
 
+class PostRenameChanged(FilesystemError):
+    """A native rename returned, but its target cannot prove source identity.
+
+    Callers must treat this as an ambiguous post-move outcome, rather than a
+    pre-move source change that can safely be skipped or retried.
+    """
+
+
 class TargetExists(FilesystemError):
     pass
 
@@ -165,7 +173,7 @@ class SafeFilesystem:
                 source_stat = self._lstat_regular(source_parent, source_leaf)
                 self._require_identity(source_stat, expected)
                 self._rename_exclusive(source_parent, source_leaf, target_parent, target_leaf)
-                self._fsync_after_rename(target_parent, target_leaf, source_parent)
+                self._verify_and_fsync_after_rename(target_parent, target_leaf, source_parent, expected)
             finally:
                 os.close(target_parent)
         finally:
@@ -181,10 +189,12 @@ class SafeFilesystem:
             if stat_module.S_ISREG(item_stat.st_mode):
                 found.append((path, self._identity(item_stat)))
             elif stat_module.S_ISDIR(item_stat.st_mode):
-                try:
-                    child_fd = os.open(name, _DIRECTORY_FLAGS | _NOFOLLOW, dir_fd=directory_fd)
-                except (FileNotFoundError, OSError):
-                    continue
+                # A directory that was readable at lstat time but cannot be
+                # opened now makes this walk incomplete.  Propagate that
+                # failure so callers retain the last complete generation.
+                # Symlinks never reach this branch because lstat above does
+                # not classify them as directories.
+                child_fd = os.open(name, _DIRECTORY_FLAGS | _NOFOLLOW, dir_fd=directory_fd)
                 try:
                     self._walk_fd(child_fd, path, found)
                 finally:
@@ -244,6 +254,30 @@ class SafeFilesystem:
         if not isinstance(expected, dict) or self._identity(item_stat) != expected:
             raise SourceChanged("source identity changed since planning")
 
+    def _verify_and_fsync_after_rename(
+        self, target_parent_fd: int, target: str, source_parent_fd: int, expected: dict[str, int]
+    ) -> None:
+        """Verify the moved descriptor, then flush it and both directories."""
+        try:
+            file_fd = os.open(target, _FILE_FLAGS | _NOFOLLOW, dir_fd=target_parent_fd)
+        except OSError as error:
+            if error.errno in (errno.ENOENT, errno.ELOOP):
+                raise PostRenameChanged("target changed after native rename") from None
+            raise
+        try:
+            item_stat = os.fstat(file_fd)
+            if not stat_module.S_ISREG(item_stat.st_mode) or self._identity(item_stat) != expected:
+                raise PostRenameChanged("target identity changed after native rename")
+            os.fsync(file_fd)
+        finally:
+            os.close(file_fd)
+        for descriptor in {target_parent_fd, source_parent_fd}:
+            try:
+                os.fsync(descriptor)
+            except OSError as error:
+                if error.errno not in (errno.EINVAL, errno.ENOTSUP):
+                    raise
+
     @staticmethod
     def _rename_exclusive(source_fd: int, source: str, target_fd: int, target: str) -> None:
         libc = ctypes.CDLL(None, use_errno=True)
@@ -266,21 +300,6 @@ class SafeFilesystem:
         if error_number in (errno.ENOENT, errno.ELOOP):
             raise SourceChanged("source changed before move")
         raise OSError(error_number, os.strerror(error_number))
-
-    @staticmethod
-    def _fsync_after_rename(target_parent_fd: int, target: str, source_parent_fd: int) -> None:
-        """Flush file and directory metadata; APFS may not support directory fsync."""
-        file_fd = os.open(target, _FILE_FLAGS | _NOFOLLOW, dir_fd=target_parent_fd)
-        try:
-            os.fsync(file_fd)
-        finally:
-            os.close(file_fd)
-        for descriptor in {target_parent_fd, source_parent_fd}:
-            try:
-                os.fsync(descriptor)
-            except OSError as error:
-                if error.errno not in (errno.EINVAL, errno.ENOTSUP):
-                    raise
 
     def _require_open(self) -> int:
         if self._root_fd is None:

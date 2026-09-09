@@ -1,12 +1,46 @@
 """Shared transactional application context and immutable pagination."""
 
 from pathlib import PurePosixPath
+from collections import OrderedDict
 import json
+from threading import Lock
 
 from .common import ApiError, digest, public, uid, utc
 from .filesystem import SafeFilesystem
 from .rules import plan_rows
 from .storage import Store
+
+PAGE_CURSOR_SECONDS = 86400
+MAX_PAGE_SNAPSHOTS_PER_USER = 64
+MAX_PAGE_SNAPSHOT_BYTES = 8 * 1024 * 1024
+MAX_PAGE_SNAPSHOT_TOTAL_BYTES_PER_USER = 32 * 1024 * 1024
+
+
+def _snapshot_bytes(payload):
+    return len(json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode())
+
+
+def _delete_expired_pages(tx, now):
+    tx.connection.execute(
+        "DELETE FROM objects "
+        "WHERE kind IN ('cursor', 'page_snapshot') "
+        "AND COALESCE(CAST(json_extract(body, '$.expires') AS REAL), 0) <= ?",
+        (now,),
+    )
+
+
+def _check_page_quota(tx, owner, payload_bytes):
+    count, total_bytes = tx.connection.execute(
+        "SELECT COUNT(*), COALESCE(SUM(CAST(json_extract(body, '$.payload_bytes') AS INTEGER)), 0) "
+        "FROM objects WHERE kind='page_snapshot' AND json_extract(body, '$.owner')=?",
+        (owner,),
+    ).fetchone()
+    if (
+        payload_bytes > MAX_PAGE_SNAPSHOT_BYTES
+        or count >= MAX_PAGE_SNAPSHOTS_PER_USER
+        or total_bytes + payload_bytes > MAX_PAGE_SNAPSHOT_TOTAL_BYTES_PER_USER
+    ):
+        raise ApiError("RATE_LIMITED", "Превышен лимит активных снимков страниц.", 429, retryable=True)
 
 
 class Context:
@@ -16,6 +50,8 @@ class Context:
         if not marker.is_file() or json.loads(marker.read_text()).get("synthetic") is not True:
             raise RuntimeError("Initialize the synthetic sandbox before starting Wise Way")
         self.store = Store(settings.database)
+        self._index_cache = OrderedDict()
+        self._index_cache_lock = Lock()
         self.fs = SafeFilesystem(settings.sandbox_dir)
         if not self.fs.probe():
             self.fs.close()
@@ -23,6 +59,30 @@ class Context:
 
     def close(self):
         self.fs.close()
+
+    def read_index(self, tx, root_id):
+        """Read-only published rows; exact stored JSON binds the cache to this transaction.
+
+        Callers must not mutate these rows. Keep at most four bounded documents;
+        large installations still work without caching their oversized index.
+        """
+        row = tx.connection.execute(
+            "SELECT body FROM objects WHERE kind='index' AND id=?", (root_id,)
+        ).fetchone()
+        if row is None:
+            return None
+        encoded = row[0]
+        if len(encoded) > 8 * 1024 * 1024:
+            return json.loads(encoded)
+        with self._index_cache_lock:
+            saved = self._index_cache.get(root_id)
+            if saved is None or saved[0] != encoded:
+                saved = (encoded, json.loads(encoded))
+                self._index_cache[root_id] = saved
+            self._index_cache.move_to_end(root_id)
+            while len(self._index_cache) > 4:
+                self._index_cache.popitem(last=False)
+            return saved[1]
 
     def location(self, tx, root_id, relative):
         root = tx.get("root", root_id)
@@ -92,9 +152,17 @@ class Context:
         )
 
     def page(self, tx, scope, actor, query, payload, field="items", cursor=None, limit=100):
+        if not tx.write:
+            # The payload belongs to the caller's consistent read snapshot.
+            # Persist only pagination metadata in a separate, short write unit.
+            with self.store.transaction() as writer:
+                return self.page(writer, scope, actor, query, payload, field, cursor, limit)
         filters = {k: v for k, v in query.items() if k not in ("cursor", "limit")}
         signature = digest(filters)
         offset = 0
+        now = self.settings.clock()
+        expires = now + PAGE_CURSOR_SECONDS
+        snapshot = None
         if cursor:
             saved = tx.get("cursor", cursor)
             if (
@@ -102,23 +170,62 @@ class Context:
                 or saved["scope"] != scope
                 or saved["owner"] != actor["user_id"]
                 or saved["query"] != signature
-                or saved["expires"] <= self.settings.clock()
+                or saved["expires"] <= now
             ):
                 raise ApiError("VALIDATION_ERROR", "Недействительный курсор страницы.", 422)
-            payload, offset = saved["payload"], saved["offset"]
+            offset, expires = saved["offset"], saved["expires"]
+            if "payload" in saved:  # Cursor created before compact snapshots were introduced.
+                snapshot_id = "page-snapshot-legacy-" + digest(cursor)[:32]
+                snapshot = tx.get("page_snapshot", snapshot_id)
+                if snapshot is None:
+                    payload = saved["payload"]
+            else:
+                snapshot = tx.get("page_snapshot", saved.get("snapshot_id"))
+                if (
+                    snapshot is None
+                    or snapshot["scope"] != scope
+                    or snapshot["owner"] != actor["user_id"]
+                    or snapshot["query"] != signature
+                    or snapshot["expires"] <= now
+                ):
+                    raise ApiError("VALIDATION_ERROR", "Недействительный курсор страницы.", 422)
+            if snapshot is not None:
+                payload = snapshot["payload"]
+        else:
+            _delete_expired_pages(tx, now)
         result = {**payload, field: payload[field][offset : offset + limit], "next_cursor": None}
         if offset + limit < len(payload[field]):
-            key = uid("cursor")
-            tx.put(
-                "cursor",
-                key,
-                {
+            if snapshot is None:
+                payload_bytes = _snapshot_bytes(payload)
+                _check_page_quota(tx, actor["user_id"], payload_bytes)
+                snapshot = {
+                    "snapshot_id": (
+                        "page-snapshot-legacy-" + digest(cursor)[:32] if cursor else uid("page-snapshot")
+                    ),
                     "scope": scope,
                     "owner": actor["user_id"],
                     "query": signature,
                     "payload": payload,
-                    "offset": offset + limit,
-                    "expires": self.settings.clock() + 86400,
+                    "payload_bytes": payload_bytes,
+                    "expires": expires,
+                }
+                tx.put("page_snapshot", snapshot["snapshot_id"], snapshot)
+            next_offset = offset + limit
+            key = (
+                "cursor-"
+                + digest([scope, actor["user_id"], signature, snapshot["snapshot_id"], next_offset])[:32]
+            )
+            tx.put(
+                "cursor",
+                key,
+                {
+                    "cursor_id": key,
+                    "scope": scope,
+                    "owner": actor["user_id"],
+                    "query": signature,
+                    "snapshot_id": snapshot["snapshot_id"],
+                    "offset": next_offset,
+                    "expires": expires,
                 },
             )
             result["next_cursor"] = key

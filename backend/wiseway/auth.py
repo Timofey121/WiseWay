@@ -61,7 +61,7 @@ class Auth:
 
     def authenticate(self, token):
         now = self.settings.clock()
-        with self.store.transaction() as tx:
+        with self.store.transaction(write=False) as tx:
             session = tx.get("session", token_key(token or ""))
             user = tx.get("user", session["user_id"]) if session else None
             if (
@@ -86,7 +86,12 @@ class Auth:
 
     def csrf(self, headers, session):
         self.origin(headers)
-        if not hmac.compare_digest(headers.get("x-csrf-token", ""), session["csrf"]):
+        supplied = headers.get("x-csrf-token", "")
+        if (
+            not isinstance(supplied, str)
+            or not supplied.isascii()
+            or not hmac.compare_digest(supplied, session["csrf"])
+        ):
             raise ApiError("CSRF_FAILED", "Недействительный CSRF-токен.", 403)
 
     def logout(self, token, actor, request_id):

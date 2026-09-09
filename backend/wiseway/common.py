@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
+from urllib.parse import urlparse
 
 
 def uid(prefix="id"):
@@ -96,14 +97,35 @@ class Settings:
             raise ValueError("Demo result limit must be 10 or 100")
         if not self.allowed_origins or "*" in self.allowed_origins:
             raise ValueError("Explicit UI origins required")
-        if not self.secure_cookie:
-            from urllib.parse import urlparse
-
-            if any(
-                urlparse(origin).hostname not in ("localhost", "127.0.0.1", "::1")
-                for origin in self.allowed_origins
+        for origin in self.allowed_origins:
+            if not isinstance(origin, str):
+                raise ValueError("Origins must be absolute HTTP(S) origins")
+            parsed = urlparse(origin)
+            try:
+                port = parsed.port
+            except ValueError as error:
+                raise ValueError("Origins must be absolute HTTP(S) origins") from error
+            if (
+                any(character.isspace() for character in origin)
+                or "\\" in origin
+                or parsed.scheme not in {"http", "https"}
+                or not parsed.netloc
+                or not parsed.hostname
+                or parsed.username is not None
+                or parsed.password is not None
+                or parsed.path
+                or parsed.params
+                or parsed.query
+                or parsed.fragment
+                or port is None
+                and parsed.netloc.endswith(":")
             ):
+                raise ValueError("Origins must be absolute HTTP(S) origins")
+            loopback = parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+            if not self.secure_cookie and not loopback:
                 raise ValueError("HTTP demo is loopback-only; use secure cookies for HTTPS origins")
+            if parsed.scheme == "http" and not loopback:
+                raise ValueError("HTTP demo is loopback-only; use HTTPS for non-loopback origins")
 
     @property
     def database(self):

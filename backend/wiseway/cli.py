@@ -41,6 +41,10 @@ def main(argv=None):
         print("Synthetic demo initialized: worker-atlas, worker-nova, admin.")
         return
     if args.command == "serve":
+        if not settings.secure_cookie and args.host not in {"localhost", "127.0.0.1", "::1"}:
+            parser.error(
+                "Insecure HTTP serving is limited to a loopback host; enable secure cookies for HTTPS"
+            )
         import uvicorn
 
         uvicorn.run(
@@ -58,6 +62,7 @@ def main(argv=None):
     try:
         if args.command in ("worker", "tick"):
             from .indexer import Indexer
+            from .maintenance import Maintenance
             from .quarantine import QuarantineService
             from .worker import Worker
 
@@ -66,6 +71,7 @@ def main(argv=None):
                 worker.run_once()
                 QuarantineService(ctx).reconcile()
                 indexer.scan()
+                Maintenance(ctx).run_once()
                 if args.command == "tick":
                     break
                 time.sleep(settings.readiness_seconds)

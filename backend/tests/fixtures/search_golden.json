@@ -1,0 +1,75 @@
+{
+  "items": [
+    {"id": "a-main", "path": "Archive/Atlas/Orion_2031/Reports/Atlas-Main-v2.pdf"},
+    {"id": "a-maintenance", "path": "Archive/Atlas/Orion_2031/Reports/Atlas-Maintenance.pdf"},
+    {"id": "a-reverse", "path": "Archive/Atlas/Orion_2031/Reports/Main-Atlas.pdf"},
+    {"id": "a-inserted", "path": "Archive/Atlas/Orion_2031/Reports/Atlas-urgent-Main.pdf"},
+    {"id": "a-case", "path": "Archive/atlas/Orion_2031/Reports/ATLAS-main.PDF"},
+    {"id": "cyr-2", "path": "Archive/Atlas/Orion_2031/Reports/Отчёт-2.pdf"},
+    {"id": "cyr-10", "path": "Archive/Atlas/Orion_2031/Reports/Отчёт-10.pdf"},
+    {"id": "numeric", "path": "Archive/Atlas/Orion_2031/Reports/Report.v2.pdf"},
+    {"id": "metadata", "path": "Archive/Atlas/Orion_2031/Reports/metadata.pdf"},
+    {"id": "rank-filename", "path": "Archive/Atlas/Orion_2031/Reports/Atlas.pdf"},
+    {"id": "rank-project", "path": "Archive/Atlas/Orion_2031/Reports/Plain.pdf"},
+    {"id": "nova", "path": "Archive/Nova/Polaris_2030/North/Reports/Nova-10.pdf"}
+  ],
+  "cases": [
+    {
+      "id": "and_prefix_casefold",
+      "items": ["a-main", "a-case", "nova"],
+      "query": "ATLAS rep",
+      "expected_ids": ["a-main", "a-case"]
+    },
+    {
+      "id": "quoted_adjacent_only",
+      "items": ["a-main", "a-maintenance", "a-reverse", "a-inserted", "a-case"],
+      "query": "\"atlas main\"",
+      "expected_ids": ["a-main", "a-case"]
+    },
+    {
+      "id": "mixed_quoted_and_prefix",
+      "items": ["a-main", "a-case", "a-inserted"],
+      "query": "\"atlas main\" v",
+      "expected_ids": ["a-main"]
+    },
+    {
+      "id": "internal_substring_and_fuzzy_are_not_matches",
+      "items": ["a-main", "a-maintenance", "metadata"],
+      "queries": ["tain", "atlaas", "data"],
+      "expected_ids": []
+    },
+    {
+      "id": "numeric_and_separator_boundaries",
+      "items": ["numeric"],
+      "query": "report 2",
+      "expected_ids": ["numeric"]
+    },
+    {
+      "id": "natural_cyrillic_tie_order",
+      "items": ["cyr-10", "cyr-2"],
+      "query": "отчёт",
+      "expected_ids": ["cyr-2", "cyr-10"]
+    },
+    {
+      "id": "ranking_field_weights",
+      "items": ["rank-project", "rank-filename"],
+      "query": "atlas orion",
+      "expected_ids": ["rank-filename", "rank-project"]
+    },
+    {
+      "id": "repeated_terms_do_not_inflate_score",
+      "items": ["a-maintenance", "a-main"],
+      "query": "atlas atlas",
+      "expected_ids": ["a-main", "a-maintenance"]
+    },
+    {
+      "id": "raw_marker_chain_is_case_distinct",
+      "items": ["a-main", "a-case", "nova"],
+      "marker_source": "a-main",
+      "marker_indexes": [0, 1],
+      "query": "",
+      "sort": {"field": "PATH", "direction": "ASC"},
+      "expected_ids": ["a-main"]
+    }
+  ]
+}

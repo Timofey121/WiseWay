@@ -69,3 +69,19 @@ def test_failed_login_audit_is_schema_valid_without_credentials(account):
     assert contract.validator(contract.spec["components"]["schemas"]["AuditEvent"]).is_valid(event)
     assert "private-input" not in str(event)
     assert "missing" not in str(event)
+
+
+def test_absolute_expiry_cannot_be_extended_by_continuous_activity(account):
+    settings, store, auth, now = account
+    _, token = auth.login({"login": "worker", "password": "test-only-password"}, "request-1", "loopback")
+    created = now[0]
+    for elapsed in range(1700, settings.absolute_session_seconds, 1700):
+        now[0] = created + elapsed
+        auth.authenticate(token)
+        auth.touch(token)
+    now[0] = created + settings.absolute_session_seconds - 1
+    auth.authenticate(token)
+    now[0] += 1
+    with pytest.raises(ApiError) as rejected:
+        auth.authenticate(token)
+    assert rejected.value.code == "UNAUTHENTICATED"
