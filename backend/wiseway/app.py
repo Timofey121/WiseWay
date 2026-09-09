@@ -249,7 +249,14 @@ def dispatch(ctx, tx, name, actor, params, body, request_id):
     if name == "getAppConfig":
         return 200, ctx.settings.app_config()
     if name == "listRoots":
-        return 200, {"items": [index["root"] for index in tx.list("index")]}
+        return 200, {
+            "items": [
+                public(json.loads(row[0]))
+                for row in tx.connection.execute(
+                    "SELECT json_extract(body, '$.root') FROM objects WHERE kind='index' ORDER BY id"
+                )
+            ]
+        }
     if name == "listCompanies":
         return 200, {"items": [public(c) for c in tx.list("company")]}
     if name in ("searchFiles", "getSearchFacet"):
@@ -263,12 +270,32 @@ def dispatch(ctx, tx, name, actor, params, body, request_id):
             raise ApiError("ROOT_NOT_READY", "Корень ещё индексируется.", 409)
         if index.get("_unavailable"):
             raise ApiError("SEARCH_UNAVAILABLE", "Поиск временно недоступен.", 503, retryable=True)
-        prepared = ctx.prepared_search(index)
-        result = (
-            search(index["root"], index["items"], body, ctx.settings.result_limit, prepared=prepared)
-            if name == "searchFiles"
-            else facet(index["root"], index["items"], body, prepared=prepared)
-        )
+        if index.get("_storage") == "sqlite":
+            from .sqlite_search import SqlSearchIndex
+
+            generation = tx.connection.execute(
+                "SELECT root_id,state FROM search_generations WHERE generation_id=?",
+                (index.get("_generation"),),
+            ).fetchone()
+            if (
+                generation is None
+                or generation[0] != body["root_id"]
+                or generation[1] not in {"READY", "ACTIVE"}
+            ):
+                raise ApiError("SEARCH_UNAVAILABLE", "Поиск временно недоступен.", 503, retryable=True)
+            prepared = SqlSearchIndex(tx, index["_generation"])
+            result = (
+                prepared.search(index["root"], body, ctx.settings.result_limit)
+                if name == "searchFiles"
+                else prepared.facet(index["root"], body)
+            )
+        else:
+            prepared = ctx.prepared_search(index)
+            result = (
+                search(index["root"], index["items"], body, ctx.settings.result_limit, prepared=prepared)
+                if name == "searchFiles"
+                else facet(index["root"], index["items"], body, prepared=prepared)
+            )
         if name == "searchFiles" and "freshness" in index:
             result["freshness"] = index["freshness"]
         return 200, result

@@ -174,6 +174,7 @@ class Store:
         connection.execute("PRAGMA foreign_keys=ON")
         connection.execute("PRAGMA synchronous=FULL")
         connection.execute("PRAGMA busy_timeout=30000")
+        connection.execute("PRAGMA temp_store=FILE")
         return connection
 
     @contextmanager

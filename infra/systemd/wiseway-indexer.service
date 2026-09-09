@@ -1,0 +1,27 @@
+[Unit]
+Description=Wise Way archive indexer
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=wiseway
+Group=wiseway
+UMask=0077
+WorkingDirectory=/opt/wiseway
+EnvironmentFile=/etc/wiseway/wiseway.env
+ExecStart=/opt/wiseway/.venv/bin/wiseway index-archive --interval 60
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=120
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/wiseway /srv/wiseway/sandbox
+RestrictAddressFamilies=AF_UNIX
+LockPersonality=true
+MemoryDenyWriteExecute=true
+
+[Install]
+WantedBy=multi-user.target

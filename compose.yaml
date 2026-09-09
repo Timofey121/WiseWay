@@ -86,6 +86,12 @@ services:
       start_period: 60s
       retries: 3
 
+  indexer:
+    <<: *app
+    profiles: [archive]
+    network_mode: none
+    command: [index-archive, --interval, "60"]
+
   cli:
     <<: *app
     profiles: [tools]

@@ -32,6 +32,7 @@ def operator_status(ctx) -> dict:
     with ctx.store.transaction(write=False) as tx:
         return {
             "worker": tx.get("operator_state", "worker", {}),
+            "archive_indexer": tx.get("operator_state", "archive_indexer", {}),
             "index": [{key: row[key] for key in fields if key in row} for row in tx.list("index_progress")],
             "attempts": [
                 {"attempt_id": attempt["attempt_id"], "phase": attempt["phase"]}
@@ -51,6 +52,13 @@ def doctor(ctx) -> dict:
     with ctx.store.transaction(write=False) as tx:
         tx.connection.execute("SELECT 1").fetchone()
         worker = tx.get("operator_state", "worker", {})
+        archive = tx.get("operator_state", "archive_indexer", {})
+        uses_archive_indexer = (
+            tx.connection.execute(
+                "SELECT 1 FROM objects WHERE kind='root' AND json_extract(body, '$._index_storage')='sqlite' LIMIT 1"
+            ).fetchone()
+            is not None
+        )
         failed_indexes = [
             row["root_id"] for row in tx.list("index_progress") if row.get("status") == "FAILED"
         ]
@@ -65,10 +73,17 @@ def doctor(ctx) -> dict:
         reasons.append("worker_heartbeat_stale")
     if failed_indexes:
         reasons.append("index_failed")
+    if uses_archive_indexer:
+        completed_at = archive.get("last_completed_at")
+        if not completed_at:
+            reasons.append("archive_indexer_heartbeat_missing")
+        elif ctx.settings.clock() - timestamp(completed_at) > max_age:
+            reasons.append("archive_indexer_heartbeat_stale")
     return {
         "database": {"ok": True},
         "filesystem": {"atomic_no_replace": ctx.fs.probe()},
         "worker": worker,
+        "archive_indexer": archive,
         "ready": not reasons,
         "reasons": reasons,
         "failed_index_roots": failed_indexes,

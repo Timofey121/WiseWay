@@ -226,7 +226,26 @@ def main(image):
         assert finished["outcomes"][0]["state"] == "MANUAL_REVIEW"
         assert finished["status"] == "COMPLETED_WITH_ISSUES"
         original_dictionary = api(f"/dictionaries/{dictionary['dictionary_id']}")
-        dc("restart", "api", "worker")
+        # Exercise the opt-in persistent archive and its independent process
+        # before restart/backup; the ordinary worker still handles incoming.
+        dc("stop", "worker")
+        dc("run", "--rm", "-T", "--no-deps", "cli", "index-archive")
+        dc("--profile", "archive", "up", "-d", "worker", "indexer")
+        persistent_search = api(
+            "/search",
+            {
+                "request_state_id": "persistent-smoke",
+                "root_id": root["root_id"],
+                "schema_set_version": root["schema_set_version"],
+                "selected_marker_ids": [],
+                "query_text": "atlas",
+                "sort": {"field": "RELEVANCE", "direction": "DESC"},
+                "facet_prefix": "",
+            },
+        )
+        assert persistent_search["total"] == search["total"]
+        assert persistent_search["items"] == search["items"]
+        dc("restart", "api", "worker", "indexer")
         dc("up", "-d", "--wait", "--wait-timeout", "150", "api", "worker", timeout=210)
         assert api(f"/dictionaries/{dictionary['dictionary_id']}") == original_dictionary
 
@@ -238,15 +257,28 @@ def main(image):
         assert refused.returncode != 0 and "does not already exist" in refused.stderr
         # A failed copy must resume the previously running application too.
         assert api(f"/dictionaries/{dictionary['dictionary_id']}") == original_dictionary
-        dc("stop", "api", "worker")
+        dc("stop", "api", "worker", "indexer")
         run([*ops, "restore", "snapshot", "restored"], environment=environment)
         environment["WISEWAY_STATE_PATH"] = str(task / "backups/restored/data")
         environment["WISEWAY_SANDBOX_PATH"] = str(task / "backups/restored/sandbox")
-        dc("up", "-d", "--force-recreate", "--wait", "--wait-timeout", "150", "api", "worker", timeout=210)
+        dc(
+            "--profile",
+            "archive",
+            "up",
+            "-d",
+            "--force-recreate",
+            "--wait",
+            "--wait-timeout",
+            "150",
+            "api",
+            "worker",
+            "indexer",
+            timeout=210,
+        )
         assert api(f"/dictionaries/{dictionary['dictionary_id']}") == original_dictionary
         assert api(f"/sorting/batches/{batch['batch_id']}")["outcomes"] == finished["outcomes"]
         assert json.loads(dc("run", "--rm", "-T", "--no-deps", "cli", "doctor"))["ready"] is True
-        for service in ("api", "worker", "gateway"):
+        for service in ("api", "worker", "gateway", "indexer"):
             details = json.loads(run(["docker", "inspect", dc("ps", "-q", service).strip()]))[0]
             assert details["Config"]["User"] == "10001:10001"
             assert details["HostConfig"]["ReadonlyRootfs"] is True

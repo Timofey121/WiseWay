@@ -19,6 +19,10 @@ def main(argv=None):
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8000)
     commands.add_parser("worker", help="Run indexing and durable file jobs")
+    archive = commands.add_parser("index-archive", help="Build SQLite archive indexes in a separate process")
+    archive.add_argument(
+        "--interval", type=int, default=0, help="Repeat after this many seconds; 0 runs once"
+    )
     commands.add_parser("tick", help="Run one worker/index observation")
     commands.add_parser("status", help="Show outstanding recovery and index progress")
     commands.add_parser("doctor", help="Check local database, filesystem, and worker state")
@@ -35,6 +39,8 @@ def main(argv=None):
 
     register_commands(commands)
     args = parser.parse_args(argv)
+    if args.command == "index-archive" and args.interval != 0 and args.interval < 30:
+        parser.error("Archive scan interval must be 0 or at least 30 seconds")
     settings = Settings()
     if args.command == "init-demo":
         from .seed import initialize
@@ -99,10 +105,20 @@ def main(argv=None):
         # Let that step complete, then stop before beginning another one.
         stop_requested.set()
 
-    if args.command == "worker":
+    if args.command in {"worker", "index-archive"}:
         for signal_name in (signal.SIGINT, signal.SIGTERM):
             previous_signal_handlers[signal_name] = signal.signal(signal_name, request_stop)
     try:
+        if args.command == "index-archive":
+            from .archive_worker import run
+
+            try:
+                successful = run(ctx, interval=args.interval, stop=stop_requested)
+            except RuntimeError as error:
+                parser.error(str(error))
+            if not successful:
+                raise SystemExit(1)
+            return
         from .accounts import execute as execute_account_command
 
         if execute_account_command(args, ctx, parser):

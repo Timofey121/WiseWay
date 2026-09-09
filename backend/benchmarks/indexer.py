@@ -12,6 +12,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import resource
 import sys
 import tempfile
 import time
@@ -30,6 +31,7 @@ from wiseway.services import Context  # noqa: E402
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--files", type=int, default=9_500, help="synthetic archive files to add")
+    parser.add_argument("--sqlite", action="store_true", help="Use the streaming persistent archive indexer")
     options = parser.parse_args()
     if options.files < 1:
         parser.error("--files must be positive")
@@ -45,10 +47,26 @@ def main() -> None:
         context = Context(settings)
         try:
             started = time.perf_counter()
-            Indexer(context).scan()
+            if options.sqlite:
+                from wiseway.large_indexer import LargeIndexer
+
+                with context.store.transaction(write=False) as tx:
+                    root = tx.require("root", "archive-root")
+                LargeIndexer(context).scan(root)
+            else:
+                Indexer(context).scan()
             elapsed = time.perf_counter() - started
             with context.store.transaction(write=False) as tx:
-                indexed = len(tx.require("index", "archive-root")["items"])
+                published = tx.require("index", "archive-root")
+                indexed = (
+                    tx.connection.execute(
+                        "SELECT COUNT(*) FROM search_items WHERE generation_id=?", (published["_generation"],)
+                    ).fetchone()[0]
+                    if published.get("_storage") == "sqlite"
+                    else len(published["items"])
+                )
+                assert tx.require("index_progress", "archive-root")["status"] == "COMPLETE"
+                assert indexed == options.files + 5, (indexed, options.files + 5)
         finally:
             context.close()
 
@@ -59,6 +77,12 @@ def main() -> None:
                 "ordinary_files_added": options.files,
                 "archive_indexed_items": indexed,
                 "elapsed_seconds": round(elapsed, 3),
+                "storage": "sqlite" if options.sqlite else "json",
+                "peak_rss_mib": round(
+                    resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                    / (1024**2 if sys.platform == "darwin" else 1024),
+                    2,
+                ),
                 "runtime": {"python": platform.python_version(), "platform": platform.platform()},
             },
             indent=2,

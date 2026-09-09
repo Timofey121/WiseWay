@@ -135,9 +135,9 @@ def _load_chunks(tx, root_id: str, run_id: str, count: int) -> tuple[list, list,
 
 
 @contextmanager
-def _index_lock(ctx):
+def _index_lock(ctx, filename="indexer.lock"):
     """One scanner owns a checkpoint run; an overlapping worker skips its cycle."""
-    path = ctx.settings.data_dir / "indexer.lock"
+    path = ctx.settings.data_dir / filename
     descriptor = os.open(
         path,
         os.O_RDWR | os.O_CREAT | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0),
@@ -169,7 +169,7 @@ class Indexer:
             with self.ctx.store.transaction() as tx:
                 roots = tx.list("root")
             for root in roots:
-                if root.get("_searchable"):
+                if root.get("_searchable") and root.get("_index_storage") != "sqlite":
                     self._scan_search_root(root)
                 if root.get("_incoming_company"):
                     self._scan_incoming_root(root)
@@ -287,6 +287,13 @@ class Indexer:
         return staged_found, staged_items, run_id, chunk_count
 
     def _scan_search_root(self, root: dict[str, Any]) -> None:
+        with self.ctx.store.transaction(write=False) as tx:
+            stored = tx.connection.execute(
+                "SELECT json_extract(body, '$._storage') FROM objects WHERE kind='index' AND id=?",
+                (root["root_id"],),
+            ).fetchone()
+        if stored and stored[0] == "sqlite":
+            return
         now = self.ctx.settings.clock()
         started = time.monotonic()
         config = {

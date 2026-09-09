@@ -8,6 +8,7 @@ import json
 import sqlite3
 import subprocess
 import sys
+import fcntl
 from pathlib import Path
 
 import pytest
@@ -129,6 +130,54 @@ def test_wal_snapshot_validation_does_not_mutate_snapshot(configured, tmp_path: 
     before = _snapshot_hashes(snapshot)
     snapshot_tool.restore_snapshot(snapshot, tmp_path / "restored")
     assert _snapshot_hashes(snapshot) == before
+
+
+def test_create_rejects_active_archive_indexer_lock(configured, tmp_path: Path, snapshot_tool) -> None:
+    lock_path = configured.data_dir / "archive-indexer.lock"
+    descriptor = lock_path.open("a+b")
+    try:
+        fcntl.flock(descriptor.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        destination = tmp_path / "blocked-snapshot"
+        with pytest.raises(snapshot_tool.SnapshotError, match="Archive indexer is running"):
+            snapshot_tool.create_snapshot(configured.data_dir, configured.sandbox_dir, destination)
+        assert not destination.exists()
+    finally:
+        fcntl.flock(descriptor.fileno(), fcntl.LOCK_UN)
+        descriptor.close()
+
+
+def test_snapshot_restores_complete_large_sqlite_generation(
+    configured, tmp_path: Path, snapshot_tool
+) -> None:
+    from wiseway.large_indexer import LargeIndexer
+    from wiseway.services import Context
+
+    context = Context(configured)
+    try:
+        with context.store.transaction(write=False) as tx:
+            root = tx.require("root", "archive-root")
+        LargeIndexer(context).scan(root)
+    finally:
+        context.close()
+    snapshot = tmp_path / "large-snapshot"
+    restored = tmp_path / "large-restored"
+    snapshot_tool.create_snapshot(configured.data_dir, configured.sandbox_dir, snapshot)
+    snapshot_tool.restore_snapshot(snapshot, restored)
+    with sqlite3.connect(restored / "data" / "wiseway.sqlite3") as connection:
+        raw = connection.execute(
+            "SELECT body FROM objects WHERE kind='index' AND id='archive-root'"
+        ).fetchone()[0]
+        index = json.loads(raw)
+        assert index["_storage"] == "sqlite"
+        assert connection.execute(
+            "SELECT state FROM search_generations WHERE generation_id=?", (index["_generation"],)
+        ).fetchone() == ("ACTIVE",)
+        assert (
+            connection.execute(
+                "SELECT COUNT(*) FROM search_items WHERE generation_id=?", (index["_generation"],)
+            ).fetchone()[0]
+            > 0
+        )
 
 
 def test_existing_destinations_are_never_overwritten(configured, tmp_path: Path, snapshot_tool) -> None:

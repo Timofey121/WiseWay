@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Create and restore verified cold copies of a stopped Wise Way installation.
 
-The caller must stop the API and worker before invoking this tool.  The tool
-checks the copied SQLite state, but cannot establish that another process is
-not changing the source while it is running.
+The caller must stop the API and regular worker before invoking this tool.  It
+also acquires the archive-indexer lock for the complete copy, so an active
+separate archive indexer is rejected rather than copied concurrently.
 """
 
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import json
 import os
@@ -16,6 +17,7 @@ import sqlite3
 import stat
 import sys
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -93,6 +95,30 @@ def _fsync_directory(path: Path) -> None:
         _fail(f"Cannot fsync directory {path}: {error}")
     try:
         os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+@contextmanager
+def _archive_indexer_lock(data_dir: Path):
+    """Exclude the separate archive-index writer for the whole cold copy."""
+    path = data_dir / "archive-indexer.lock"
+    try:
+        descriptor = os.open(
+            path, os.O_RDWR | os.O_CREAT | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0), 0o600
+        )
+    except OSError as error:
+        _fail(f"Cannot inspect archive indexer lock: {error}")
+    try:
+        os.fchmod(descriptor, 0o600)
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            _fail("Archive indexer is running; stop it before creating a snapshot.")
+        try:
+            yield
+        finally:
+            fcntl.flock(descriptor, fcntl.LOCK_UN)
     finally:
         os.close(descriptor)
 
@@ -406,32 +432,37 @@ def create_snapshot(data_dir: str | Path, sandbox_dir: str | Path, destination: 
     sandbox = _require_directory(Path(sandbox_dir), "sandbox directory")
     if data == sandbox or _is_within(data, sandbox) or _is_within(sandbox, data):
         _fail("Data and sandbox directories must be separate.")
-    _validate_database(data)
-    _validate_marker(sandbox)
-    data_files, data_directories = _scan_tree(data, "data")
-    sandbox_files, sandbox_directories = _scan_tree(sandbox, "sandbox")
-    if len(data_files) + len(data_directories) + len(sandbox_files) + len(sandbox_directories) > MAX_NODES:
-        _fail(f"Snapshot contains more than {MAX_NODES} filesystem nodes.")
-    target = _new_destination(Path(destination), (data, sandbox))
-    try:
-        data_target = target / "data"
-        sandbox_target = target / "sandbox"
-        _private_directory(data_target)
-        _private_directory(sandbox_target)
-        entries = _copy_tree(data_files, data_target, "data", data_directories) + _copy_tree(
-            sandbox_files, sandbox_target, "sandbox", sandbox_directories
-        )
-        entries.sort(key=lambda entry: entry["path"])
-        _validate_database(data_target)
-        _validate_marker(sandbox_target)
-        _write_manifest(
-            target / "manifest.json", _manifest_bytes(entries, sorted(data_directories + sandbox_directories))
-        )
-        _fsync_directory(target)
-        return target
-    except BaseException:
-        _remove_created_tree(target)
-        raise
+    with _archive_indexer_lock(data):
+        _validate_database(data)
+        _validate_marker(sandbox)
+        data_files, data_directories = _scan_tree(data, "data")
+        sandbox_files, sandbox_directories = _scan_tree(sandbox, "sandbox")
+        if (
+            len(data_files) + len(data_directories) + len(sandbox_files) + len(sandbox_directories)
+            > MAX_NODES
+        ):
+            _fail(f"Snapshot contains more than {MAX_NODES} filesystem nodes.")
+        target = _new_destination(Path(destination), (data, sandbox))
+        try:
+            data_target = target / "data"
+            sandbox_target = target / "sandbox"
+            _private_directory(data_target)
+            _private_directory(sandbox_target)
+            entries = _copy_tree(data_files, data_target, "data", data_directories) + _copy_tree(
+                sandbox_files, sandbox_target, "sandbox", sandbox_directories
+            )
+            entries.sort(key=lambda entry: entry["path"])
+            _validate_database(data_target)
+            _validate_marker(sandbox_target)
+            _write_manifest(
+                target / "manifest.json",
+                _manifest_bytes(entries, sorted(data_directories + sandbox_directories)),
+            )
+            _fsync_directory(target)
+            return target
+        except BaseException:
+            _remove_created_tree(target)
+            raise
 
 
 def _valid_manifest_path(path: Any, *, allow_root: bool) -> str | None:

@@ -39,7 +39,7 @@ def main():
             parser.error("Another operation is running for this installation")
         dc("config", "--quiet")
         running = set(dc("ps", "--services", "--status", "running", capture=True).stdout.split())
-        active = running & {"api", "worker"}
+        active = running & {"api", "worker", "indexer"}
         if args.command == "check":
             if not {"api", "worker", "gateway"} <= running:
                 parser.error("API, worker and gateway must all be running")
@@ -48,7 +48,7 @@ def main():
         elif args.command == "snapshot":
             # Remember exactly what was running; never unexpectedly start a stopped service.
             try:
-                dc("stop", "api", "worker")
+                dc("stop", "api", "worker", *(["indexer"] if "indexer" in active else []))
                 dc(
                     "run",
                     "--rm",
@@ -71,7 +71,9 @@ def main():
                     dc("up", "-d", "--wait", "--wait-timeout", "150", *sorted(active))
         elif args.command == "restore":
             if active:
-                parser.error("Stop API and worker before restoring; existing data will remain untouched")
+                parser.error(
+                    "Stop API, worker and archive indexer before restoring; existing data will remain untouched"
+                )
             dc(
                 "run",
                 "--rm",

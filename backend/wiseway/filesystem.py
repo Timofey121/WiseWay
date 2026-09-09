@@ -13,6 +13,7 @@ import os
 import stat as stat_module
 import sys
 import time
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
@@ -194,6 +195,28 @@ class SafeFilesystem:
             os.close(start_fd)
         return sorted(found)
 
+    def iter_files(
+        self, relative_dir: str, *, limits: ScanLimits | None = None
+    ) -> Iterator[tuple[str, dict[str, int]]]:
+        """Yield regular files below a directory without accumulating the tree.
+
+        The yielded order is the filesystem's directory-entry order.  Callers
+        that need a stable global order must arrange it in durable storage;
+        sorting here would defeat the bounded-memory property.  As with
+        :meth:`walk`, links are never followed and every observed directory
+        entry consumes the configured resource budget.
+        """
+        parts = self._parts(relative_dir, allow_empty=True)
+        start_fd = self._open_directory(parts)
+        prefix = "/".join(parts)
+        budget = _ScanBudget(
+            limits or self.scan_limits, time.monotonic() + (limits or self.scan_limits).max_seconds
+        )
+        try:
+            yield from self._iter_files_fd(start_fd, prefix, budget, 0)
+        finally:
+            os.close(start_fd)
+
     def rename_no_replace(self, source: str, target: str, expected: dict[str, int]) -> None:
         """Atomically rename a verified regular file, refusing an occupied target."""
         if not self.probe():
@@ -237,6 +260,39 @@ class SafeFilesystem:
                     finally:
                         os.close(child_fd)
                 # Links and special files are ignored, but still consume budget.
+
+    def _iter_files_fd(self, directory_fd, prefix, budget, depth) -> Iterator[tuple[str, dict[str, int]]]:
+        """Descriptor-owned streaming counterpart to :meth:`_walk_fd`."""
+        # Keep scandir's lifetime separate from the caller-owned descriptor.
+        # CPython currently leaves an integer fd passed to scandir open, while
+        # another implementation may close it; always close our duplicate and
+        # tolerate the latter behavior.
+        scan_fd = os.dup(directory_fd)
+        try:
+            with os.scandir(scan_fd) as entries:
+                for entry in entries:
+                    path = f"{prefix}/{entry.name}" if prefix else entry.name
+                    budget.observe(path, depth)
+                    try:
+                        item_stat = os.stat(entry.name, dir_fd=directory_fd, follow_symlinks=False)
+                    except FileNotFoundError:
+                        continue
+                    if stat_module.S_ISREG(item_stat.st_mode):
+                        yield path, self._identity(item_stat)
+                    elif stat_module.S_ISDIR(item_stat.st_mode):
+                        if depth >= budget.limits.max_depth:
+                            raise ScanLimitExceeded("filesystem scan depth exceeded")
+                        child_fd = os.open(entry.name, _DIRECTORY_FLAGS | _NOFOLLOW, dir_fd=directory_fd)
+                        try:
+                            yield from self._iter_files_fd(child_fd, path, budget, depth + 1)
+                        finally:
+                            os.close(child_fd)
+        finally:
+            try:
+                os.close(scan_fd)
+            except OSError as error:
+                if error.errno != errno.EBADF:
+                    raise
 
     def _open_parent(self, relative: str) -> tuple[int, str]:
         parts = self._parts(relative)
