@@ -1,0 +1,96 @@
+name: Publish container image
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Exact package version from pyproject.toml, for example 0.1.0.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-container-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    uses: ./.github/workflows/verify.yml
+    with:
+      run_container_smoke: true
+    permissions:
+      contents: read
+
+  publish:
+    name: Publish version and commit image references
+    needs: verify
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image.outputs.name }}
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Validate requested release version
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          case "$RELEASE_TAG" in
+            ''|*[!0-9A-Za-z._-]*) echo "Invalid release tag" >&2; exit 1 ;;
+          esac
+          package_version="$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          test "$RELEASE_TAG" = "$package_version" || {
+            echo "Release tag must equal pyproject.toml version" >&2
+            exit 1
+          }
+      - name: Normalize GHCR image name
+        id: image
+        run: echo "name=ghcr.io/$(printf '%s' "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+      - name: Authenticate to GitHub Container Registry
+        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: Refuse to overwrite an existing release reference
+        env:
+          IMAGE: ${{ steps.image.outputs.name }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          for reference in "$IMAGE:$RELEASE_TAG" "$IMAGE:sha-$GITHUB_SHA"; do
+            set +e
+            inspection="$(docker buildx imagetools inspect "$reference" 2>&1)"
+            inspection_status=$?
+            set -e
+            if [ "$inspection_status" -eq 0 ]; then
+              echo "Refusing to overwrite existing image reference: $reference" >&2
+              exit 1
+            fi
+            if printf '%s' "$inspection" | grep -Eiq 'manifest unknown|name unknown|manifest.*not found|404 not found'; then
+              continue
+            fi
+            printf '%s\n' "$inspection" >&2
+            echo "Could not prove that release reference is absent: $reference" >&2
+            exit 1
+          done
+      - name: Build and publish version and commit references
+        id: build
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.image.outputs.name }}:${{ inputs.tag }}
+            ${{ steps.image.outputs.name }}:sha-${{ github.sha }}
+          provenance: mode=max
+          sbom: true
+      - name: Report immutable digest
+        run: |
+          echo "Published ${{ steps.image.outputs.name }}@${{ steps.build.outputs.digest }}"

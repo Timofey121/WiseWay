@@ -1,0 +1,10 @@
+[Unit]
+Description=Hourly Wise Way coordinated snapshot
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+Unit=wiseway-compose-backup.service
+
+[Install]
+WantedBy=timers.target

@@ -49,6 +49,8 @@ paths:
           headers:
             X-Request-ID: { $ref: '#/components/headers/RequestId' }
             Cache-Control: { $ref: '#/components/headers/NoStore' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
         '500': { $ref: '#/components/responses/InternalError' }
       security: [ ]

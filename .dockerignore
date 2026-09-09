@@ -1,0 +1,15 @@
+**
+!pyproject.toml
+!uv.lock
+!backend/
+!backend/wiseway/
+!backend/wiseway/**
+!contracts/
+!contracts/openapi/
+!contracts/openapi/wiseway-v1.yaml
+!infra/
+!infra/scripts/
+!infra/scripts/healthcheck.py
+!infra/scripts/snapshot.py
+**/__pycache__/
+**/*.pyc

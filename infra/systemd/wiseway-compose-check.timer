@@ -1,0 +1,10 @@
+[Unit]
+Description=Check Wise Way container readiness every minute
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+Unit=wiseway-compose-check.service
+
+[Install]
+WantedBy=timers.target

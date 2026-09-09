@@ -1,0 +1,182 @@
+name: Verify
+
+on:
+  workflow_call:
+    inputs:
+      run_container_smoke:
+        description: Run the Linux Docker Compose end-to-end smoke test.
+        required: false
+        default: true
+        type: boolean
+  workflow_dispatch:
+    inputs:
+      run_container_smoke:
+        description: Run the Linux Docker Compose end-to-end smoke test.
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Python checks, tests, and package
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          version: "0.11.2"
+          enable-cache: true
+          python-version: "3.11"
+      - name: Install locked environment
+        run: uv sync --frozen --all-groups
+      - name: Lint
+        run: uv run ruff check backend infra/scripts
+      - name: Check formatting
+        run: uv run ruff format --check backend infra/scripts
+      - name: Test with JUnit report
+        run: uv run pytest -q --junitxml=test-results/junit.xml
+      - name: Build wheel and source distribution
+        run: uv build --out-dir dist
+      - name: Upload JUnit report
+        if: always()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.2
+        with:
+          name: junit-${{ github.run_id }}-${{ github.run_attempt }}
+          path: test-results/junit.xml
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Upload packages
+        if: success()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.2
+        with:
+          name: wiseway-packages-${{ github.sha }}-${{ github.run_attempt }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
+
+  dependency-audit:
+    name: Dependency audit
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          version: "0.11.2"
+          enable-cache: true
+          python-version: "3.11"
+      - name: Export the locked dependency set
+        run: uv export --frozen --all-groups --no-emit-project --format requirements-txt --output-file requirements-ci.txt
+      - name: Audit published advisories
+        run: uv tool run --from pip-audit==2.9.0 pip-audit --strict -r requirements-ci.txt
+      - name: Export the pinned build backend requirement
+        run: |
+          python - <<'PY'
+          import tomllib
+
+          with open("pyproject.toml", "rb") as handle:
+              requires = tomllib.load(handle)["build-system"]["requires"]
+          if len(requires) != 1 or not requires[0].startswith("setuptools=="):
+              raise SystemExit("build-system.requires must contain one pinned setuptools requirement")
+          with open("build-requirements-ci.txt", "w", encoding="utf-8") as handle:
+              handle.write(requires[0] + "\n")
+          PY
+      - name: Audit the pinned build backend
+        run: uv tool run --from pip-audit==2.9.0 pip-audit --strict -r build-requirements-ci.txt
+
+  application-container-security:
+    name: Application container vulnerability gate
+    needs: [quality, dependency-audit]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Build local image for the vulnerability scan
+        run: docker build --tag wiseway:ci .
+      - name: Fail on HIGH or CRITICAL image vulnerabilities
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: wiseway:ci
+          format: json
+          output: trivy-image-report.json
+          exit-code: "1"
+          severity: HIGH,CRITICAL
+          vuln-type: os,library
+          ignore-unfixed: "false"
+          version: v0.74.0
+      - name: Upload Trivy report
+        if: always()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.2
+        with:
+          name: trivy-image-${{ github.run_id }}-${{ github.run_attempt }}
+          path: trivy-image-report.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  gateway-container-security:
+    name: Gateway container vulnerability gate
+    needs: [quality, dependency-audit]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Resolve the declared gateway image without starting Compose
+        id: gateway
+        run: |
+          gateway_image="$(docker compose --env-file infra/env/compose.env.example config --format json | python -c 'import json, sys; print(json.load(sys.stdin)["services"]["gateway"]["image"])')"
+          test -n "$gateway_image"
+          echo "image=$gateway_image" >> "$GITHUB_OUTPUT"
+      - name: Fail on HIGH or CRITICAL gateway vulnerabilities
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ steps.gateway.outputs.image }}
+          format: json
+          output: trivy-gateway-report.json
+          exit-code: "1"
+          severity: HIGH,CRITICAL
+          vuln-type: os,library
+          ignore-unfixed: "false"
+          version: v0.74.0
+      - name: Upload gateway Trivy report
+        if: always()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.2
+        with:
+          name: trivy-gateway-${{ github.run_id }}-${{ github.run_attempt }}
+          path: trivy-gateway-report.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  container-smoke:
+    name: Docker Compose smoke test
+    needs: [quality, dependency-audit, application-container-security, gateway-container-security]
+    if: ${{ inputs.run_container_smoke }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Build local test image
+        run: docker build --tag wiseway:ci .
+      - name: Run isolated Compose smoke test
+        run: |
+          set -o pipefail
+          bash infra/scripts/container-smoke.sh wiseway:ci 2>&1 | tee smoke.log
+      - name: Upload smoke log
+        if: always()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.2
+        with:
+          name: container-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+          path: smoke.log
+          if-no-files-found: warn
+          retention-days: 14

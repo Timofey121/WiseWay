@@ -1,0 +1,101 @@
+name: wiseway
+
+x-app: &app
+  image: ${WISEWAY_IMAGE:-wiseway:local}
+  user: "10001:10001"
+  read_only: true
+  init: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  restart: unless-stopped
+  stop_grace_period: 120s
+  pids_limit: 128
+  mem_limit: 1g
+  cpus: 2.0
+  tmpfs: ["/tmp:rw,noexec,nosuid,size=64m,mode=1777"]
+  environment:
+    WISEWAY_DATA_DIR: /var/lib/wiseway/state
+    WISEWAY_SANDBOX_DIR: /srv/wiseway/sandbox
+    WISEWAY_ORIGINS: ${WISEWAY_ORIGINS:?Set the exact HTTPS frontend origin}
+    WISEWAY_SECURE_COOKIE: "true"
+    WISEWAY_TRUST_PROXY_HEADERS: "true"
+    WISEWAY_WORKER_STALE_SECONDS: ${WISEWAY_WORKER_STALE_SECONDS:-900}
+  volumes:
+    - &state
+      type: bind
+      source: ${WISEWAY_STATE_PATH:?Set a private state directory}
+      target: /var/lib/wiseway/state
+      bind: {create_host_path: false}
+    - &sandbox
+      type: bind
+      source: ${WISEWAY_SANDBOX_PATH:?Set a private synthetic sandbox directory}
+      target: /srv/wiseway/sandbox
+      bind: {create_host_path: false}
+  logging:
+    driver: local
+    options: {max-size: "10m", max-file: "5"}
+
+services:
+  gateway:
+    image: nginxinc/nginx-unprivileged:stable-alpine@sha256:442753882674b49ae2c1de83ed67896131c0777f56df5005e356e62bc3f7e7ce
+    user: "10001:10001"
+    entrypoint: [nginx, -g, "daemon off;"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+    stop_grace_period: 30s
+    mem_limit: 128m
+    cpus: 0.5
+    pids_limit: 64
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=32m,mode=1777"]
+    ports:
+      - "${WISEWAY_BIND_ADDRESS:-0.0.0.0}:${WISEWAY_HTTPS_PORT:-443}:8443"
+    volumes:
+      - ./infra/nginx/container.conf:/etc/nginx/nginx.conf:ro
+      - type: bind
+        source: ${WISEWAY_TLS_PATH:?Set a directory containing fullchain.pem and privkey.pem}
+        target: /etc/nginx/tls
+        read_only: true
+        bind: {create_host_path: false}
+    logging:
+      driver: local
+      options: {max-size: "10m", max-file: "5"}
+
+  api:
+    <<: *app
+    network_mode: service:gateway
+    depends_on:
+      gateway: {condition: service_started}
+    command: [serve, --host, "127.0.0.1", --port, "8000"]
+    healthcheck:
+      test: [CMD, python, /usr/local/lib/wiseway/healthcheck.py, api]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+
+  worker:
+    <<: *app
+    network_mode: none
+    command: [worker]
+    healthcheck:
+      test: [CMD, python, /usr/local/lib/wiseway/healthcheck.py, worker]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+
+  cli:
+    <<: *app
+    profiles: [tools]
+    network_mode: none
+    restart: "no"
+    command: [status]
+    volumes:
+      - *state
+      - *sandbox
+      - type: bind
+        source: ${WISEWAY_BACKUP_PATH:?Set a private backup directory}
+        target: /backups
+        bind: {create_host_path: false}

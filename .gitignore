@@ -27,3 +27,10 @@ dist/
 htmlcov/
 /backups/
 /test-results/
+/.wiseway-ops.lock
+/requirements-ci.txt
+/build-requirements-ci.txt
+/trivy-image-report.json
+/trivy-gateway-report.json
+*.pem
+*.key

@@ -1,0 +1,11 @@
+[Unit]
+Description=Wise Way container readiness check
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/wiseway
+ExecStart=/usr/bin/python3 /opt/wiseway/infra/scripts/compose_ops.py check
+TimeoutStartSec=60
+NoNewPrivileges=true

@@ -31,14 +31,14 @@ API: `http://127.0.0.1:8000/api/v1`, проверка: `GET /health`. `init-demo
 
 Обход ограничен 10 000 записями каталога, глубиной 64 и суммарными 8 MiB имён путей; между записями проверяется бюджет 30 секунд. Превышение отмечается как FAILED в `status`, предыдущий полный индекс сохраняется. При утрате базы повторный `init-demo` отклоняется; существующие файлы и пароли не пересоздаются.
 
-Настройки: `WISEWAY_DATA_DIR`, `WISEWAY_SANDBOX_DIR`, `WISEWAY_ORIGINS` (точные origins через запятую), `WISEWAY_SECURE_COOKIE`. По умолчанию разрешены localhost:8000, 127.0.0.1:8000 и localhost:5173. Для одного Linux-сервера до 50 пользователей есть [инструкция эксплуатации](docs/operations.md) и шаблоны systemd/nginx в `infra/`.
+Настройки: `WISEWAY_DATA_DIR`, `WISEWAY_SANDBOX_DIR`, `WISEWAY_ORIGINS` (точные origins через запятую), `WISEWAY_SECURE_COOKIE`. По умолчанию разрешены localhost:8000, 127.0.0.1:8000 и localhost:5173. Для одного Linux-сервера до 50 пользователей подготовлены [Docker Compose, CI/CD и восстановление](docs/deployment.md). Альтернативный запуск без контейнеров: [systemd/nginx](docs/operations.md).
 
 ## Проверка и обслуживание
 
 ```sh
 uv run pytest -q
-uv run ruff check backend
-uv run ruff format --check backend
+uv run ruff check backend infra/scripts
+uv run ruff format --check backend infra/scripts
 uv run python backend/benchmarks/search.py
 uv run python backend/benchmarks/stress.py
 uv run python backend/benchmarks/stress.py --accounts 50 --rounds 10 --varied-queries
@@ -46,10 +46,10 @@ uv run python backend/benchmarks/stress.py --accounts 50 --rounds 10 --varied-qu
 
 Тесты используют временные песочницы и проверяют реальные SQLite/файловые операции, контракт, конкурирующие партии, сбои и перезапуск API/worker. Процессному тесту нужен доступ к loopback-порту. Benchmark выводит параметры корпуса и p95; это локальное измерение, не оценка промышленного архива.
 
-Сопоставление с исходными сценариями: [матрица приёмки](backend/ACCEPTANCE.md). CI запускает тесты и сборку на Linux. Стресс-скрипт проверяет содержимое ответов и возвращает ненулевой код при ошибках или нарушении SLA. Датированные локальные отчёты и профили в Git не включаются.
+Сопоставление с исходными сценариями: [матрица приёмки](backend/ACCEPTANCE.md). CI проверяет Python, сборку, зависимости и Docker-образ, затем запускает TLS Compose smoke с полным восстановлением. Ручной release публикует проверенный образ в GHCR; сервер обновляется отдельно по digest. Стресс-скрипт проверяет содержимое ответов и возвращает ненулевой код при ошибках или нарушении SLA. Локальные отчёты и профили в Git не включаются.
 
 `uv run wiseway doctor` проверяет базу, файловый адаптер, индексы и heartbeat worker. Команды `status`, `recover`, `backup`, `restore-check` и управление аккаунтами описаны в инструкции эксплуатации.
 
-Файловые операции требуют одной файловой системы, принадлежащей демосервису песочницы и атомарного rename без перезаписи. Реализованы адаптеры macOS/Linux; фактический прогон выполнен на macOS. Windows, Docker и совместная приёмка с frontend пока не проверены. Гонки с посторонним процессом, меняющим sandbox, переводятся в RECOVERY_REQUIRED; исключительное владение каталогами обязательно. Копирования с последующим удалением и перезаписи файлов нет.
+Файловые операции требуют одной файловой системы, принадлежащей демосервису песочницы и атомарного rename без перезаписи. Проверены macOS и Linux ARM64 в Docker; целевой сервер, Windows и совместная приёмка с frontend ещё не проверены. Гонки с посторонним процессом, меняющим sandbox, переводятся в RECOVERY_REQUIRED; исключительное владение каталогами обязательно. Копирования с последующим удалением и перезаписи файлов нет.
 
 Разработка backend ведётся в `backend-mvp`; после проверки ветка целиком объединяется с `main`.

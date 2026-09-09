@@ -3,8 +3,9 @@
 import argparse
 import getpass
 import json
+import signal
 import sys
-import time
+from threading import Event
 
 from .common import Settings
 
@@ -90,6 +91,17 @@ def main(argv=None):
     from .services import Context
 
     ctx = Context(settings)
+    stop_requested = Event()
+    previous_signal_handlers = {}
+
+    def request_stop(_signum, _frame):
+        # A worker may be between its durable SQLite and filesystem steps.
+        # Let that step complete, then stop before beginning another one.
+        stop_requested.set()
+
+    if args.command == "worker":
+        for signal_name in (signal.SIGINT, signal.SIGTERM):
+            previous_signal_handlers[signal_name] = signal.signal(signal_name, request_stop)
     try:
         from .accounts import execute as execute_account_command
 
@@ -102,17 +114,25 @@ def main(argv=None):
             from .worker import Worker
 
             worker, indexer = Worker(ctx), Indexer(ctx)
-            while True:
+            while not stop_requested.is_set():
                 worker.run_once()
+                if stop_requested.is_set():
+                    break
                 QuarantineService(ctx).reconcile()
+                if stop_requested.is_set():
+                    break
                 indexer.scan()
+                if stop_requested.is_set():
+                    break
                 Maintenance(ctx).run_once()
+                if stop_requested.is_set():
+                    break
                 from .operations import record_worker_heartbeat
 
                 record_worker_heartbeat(ctx)
                 if args.command == "tick":
                     break
-                time.sleep(settings.readiness_seconds)
+                stop_requested.wait(settings.readiness_seconds)
         elif args.command == "status":
             from .operations import operator_status
 
@@ -120,7 +140,10 @@ def main(argv=None):
         elif args.command == "doctor":
             from .operations import doctor
 
-            print(json.dumps(doctor(ctx), ensure_ascii=False, indent=2))
+            result = doctor(ctx)
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+            if not result["ready"]:
+                raise SystemExit(1)
         elif args.command == "recover":
             from .worker import Worker
 
@@ -131,6 +154,8 @@ def main(argv=None):
     except KeyboardInterrupt:
         pass
     finally:
+        for signal_name, previous_handler in previous_signal_handlers.items():
+            signal.signal(signal_name, previous_handler)
         ctx.close()
 
 
