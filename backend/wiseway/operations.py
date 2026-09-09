@@ -150,7 +150,8 @@ def _database_identity(connection: sqlite3.Connection) -> dict:
     if migrations is None or migrations[0] is None or bootstrap is None:
         raise OperationError("database is not a Wise Way initialized state")
     try:
-        complete = json.loads(bootstrap[0]).get("complete") is True
+        state = json.loads(bootstrap[0])
+        complete = isinstance(state, dict) and state.get("complete") is True
     except (TypeError, ValueError):
         complete = False
     if not complete:
@@ -193,16 +194,16 @@ def backup_database(settings, destination: Path | str) -> dict:
     if metadata_path.exists() or metadata_path.is_symlink():
         raise OperationError("backup metadata destination already exists")
     integrity, identity = _copy_database(_resolved(settings.database), target)
-    metadata = {
-        "format": "wiseway-sqlite-backup-v1",
-        "created_at": utc(),
-        "integrity_check": integrity,
-        "size_bytes": target.stat().st_size,
-        "sha256": _sha256(target),
-        **identity,
-    }
     metadata_created = False
     try:
+        metadata = {
+            "format": "wiseway-sqlite-backup-v1",
+            "created_at": utc(),
+            "integrity_check": integrity,
+            "size_bytes": target.stat().st_size,
+            "sha256": _sha256(target),
+            **identity,
+        }
         metadata_created = _reserve_new_file(metadata_path)
         metadata_path.write_text(
             json.dumps(metadata, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8"
@@ -240,12 +241,15 @@ def verify_restore(settings, backup: Path | str, destination: Path | str) -> dic
         raise OperationError("backup checksum does not match metadata")
     target = _new_database_target(settings, destination)
     integrity, identity = _copy_database(source, target)
-    if identity != {key: metadata.get(key) for key in identity}:
+    try:
+        if identity != {key: metadata.get(key) for key in identity}:
+            raise OperationError("backup database identity does not match metadata")
+        return {
+            "format": "wiseway-sqlite-restore-check-v1",
+            "integrity_check": integrity,
+            "size_bytes": target.stat().st_size,
+            "sha256": _sha256(target),
+        }
+    except BaseException:
         target.unlink(missing_ok=True)
-        raise OperationError("backup database identity does not match metadata")
-    return {
-        "format": "wiseway-sqlite-restore-check-v1",
-        "integrity_check": integrity,
-        "size_bytes": target.stat().st_size,
-        "sha256": _sha256(target),
-    }
+        raise

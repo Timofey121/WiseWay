@@ -145,7 +145,9 @@ class Worker:
                 saved["phase"] = "INTENT"
                 tx.put("attempt", attempt_id, saved)
             return self._execute_intent(attempt_id)
-        return self._recovery_required(attempt_id)
+        return self._recovery_required(
+            attempt_id, actual_location=attempt["item"]["source"] if source_present else None
+        )
 
     def _intent(self, attempt_id: str, target: dict, state: str, reason: str | None) -> None:
         with self.ctx.store.transaction() as tx:
@@ -208,7 +210,10 @@ class Worker:
             return self._recovery_required(attempt_id)
         target = self._quarantine_target(attempt)
         if self._exists(target):
-            return self._recovery_required(attempt_id)
+            # No quarantine rename was attempted, and the source identity was
+            # just proven.  Keep that observed placement for the operator;
+            # unlike a post-rename failure it is not ambiguous.
+            return self._recovery_required(attempt_id, actual_location=item["source"])
         # A quarantine move is a new filesystem intent.  It must be durable
         # before the filesystem call, otherwise a crash cannot be reconciled.
         with self.ctx.store.transaction() as tx:
@@ -297,7 +302,7 @@ class Worker:
                 reason_code=reason,
             )
 
-    def _recovery_required(self, attempt_id: str) -> bool:
+    def _recovery_required(self, attempt_id: str, *, actual_location: dict | None = None) -> bool:
         with self.ctx.store.transaction() as tx:
             attempt = tx.require("attempt", attempt_id)
             if attempt["phase"] == "DONE":
@@ -309,7 +314,7 @@ class Worker:
                 attempt["outcome"].update(
                     state="RECOVERY_REQUIRED",
                     reason_code="RECOVERY_REQUIRED",
-                    actual_location=None,
+                    actual_location=actual_location,
                     finished_at=None,
                 )
                 tx.put("attempt", attempt_id, attempt)

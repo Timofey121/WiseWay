@@ -65,6 +65,58 @@ def test_single_page_response_does_not_consume_snapshot_quota(tmp_path):
         ctx.close()
 
 
+def test_repeated_first_page_reuses_identical_snapshot_without_extending_expiry(tmp_path):
+    now = [2_000_000_000.0]
+    ctx = make_context(tmp_path, now)
+    owner = {"user_id": "user-a"}
+    payload = {"items": list(range(6)), "total": 6}
+    try:
+        first = page(ctx, owner, payload)
+        for _ in range(70):
+            now[0] += 1
+            assert page(ctx, owner, payload) == first
+        assert len(records(ctx, "page_snapshot")) == 1
+        assert len(records(ctx, "cursor")) == 1
+        assert records(ctx, "page_snapshot")[0]["expires"] == 2_000_000_000.0 + 86400
+        changed = page(ctx, owner, {"items": list(range(7)), "total": 7})
+        assert changed["next_cursor"] != first["next_cursor"]
+        old = page(ctx, owner, {}, cursor=first["next_cursor"])
+        assert old["total"] == 6 and old["items"] == [2, 3]
+        other = page(ctx, {"user_id": "user-b"}, payload)
+        assert other["next_cursor"] != first["next_cursor"]
+        with pytest.raises(ApiError):
+            page(ctx, {"user_id": "user-b"}, {}, cursor=first["next_cursor"])
+        now[0] = 2_000_000_000.0 + 86401
+        renewed = page(ctx, owner, payload)
+        assert renewed["next_cursor"] != first["next_cursor"]
+        with pytest.raises(ApiError):
+            page(ctx, owner, {}, cursor=first["next_cursor"])
+    finally:
+        ctx.close()
+
+
+def test_repeated_audit_refresh_does_not_exhaust_pagination_quota(client):
+    from test_api import login
+    from test_backend_auth_acceptance import _audit_request
+    from wiseway.audit import emit
+
+    login(client)
+    actor = client.get("/api/v1/session").json()["actor"]
+    ctx = client.app.state.ctx
+    with ctx.store.transaction() as tx:
+        for number in range(3):
+            emit(tx, actor, "DRAFT_SAVED", f"request-refresh-{number}", now=ctx.settings.clock())
+    query = _audit_request(limit=1)
+    first = client.post("/api/v1/audit/query", json=query)
+    assert first.status_code == 200 and first.json()["next_cursor"]
+    for _ in range(70):
+        refreshed = client.post("/api/v1/audit/query", json=query)
+        assert refreshed.status_code == 200, refreshed.text
+        assert refreshed.json() == first.json()
+    assert len(records(ctx, "page_snapshot")) == 1
+    assert len(records(ctx, "cursor")) == 1
+
+
 def test_single_read_page_does_not_acquire_writer(configured, monkeypatch):
     ctx = Context(configured)
     try:

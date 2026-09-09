@@ -4438,7 +4438,7 @@ components:
         - if:
             properties:
               action:
-                enum: [ LOGIN_SUCCEEDED, LOGIN_FAILED, LOGOUT, ACCOUNT_BLOCKED ]
+                enum: [ LOGIN_SUCCEEDED, LOGIN_FAILED, LOGOUT, ACCOUNT_BLOCKED, ACCOUNT_CREATED, ACCOUNT_UNBLOCKED, PASSWORD_CHANGED ]
           then:
             properties:
               category:
@@ -4450,7 +4450,7 @@ components:
         - if:
             properties:
               action:
-                enum: [ LOGIN_SUCCEEDED, LOGOUT, ACCOUNT_BLOCKED ]
+                enum: [ LOGIN_SUCCEEDED, LOGOUT, ACCOUNT_BLOCKED, ACCOUNT_CREATED, ACCOUNT_UNBLOCKED, PASSWORD_CHANGED ]
           then:
             properties:
               actor: { $ref: '#/components/schemas/Actor' }

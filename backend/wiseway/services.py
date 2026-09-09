@@ -5,7 +5,7 @@ from collections import OrderedDict
 import json
 from threading import Lock
 
-from .common import ApiError, digest, public, uid, utc
+from .common import ApiError, digest, public, utc
 from .filesystem import SafeFilesystem
 from .rules import plan_rows
 from .storage import Store
@@ -261,15 +261,17 @@ class Context:
                 payload = snapshot["payload"]
         else:
             _delete_expired_pages(tx, now)
+            snapshot_id = "page-snapshot-" + digest([scope, actor["user_id"], signature, field, payload])
+            snapshot = tx.get("page_snapshot", snapshot_id)
+            if snapshot is not None:
+                expires = snapshot["expires"]
         result = {**payload, field: payload[field][offset : offset + limit], "next_cursor": None}
         if offset + limit < len(payload[field]):
             if snapshot is None:
                 payload_bytes = _snapshot_bytes(payload)
                 _check_page_quota(tx, actor["user_id"], payload_bytes)
                 snapshot = {
-                    "snapshot_id": (
-                        "page-snapshot-legacy-" + digest(cursor)[:32] if cursor else uid("page-snapshot")
-                    ),
+                    "snapshot_id": ("page-snapshot-legacy-" + digest(cursor)[:32] if cursor else snapshot_id),
                     "scope": scope,
                     "owner": actor["user_id"],
                     "query": signature,
@@ -281,7 +283,9 @@ class Context:
             next_offset = offset + limit
             key = (
                 "cursor-"
-                + digest([scope, actor["user_id"], signature, snapshot["snapshot_id"], next_offset])[:32]
+                + digest([scope, actor["user_id"], signature, snapshot["snapshot_id"], next_offset, expires])[
+                    :32
+                ]
             )
             tx.put(
                 "cursor",
