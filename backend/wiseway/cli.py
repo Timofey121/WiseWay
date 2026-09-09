@@ -6,7 +6,7 @@ import json
 import sys
 import time
 
-from .common import Settings, uid
+from .common import Settings
 
 
 def main(argv=None):
@@ -20,11 +20,19 @@ def main(argv=None):
     commands.add_parser("worker", help="Run indexing and durable file jobs")
     commands.add_parser("tick", help="Run one worker/index observation")
     commands.add_parser("status", help="Show outstanding recovery and index progress")
+    commands.add_parser("doctor", help="Check local database, filesystem, and worker state")
+    backup = commands.add_parser("backup", help="Create a new integrity-checked SQLite backup")
+    backup.add_argument("destination")
+    restore_check = commands.add_parser(
+        "restore-check", help="Copy a backup into a new database and verify its integrity"
+    )
+    restore_check.add_argument("backup")
+    restore_check.add_argument("destination")
     recover = commands.add_parser("recover", help="Reconcile one attempt using observed file identity")
     recover.add_argument("attempt_id")
-    block = commands.add_parser("block-user", help="Block a local account and revoke sessions")
-    block.add_argument("login")
-    block.add_argument("--actor", required=True, help="Existing local ADMIN login for audit attribution")
+    from .accounts import register_commands
+
+    register_commands(commands)
     args = parser.parse_args(argv)
     settings = Settings()
     if args.command == "init-demo":
@@ -45,6 +53,8 @@ def main(argv=None):
             parser.error(
                 "Insecure HTTP serving is limited to a loopback host; enable secure cookies for HTTPS"
             )
+        if settings.trusted_proxy_headers and args.host not in {"localhost", "127.0.0.1", "::1"}:
+            parser.error("Trusted proxy headers require a loopback API binding")
         import uvicorn
 
         uvicorn.run(
@@ -53,13 +63,18 @@ def main(argv=None):
             host=args.host,
             port=args.port,
             access_log=False,
-            proxy_headers=False,
+            proxy_headers=settings.trusted_proxy_headers,
+            forwarded_allow_ips="127.0.0.1,::1" if settings.trusted_proxy_headers else None,
         )
         return
     from .services import Context
 
     ctx = Context(settings)
     try:
+        from .accounts import execute as execute_account_command
+
+        if execute_account_command(args, ctx, parser):
+            return
         if args.command in ("worker", "tick"):
             from .indexer import Indexer
             from .maintenance import Maintenance
@@ -72,30 +87,38 @@ def main(argv=None):
                 QuarantineService(ctx).reconcile()
                 indexer.scan()
                 Maintenance(ctx).run_once()
+                from .operations import record_worker_heartbeat
+
+                record_worker_heartbeat(ctx)
                 if args.command == "tick":
                     break
                 time.sleep(settings.readiness_seconds)
         elif args.command == "status":
-            with ctx.store.transaction(write=False) as tx:
+            from .operations import operator_status
+
+            print(json.dumps(operator_status(ctx), ensure_ascii=False, indent=2))
+        elif args.command == "doctor":
+            from .operations import doctor
+
+            print(json.dumps(doctor(ctx), ensure_ascii=False, indent=2))
+        elif args.command == "backup":
+            from .operations import OperationError, backup_database
+
+            try:
+                print(json.dumps(backup_database(settings, args.destination), ensure_ascii=False, indent=2))
+            except OperationError as error:
+                parser.error(str(error))
+        elif args.command == "restore-check":
+            from .operations import OperationError, verify_restore
+
+            try:
                 print(
                     json.dumps(
-                        {
-                            "index": tx.list("index_progress"),
-                            "attempts": [
-                                {"attempt_id": a["attempt_id"], "phase": a["phase"]}
-                                for a in tx.list("attempt")
-                                if a["phase"] == "RECOVERY_REQUIRED"
-                            ],
-                            "returns": [
-                                {"operation_id": o["operation_id"], "phase": o["phase"]}
-                                for o in tx.list("return")
-                                if o["phase"] in ("INTENT", "RECOVERY_REQUIRED")
-                            ],
-                        },
-                        ensure_ascii=False,
-                        indent=2,
+                        verify_restore(settings, args.backup, args.destination), ensure_ascii=False, indent=2
                     )
                 )
+            except OperationError as error:
+                parser.error(str(error))
         elif args.command == "recover":
             from .worker import Worker
 
@@ -103,36 +126,6 @@ def main(argv=None):
                 print("Placement remains unproven; no file action was repeated.", file=sys.stderr)
                 raise SystemExit(2)
             print("Observed file identity reconciled.")
-        elif args.command == "block-user":
-            from .audit import emit
-
-            with ctx.store.transaction() as tx:
-                users = tx.list("user")
-                administrator = next(
-                    (
-                        u
-                        for u in users
-                        if u["actor"]["login"] == args.actor
-                        and u["actor"]["role"] == "ADMIN"
-                        and not u["blocked"]
-                    ),
-                    None,
-                )
-                target = next((u for u in users if u["actor"]["login"] == args.login), None)
-                if not administrator or not target:
-                    parser.error("An active administrator and existing target account are required")
-                target["blocked"] = True
-                tx.put("user", target["actor"]["user_id"], target)
-                # Authentication checks the current account state on every request.
-                emit(
-                    tx,
-                    administrator["actor"],
-                    "ACCOUNT_BLOCKED",
-                    uid("request"),
-                    now=settings.clock(),
-                    comment="Blocked account: " + target["actor"]["login"],
-                )
-            print("Account blocked; its sessions no longer authorize requests.")
     except KeyboardInterrupt:
         pass
     finally:

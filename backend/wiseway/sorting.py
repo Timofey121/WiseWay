@@ -236,7 +236,7 @@ class SortingService:
             # A preview promises a snapshot of the exact source revisions.  Once
             # the selection itself has not expired, any changed dependency makes
             # that preview stale rather than a generic selection conflict.
-            if previewed and error.code == "SELECTION_CHANGED":
+            if previewed and error.code in {"SELECTION_CHANGED", "SELECTION_EXPIRED"}:
                 raise ApiError("STALE_PREVIEW", "Прогноз устарел; выполните его заново.", 409) from None
             raise
         if selection.get("_batch_id"):

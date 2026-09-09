@@ -3,7 +3,10 @@
 __pycache__/
 *.py[cod]
 .DS_Store
-docs
+/docs/team/
+/docs/local/
+/docs/reports/
+/backend/VALIDATION.md
 
 .venv/
 .wiseway/
@@ -12,3 +15,15 @@ docs
 *.egg-info/
 build/
 dist/
+.env
+.env.*
+!.env.example
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.prof
+*.log
+.coverage*
+htmlcov/
+/backups/
+/test-results/

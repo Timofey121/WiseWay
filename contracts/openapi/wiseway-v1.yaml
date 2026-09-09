@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Wise Way API
-  version: 1.0.0
+  version: 1.1.0
   summary: Иерархический поиск и ручная сортировка файлов Wise Way.
   description: |-
     Контракт синтетической демоверсии Wise Way.
@@ -4315,7 +4315,7 @@ components:
       type: string
       enum: [ DICTIONARY_CREATED, DRAFT_SAVED, DICTIONARY_SIMULATED, DICTIONARY_PUBLISHED, DICTIONARY_RESTORED, BATCH_ACCEPTED,
               FILE_ATTEMPT_STARTED, FILE_ATTEMPT_FINISHED, QUARANTINE_RETURNED, RECOVERY_REQUIRED, LOGIN_SUCCEEDED, LOGIN_FAILED,
-              LOGOUT, ACCOUNT_BLOCKED ]
+              LOGOUT, ACCOUNT_BLOCKED, ACCOUNT_CREATED, ACCOUNT_UNBLOCKED, PASSWORD_CHANGED ]
     AuditResult:
       type: string
       enum: [ SUCCESS, ISSUE, FAILED ]

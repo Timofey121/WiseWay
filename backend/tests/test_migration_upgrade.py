@@ -12,6 +12,6 @@ def test_existing_database_gets_pagination_indexes_without_losing_data(tmp_path)
     store = Store(database)
     with store.transaction(write=False) as tx:
         assert tx.require("user", "existing") == {"login": "preserved"}
-        assert tx.connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0] == 2
+        assert tx.connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0] == 3
         indexes = {row[1] for row in tx.connection.execute("PRAGMA index_list('objects')")}
         assert {"page_expiry", "page_owner_bytes"} <= indexes

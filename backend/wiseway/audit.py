@@ -1,6 +1,14 @@
 from .common import ApiError, timestamp, uid, utc
 
-SYSTEM_ACTIONS = {"LOGIN_SUCCEEDED", "LOGIN_FAILED", "LOGOUT", "ACCOUNT_BLOCKED"}
+SYSTEM_ACTIONS = {
+    "LOGIN_SUCCEEDED",
+    "LOGIN_FAILED",
+    "LOGOUT",
+    "ACCOUNT_BLOCKED",
+    "ACCOUNT_CREATED",
+    "ACCOUNT_UNBLOCKED",
+    "PASSWORD_CHANGED",
+}
 
 
 def emit(tx, actor, action, request_id, *, now=None, result="SUCCESS", **links):
@@ -35,17 +43,18 @@ def emit(tx, actor, action, request_id, *, now=None, result="SUCCESS", **links):
     return event
 
 
-def visible_events(tx, actor):
-    return [e for e in tx.events() if actor["role"] == "ADMIN" or e["category"] == "BUSINESS"]
+def visible_events(tx, actor, *, events=None):
+    source = tx.events() if events is None else events
+    return [e for e in source if actor["role"] == "ADMIN" or e["category"] == "BUSINESS"]
 
 
-def query_events(tx, actor, body):
+def query_events(tx, actor, body, *, events=None):
     start, end = timestamp(body["from"]), timestamp(body["to"])
     if start >= end:
         raise ApiError("VALIDATION_ERROR", "Начало периода должно предшествовать концу.", 422)
     if body["action"] in SYSTEM_ACTIONS and actor["role"] != "ADMIN":
         raise ApiError("FORBIDDEN", "Системный журнал доступен администратору.", 403)
-    events = visible_events(tx, actor)
+    events = visible_events(tx, actor) if events is None else events
     text = body["query_text"].casefold()
     return sorted(
         [

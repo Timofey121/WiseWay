@@ -14,6 +14,8 @@ PAGE_CURSOR_SECONDS = 86400
 MAX_PAGE_SNAPSHOTS_PER_USER = 64
 MAX_PAGE_SNAPSHOT_BYTES = 8 * 1024 * 1024
 MAX_PAGE_SNAPSHOT_TOTAL_BYTES_PER_USER = 32 * 1024 * 1024
+MAX_AUDIT_CACHE_EVENTS = 10_000
+MAX_AUDIT_CACHE_BYTES = 8 * 1024 * 1024
 
 
 def _snapshot_bytes(payload):
@@ -64,7 +66,10 @@ class Context:
             if not isinstance(bootstrap, dict) or bootstrap.get("complete") is not True:
                 raise RuntimeError("Initialize the synthetic sandbox before starting Wise Way")
         self._index_cache = OrderedDict()
+        self._prepared_indexes = OrderedDict()
         self._index_cache_lock = Lock()
+        self._audit_cache = None
+        self._audit_cache_lock = Lock()
         self.fs = SafeFilesystem(settings.sandbox_dir)
         if not self.fs.probe():
             self.fs.close()
@@ -73,29 +78,77 @@ class Context:
     def close(self):
         self.fs.close()
 
+    def prepared_search(self, index):
+        from .search_index import SearchIndex
+
+        items = index["items"]
+        if len(items) > 10_000:
+            return None
+        key = index["root"]["root_id"]
+        with self._index_cache_lock:
+            prepared = self._prepared_indexes.get(key)
+            if prepared is None or prepared.items is not items:
+                prepared = SearchIndex(items)
+                self._prepared_indexes[key] = prepared
+            self._prepared_indexes.move_to_end(key)
+            while len(self._prepared_indexes) > 4:
+                self._prepared_indexes.popitem(last=False)
+            return prepared
+
     def read_index(self, tx, root_id):
-        """Read-only published rows; exact stored JSON binds the cache to this transaction.
+        """Read-only published rows; a transactional revision binds the cached document.
 
         Callers must not mutate these rows. Keep at most four bounded documents;
         large installations still work without caching their oversized index.
         """
-        row = tx.connection.execute(
-            "SELECT body FROM objects WHERE kind='index' AND id=?", (root_id,)
+        revision = tx.connection.execute(
+            "SELECT revision FROM index_revisions WHERE root_id=?", (root_id,)
         ).fetchone()
-        if row is None:
-            return None
-        encoded = row[0]
-        if len(encoded) > 8 * 1024 * 1024:
-            return json.loads(encoded)
         with self._index_cache_lock:
             saved = self._index_cache.get(root_id)
-            if saved is None or saved[0] != encoded:
-                saved = (encoded, json.loads(encoded))
-                self._index_cache[root_id] = saved
+            if saved is not None and saved[0] == revision:
+                self._index_cache.move_to_end(root_id)
+                return saved[1]
+            row = tx.connection.execute(
+                "SELECT body FROM objects WHERE kind='index' AND id=?", (root_id,)
+            ).fetchone()
+            if row is None:
+                return None
+            encoded = row[0]
+            value = json.loads(encoded)
+            if len(encoded.encode("utf-8")) > 8 * 1024 * 1024:
+                return value
+            # Freshness-only publications can retain the prepared token index.
+            if saved is not None and saved[1]["items"] == value["items"]:
+                value["items"] = saved[1]["items"]
+            saved = (revision, value)
+            self._index_cache[root_id] = saved
             self._index_cache.move_to_end(root_id)
             while len(self._index_cache) > 4:
                 self._index_cache.popitem(last=False)
             return saved[1]
+
+    def read_audit(self, tx):
+        """Return this transaction's immutable audit snapshot, caching bounded revisions.
+
+        Audit rows are append-only, so the maximum sequence number identifies a
+        complete snapshot.  An older reader must still receive its own snapshot;
+        it must not replace a cache built by a newer transaction.
+        """
+        revision = tx.connection.execute("SELECT MAX(seq) FROM audit").fetchone()[0]
+        with self._audit_cache_lock:
+            cached = self._audit_cache
+            if cached is not None and cached[0] == revision:
+                return cached[1]
+            count, encoded_bytes = tx.connection.execute(
+                "SELECT COUNT(*), COALESCE(SUM(LENGTH(CAST(body AS BLOB))), 0) FROM audit"
+            ).fetchone()
+            events = tx.events()
+            if count > MAX_AUDIT_CACHE_EVENTS or encoded_bytes > MAX_AUDIT_CACHE_BYTES:
+                return events
+            if cached is None or cached[0] is None or (revision is not None and cached[0] <= revision):
+                self._audit_cache = (revision, events)
+            return events
 
     def location(self, tx, root_id, relative):
         root = tx.get("root", root_id)
@@ -165,6 +218,8 @@ class Context:
         )
 
     def page(self, tx, scope, actor, query, payload, field="items", cursor=None, limit=100):
+        if cursor is None and len(payload[field]) <= limit:
+            return {**payload, field: payload[field][:limit], "next_cursor": None}
         if not tx.write:
             # The payload belongs to the caller's consistent read snapshot.
             # Persist only pagination metadata in a separate, short write unit.

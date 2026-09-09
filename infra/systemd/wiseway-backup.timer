@@ -1,0 +1,10 @@
+[Unit]
+Description=Hourly Wise Way SQLite database backup
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+Unit=wiseway-backup.service
+
+[Install]
+WantedBy=timers.target

@@ -23,8 +23,8 @@
 | Q-017 · DICT-02/09/10 · A/E | — | — | NOT_RUN | NOT_RUN | Simulation покрыта частично; полный READY-набор/параметры не пройдены |
 | Q-018 · DICT-03/06/10/12 · M/A/E | — | NOT_RUN | NOT_RUN | NOT_RUN | Части conflict/stale: `test_dictionaries.py`; весь сценарий не пройден |
 | Q-019 · DICT-10 · M/A/E | — | NOT_RUN | NOT_RUN | NOT_RUN | Acknowledge покрыт частично; UI/границы комментария не единым прогоном |
-| Q-020 · DICT-01/11/12 · S/M/A/E | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | Нет полного publish/history/accepted-batch сценария |
-| Q-021 · DICT-11, FILE-09 · M/A/E | — | NOT_RUN | NOT_RUN | NOT_RUN | Части restore: `test_dictionaries.py`; restore→simulate→publish не пройден |
+| Q-020 · DICT-01/11/12 · S/M/A/E | NOT_RUN | NOT_RUN | PASS | NOT_RUN | `test_acceptance_completion.py`: immutable history и полный RuleSet; принятая партия сохраняет v1 при публикации v2, а непринятый preview v1 отклоняется `STALE_PREVIEW` |
+| Q-021 · DICT-11, FILE-09 · M/A/E | — | NOT_RUN | PASS | NOT_RUN | `test_acceptance_completion.py`: две публикации, фактическое перемещение, restore→simulate→publish старой версии с `restored_from_version_id`; ручная правка очищает происхождение без файлового undo |
 | Q-022 · QUEUE-01/02/04 · M/A/E | — | NOT_RUN | NOT_RUN | NOT_RUN | `test_indexer.py` покрывает готовность; UI/счётчики не единым сценарием |
 | Q-023 · QUEUE-03/05/10 · S/M/A/E | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | Preview покрыт частично; полный scope не пройден |
 | Q-024 · QUEUE-03 · A/E | — | — | PASS | NOT_RUN | `test_bulk_acceptance.py`: 120 файлов со всех страниц выбраны и реально обработаны; точные ID/outcomes, 0 и 1001 отклоняются без частичной записи/перемещения |
@@ -32,7 +32,7 @@
 | Q-026 · QUEUE-06, DICT-12 · M/A/E | — | NOT_RUN | NOT_RUN | NOT_RUN | Части stale: `test_final_review.py`; все зависимости/TTL не пройдены |
 | Q-027 · QUEUE-04/06, FILE-08 · S/M/A/E | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | Части DIRECT/source changed: `test_worker.py`; полный scope не пройден |
 | Q-028 · QUEUE-07/10, NFR-07 · A/E | — | — | NOT_RUN | NOT_RUN | `test_concurrent_batches.py` частичный: доказательство требуемого полного сценария не оформлено |
-| Q-029 · QUEUE-09, AUD-01/02 · S/A/E | NOT_RUN | — | NOT_RUN | NOT_RUN | Части: `test_processes.py`, `test_quarantine.py`; три операции/потеря ответа не пройдены |
+| Q-029 · QUEUE-09, AUD-01/02 · S/A/E | NOT_RUN | — | PASS | NOT_RUN | `test_acceptance_completion.py`: publish, batch и quarantine return повторяют сохранённый результат тем же ключом после TTL; изменённое тело даёт `IDEMPOTENCY_KEY_REUSED`, новый ключ после return — `INVALID_STATE` |
 | Q-030 · QUEUE-08, AUTH-03, NFR-07 · M/A/E | — | NOT_RUN | NOT_RUN | NOT_RUN | Части restart/logout: `test_processes.py`; UI polling/зритель не пройдены |
 | Q-031 · FILE-03, QUEUE-10 · A/E | — | — | NOT_RUN | NOT_RUN | Нет mixed-batch с повтором порядка ID |
 | Q-032 · FILE-01/02/08 · A/E | — | — | NOT_RUN | NOT_RUN | Части no-replace: `test_filesystem.py`; оба параметра не пройдены |
@@ -48,6 +48,6 @@
 | Q-042 · SRCH-15/16/18, NFR-01 · M/E | — | NOT_RUN | — | NOT_RUN | Только UI/браузер; backend неприменим |
 | Q-043 · AUTH-02, NFR-05; контракт 02 целиком · S/M/A | NOT_RUN | NOT_RUN | NOT_RUN | — | Части: `test_contract.py`, `test_api.py`; mock/полная контрактная приёмка не пройдены |
 | Q-044 · FILE-08, DICT-07, AUTH-02 · S/A/E | FAIL | — | FAIL | NOT_RUN | `test_filesystem_race_review.py`: post-check symlink подмена может переместить entry внутри открытого каталога; `RECOVERY_REQUIRED` защищает восстановление, но строгий инвариант «ссылки не допускаются» не доказан |
-| Q-045 · SRCH-23, NFR-02/03/04/06 · S/A/E | NOT_RUN | — | FAIL | NOT_RUN | Повторно 250/250 успешных HTTP; p95 типового поиска 2231,308 мс > 2000 мс. Оптимизация исключена пользователем, SLA остаётся незакрытым (VALIDATION.md) |
+| Q-045 · SRCH-23, NFR-02/03/04/06 · S/A/E | NOT_RUN | — | NOT_RUN | NOT_RUN | На macOS: 50 аккаунтов, 2500 запросов, 3200 добавленных файлов/1000 audit events; p95 типового поиска 411,577 мс, широкого 142,047 мс, ошибок нет. Linux и полный комплект совместной приёмки ещё не проверены; частичный замер не закрывает весь Q-ID |
 
 Новые backend-regression тесты не перенумеровывают исходные Q-ID: `test_pagination_retention.py`, `test_read_concurrency.py`, `test_response_validation_cache.py`, `test_auth_hardening.py`, `test_index_read_cache.py`, `test_index_failure_review.py`, `test_matching_review.py`, `test_review_regressions.py`.

@@ -65,6 +65,23 @@ def test_single_page_response_does_not_consume_snapshot_quota(tmp_path):
         ctx.close()
 
 
+def test_single_read_page_does_not_acquire_writer(configured, monkeypatch):
+    ctx = Context(configured)
+    try:
+        with ctx.store.transaction(write=False) as tx:
+
+            def reject_writer(*args, **kwargs):
+                raise AssertionError("Single page acquired SQLite writer")
+
+            monkeypatch.setattr(ctx.store, "transaction", reject_writer)
+            assert ctx.page(tx, "read", {"user_id": "user-a"}, {}, {"items": [1]}) == {
+                "items": [1],
+                "next_cursor": None,
+            }
+    finally:
+        ctx.close()
+
+
 def test_old_payload_cursor_remains_usable(tmp_path):
     now = [2_000_000_000.0]
     ctx = make_context(tmp_path, now)

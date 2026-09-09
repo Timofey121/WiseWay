@@ -263,10 +263,11 @@ def dispatch(ctx, tx, name, actor, params, body, request_id):
             raise ApiError("ROOT_NOT_READY", "Корень ещё индексируется.", 409)
         if index.get("_unavailable"):
             raise ApiError("SEARCH_UNAVAILABLE", "Поиск временно недоступен.", 503, retryable=True)
+        prepared = ctx.prepared_search(index)
         result = (
-            search(index["root"], index["items"], body, ctx.settings.result_limit)
+            search(index["root"], index["items"], body, ctx.settings.result_limit, prepared=prepared)
             if name == "searchFiles"
-            else facet(index["root"], index["items"], body)
+            else facet(index["root"], index["items"], body, prepared=prepared)
         )
         if name == "searchFiles" and "freshness" in index:
             result["freshness"] = index["freshness"]
@@ -274,12 +275,12 @@ def dispatch(ctx, tx, name, actor, params, body, request_id):
     if name in ("queryAuditEvents", "getAuditUpdates", "listAuditActors"):
         # Storage returns append order. Equal timestamps or a corrected system clock
         # must not hide newly appended events from the refresh indicator.
-        events = visible_events(tx, actor)
+        events = visible_events(tx, actor, events=ctx.read_audit(tx))
         if name == "getAuditUpdates":
             after = params.get("after_event_id")
             return 200, {"has_new_events": bool(events) and events[0]["event_id"] != after}
         if name == "queryAuditEvents":
-            filtered = query_events(tx, actor, body)
+            filtered = query_events(tx, actor, body, events=events)
             return 200, ctx.page(
                 tx,
                 name,

@@ -20,6 +20,7 @@ claim.
 
 from __future__ import annotations
 
+import argparse
 import concurrent.futures
 import json
 import math
@@ -114,8 +115,25 @@ def add_corpus(settings: Settings) -> None:
         (settings.sandbox_dir / relative).write_bytes(b"x")
 
 
-def prepare(settings: Settings) -> tuple[list[str], str]:
-    """Index the corpus, seed a non-trivial audit log and create distinct sessions."""
+def parse_arguments(arguments: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--accounts", type=int, default=1, help="distinct stored accounts (1 to 50)")
+    parser.add_argument("--rounds", type=int, default=1, help="five-request rounds per session")
+    parser.add_argument(
+        "--varied-queries",
+        action="store_true",
+        help="use distinct exact corpus-file tokens for search requests",
+    )
+    options = parser.parse_args(arguments)
+    if not 1 <= options.accounts <= CLIENTS:
+        parser.error(f"--accounts must be between 1 and {CLIENTS}")
+    if options.rounds < 1:
+        parser.error("--rounds must be positive")
+    return options
+
+
+def prepare(settings: Settings, *, accounts: int, sessions: int = CLIENTS) -> list[tuple[str, str]]:
+    """Index the corpus and issue sessions without sending public login traffic."""
     initialize(settings, password="synthetic-stress-password")
     add_corpus(settings)
     context = Context(settings)
@@ -123,30 +141,48 @@ def prepare(settings: Settings) -> tuple[list[str], str]:
         Indexer(context).scan()
         auth = Auth(context.store, settings)
         with context.store.transaction() as tx:
-            actor = tx.require("user", "user-worker-atlas")["actor"]
+            base_user = tx.require("user", "user-worker-atlas")
+            actors = [base_user["actor"]]
+            for number in range(1, accounts):
+                actor = {
+                    "user_id": f"user-stress-{number:02d}",
+                    "login": f"stress-worker-{number:02d}",
+                    "display_name": f"Stress worker {number:02d}",
+                    "role": "WORKER",
+                }
+                tx.insert(
+                    "user",
+                    actor["user_id"],
+                    {"actor": actor, "password_hash": base_user["password_hash"], "blocked": False},
+                )
+                actors.append(actor)
             for number in range(1_000):
                 emit(
                     tx,
-                    actor,
+                    actors[number % len(actors)],
                     "BATCH_ACCEPTED",
                     f"stress-seed-{number}",
                     now=settings.clock(),
                     company_id="company-atlas",
                 )
-        tokens = [
-            auth.login(
-                {"login": "worker-atlas", "password": "synthetic-stress-password"},
-                f"stress-login-{number}",
-                f"198.18.0.{number + 1}",
-            )[1]
-            for number in range(CLIENTS)
+        return [
+            (
+                auth.login(
+                    {"login": actors[number % accounts]["login"], "password": "synthetic-stress-password"},
+                    f"stress-login-{number}",
+                    f"198.18.0.{number + 1}",
+                )[1],
+                actors[number % accounts]["user_id"],
+            )
+            for number in range(sessions)
         ]
-        return tokens, actor["user_id"]
     finally:
         context.close()
 
 
-def payloads(actor_id: str) -> list[tuple[str, dict[str, Any]]]:
+def payloads(
+    actor_id: str, *, client_number: int = 0, round_number: int = 0, varied_queries: bool = False
+) -> list[tuple[str, dict[str, Any]]]:
     audit = {
         "company_id": "company-atlas",
         "from": "2020-01-01T00:00:00Z",
@@ -176,46 +212,116 @@ def payloads(actor_id: str) -> list[tuple[str, dict[str, Any]]]:
             "facet_prefix": "",
         }
 
+    if varied_queries:
+        base = (round_number * CLIENTS + client_number) * 6
+        queries = (
+            f"stress-atlas-{base:04d}",
+            f"stress-nova-{base + 1:04d}",
+            f"stress-atlas-{base + 2:04d}",
+        )
+        request_ids = tuple(f"stress-{round_number}-{client_number}-{number}" for number in range(3))
+    else:
+        queries = ("stress atlas", "stress", "stress nova")
+        request_ids = ("stress-typical-a", "stress-broad", "stress-typical-b")
     return [
-        ("typical_search", search("stress-typical-a", "stress atlas")),
-        ("broad_search", search("stress-broad", "stress")),
+        ("typical_search", search(request_ids[0], queries[0])),
+        ("broad_search", search(request_ids[1], queries[1])),
         ("queue_query", queue),
         ("audit_query", audit),
-        ("typical_search", search("stress-typical-b", "stress nova")),
+        ("typical_search", search(request_ids[2], queries[2])),
     ]
 
 
-def virtual_user(client: httpx2.Client, token: str, actor_id: str) -> list[tuple[str, float, int, str]]:
-    results: list[tuple[str, float, int, str]] = []
-    for operation, body in payloads(actor_id):
-        started = time.perf_counter()
-        try:
-            response = client.post(
-                {
-                    "typical_search": "/api/v1/search",
-                    "broad_search": "/api/v1/search",
-                    "queue_query": "/api/v1/sorting/queue/query",
-                    "audit_query": "/api/v1/audit/query",
-                }[operation],
-                json=body,
-                headers={"Cookie": f"wiseway_session={token}"},
-            )
-            detail = response.text[:160] if response.status_code >= 400 else ""
-            results.append((operation, (time.perf_counter() - started) * 1000, response.status_code, detail))
-        except httpx2.HTTPError as error:
-            results.append((operation, (time.perf_counter() - started) * 1000, 0, type(error).__name__))
+def response_error(operation: str, body: dict[str, Any]) -> str | None:
+    if operation.endswith("search"):
+        items, total = body.get("items"), body.get("total")
+        if not isinstance(items, list) or not isinstance(total, int) or total < len(items):
+            return "invalid search items/total"
+        if body.get("returned_count") != len(items):
+            return "invalid search returned_count"
+        if body.get("limited") != (total > len(items)):
+            return "invalid search limited"
+    elif operation == "queue_query":
+        items, matching, eligible = body.get("items"), body.get("matching_count"), body.get("eligible_count")
+        if not isinstance(items, list) or not isinstance(matching, int) or not isinstance(eligible, int):
+            return "invalid queue fields"
+        if matching < len(items) or eligible < 0 or eligible > matching:
+            return "invalid queue counts"
+        counts = {entry.get("status"): entry.get("count") for entry in body.get("status_counts", [])}
+        counters = body.get("counters", {})
+        if counters.get("ready") != counts.get("READY"):
+            return "invalid queue ready counter"
+        if counters.get("attention") != counts.get("REQUIRES_DECISION", 0) + counts.get(
+            "RECOVERY_REQUIRED", 0
+        ):
+            return "invalid queue attention counter"
+    elif operation == "audit_query" and not isinstance(body.get("items"), list):
+        return "invalid audit items"
+    return None
+
+
+def virtual_user(
+    client: httpx2.Client,
+    token: str,
+    actor_id: str,
+    *,
+    client_number: int,
+    rounds: int,
+    varied_queries: bool,
+) -> list[tuple[str, float, int, str, bool]]:
+    results: list[tuple[str, float, int, str, bool]] = []
+    for round_number in range(rounds):
+        for operation, body in payloads(
+            actor_id, client_number=client_number, round_number=round_number, varied_queries=varied_queries
+        ):
+            started = time.perf_counter()
+            try:
+                response = client.post(
+                    {
+                        "typical_search": "/api/v1/search",
+                        "broad_search": "/api/v1/search",
+                        "queue_query": "/api/v1/sorting/queue/query",
+                        "audit_query": "/api/v1/audit/query",
+                    }[operation],
+                    json=body,
+                    headers={"Cookie": f"wiseway_session={token}"},
+                )
+                detail = response.text[:160] if response.status_code >= 400 else ""
+                invariant = (
+                    response_error(operation, response.json()) if response.status_code == 200 else None
+                )
+                results.append(
+                    (
+                        operation,
+                        (time.perf_counter() - started) * 1000,
+                        response.status_code,
+                        detail or invariant or "",
+                        not invariant,
+                    )
+                )
+            except httpx2.HTTPError as error:
+                results.append(
+                    (operation, (time.perf_counter() - started) * 1000, 0, type(error).__name__, False)
+                )
     return results
 
 
 def summarize(
-    rows: list[tuple[str, float, int, str]], log: str, elapsed: float, rss: int | None
+    rows: list[tuple[str, float, int, str, bool]],
+    log: str,
+    elapsed: float,
+    rss: int | None,
+    *,
+    accounts: int,
+    rounds: int,
+    varied_queries: bool,
 ) -> dict[str, Any]:
     classes: dict[str, dict[str, Any]] = {}
-    for operation, milliseconds, status, detail in rows:
+    for operation, milliseconds, status, detail, invariant_ok in rows:
         current = classes.setdefault(operation, {"latencies": [], "statuses": {}, "errors": []})
         current["latencies"].append(milliseconds)
         current["statuses"][str(status)] = current["statuses"].get(str(status), 0) + 1
-        if status != 200:
+        if status != 200 or not invariant_ok:
             current["errors"].append(detail)
     normalized = {
         name: {
@@ -233,14 +339,17 @@ def summarize(
         "workload": {
             "ordinary_files_added": CORPUS_FILES,
             "seed_audit_events": 1000,
-            "distinct_accounts": 1,
+            "distinct_accounts": accounts,
             "clients": CLIENTS,
             "requests_per_client": REQUESTS_PER_CLIENT,
+            "rounds": rounds,
             "total_requests": len(rows),
+            "expected_total_requests": CLIENTS * REQUESTS_PER_CLIENT * rounds,
+            "varied_queries": varied_queries,
             "concurrent_worker_index_loop": True,
             "request_warmup": 0,
             "client_initialization": "HTTP clients created before timed traffic to exclude client TLS-context initialization on the shared host.",
-            "authentication": "50 persisted sessions issued via Auth with distinct synthetic client addresses; public login rate limiter was not load-tested here.",
+            "authentication": "Persisted sessions were issued via Auth with distinct synthetic client addresses before timed traffic; public login rate limiting was not load-tested here.",
         },
         "results": normalized,
         "total_elapsed_ms": round(elapsed * 1000, 3),
@@ -252,10 +361,11 @@ def summarize(
 
 
 def main() -> None:
+    options = parse_arguments()
     with tempfile.TemporaryDirectory(prefix="wiseway-stress-") as temporary:
         base = Path(temporary)
         settings = Settings(data_dir=base / "state", sandbox_dir=base / "sandbox")
-        tokens, actor_id = prepare(settings)
+        sessions = prepare(settings, accounts=options.accounts)
         with socket.socket() as reservation:
             reservation.bind(("127.0.0.1", 0))
             port = reservation.getsockname()[1]
@@ -291,19 +401,45 @@ def main() -> None:
                 started = time.perf_counter()
                 with concurrent.futures.ThreadPoolExecutor(max_workers=CLIENTS) as pool:
                     futures = [
-                        pool.submit(virtual_user, client, token, actor_id)
-                        for client, token in zip(clients, tokens)
+                        pool.submit(
+                            virtual_user,
+                            client,
+                            token,
+                            actor_id,
+                            client_number=number,
+                            rounds=options.rounds,
+                            varied_queries=options.varied_queries,
+                        )
+                        for number, (client, (token, actor_id)) in enumerate(zip(clients, sessions))
                     ]
                     rows = [result for future in futures for result in future.result()]
                 elapsed = time.perf_counter() - started
                 log = server_log.read_text(encoding="utf-8")
-                result = summarize(rows, log, elapsed, rss_kib(server.pid))
+                api_alive = clients[0].get("/api/v1/health").status_code == 200
+                result = summarize(
+                    rows,
+                    log,
+                    elapsed,
+                    rss_kib(server.pid),
+                    accounts=options.accounts,
+                    rounds=options.rounds,
+                    varied_queries=options.varied_queries,
+                )
                 result["checks"] = {
-                    "all_requests_succeeded": all(status == 200 for _, _, status, _ in rows),
+                    "all_requests_succeeded": all(
+                        status == 200 and invariant_ok for _, _, status, _, invariant_ok in rows
+                    ),
                     "typical_p95_within_2000ms": result["results"]["typical_search"]["p95_ms"] <= 2000,
                     "broad_p95_within_5000ms": result["results"]["broad_search"]["p95_ms"] <= 5000,
-                    "server_and_worker_alive": server.poll() is None and worker.poll() is None,
+                    "server_and_worker_alive": api_alive and server.poll() is None and worker.poll() is None,
                 }
+                if not all(result["checks"].values()):
+                    result["failure_diagnostics"] = {
+                        "server_exit_code": server.poll(),
+                        "worker_exit_code": worker.poll(),
+                        "server_log_tail": log[-4000:],
+                        "worker_log_tail": worker_log.read_text(encoding="utf-8")[-4000:],
+                    }
                 print(json.dumps(result, ensure_ascii=False, indent=2))
                 if not all(result["checks"].values()):
                     raise SystemExit(1)

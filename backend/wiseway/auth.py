@@ -9,6 +9,8 @@ from .audit import emit
 from .common import ApiError, utc
 
 HASHER = PasswordHasher()
+LOGIN_ATTEMPTS_PER_IP_AND_LOGIN = 10
+LOGIN_ATTEMPTS_PER_IP = 100
 # The dummy hash equalizes unknown-user and incorrect-password verification work.
 DUMMY_HASH = HASHER.hash(secrets.token_urlsafe(32))
 
@@ -29,11 +31,19 @@ class Auth:
         now = self.settings.clock()
         error = None
         with self.store.transaction() as tx:
-            bucket = token_key(address)
-            attempts = [t for t in tx.get("login_rate", bucket, []) if now - t < 60]
-            if len(attempts) >= 10:
+            ip_bucket = token_key("ip:" + address)
+            login_bucket = token_key("login:" + address + "\0" + body["login"].casefold())
+            ip_attempts = [attempt for attempt in tx.get("login_rate", ip_bucket, []) if now - attempt < 60]
+            login_attempts = [
+                attempt for attempt in tx.get("login_rate", login_bucket, []) if now - attempt < 60
+            ]
+            if (
+                len(ip_attempts) >= LOGIN_ATTEMPTS_PER_IP
+                or len(login_attempts) >= LOGIN_ATTEMPTS_PER_IP_AND_LOGIN
+            ):
                 raise ApiError("RATE_LIMITED", "Слишком много попыток входа.", 429, retryable=True)
-            tx.put("login_rate", bucket, attempts + [now])
+            tx.put("login_rate", ip_bucket, ip_attempts + [now])
+            tx.put("login_rate", login_bucket, login_attempts + [now])
             user = next((u for u in tx.list("user") if u["actor"]["login"] == body["login"]), None)
             try:
                 verified = HASHER.verify(user["password_hash"] if user else DUMMY_HASH, body["password"])

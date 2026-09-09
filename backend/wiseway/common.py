@@ -90,11 +90,19 @@ class Settings:
     readiness_seconds: int = 5
     absolute_session_seconds: int = 28800
     idle_session_seconds: int = 1800
+    worker_stale_seconds: int = field(
+        default_factory=lambda: int(os.getenv("WISEWAY_WORKER_STALE_SECONDS", "900"))
+    )
+    trusted_proxy_headers: bool = field(
+        default_factory=lambda: os.getenv("WISEWAY_TRUST_PROXY_HEADERS", "false").lower() == "true"
+    )
     clock: Callable[[], float] = field(default=time.time, repr=False, compare=False)
 
     def __post_init__(self):
         if self.result_limit not in (10, 100):
             raise ValueError("Demo result limit must be 10 or 100")
+        if self.worker_stale_seconds < 60:
+            raise ValueError("Worker stale threshold must be at least 60 seconds")
         if not self.allowed_origins or "*" in self.allowed_origins:
             raise ValueError("Explicit UI origins required")
         for origin in self.allowed_origins:

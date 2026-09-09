@@ -402,24 +402,34 @@ def _freshness(root: dict[str, Any]) -> dict[str, str]:
 
 
 def search(
-    root: dict[str, Any], items: list[dict[str, Any]], request: dict[str, Any], limit: int = 100
+    root: dict[str, Any],
+    items: list[dict[str, Any]],
+    request: dict[str, Any],
+    limit: int = 100,
+    *,
+    prepared=None,
 ) -> dict[str, Any]:
     """Return a contract-shaped search response for one published generation."""
     _validate_context(root, request)
+    if prepared is not None and prepared.items is not items:
+        raise ValueError("Prepared search index belongs to another snapshot")
     if limit < 1:
         raise ValueError("limit must be positive")
     query = _parse_query(str(request.get("query_text", "")))
     selected = list(request.get("selected_marker_ids", []))
-    candidates = _selected_chain(items, selected)
+    candidates = prepared.selected(selected) if prepared is not None else _selected_chain(items, selected)
     is_idle = not selected and not query.terms and not query.phrases
     if request.get("sort", {}).get("field") == "RELEVANCE" and not (query.terms or query.phrases):
         raise _error("INVALID_QUERY", "RELEVANCE требует непустой текст", 400)
     matching: list[tuple[dict[str, Any], int]] = []
     if not is_idle:
-        for item in candidates:
-            score = _matches_and_score(item, query)
-            if score is not None:
-                matching.append((item, score))
+        if prepared is not None:
+            matching = prepared.match(query, selected)
+        else:
+            for item in candidates:
+                score = _matches_and_score(item, query)
+                if score is not None:
+                    matching.append((item, score))
     facet_candidates = candidates if is_idle else [item for item, _ in matching]
     next_facet = _facet(facet_candidates, len(selected), str(request.get("facet_prefix", "")))
     if is_idle:
@@ -463,13 +473,20 @@ def search(
     }
 
 
-def facet(root: dict[str, Any], items: list[dict[str, Any]], request: dict[str, Any]) -> dict[str, Any]:
+def facet(
+    root: dict[str, Any], items: list[dict[str, Any]], request: dict[str, Any], *, prepared=None
+) -> dict[str, Any]:
     """Return the independent facet response; it never changes table state."""
     _validate_context(root, request)
+    if prepared is not None and prepared.items is not items:
+        raise ValueError("Prepared search index belongs to another snapshot")
     query = _parse_query(str(request.get("query_text", "")))
     selected = list(request.get("selected_marker_ids", []))
-    candidates = _selected_chain(items, selected)
-    matching = [item for item in candidates if _matches_and_score(item, query) is not None]
+    if prepared is not None:
+        matching = [item for item, _ in prepared.match(query, selected)]
+    else:
+        candidates = _selected_chain(items, selected)
+        matching = [item for item in candidates if _matches_and_score(item, query) is not None]
     return {
         "request_state_id": request["request_state_id"],
         "root_id": root["root_id"],
