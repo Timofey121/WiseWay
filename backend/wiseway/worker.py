@@ -285,6 +285,10 @@ class Worker:
             tx.delete("claim", item["item_id"])
             if state == "QUARANTINED":
                 self._put_quarantine(tx, attempt, actual, now)
+            if state == "SORTED" and actual is not None:
+                from .search_outbox import enqueue_move
+
+                enqueue_move(tx, attempt_id, item["item_id"], actual, attempt["item"]["_fingerprint"])
             result = "SUCCESS" if state == "SORTED" else "ISSUE"
             emit(
                 tx,

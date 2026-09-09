@@ -51,3 +51,10 @@
 | Q-045 · SRCH-23, NFR-02/03/04/06 · S/A/E | NOT_RUN | — | FAIL | NOT_RUN | На macOS: 50 аккаунтов, 12 500 запросов, 3200 добавленных файлов/1000 audit events; последний p95 типового поиска 1378,224 мс, широкого 1308,403 мс, ошибок нет. Подробности и ограничения замеров: `docs/performance.md`. Ранее также проверены 50 сессий общего аккаунта, сборка и изолированная установка CLI. Linux ARM64: полный pytest, сборка wheel/sdist и TLS Compose smoke с реальной файловой обработкой, рестартом и полным snapshot/restore прошли. Checkpoint и продолжение после падения проверены (`test_indexer_regressions.py`). Дополнительно проверены постоянный поиск по 1 млн метаданных и 50 параллельных ASGI-клиентов: ответы корректны, но цели задержки 2/5 секунд под burst-нагрузкой не выполнены. Большой обход после прерывания начинает неполный проход заново. Точность прогноза, промышленный объём 200 млн файлов, целевой сервер, RPO/RTO и полный комплект совместной приёмки не подтверждены; частичные проверки не закрывают весь Q-ID |
 
 Новые backend-regression тесты не перенумеровывают исходные Q-ID: `test_pagination_retention.py`, `test_read_concurrency.py`, `test_response_validation_cache.py`, `test_auth_hardening.py`, `test_index_read_cache.py`, `test_index_failure_review.py`, `test_matching_review.py`, `test_review_regressions.py`, `test_devops_backend_review.py`, `test_snapshot_tool.py`, `test_search_scale.py`, `test_search_scale_review.py`, `test_index_cache_budget.py`, `test_audit_pagination_scale.py`, `test_audit_sql_reads.py`, `test_sorting_read_scaling.py`.
+
+
+Дополнительный OpenSearch-профиль проверен на 10 млн метаданных, включая точные
+счётчики, ranking/fallback, Unicode, отдельные слоты API, durable import/outbox
+и потерю PIT. Измерения и границы: `docs/performance.md`, `docs/archive-search.md`.
+Это не закрывает Q-045 для 200–400 млн, целевого сервера, свежести промышленного
+источника, RPO/RTO и совместной приёмки. Статусы исходных сценариев сохранены.

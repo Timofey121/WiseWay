@@ -79,6 +79,8 @@ def create_app(settings=None):
         # SQLite has one writer; a large thread pool causes lock contention and
         # competes for the GIL during metadata search/response validation.
         app.state.request_limiter = CapacityLimiter(4)
+        # Slow search I/O must not occupy every session/audit/business slot.
+        app.state.search_limiter = CapacityLimiter(4)
         yield
         app.state.ctx.close()
 
@@ -203,7 +205,11 @@ def create_app(settings=None):
                     request,
                     body,
                     request_id,
-                    limiter=app.state.request_limiter,
+                    limiter=(
+                        app.state.search_limiter
+                        if operation["operationId"] in {"searchFiles", "getSearchFacet"}
+                        else app.state.request_limiter
+                    ),
                 )
             except ApiError as error:
                 value = error.body(request_id)
@@ -270,7 +276,21 @@ def dispatch(ctx, tx, name, actor, params, body, request_id):
             raise ApiError("ROOT_NOT_READY", "Корень ещё индексируется.", 409)
         if index.get("_unavailable"):
             raise ApiError("SEARCH_UNAVAILABLE", "Поиск временно недоступен.", 503, retryable=True)
-        if index.get("_storage") == "sqlite":
+        if index.get("_storage") == "opensearch":
+            from .opensearch import SearchSnapshot
+
+            snapshot = SearchSnapshot(ctx.search_engine(), index)
+            result = ctx.search_cache.get(
+                (index["root"]["index_generation"], index["_pit_id"]),
+                name,
+                body,
+                lambda: (
+                    snapshot.search(body, ctx.settings.result_limit)
+                    if name == "searchFiles"
+                    else snapshot.facet(body)
+                ),
+            )
+        elif index.get("_storage") == "sqlite":
             from .sqlite_search import SqlSearchIndex
 
             generation = tx.connection.execute(

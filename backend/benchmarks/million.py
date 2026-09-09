@@ -199,7 +199,9 @@ def burst_case(number: int, count: int) -> tuple[str, dict[str, Any], int, list[
     return "absent", request_body("не-существует", state=f"burst-{number}"), 0, []
 
 
-def asgi_burst(settings: Settings, count: int, clients: int, requests: int) -> dict[str, Any]:
+def asgi_burst(
+    settings: Settings, count: int, clients: int, requests: int, *, broad_only=False
+) -> dict[str, Any]:
     """Concurrent ASGI requests over one authenticated synthetic account.
 
     This intentionally shares one TestClient/application and one session so
@@ -222,7 +224,11 @@ def asgi_burst(settings: Settings, count: int, clients: int, requests: int) -> d
             raise RuntimeError("burst login did not issue a session cookie")
 
         def one(number: int) -> tuple[str, float, dict[str, Any] | None]:
-            name, body, expected_total, expected_ids = burst_case(number, count)
+            name, body, expected_total, expected_ids = (
+                ("broad", request_body("документ", state=f"burst-{number}"), count, expected_broad_ids(count))
+                if broad_only
+                else burst_case(number, count)
+            )
             started = time.perf_counter()
             try:
                 response = client.post(
@@ -264,7 +270,7 @@ def asgi_burst(settings: Settings, count: int, clients: int, requests: int) -> d
         "accounts": 1,
         "requests": requests,
         "transport": "ASGI; excludes TCP and login throughput",
-        "mix": "49 rare/absent requests per 1 broad request",
+        "mix": "all broad" if broad_only else "49 rare/absent requests per 1 broad request",
         "passed": not failures,
         "error_count": len(failures),
         "errors": failures[:10],

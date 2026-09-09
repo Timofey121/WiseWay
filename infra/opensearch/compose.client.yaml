@@ -1,0 +1,64 @@
+# Overlay for an independently provisioned, private TLS OpenSearch service.
+# docker compose -f compose.yaml -f infra/opensearch/compose.client.yaml ...
+x-search-env: &search-env
+  WISEWAY_SEARCH_URL: ${WISEWAY_SEARCH_URL:?Set a private HTTPS OpenSearch origin}
+  WISEWAY_SEARCH_CA_FILE: /run/wiseway-search/ca.pem
+  WISEWAY_SEARCH_CREDENTIALS_FILE: /run/wiseway-search/credentials.json
+  WISEWAY_SEARCH_CACHE_BYTES: ${WISEWAY_SEARCH_CACHE_BYTES:-8388608}
+x-search-secrets: &search-secrets
+  type: bind
+  source: ${WISEWAY_SEARCH_SECRET_PATH:?Set a private directory with ca.pem and credentials.json}
+  target: /run/wiseway-search
+  read_only: true
+  bind: {create_host_path: false}
+services:
+  api:
+    environment: *search-env
+    volumes: [*search-secrets]
+  cli:
+    network_mode: service:gateway
+    environment: *search-env
+    volumes:
+      - *search-secrets
+      - type: bind
+        source: ${WISEWAY_MANIFEST_PATH:?Set a directory with immutable metadata manifests}
+        target: /manifests
+        read_only: true
+        bind: {create_host_path: false}
+  search-maintenance:
+    profiles: [search]
+    image: ${WISEWAY_IMAGE:-wiseway:local}
+    user: "10001:10001"
+    read_only: true
+    init: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    network_mode: service:gateway
+    depends_on:
+      gateway: {condition: service_started}
+    restart: unless-stopped
+    stop_grace_period: 120s
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 64
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=32m,mode=1777"]
+    environment:
+      <<: *search-env
+      WISEWAY_DATA_DIR: /var/lib/wiseway/state
+      WISEWAY_SANDBOX_DIR: /srv/wiseway/sandbox
+      WISEWAY_ORIGINS: ${WISEWAY_ORIGINS:?Set the exact HTTPS frontend origin}
+      WISEWAY_SECURE_COOKIE: "true"
+    volumes:
+      - *search-secrets
+      - type: bind
+        source: ${WISEWAY_STATE_PATH:?Set a private state directory}
+        target: /var/lib/wiseway/state
+        bind: {create_host_path: false}
+      - type: bind
+        source: ${WISEWAY_SANDBOX_PATH:?Set a private synthetic sandbox directory}
+        target: /srv/wiseway/sandbox
+        bind: {create_host_path: false}
+    command: [maintain-search, --interval, "60"]
+    logging:
+      driver: local
+      options: {max-size: "10m", max-file: "5"}

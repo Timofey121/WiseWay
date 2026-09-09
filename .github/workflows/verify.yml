@@ -180,3 +180,42 @@ jobs:
           path: smoke.log
           if-no-files-found: warn
           retention-days: 14
+
+  search-integration:
+    name: OpenSearch contract and recovery tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          version: "0.11.2"
+          enable-cache: true
+          python-version: "3.11"
+      - name: Install locked environment
+        run: uv sync --frozen --all-groups
+      - name: Configure the ephemeral runner for OpenSearch
+        run: sudo sysctl -w vm.max_map_count=262144
+      - name: Start isolated loopback test engine
+        run: docker compose -f infra/opensearch/compose.test.yaml up -d --wait --wait-timeout 180
+      - name: Test real multi-shard search and restart recovery
+        env:
+          WISEWAY_TEST_SEARCH_URL: http://127.0.0.1:19200
+        run: uv run pytest -q backend/tests/test_opensearch.py backend/tests/test_archive_import.py backend/tests/test_search_cache.py backend/tests/test_search_outbox.py --junitxml=test-results/search.xml
+      - name: Collect engine logs
+        if: always()
+        run: |
+          mkdir -p test-results
+          docker compose -f infra/opensearch/compose.test.yaml logs --no-color > test-results/search-engine.log
+      - name: Upload search test results
+        if: always()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.2
+        with:
+          name: search-tests-${{ github.run_id }}-${{ github.run_attempt }}
+          path: test-results/
+          retention-days: 14
+      - name: Remove isolated test engine and synthetic volume
+        if: always()
+        run: docker compose -f infra/opensearch/compose.test.yaml down -v

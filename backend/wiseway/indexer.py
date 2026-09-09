@@ -169,7 +169,7 @@ class Indexer:
             with self.ctx.store.transaction() as tx:
                 roots = tx.list("root")
             for root in roots:
-                if root.get("_searchable") and root.get("_index_storage") != "sqlite":
+                if root.get("_searchable") and root.get("_index_storage") not in {"sqlite", "opensearch"}:
                     self._scan_search_root(root)
                 if root.get("_incoming_company"):
                     self._scan_incoming_root(root)
@@ -292,7 +292,7 @@ class Indexer:
                 "SELECT json_extract(body, '$._storage') FROM objects WHERE kind='index' AND id=?",
                 (root["root_id"],),
             ).fetchone()
-        if stored and stored[0] == "sqlite":
+        if stored and stored[0] in {"sqlite", "opensearch"}:
             return
         now = self.ctx.settings.clock()
         started = time.monotonic()

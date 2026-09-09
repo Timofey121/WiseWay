@@ -70,6 +70,11 @@ class Context:
         self._index_cache_sizes = {}
         self._prepared_indexes = OrderedDict()
         self._index_cache_lock = Lock()
+        from .search_cache import SearchCache
+
+        self.search_cache = SearchCache(max_bytes=settings.search_cache_bytes)
+        self._search_engine = None
+        self._search_engine_lock = Lock()
         self._audit_cache = None
         self._audit_cache_lock = Lock()
         self.fs = SafeFilesystem(settings.sandbox_dir)
@@ -79,6 +84,23 @@ class Context:
 
     def close(self):
         self.fs.close()
+        if self._search_engine is not None:
+            self._search_engine.close()
+
+    def search_engine(self):
+        from .opensearch import OpenSearch, unavailable
+
+        with self._search_engine_lock:
+            if self._search_engine is None:
+                if not self.settings.search_url:
+                    raise unavailable()
+                self._search_engine = OpenSearch(
+                    self.settings.search_url,
+                    ca_file=self.settings.search_ca_file,
+                    credentials_file=self.settings.search_credentials_file,
+                    allow_http=self.settings.search_allow_http,
+                )
+            return self._search_engine
 
     def prepared_search(self, index):
         from .search_index import SearchIndex

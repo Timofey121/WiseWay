@@ -23,6 +23,18 @@ def main(argv=None):
     archive.add_argument(
         "--interval", type=int, default=0, help="Repeat after this many seconds; 0 runs once"
     )
+    ingest = commands.add_parser(
+        "import-archive", help="Import an immutable metadata manifest into OpenSearch"
+    )
+    ingest.add_argument("root_id")
+    ingest.add_argument("manifest")
+    ingest.add_argument("--mode", choices=("full", "delta"), default="full")
+    ingest.add_argument("--base-generation", help="Required current generation for a delta")
+    ingest.add_argument("--shards", type=int, default=8)
+    abort = commands.add_parser("abort-import", help="Abandon a stopped import; next import must be full")
+    abort.add_argument("root_id")
+    maintenance = commands.add_parser("maintain-search", help="Renew or recover completed search snapshots")
+    maintenance.add_argument("--interval", type=int, default=0)
     commands.add_parser("tick", help="Run one worker/index observation")
     commands.add_parser("status", help="Show outstanding recovery and index progress")
     commands.add_parser("doctor", help="Check local database, filesystem, and worker state")
@@ -105,10 +117,48 @@ def main(argv=None):
         # Let that step complete, then stop before beginning another one.
         stop_requested.set()
 
-    if args.command in {"worker", "index-archive"}:
+    if args.command in {"worker", "index-archive", "import-archive", "maintain-search"}:
         for signal_name in (signal.SIGINT, signal.SIGTERM):
             previous_signal_handlers[signal_name] = signal.signal(signal_name, request_stop)
     try:
+        if args.command in {"abort-import", "maintain-search"}:
+            from .archive_import import ArchiveImporter
+            from .common import ApiError
+
+            try:
+                importer = ArchiveImporter(ctx, ctx.search_engine())
+                if args.command == "abort-import":
+                    print(json.dumps(importer.abort(args.root_id)))
+                else:
+                    if args.interval and args.interval < 30:
+                        parser.error("Search maintenance interval must be 0 or >=30 seconds")
+                    while not stop_requested.is_set():
+                        from .search_outbox import drain
+
+                        delivered = drain(importer)
+                        print(json.dumps({**importer.maintain(), "delivered": delivered}), flush=True)
+                        if not args.interval:
+                            break
+                        stop_requested.wait(args.interval)
+            except (ValueError, RuntimeError, OSError, ApiError) as error:
+                parser.error(str(error))
+            return
+        if args.command == "import-archive":
+            from .archive_import import ArchiveImporter
+            from .common import ApiError
+
+            try:
+                result = ArchiveImporter(ctx, ctx.search_engine(), shards=args.shards).run(
+                    args.root_id,
+                    args.manifest,
+                    mode=args.mode,
+                    base_generation=args.base_generation,
+                    stop=stop_requested,
+                )
+                print(json.dumps(result, ensure_ascii=False))
+            except (ValueError, RuntimeError, OSError, ApiError) as error:
+                parser.error(str(error))
+            return
         if args.command == "index-archive":
             from .archive_worker import run
 

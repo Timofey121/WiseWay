@@ -22,7 +22,11 @@ def run(ctx, *, interval=0, stop=None):
                     stop.wait(1)
                     continue
                 with ctx.store.transaction() as tx:
-                    roots = [root for root in tx.list("root") if root.get("_searchable")]
+                    roots = [
+                        root
+                        for root in tx.list("root")
+                        if root.get("_searchable") and root.get("_index_storage") != "opensearch"
+                    ]
                     for root in roots:
                         root["_index_storage"] = "sqlite"
                         tx.put("root", root["root_id"], root)

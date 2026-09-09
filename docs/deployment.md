@@ -137,3 +137,11 @@ bash infra/scripts/container-smoke.sh wiseway:ci
 Скрипт создаёт собственные временные каталоги, self-signed сертификат и отдельный Compose project, а затем удаляет их. Он не использует `.env` рабочей установки. Self-signed TLS предназначен только для этого теста.
 
 Справка по использованным механизмам: [Compose services](https://docs.docker.com/reference/compose-file/services/), [uv в Docker](https://docs.astral.sh/uv/guides/integration/docker/). Альтернативный запуск без Docker описан в [operations.md](operations.md); не запускайте оба варианта над одной рабочей БД одновременно.
+
+
+## Большой внешний поисковый индекс
+
+Для OpenSearch используйте [отдельную инструкцию](archive-search.md): TLS overlay,
+импорт manifests/дельт, maintenance и ограничения восстановления. Существующие
+Compose backup/snapshot и smoke-тесты покрывают локальную песочницу и SQLite;
+внешний поисковый кластер требует отдельного согласованного snapshot/restore.

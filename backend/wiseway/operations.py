@@ -33,6 +33,13 @@ def operator_status(ctx) -> dict:
         return {
             "worker": tx.get("operator_state", "worker", {}),
             "archive_indexer": tx.get("operator_state", "archive_indexer", {}),
+            "search": tx.get("operator_state", "search", {}),
+            "search_outbox": [
+                {"root_id": root_id, "pending": count}
+                for root_id, count in tx.connection.execute(
+                    "SELECT root_id,count(*) FROM search_outbox GROUP BY root_id"
+                )
+            ],
             "index": [{key: row[key] for key in fields if key in row} for row in tx.list("index_progress")],
             "attempts": [
                 {"attempt_id": attempt["attempt_id"], "phase": attempt["phase"]}
@@ -59,6 +66,13 @@ def doctor(ctx) -> dict:
             ).fetchone()
             is not None
         )
+        search_state = tx.get("operator_state", "search", {})
+        uses_search = (
+            tx.connection.execute(
+                "SELECT 1 FROM objects WHERE kind='index' AND json_extract(body,'$._storage')='opensearch' LIMIT 1"
+            ).fetchone()
+            is not None
+        )
         failed_indexes = [
             row["root_id"] for row in tx.list("index_progress") if row.get("status") == "FAILED"
         ]
@@ -79,11 +93,18 @@ def doctor(ctx) -> dict:
             reasons.append("archive_indexer_heartbeat_missing")
         elif ctx.settings.clock() - timestamp(completed_at) > max_age:
             reasons.append("archive_indexer_heartbeat_stale")
+    if uses_search:
+        completed_at = search_state.get("last_completed_at")
+        if not completed_at:
+            reasons.append("search_heartbeat_missing")
+        elif ctx.settings.clock() - timestamp(completed_at) > max_age:
+            reasons.append("search_heartbeat_stale")
     return {
         "database": {"ok": True},
         "filesystem": {"atomic_no_replace": ctx.fs.probe()},
         "worker": worker,
         "archive_indexer": archive,
+        "search": search_state,
         "ready": not reasons,
         "reasons": reasons,
         "failed_index_roots": failed_indexes,

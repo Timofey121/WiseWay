@@ -201,3 +201,19 @@ def test_cli_restore_check_does_not_require_live_database_or_sandbox(configured,
     cli.main(["restore-check", str(backup), str(tmp_path / "restored.sqlite3")])
 
     assert (tmp_path / "restored.sqlite3").is_file()
+
+
+def test_doctor_reports_search_maintenance_staleness(configured):
+    from wiseway.services import Context
+    from wiseway.operations import doctor, record_worker_heartbeat
+
+    ctx = Context(configured)
+    try:
+        record_worker_heartbeat(ctx)
+        with ctx.store.transaction() as tx:
+            tx.put(
+                "index", "external", {"root": {"root_id": "external"}, "_storage": "opensearch", "items": []}
+            )
+        assert "search_heartbeat_missing" in doctor(ctx)["reasons"]
+    finally:
+        ctx.close()

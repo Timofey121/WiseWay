@@ -34,3 +34,9 @@ htmlcov/
 /trivy-gateway-report.json
 *.pem
 *.key
+
+/archive-data/
+/search-data/
+/infra/opensearch/secrets/
+*.ndjson
+!/backend/tests/fixtures/*.ndjson

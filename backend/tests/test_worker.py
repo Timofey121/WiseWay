@@ -123,6 +123,20 @@ class WorkerTests(unittest.TestCase):
         self.assertFalse((self.root / "sandbox/incoming/team/file.txt").exists())
         self.assertEqual((self.root / "sandbox/archive/team/file.txt").read_bytes(), b"content")
 
+    def test_move_commits_search_delivery_with_the_outcome(self) -> None:
+        with self.ctx.store.transaction() as tx:
+            tx.put("root", "archive-root", {"_index_storage": "opensearch"})
+        target = self._location("archive-root", "team/file.txt")
+        self._attempt("WILL_MOVE", target=target)
+        Worker(self.ctx).run_once()
+        Worker(self.ctx).run_once()
+        with self.ctx.store.transaction(write=False) as tx:
+            rows = tx.connection.execute("SELECT event_key,root_id,body FROM search_outbox").fetchall()
+            self.assertEqual(len(rows), 1)
+            self.assertEqual(rows[0][:2], ("attempt-1", "archive-root"))
+            self.assertEqual(tx.require("attempt", "attempt-1")["phase"], "DONE")
+            self.assertEqual(len(tx.events()), 2)
+
     def test_no_scenario_moves_to_flat_manual_review(self) -> None:
         self._attempt("WILL_MANUAL_REVIEW", reason="NO_SCENARIO")
 

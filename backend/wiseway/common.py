@@ -96,9 +96,20 @@ class Settings:
     trusted_proxy_headers: bool = field(
         default_factory=lambda: os.getenv("WISEWAY_TRUST_PROXY_HEADERS", "false").lower() == "true"
     )
+    search_cache_bytes: int = field(
+        default_factory=lambda: int(os.getenv("WISEWAY_SEARCH_CACHE_BYTES", str(8 * 1024 * 1024)))
+    )
+    search_url: str | None = field(default_factory=lambda: os.getenv("WISEWAY_SEARCH_URL"))
+    search_ca_file: str | None = field(default_factory=lambda: os.getenv("WISEWAY_SEARCH_CA_FILE"))
+    search_credentials_file: str | None = field(
+        default_factory=lambda: os.getenv("WISEWAY_SEARCH_CREDENTIALS_FILE")
+    )
+    search_allow_http: bool = field(default_factory=lambda: os.getenv("WISEWAY_SEARCH_ALLOW_HTTP") == "true")
     clock: Callable[[], float] = field(default=time.time, repr=False, compare=False)
 
     def __post_init__(self):
+        if not 0 <= self.search_cache_bytes <= 64 * 1024 * 1024:
+            raise ValueError("Search cache must be between 0 and 64 MiB")
         if self.result_limit not in (10, 100):
             raise ValueError("Demo result limit must be 10 or 100")
         if self.worker_stale_seconds < 60:
