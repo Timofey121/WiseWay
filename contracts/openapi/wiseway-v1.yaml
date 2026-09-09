@@ -147,7 +147,7 @@ paths:
               examples:
                 demo:
                   value:
-                    api_contract_version: 1.0.0
+                    api_contract_version: 1.1.0
                     display_timezone: Europe/Moscow
                     search_result_limit: 100
                     max_batch_items: 1000

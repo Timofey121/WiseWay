@@ -48,15 +48,49 @@ def test_varied_payloads_use_distinct_exact_corpus_tokens_and_request_state_ids(
     request_ids = [body["request_state_id"] for body in first_searches + second_searches]
     assert len(request_ids) == len(set(request_ids))
     assert [body["query_text"] for body in first_searches] == [
-        "stress-atlas-0000",
-        "stress-nova-0001",
-        "stress-atlas-0002",
+        '"stress-atlas-0001"',
+        "stress",
+        '"stress-nova-0000"',
     ]
     assert [body["query_text"] for body in second_searches] == [
-        "stress-atlas-0006",
-        "stress-nova-0007",
-        "stress-atlas-0008",
+        '"stress-atlas-0003"',
+        "stress",
+        '"stress-nova-0002"',
     ]
     assert all(body["request_state_id"].startswith("stress-") for body in first_searches + second_searches)
     assert all(body["actor_id"] == "actor-one" for operation, body in first if operation == "audit_query")
     assert all(body["actor_id"] == "actor-two" for operation, body in second if operation == "audit_query")
+
+
+def test_varied_queries_hit_real_files_and_keep_broad_search_broad(client):
+    from test_api import login
+    from wiseway.indexer import Indexer
+
+    context = client.app.state.ctx
+    stress.add_corpus(context.settings)
+    Indexer(context).scan()
+    login(client)
+    for client_number, round_number in ((0, 0), (49, 9), (15, 20), (49, 70)):
+        for operation, request in stress.payloads(
+            "actor", client_number=client_number, round_number=round_number, varied_queries=True
+        ):
+            if not operation.endswith("search"):
+                continue
+            response = client.post("/api/v1/search", json=request)
+            assert response.status_code == 200
+            result = response.json()
+            assert result["total"] == (stress.CORPUS_FILES if operation == "broad_search" else 1)
+            if operation == "typical_search":
+                assert Path(result["items"][0]["filename"]).stem == request["query_text"].strip('"')
+
+
+def test_benchmark_rejects_consistent_but_incorrect_zero_result():
+    request = stress.payloads("actor")[0][1]
+    body = {
+        "items": [],
+        "total": 0,
+        "returned_count": 0,
+        "limited": False,
+        "request_state_id": request["request_state_id"],
+    }
+    assert stress.response_error("typical_search", body, request=request)

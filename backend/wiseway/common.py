@@ -141,7 +141,7 @@ class Settings:
 
     def app_config(self):
         return {
-            "api_contract_version": "1.0.0",
+            "api_contract_version": "1.1.0",
             "display_timezone": "Europe/Moscow",
             "search_result_limit": self.result_limit,
             "max_batch_items": self.max_batch_items,

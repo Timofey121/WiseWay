@@ -5,9 +5,8 @@ The command creates its own temporary database and synthetic filesystem.  It
 never opens an existing ``.wiseway`` directory and removes all generated data
 when it exits.  It deliberately provisions 50 persisted sessions through the
 same authentication service used by the API, with distinct synthetic client
-addresses: the public login endpoint rate-limits a single address to ten
-attempts per minute, so using that endpoint for every virtual client would
-measure the rate limiter rather than concurrent authenticated traffic.
+addresses. Login limits are checked separately; timed traffic measures
+authenticated requests against both API and worker.
 
 Run from the repository root:
 
@@ -213,11 +212,11 @@ def payloads(
         }
 
     if varied_queries:
-        base = (round_number * CLIENTS + client_number) * 6
+        slot = (round_number * CLIENTS + client_number) % (CORPUS_FILES // 2)
         queries = (
-            f"stress-atlas-{base:04d}",
-            f"stress-nova-{base + 1:04d}",
-            f"stress-atlas-{base + 2:04d}",
+            f'"stress-atlas-{slot * 2 + 1:04d}"',
+            "stress",
+            f'"stress-nova-{slot * 2:04d}"',
         )
         request_ids = tuple(f"stress-{round_number}-{client_number}-{number}" for number in range(3))
     else:
@@ -232,7 +231,7 @@ def payloads(
     ]
 
 
-def response_error(operation: str, body: dict[str, Any]) -> str | None:
+def response_error(operation: str, body: dict[str, Any], *, request=None) -> str | None:
     if operation.endswith("search"):
         items, total = body.get("items"), body.get("total")
         if not isinstance(items, list) or not isinstance(total, int) or total < len(items):
@@ -241,6 +240,21 @@ def response_error(operation: str, body: dict[str, Any]) -> str | None:
             return "invalid search returned_count"
         if body.get("limited") != (total > len(items)):
             return "invalid search limited"
+        if request is not None:
+            if body.get("request_state_id") != request["request_state_id"]:
+                return "incorrect search request_state_id"
+            query = request["query_text"]
+            expected = (
+                CORPUS_FILES
+                if query == "stress"
+                else (CORPUS_FILES // 2 if query in {"stress atlas", "stress nova"} else 1)
+            )
+            if total != expected:
+                return f"incorrect corpus matches: expected {expected}, got {total}"
+            if len(items) != min(expected, 100):
+                return "incorrect corpus returned item count"
+            if expected == 1 and Path(items[0]["filename"]).stem != query.strip('"'):
+                return "incorrect corpus filename"
     elif operation == "queue_query":
         items, matching, eligible = body.get("items"), body.get("matching_count"), body.get("eligible_count")
         if not isinstance(items, list) or not isinstance(matching, int) or not isinstance(eligible, int):
@@ -255,8 +269,19 @@ def response_error(operation: str, body: dict[str, Any]) -> str | None:
             "RECOVERY_REQUIRED", 0
         ):
             return "invalid queue attention counter"
-    elif operation == "audit_query" and not isinstance(body.get("items"), list):
-        return "invalid audit items"
+    elif operation == "audit_query":
+        if not isinstance(body.get("items"), list):
+            return "invalid audit items"
+        if request is not None and (
+            not body["items"]
+            or any(
+                event.get("category") != "BUSINESS"
+                or (event.get("actor") or {}).get("user_id") != request["actor_id"]
+                or event.get("company_id") != request["company_id"]
+                for event in body["items"]
+            )
+        ):
+            return "incorrect audit visibility or actor filter"
     return None
 
 
@@ -288,7 +313,9 @@ def virtual_user(
                 )
                 detail = response.text[:160] if response.status_code >= 400 else ""
                 invariant = (
-                    response_error(operation, response.json()) if response.status_code == 200 else None
+                    response_error(operation, response.json(), request=body)
+                    if response.status_code == 200
+                    else None
                 )
                 results.append(
                     (

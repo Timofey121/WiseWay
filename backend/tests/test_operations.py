@@ -163,3 +163,41 @@ def test_doctor_uses_configured_worker_stale_threshold(configured):
 
     assert result["ready"] is False
     assert "worker_heartbeat_stale" in result["reasons"]
+
+
+def test_cli_backup_does_not_require_sandbox(configured, monkeypatch, tmp_path):
+    from wiseway import cli
+
+    for child in configured.sandbox_dir.rglob("*"):
+        if child.is_file():
+            child.unlink()
+    for child in sorted(configured.sandbox_dir.rglob("*"), reverse=True):
+        if child.is_dir():
+            child.rmdir()
+    configured.sandbox_dir.rmdir()
+    monkeypatch.setattr(cli, "Settings", lambda: configured)
+
+    cli.main(["backup", str(tmp_path / "backup.sqlite3")])
+
+    assert (tmp_path / "backup.sqlite3").is_file()
+
+
+def test_cli_restore_check_does_not_require_live_database_or_sandbox(configured, monkeypatch, tmp_path):
+    from wiseway import cli
+    from wiseway.operations import backup_database
+
+    backup = tmp_path / "backup.sqlite3"
+    backup_database(configured, backup)
+    configured.database.unlink()
+    for child in configured.sandbox_dir.rglob("*"):
+        if child.is_file():
+            child.unlink()
+    for child in sorted(configured.sandbox_dir.rglob("*"), reverse=True):
+        if child.is_dir():
+            child.rmdir()
+    configured.sandbox_dir.rmdir()
+    monkeypatch.setattr(cli, "Settings", lambda: configured)
+
+    cli.main(["restore-check", str(backup), str(tmp_path / "restored.sqlite3")])
+
+    assert (tmp_path / "restored.sqlite3").is_file()

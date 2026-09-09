@@ -37,7 +37,8 @@ def ready_queue(client, configured) -> dict:
 def test_live_roots_search_facet_targets_and_audit_visibility(client):
     login(client)
     config = client.get("/api/v1/app-config")
-    assert config.status_code == 200 and config.json()["api_contract_version"] == "1.0.0"
+    assert config.status_code == 200
+    assert config.json()["api_contract_version"] == client.app.state.contract.spec["info"]["version"]
     roots = client.get("/api/v1/roots")
     assert roots.status_code == 200, roots.text
     root = roots.json()["items"][0]

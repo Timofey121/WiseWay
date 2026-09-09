@@ -67,6 +67,26 @@ def main(argv=None):
             forwarded_allow_ips="127.0.0.1,::1" if settings.trusted_proxy_headers else None,
         )
         return
+    if args.command == "backup":
+        from .operations import OperationError, backup_database
+
+        try:
+            print(json.dumps(backup_database(settings, args.destination), ensure_ascii=False, indent=2))
+        except OperationError as error:
+            parser.error(str(error))
+        return
+    if args.command == "restore-check":
+        from .operations import OperationError, verify_restore
+
+        try:
+            print(
+                json.dumps(
+                    verify_restore(settings, args.backup, args.destination), ensure_ascii=False, indent=2
+                )
+            )
+        except OperationError as error:
+            parser.error(str(error))
+        return
     from .services import Context
 
     ctx = Context(settings)
@@ -101,24 +121,6 @@ def main(argv=None):
             from .operations import doctor
 
             print(json.dumps(doctor(ctx), ensure_ascii=False, indent=2))
-        elif args.command == "backup":
-            from .operations import OperationError, backup_database
-
-            try:
-                print(json.dumps(backup_database(settings, args.destination), ensure_ascii=False, indent=2))
-            except OperationError as error:
-                parser.error(str(error))
-        elif args.command == "restore-check":
-            from .operations import OperationError, verify_restore
-
-            try:
-                print(
-                    json.dumps(
-                        verify_restore(settings, args.backup, args.destination), ensure_ascii=False, indent=2
-                    )
-                )
-            except OperationError as error:
-                parser.error(str(error))
         elif args.command == "recover":
             from .worker import Worker
 
