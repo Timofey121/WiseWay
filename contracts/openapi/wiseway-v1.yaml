@@ -2074,7 +2074,7 @@ paths:
       summary: List company sorting batches
       description: Все партии компании, включая партии коллег. Порядок created_at DESC, batch_id DESC.
       parameters:
-        - { $ref: '#/components/parameters/CompanyId' }
+        - { $ref: '#/components/parameters/CompanyQuery' }
         - { $ref: '#/components/parameters/Cursor' }
         - { $ref: '#/components/parameters/Limit' }
       responses:
@@ -2520,7 +2520,7 @@ paths:
       summary: List quarantined files for a company
       description: Только подтверждённые технические перемещения в карантин; ручной разбор в этот список не входит.
       parameters:
-        - { $ref: '#/components/parameters/CompanyId' }
+        - { $ref: '#/components/parameters/CompanyQuery' }
         - { $ref: '#/components/parameters/Cursor' }
         - { $ref: '#/components/parameters/Limit' }
       responses:
@@ -2782,6 +2782,12 @@ components:
       description: Непрозрачный логический идентификатор объекта.
       schema: { $ref: '#/components/schemas/Id' }
       example: company-demo-1
+    CompanyQuery:
+      name: company_id
+      in: query
+      required: true
+      description: Компания, для которой запрашивается список.
+      schema: { $ref: '#/components/schemas/Id' }
     DictionaryId:
       name: dictionary_id
       in: path

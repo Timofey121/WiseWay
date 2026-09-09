@@ -1,0 +1,277 @@
+import json
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Request
+from starlette.concurrency import run_in_threadpool
+from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import JSONResponse, Response
+
+from .audit import query_events, visible_events
+from .auth import Auth
+from .common import ApiError, Settings, public, uid
+from .contract import Contract
+from .services import Context
+
+READ_POSTS = {
+    "searchFiles",
+    "getSearchFacet",
+    "querySortingQueue",
+    "queryAuditEvents",
+    "resolveTargetDirectory",
+}
+IDEMPOTENT = {"publishDictionary", "createSortingBatch"}
+
+
+def _json_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("duplicate key")
+        result[key] = value
+    return result
+
+
+def create_app(settings=None):
+    settings = settings or Settings()
+    contract = Contract()
+
+    @asynccontextmanager
+    async def lifespan(app):
+        app.state.ctx = Context(settings)
+        app.state.auth = Auth(app.state.ctx.store, settings)
+        yield
+        app.state.ctx.close()
+
+    app = FastAPI(
+        title="Wise Way", version="0.1.0", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan
+    )
+    app.state.contract = contract
+    app.openapi = lambda: contract.spec
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=list(settings.allowed_origins),
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT"],
+        allow_headers=["Content-Type", "X-CSRF-Token", "Idempotency-Key"],
+        expose_headers=["X-Request-ID", "Retry-After"],
+    )
+
+    def execute(operation, path_item, request, body, request_id):
+        ctx, auth = app.state.ctx, app.state.auth
+        name = operation["operationId"]
+        token = request.cookies.get("wiseway_session")
+        session = actor = None
+        if name == "login":
+            auth.origin(request.headers)
+        elif name != "getHealth":
+            session, actor = auth.authenticate(token)
+            if request.method in ("POST", "PUT", "PATCH", "DELETE") and name not in READ_POSTS:
+                auth.csrf(request.headers, session)
+        params = contract.request(
+            operation, path_item, request.path_params, request.query_params, request.headers, body
+        )
+        response_headers = {}
+        cookie = None
+        if name == "getHealth":
+            status, data = 200, {"status": "ok"}
+        elif name == "login":
+            data, cookie = auth.login(body, request_id, request.client.host if request.client else "local")
+            status = 200
+        elif name == "getSession":
+            session["touched"] = settings.clock()
+            status, data = 200, auth.dto(session, actor)
+        elif name == "logout":
+            auth.logout(token, actor, request_id)
+            status, data = 204, None
+        elif name == "returnQuarantineItem":
+            from .quarantine import QuarantineService
+
+            status, data = QuarantineService(ctx).return_item(actor, params, body, request_id)
+        else:
+            with ctx.store.transaction() as tx:
+
+                def action():
+                    return dispatch(ctx, tx, name, actor, params, body, request_id)
+
+                if name in IDEMPOTENT:
+                    # Dictionary ID is part of operation identity, not just the body hash.
+                    identity = name + ":" + request.url.path
+                    status, data = ctx.idempotent(
+                        tx, identity, actor, params["Idempotency-Key"], body, action
+                    )
+                else:
+                    status, data = action()
+                contract.response(operation, status, data)
+        contract.response(operation, status, data)
+        if actor and name != "logout":
+            auth.touch(token)
+        response = (
+            Response(status_code=status)
+            if status == 204
+            else JSONResponse(data, status_code=status, headers=response_headers)
+        )
+        if cookie:
+            response.set_cookie(
+                "wiseway_session",
+                cookie,
+                httponly=True,
+                secure=settings.secure_cookie,
+                samesite="lax",
+                path="/",
+                max_age=settings.absolute_session_seconds,
+            )
+        if name == "logout":
+            response.delete_cookie(
+                "wiseway_session", path="/", httponly=True, secure=settings.secure_cookie, samesite="lax"
+            )
+        return response
+
+    def endpoint(operation, path_item):
+        async def handle(request: Request):
+            request_id = uid("request")
+            try:
+                if request.url.hostname not in {
+                    __import__("urllib.parse", fromlist=["urlparse"]).urlparse(o).hostname
+                    for o in settings.allowed_origins
+                }:
+                    raise ApiError("FORBIDDEN", "Недопустимый адрес сервиса.", 403)
+                raw = bytearray()
+                async for chunk in request.stream():
+                    raw.extend(chunk)
+                    if len(raw) > 1024 * 1024:
+                        raise ApiError("VALIDATION_ERROR", "Слишком большой запрос.", 422)
+                body = None
+                if raw:
+                    if request.headers.get("content-type", "").split(";")[0].lower() != "application/json":
+                        raise ApiError("VALIDATION_ERROR", "Требуется application/json.", 422)
+                    try:
+                        body = json.loads(
+                            raw,
+                            object_pairs_hook=_json_object,
+                            parse_constant=lambda _: (_ for _ in ()).throw(ValueError()),
+                        )
+                    except (ValueError, UnicodeDecodeError):
+                        raise ApiError("VALIDATION_ERROR", "Недопустимый JSON.", 422) from None
+                response = await run_in_threadpool(execute, operation, path_item, request, body, request_id)
+            except ApiError as error:
+                value = error.body(request_id)
+                try:
+                    contract.response(operation, error.status, value)
+                except RuntimeError:
+                    error = ApiError("INTERNAL_ERROR", "Внутренняя ошибка сервиса.", 500)
+                    value = error.body(request_id)
+                response = JSONResponse(value, status_code=error.status)
+                if error.status == 429:
+                    response.headers["Retry-After"] = "60"
+            except Exception:
+                # No request bodies, tokens or physical paths enter the error response/log.
+                import logging
+
+                logging.getLogger("wiseway").error(
+                    "Request failed operation=%s request_id=%s", operation["operationId"], request_id
+                )
+                response = JSONResponse(
+                    ApiError("INTERNAL_ERROR", "Внутренняя ошибка сервиса.", 500).body(request_id),
+                    status_code=500,
+                )
+            response.headers["X-Request-ID"] = request_id
+            response.headers["Cache-Control"] = "no-store"
+            response.headers["X-Content-Type-Options"] = "nosniff"
+            return response
+
+        return handle
+
+    for path, item in contract.spec["paths"].items():
+        for method, operation in item.items():
+            if method in ("get", "post", "put", "patch", "delete"):
+                app.add_api_route(
+                    "/api/v1" + path,
+                    endpoint(operation, item),
+                    methods=[method.upper()],
+                    name=operation["operationId"],
+                )
+    return app
+
+
+def dispatch(ctx, tx, name, actor, params, body, request_id):
+    if name == "getAppConfig":
+        return 200, ctx.settings.app_config()
+    if name == "listRoots":
+        return 200, {"items": [index["root"] for index in tx.list("index")]}
+    if name == "listCompanies":
+        return 200, {"items": [public(c) for c in tx.list("company")]}
+    if name in ("searchFiles", "getSearchFacet"):
+        from .search import search, facet
+
+        root = tx.get("root", body["root_id"])
+        if root is None or not root.get("_searchable"):
+            raise ApiError("ROOT_NOT_READY", "Корень не опубликован.", 409)
+        index = tx.get("index", body["root_id"])
+        if index is None:
+            raise ApiError("ROOT_NOT_READY", "Корень ещё индексируется.", 409)
+        if index.get("_unavailable"):
+            raise ApiError("SEARCH_UNAVAILABLE", "Поиск временно недоступен.", 503, retryable=True)
+        result = (
+            search(index["root"], index["items"], body, ctx.settings.result_limit)
+            if name == "searchFiles"
+            else facet(index["root"], index["items"], body)
+        )
+        if name == "searchFiles" and "freshness" in index:
+            result["freshness"] = index["freshness"]
+        return 200, result
+    if name in ("queryAuditEvents", "getAuditUpdates", "listAuditActors"):
+        # Storage returns append order. Equal timestamps or a corrected system clock
+        # must not hide newly appended events from the refresh indicator.
+        events = visible_events(tx, actor)
+        if name == "getAuditUpdates":
+            after = params.get("after_event_id")
+            return 200, {"has_new_events": bool(events) and events[0]["event_id"] != after}
+        if name == "queryAuditEvents":
+            filtered = query_events(tx, actor, body)
+            return 200, ctx.page(
+                tx,
+                name,
+                actor,
+                body,
+                {"items": filtered, "newest_event_id": events[0]["event_id"] if events else None},
+                cursor=body["cursor"],
+                limit=body["limit"],
+            )
+        actors = {e["actor"]["user_id"]: e["actor"] for e in events if e["actor"]}
+        prefix = params.get("prefix", "").casefold()
+        items = sorted(
+            [
+                a
+                for a in actors.values()
+                if a["display_name"].casefold().startswith(prefix) or a["login"].casefold().startswith(prefix)
+            ],
+            key=lambda a: (a["display_name"].casefold(), a["user_id"]),
+        )
+        return 200, ctx.page(
+            tx,
+            name,
+            actor,
+            params,
+            {"items": items},
+            cursor=params.get("cursor"),
+            limit=params.get("limit", 100),
+        )
+    if name == "listQuarantineItems":
+        from .quarantine import QuarantineService
+
+        return QuarantineService(ctx).list_items(tx, actor, params)
+    if name in {
+        "querySortingQueue",
+        "createSortingSelection",
+        "createSortingPreview",
+        "getSortingPreview",
+        "createSortingBatch",
+        "getSortingBatch",
+        "listSortingBatches",
+    }:
+        from .sorting import SortingService
+
+        return SortingService(ctx).handle(name, tx, actor, params, body, request_id)
+    from .dictionaries import DictionaryService
+
+    return DictionaryService(ctx).handle(name, tx, actor, params, body, request_id)

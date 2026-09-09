@@ -1,0 +1,65 @@
+from .common import ApiError, uid, utc
+
+SYSTEM_ACTIONS = {"LOGIN_SUCCEEDED", "LOGIN_FAILED", "LOGOUT", "ACCOUNT_BLOCKED"}
+
+
+def emit(tx, actor, action, request_id, *, now=None, result="SUCCESS", **links):
+    event = dict.fromkeys(
+        (
+            "operation_id",
+            "source_attempt_id",
+            "company_id",
+            "dictionary_id",
+            "version_id",
+            "rule_set_id",
+            "batch_id",
+            "attempt_id",
+            "item_id",
+            "source",
+            "target",
+            "reason_code",
+            "comment",
+        )
+    )
+    event.update(
+        event_id=uid("event"),
+        occurred_at=utc(now),
+        actor=actor,
+        category="SYSTEM" if action in SYSTEM_ACTIONS else "BUSINESS",
+        action=action,
+        result=result,
+        request_id=request_id,
+    )
+    event.update(links)
+    tx.append_event(event)
+    return event
+
+
+def visible_events(tx, actor):
+    return [e for e in tx.events() if actor["role"] == "ADMIN" or e["category"] == "BUSINESS"]
+
+
+def query_events(tx, actor, body):
+    if body["from"] >= body["to"]:
+        raise ApiError("VALIDATION_ERROR", "Начало периода должно предшествовать концу.", 422)
+    if body["action"] in SYSTEM_ACTIONS and actor["role"] != "ADMIN":
+        raise ApiError("FORBIDDEN", "Системный журнал доступен администратору.", 403)
+    events = visible_events(tx, actor)
+    text = body["query_text"].casefold()
+    return sorted(
+        [
+            e
+            for e in events
+            if body["from"] <= e["occurred_at"] < body["to"]
+            and all(body[k] is None or e[k] == body[k] for k in ("company_id", "action", "result"))
+            and (body["actor_id"] is None or (e["actor"] and e["actor"]["user_id"] == body["actor_id"]))
+            and (
+                not text
+                or any(
+                    text in (e.get(k) or {}).get("display_path", "").casefold() for k in ("source", "target")
+                )
+            )
+        ],
+        key=lambda e: (e["occurred_at"], e["event_id"]),
+        reverse=True,
+    )
