@@ -1,0 +1,10 @@
+{
+  "actor": {
+    "user_id": "user-demo-worker-2",
+    "login": "worker.two",
+    "display_name": "Пётр Сменов",
+    "role": "WORKER"
+  },
+  "expires_at": "2031-05-10T17:30:00Z",
+  "csrf_token": "csrf-inert-placeholder-worker-two-not-a-real-token"
+}

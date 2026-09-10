@@ -44,3 +44,41 @@ PlanCounts и страницы, RuleSet и rule references, batch/outcome counts
 `contractlib.semantic.validate_fixture`, `link_errors` и
 `rule_set_consistency_errors`). Исполнение поиска, файловые гарантии
 и E2E требуют будущего приложения.
+
+## Синтетический корпус и публичные примеры (WP-03, LT-03.1a)
+
+Версионированный синтетический корпус и публичные примеры API лежат отдельно
+от встроенных примеров контракта:
+
+- `fixtures/synthetic/manifest.json` — версия, seed, метод контрольной суммы и
+  привязка каждого публичного примера к каноническому указателю
+  `#/components/schemas/<Name>` (DTO не копируются); контрольная сумма считается
+  по канонической JSON-форме (`json.dumps(..., sort_keys=True)`), поэтому LF- и
+  CRLF-checkout дают одинаковый digest;
+- `fixtures/synthetic/corpus.json` — компактный метаданный корпус: два
+  непересекающихся логических корня Atlas/Nova, контекстно-зависимые
+  `marker_id` (уникальны для root+цепочки родителей+raw+kind, как требует
+  `contracts/semantics.md`), разный регистр, 103 файла в широкой ветке, четыре
+  вида структурных отклонений, служебные объекты вне инвентаря, контроли
+  content-only/old-path и явные стадии create/change/rename/move/delete;
+- `contracts/examples/` — публичные JSON-примеры auth/config: два WORKER и
+  ADMIN, их сессии (инертные CSRF-заглушки, не реальные токены), профили
+  N=100/N=10, два корня и пустые состояния roots/companies.
+
+Runner проверяет эти внешние файлы теми же каноническими схемами
+(`FIX-EX-001`), все 8 lifecycle before/after `SearchItem` (`FIX-EX-002`),
+целостность корпуса (`FIX-CORPUS-001`) и каноническую контрольную сумму
+(`FIX-CHK-001`). Загрузчик/материализатор `tests/contract/contractlib/synthetic.py`
+раскрывает только объявленные контексты маркеров и явные ID/range-шаблоны
+больших регулярных групп и не выполняет поиск, сопоставление или ранжирование.
+Документированная команда подготовки (файл `fixtures/synthetic/inventory.json`
+не коммитится):
+
+```powershell
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\synthetic.py --write fixtures\synthetic\inventory.json
+```
+
+Ожидания точных поисковых запросов, порядка и фасетов формируются в следующем
+leaf LT-03.1b; здесь публикуется только конечный корпус и его инвентарь.
+Списки natural/русской сортировки в `search_inputs` — неупорядоченные
+кандидатные входы; точный порядок определяет LT-03.1b.

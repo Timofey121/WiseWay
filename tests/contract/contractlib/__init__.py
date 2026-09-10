@@ -8,6 +8,7 @@ Public entry points for other leaves (LT-02.2, WP-03 fixtures):
 """
 
 from .examples import ExampleSite, iter_example_sites, resolve_example_value, run_example_checks
+from .fixture_checks import run_fixture_checks
 from .loading import (
     CONTRACT_URI,
     RefError,
@@ -31,6 +32,7 @@ from .semantic import (
     validate_fixture,
 )
 from .verify import run_checks
+from . import synthetic
 
 __all__ = [
     "CONTRACT_URI",
@@ -57,8 +59,10 @@ __all__ = [
     "rule_set_consistency_errors",
     "run_checks",
     "run_example_checks",
+    "run_fixture_checks",
     "run_semantic_checks",
     "semantic_errors",
+    "synthetic",
     "validate_fixture",
     "validate_value",
 ]

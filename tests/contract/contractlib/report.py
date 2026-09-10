@@ -47,6 +47,9 @@ class Report:
     checks: List[CheckResult] = field(default_factory=list)
     examples_validated: int = 0
     semantics_checked: int = 0
+    fixtures_validated: int = 0
+    corpus_files: int = 0
+    lifecycle_fixtures: int = 0
 
     def check(self, check_id: str, description: str) -> CheckResult:
         result = CheckResult(check_id=check_id, description=description)

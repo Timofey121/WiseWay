@@ -1,0 +1,134 @@
+{
+  "fixture_set": "wiseway-synthetic-metadata",
+  "version": "1.1.1",
+  "seed": "wiseway-demo-seed-2031",
+  "contract_version": "1.0.0",
+  "generated_by": "tests/contract/contractlib/synthetic.py (deterministic; no randomness)",
+  "checksum": {
+    "algorithm": "sha256",
+    "canonicalization": "json.dumps(parse(content), sort_keys=True, separators=(',', ':'), ensure_ascii=False)",
+    "method": "content_hash(file) = sha256(canonical JSON bytes) so LF/CRLF checkouts hash identically; combined = sha256(utf8('fixture_set=<set>\\nversion=<version>\\nseed=<seed>\\ncorpus=<content_hash(corpus.json)>\\n' + concat('<example id>=<content_hash(payload)>\\n' in manifest order)))",
+    "corpus": "843659eef9aa39b1ea09e1b7a6cafe91d78eb48ca91abbb17764bc0fc9b5dced",
+    "examples": {
+      "auth-actor-worker-one": "91fe7ba2396c6f3ed3ba031c485c9b0b51cc7d7891527bf1e078d324745a9f36",
+      "auth-actor-worker-two": "1c3c5f5b4f9d5611ef9318b34c976c60c2901daa3ed283b094137e563532ee6b",
+      "auth-actor-admin": "c1de9b1e33aeee678d56df5387f0b3d41937e3f8ff250b0d5cdfa3b1637bcd63",
+      "auth-login-request-worker-one": "80192acb082997e7230839fa136dd5dbf42087d7fe3ea9e4bcbe4e9c81fffa69",
+      "auth-login-request-worker-two": "95982cb4a641217922dd9d752202d8e2bff181bffdd907729c60314705be05ef",
+      "auth-login-request-admin": "f7b37d9b645cd2551a9e3133af3236848923a5bc1cf94f0a32892fc9ad9823c6",
+      "auth-session-worker-one": "3b5c861170751296e70cd5c8b921bf222418a1af668774e45745476bf1590773",
+      "auth-session-worker-two": "e448bddc720f66b52edf17e50720a024e068d1fc068d05bed8d0d7d4a625128f",
+      "auth-session-admin": "b3dd89269365e7737fc90ec7242452dcf60f4082f8b12dee0ed5d0d99aa5ff1b",
+      "config-app-config-n100": "af53f65f00cdfc74acadf9b451b1aeef198be8e5ba78c83d8f8114908a4047f7",
+      "config-app-config-n10": "77aadaff17f48cfa4dd7a8821f23f6517aeeb711eb824089e35d34962200e24d",
+      "roots-two": "c4c3e4d39c5fb497e08077987c32acf9b08e7ecf8dea9a5f1265a9933ee75787",
+      "roots-empty": "eef46741adfc3a9f76294d3b78f37a45f113092ac9d44ee77c7a038a88ff09a1",
+      "companies-atlas-nova": "ee53d85061ad6c0aa97abb2df22dd7fa4611c4c8e901ae1103fb9d7f32936354",
+      "companies-empty": "eef46741adfc3a9f76294d3b78f37a45f113092ac9d44ee77c7a038a88ff09a1"
+    },
+    "combined": "cef77933500ed97336e2d38d8be670baf448de37ba2d33661bc3afad7e42a7b3"
+  },
+  "corpus": {
+    "file": "fixtures/synthetic/corpus.json",
+    "schema": "#/components/schemas/SearchItem",
+    "notes": "Compact corpus; synthetic.py materializes marker references and explicit ID/range cohorts into plain SearchItem JSON. Service objects are excluded from the searchable inventory."
+  },
+  "examples": [
+    {
+      "id": "auth-actor-worker-one",
+      "schema": "#/components/schemas/Actor",
+      "file": "contracts/examples/auth/actor-worker-one.json",
+      "description": "Synthetic WORKER actor used by the first concurrent worker scenario."
+    },
+    {
+      "id": "auth-actor-worker-two",
+      "schema": "#/components/schemas/Actor",
+      "file": "contracts/examples/auth/actor-worker-two.json",
+      "description": "Synthetic WORKER actor used by the second concurrent worker scenario."
+    },
+    {
+      "id": "auth-actor-admin",
+      "schema": "#/components/schemas/Actor",
+      "file": "contracts/examples/auth/actor-admin.json",
+      "description": "Synthetic ADMIN actor; no real account or elevated secret is embedded."
+    },
+    {
+      "id": "auth-login-request-worker-one",
+      "schema": "#/components/schemas/LoginRequest",
+      "file": "contracts/examples/auth/login-request-worker-one.json",
+      "description": "Synthetic login request shape.",
+      "secret_note": "The password is an inert placeholder, is not a credential, and is not valid on any system."
+    },
+    {
+      "id": "auth-login-request-worker-two",
+      "schema": "#/components/schemas/LoginRequest",
+      "file": "contracts/examples/auth/login-request-worker-two.json",
+      "description": "Synthetic login request shape.",
+      "secret_note": "The password is an inert placeholder, is not a credential, and is not valid on any system."
+    },
+    {
+      "id": "auth-login-request-admin",
+      "schema": "#/components/schemas/LoginRequest",
+      "file": "contracts/examples/auth/login-request-admin.json",
+      "description": "Synthetic login request shape.",
+      "secret_note": "The password is an inert placeholder, is not a credential, and is not valid on any system."
+    },
+    {
+      "id": "auth-session-worker-one",
+      "schema": "#/components/schemas/Session",
+      "file": "contracts/examples/auth/session-worker-one.json",
+      "description": "Synthetic session for the first WORKER.",
+      "secret_note": "csrf_token is an explicitly inert, non-functional placeholder; it is not a reusable token."
+    },
+    {
+      "id": "auth-session-worker-two",
+      "schema": "#/components/schemas/Session",
+      "file": "contracts/examples/auth/session-worker-two.json",
+      "description": "Synthetic session for the second WORKER.",
+      "secret_note": "csrf_token is an explicitly inert, non-functional placeholder; it is not a reusable token."
+    },
+    {
+      "id": "auth-session-admin",
+      "schema": "#/components/schemas/Session",
+      "file": "contracts/examples/auth/session-admin.json",
+      "description": "Synthetic session for the ADMIN.",
+      "secret_note": "csrf_token is an explicitly inert, non-functional placeholder; it is not a reusable token."
+    },
+    {
+      "id": "config-app-config-n100",
+      "schema": "#/components/schemas/AppConfig",
+      "file": "contracts/examples/config/app-config-n100.json",
+      "description": "Default demo profile with search_result_limit = 100."
+    },
+    {
+      "id": "config-app-config-n10",
+      "schema": "#/components/schemas/AppConfig",
+      "file": "contracts/examples/config/app-config-n10.json",
+      "description": "Test profile with search_result_limit = 10."
+    },
+    {
+      "id": "roots-two",
+      "schema": "#/components/schemas/RootsResponse",
+      "file": "contracts/examples/roots/roots-two.json",
+      "description": "The two published logical roots, one per synthetic company."
+    },
+    {
+      "id": "roots-empty",
+      "schema": "#/components/schemas/RootsResponse",
+      "file": "contracts/examples/roots/roots-empty.json",
+      "description": "Empty roots state before any root is published."
+    },
+    {
+      "id": "companies-atlas-nova",
+      "schema": "#/components/schemas/CompaniesResponse",
+      "file": "contracts/examples/companies/companies-atlas-nova.json",
+      "description": "The two available companies Atlas and Nova."
+    },
+    {
+      "id": "companies-empty",
+      "schema": "#/components/schemas/CompaniesResponse",
+      "file": "contracts/examples/companies/companies-empty.json",
+      "description": "Empty companies state."
+    }
+  ]
+}

@@ -3,6 +3,7 @@
 __pycache__/
 *.py[cod]
 .DS_Store
+fixtures/synthetic/inventory.json
 docs/*
 !docs/team/
 !docs/team/**
