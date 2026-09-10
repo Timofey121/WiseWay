@@ -517,6 +517,8 @@ def queue_response_errors(value: Dict[str, Any]) -> List[str]:
             for entry in status_counts
             if isinstance(entry, dict)
         }
+        if len(by_status) != len(status_counts):
+            errors.append("queue status_counts must not repeat a status")
         expected = {
             "ready": by_status.get("READY", 0),
             "processing": by_status.get("PROCESSING", 0),

@@ -3,7 +3,7 @@
   "version": "1.2.0",
   "seed": "wiseway-demo-seed-2031",
   "contract_version": "1.0.0",
-  "generated_by": "corpus: tests/contract/contractlib/synthetic.py (deterministic; no randomness); search/error examples: tests/contract/contractlib/search_expectations.py --write-examples (from literal expectations); rule/target examples: tests/contract/contractlib/rule_expectations.py --write-examples (from literal expectations); dictionary lifecycle examples: tests/contract/contractlib/dictionary_lifecycle.py --write-examples (from literal expectations)",
+  "generated_by": "corpus: tests/contract/contractlib/synthetic.py (deterministic; no randomness); search/error examples: tests/contract/contractlib/search_expectations.py --write-examples (from literal expectations); rule/target examples: tests/contract/contractlib/rule_expectations.py --write-examples (from literal expectations); dictionary lifecycle examples: tests/contract/contractlib/dictionary_lifecycle.py --write-examples (from literal expectations); queue/selection examples: tests/contract/contractlib/queue_selections.py --write-examples (from literal expectations)",
   "checksum": {
     "algorithm": "sha256",
     "canonicalization": "json.dumps(parse(content), sort_keys=True, separators=(',', ':'), ensure_ascii=False)",
@@ -86,13 +86,34 @@
       "error-stale-simulation": "cdddf9d71c4e46210a493b44b49f22529e4dcff982871141fc8d38cca6a31177",
       "error-no-scenario-ack-required": "c42a2f274ed410bf91f121b5762aa06d6a9e91c1cffdcf7ea406c2030cd7fda9",
       "error-rule-conflict": "5da3b2dbedcae485ffb538fc608b85a4e72a54f6f7a03750db422248c77fc8f5",
-      "error-idempotency-key-reused": "13fef2000904aa7f6b63b967e2dec84d10b3253702281ba3d8811eb3592cfc94"
+      "error-idempotency-key-reused": "13fef2000904aa7f6b63b967e2dec84d10b3253702281ba3d8811eb3592cfc94",
+      "queue-ready-120-page1": "f134a798c219fa7ad7fd50ace6e28dc6c98757803ed34d9e384f531a28d7b696",
+      "queue-all-active-120": "1b0fa4b8ff48ab66137c1fd0c4b9d6148136783cd0b98c47818e2dc1ce3def94",
+      "queue-missing-explicit": "82f6ca353364b8bee19bcc4a26ebc8a4c015d1d7a1cdbc6ac2fd670bd9639203",
+      "queue-query-text": "20617bbc2486d6e47b66928603a85f3510b0c5950e4b07ad2268a7fd523f9bf3",
+      "queue-ready-0": "00d8a485c906a8fd7ac25bf7fa8fff304253b56cc1ce182d4b90006efdd1012a",
+      "queue-all-active-0": "82405ced7313b0d0d7353631d5f3d39f7a5f2199d22501b9527633a327d0e45e",
+      "queue-ready-1001-page1": "a7842aef4c1df346536a159aa17c24c7cd9d93763433d9118ca08df034461e24",
+      "selection-request-explicit-one": "b3a44511af7f136d8ada1c5b01ef0da0eff936e8e58c0b7b64ea27ca98d30d80",
+      "selection-request-explicit-multiple": "370f27059050d01792a08810848ed6eca4454c5fd34388f01408cb8fdd409ce5",
+      "selection-request-all-matching-120": "386368894d7f8c996241732f6913a7293842a54bfef4453b02cc29dc982326a7",
+      "selection-snapshot-explicit-one": "ceb8328eb34e55ed8d09ca4f4c0a3204264ca18158810109d771713995c0bf40",
+      "selection-snapshot-explicit-multiple": "2d08ca0c13be8b6513bdfdbce822e7ce9446cee4fa3e30820a6b0f52497fbd00",
+      "selection-snapshot-all-matching-120": "bb4502d1bb1e9e177d7f380a8ddad676b60e84471082a670f498c9df1fa69ddc",
+      "error-empty-selection": "18b303b039834b4de956d0f4834b8e470fbee300e4686432865303c8df5dff40",
+      "error-batch-limit-exceeded": "b475884d24f23001c7c711b26fe4ddb17a03e61306e70781e8c213ddf9823992",
+      "error-selection-changed": "60ec3487bd4594382bca49314723440078740cee0efc23af819db3ea0e118324",
+      "error-selection-forbidden": "a64ec698e9fb39730d24eb2bc1820b7b02bf2f9fd296c17c039d2eac85f468ef",
+      "error-selection-expired-preview": "f6b45764635f52a1fa9cb7bc27093181e1a38312f6b44c21b6af1d79a2509ef3",
+      "error-selection-expired-batch": "d26bc18bdb371153df557353f5c1bd02bb045e8b177c455a9e3a36735c294577",
+      "error-selection-not-found": "bec3d835dac8993c8e87f04e7295157db8d29b13fd5f4555e0e65374264261f7"
     },
-    "combined": "fa9411f2f3057c7c66ef5f27a90811eba96be58aa8ebe2777ea57f5b01a83398",
+    "combined": "e6a2232296e780047b282b130c4ef07ae7bf7393a1ea77f7cf0faa576c1c8655",
     "fixtures": {
       "search-expectations": "0910c9bbeb54eaba159105e4d060cd2ca06c7d71f0459946f220886f22751c1b",
       "rule-expectations": "c3577511741d2611c4e951b0e49f5a3a458642d9df17b627f1f60107d2bf74ac",
-      "dictionary-lifecycle": "d6bf6fa32cd183a033d65790afd95d7e7d5a4d0d1244156f0051275fce489e9c"
+      "dictionary-lifecycle": "d6bf6fa32cd183a033d65790afd95d7e7d5a4d0d1244156f0051275fce489e9c",
+      "queue-selections": "328b828fbc429ca924619157c9f73cb5a7f5f836a4a9f86f149d3173039b8e90"
     }
   },
   "corpus": {
@@ -118,6 +139,12 @@
       "file": "fixtures/synthetic/dictionary_lifecycle.json",
       "schema": null,
       "description": "LT-03.2b literal draft/simulation/publication/history/restore expectations across two actors, built on the LT-03.2a immutable definitions; materialized by contractlib.dictionary_lifecycle without a runtime domain."
+    },
+    {
+      "id": "queue-selections",
+      "file": "fixtures/synthetic/queue_selections.json",
+      "schema": null,
+      "description": "LT-03.3a literal queue/readiness/selection oracle: 0/120/1001 READY profiles, explicit and ALL_MATCHING membership, pre-batch ownership/expiry errors; materialized by contractlib.queue_selections without a matcher, readiness detector or selection algorithm."
     }
   ],
   "examples": [
@@ -588,6 +615,126 @@
       "schema": "#/components/schemas/ErrorResponse",
       "file": "contracts/examples/errors/error-idempotency-key-reused.json",
       "description": "409 IDEMPOTENCY_KEY_REUSED for the same key with a different body."
+    },
+    {
+      "id": "queue-ready-120-page1",
+      "schema": "#/components/schemas/QueueResponse",
+      "file": "contracts/examples/sorting/queue-ready-120-page1.json",
+      "description": "LT-03.3a: company queue page 1 of 120 READY files; company counters and filtered counts differ."
+    },
+    {
+      "id": "queue-all-active-120",
+      "schema": "#/components/schemas/QueueResponse",
+      "file": "contracts/examples/sorting/queue-all-active-120.json",
+      "description": "LT-03.3a: default active queue excludes MISSING and pages 100 of 130 matches."
+    },
+    {
+      "id": "queue-missing-explicit",
+      "schema": "#/components/schemas/QueueResponse",
+      "file": "contracts/examples/sorting/queue-missing-explicit.json",
+      "description": "LT-03.3a: MISSING appears only under an explicit status filter."
+    },
+    {
+      "id": "queue-query-text",
+      "schema": "#/components/schemas/QueueResponse",
+      "file": "contracts/examples/sorting/queue-query-text.json",
+      "description": "LT-03.3a: literal query_text substring filter over filename/display path."
+    },
+    {
+      "id": "queue-ready-0",
+      "schema": "#/components/schemas/QueueResponse",
+      "file": "contracts/examples/sorting/queue-ready-0.json",
+      "description": "LT-03.3a: zero READY files; the empty READY page drives EMPTY_SELECTION."
+    },
+    {
+      "id": "queue-all-active-0",
+      "schema": "#/components/schemas/QueueResponse",
+      "file": "contracts/examples/sorting/queue-all-active-0.json",
+      "description": "LT-03.3a: non-empty company queue with no selectable item."
+    },
+    {
+      "id": "queue-ready-1001-page1",
+      "schema": "#/components/schemas/QueueResponse",
+      "file": "contracts/examples/sorting/queue-ready-1001-page1.json",
+      "description": "LT-03.3a: 1001 eligible READY files; the page is capped at 100 and the batch limit is exceeded."
+    },
+    {
+      "id": "selection-request-explicit-one",
+      "schema": "#/components/schemas/SelectionRequest",
+      "file": "contracts/examples/sorting/selection-request-explicit-one.json",
+      "description": "LT-03.3a: EXPLICIT selection request for one item with its content revision."
+    },
+    {
+      "id": "selection-request-explicit-multiple",
+      "schema": "#/components/schemas/SelectionRequest",
+      "file": "contracts/examples/sorting/selection-request-explicit-multiple.json",
+      "description": "LT-03.3a: EXPLICIT selection request for several items, including off-page ids."
+    },
+    {
+      "id": "selection-request-all-matching-120",
+      "schema": "#/components/schemas/SelectionRequest",
+      "file": "contracts/examples/sorting/selection-request-all-matching-120.json",
+      "description": "LT-03.3a: ALL_MATCHING selection request with expected_eligible_count=120."
+    },
+    {
+      "id": "selection-snapshot-explicit-one",
+      "schema": "#/components/schemas/SelectionSnapshot",
+      "file": "contracts/examples/sorting/selection-snapshot-explicit-one.json",
+      "description": "LT-03.3a: immutable snapshot of one explicit item."
+    },
+    {
+      "id": "selection-snapshot-explicit-multiple",
+      "schema": "#/components/schemas/SelectionSnapshot",
+      "file": "contracts/examples/sorting/selection-snapshot-explicit-multiple.json",
+      "description": "LT-03.3a: immutable snapshot of several explicit items, including off-page ids."
+    },
+    {
+      "id": "selection-snapshot-all-matching-120",
+      "schema": "#/components/schemas/SelectionSnapshot",
+      "file": "contracts/examples/sorting/selection-snapshot-all-matching-120.json",
+      "description": "LT-03.3a: immutable ALL_MATCHING snapshot of all 120 eligible READY files."
+    },
+    {
+      "id": "error-empty-selection",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-empty-selection.json",
+      "description": "LT-03.3a: 422 EMPTY_SELECTION for a filter with zero eligible files."
+    },
+    {
+      "id": "error-batch-limit-exceeded",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-batch-limit-exceeded.json",
+      "description": "LT-03.3a: 422 BATCH_LIMIT_EXCEEDED for 1001 eligible files, without truncation."
+    },
+    {
+      "id": "error-selection-changed",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-selection-changed.json",
+      "description": "LT-03.3a: 409 SELECTION_CHANGED before snapshot creation."
+    },
+    {
+      "id": "error-selection-forbidden",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-selection-forbidden.json",
+      "description": "LT-03.3a: 403 FORBIDDEN for another user of a bound snapshot."
+    },
+    {
+      "id": "error-selection-expired-preview",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-selection-expired-preview.json",
+      "description": "LT-03.3a: 409 SELECTION_EXPIRED on the preview operation."
+    },
+    {
+      "id": "error-selection-expired-batch",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-selection-expired-batch.json",
+      "description": "LT-03.3a: 409 SELECTION_EXPIRED on the batch operation."
+    },
+    {
+      "id": "error-selection-not-found",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-selection-not-found.json",
+      "description": "LT-03.3a: 404 NOT_FOUND for an unknown selection id on the preview operation."
     }
   ]
 }

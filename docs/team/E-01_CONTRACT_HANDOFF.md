@@ -568,8 +568,10 @@ git diff --check
   поэтому корреляция возврата доказана linked-парой фикстур, а не выдуманной связью.
 - Backend/UI/control plane/backlog не затрагивались; staging/commit/push worker не
   выполняет (D-06). Mock/real/QA-прогоны не выполнялись.
-- WP-03 ещё не начат: семантический API подготовлен к переиспользованию, но внешние
-  `contracts/examples/`/`fixtures/synthetic/` не создавались.
+- WP-03 выполняется отдельно от этой проверки: внешние `contracts/examples/`/
+  `fixtures/synthetic/` создаются его leaf-ами (см.
+  `WP-03_SYNTHETIC_HANDOFF.md`); здесь описана только семантическая проверка
+  встроенных примеров OAS.
 
 ### Статус и следующий владелец
 

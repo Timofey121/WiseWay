@@ -219,3 +219,49 @@ counts, ID и совпадение сгенерированных публичн
 Сгенерированные примеры лежат в `contracts/examples/dictionaries/`,
 `contracts/examples/simulations/` и `contracts/examples/errors/` и привязаны в
 `manifest.json` к каноническим схемам. Версия корпуса `1.2.0` не меняется.
+
+## Эталон очереди, readiness и снимков (WP-03, LT-03.3a)
+
+`fixtures/synthetic/queue_selections.json` — конечный, внутренне связанный
+эталон очереди компании, наблюдений готовности и снимка выбора поверх
+неизменяемых определений LT-03.2a/2b и актёров auth-fixtures:
+
+- `profiles` — три профиля READY `0 / 120 / 1001` плюс изолированный
+  `QUEUE-Q022-DECISION-STABILITY`; `status_counts` покрывают все семь состояний
+  (`DISCOVERED`, `WAITING_READY`, `READY`, `PROCESSING`, `REQUIRES_DECISION`,
+  `RECOVERY_REQUIRED`, `MISSING`), а `matching_count`/`eligible_count` заданы
+  отдельно для каждого фильтра (страница ≤100 при общем 120, `MISSING` только
+  по явному фильтру, `query_text` — литеральная подстрока); `selectable=true`
+  только для стабильного READY/REQUIRES_DECISION без claim, где стабильность —
+  явная метадата группы, а не поле `QueueItem`;
+- `readiness` — пять конечных наблюдений: два равных size/mtime ≥5 с без
+  флага незавершённости → `READY`; изменение/переименование →
+  `WAITING_READY` с новой ревизией; незавершённое поступление остаётся
+  `WAITING_READY`; claim → `PROCESSING` без смены содержательной ревизии;
+- `selection_scenarios` — EXPLICIT одного/нескольких (включая off-page IDs) и
+  ALL_MATCHING 120: снимок фиксирует literal membership, `selected_count` и
+  `queue_generation`; TTL 300 с; поздний приход и смена фильтра снимок не
+  меняют;
+- `selection_errors` — 422 `EMPTY_SELECTION`, 422 `BATCH_LIMIT_EXCEEDED` без
+  усечения, 409 `SELECTION_CHANGED` до создания, 403 `FORBIDDEN` чужому
+  пользователю, 409 `SELECTION_EXPIRED` на реальных preview/batch-операциях,
+  404 `NOT_FOUND`; коды сверяются с канонической response-схемой операции;
+- `invalid_requests` — schema-отклонение очереди/выбора без компании, пустого и
+  1001-элементного EXPLICIT, неизвестного режима и лишних полей;
+- `links`/`mutations` — generic cross-links (company/generation/count/membership/
+  RuleSet) и негативные мутации, которые обязаны отклоняться валидаторами.
+
+`rule_set` сохраняет принятую идентичность `rule-set-atlas-published` для
+следующего leaf preview (LT-03.3b). `tests/contract/contractlib/queue_selections.py`
+— материализатор по литеральным ID без matcher/readiness/selection-алгоритма.
+Проверки `FIX-QUEUE-001/002/003` валидируют схемы, конечные инварианты,
+schema-классификацию запросов и совпадение сгенерированных публичных примеров.
+Документированная команда подготовки:
+
+```powershell
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\queue_selections.py --write-examples
+```
+
+Сгенерированные примеры лежат в `contracts/examples/sorting/` и
+`contracts/examples/errors/` и привязаны в `manifest.json` к каноническим
+схемам. Версия корпуса `1.2.0` не меняется.

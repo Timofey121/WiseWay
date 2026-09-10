@@ -1,0 +1,80 @@
+{
+  "queue_generation": "queue-generation-atlas-0",
+  "items": [
+    {
+      "item_id": "queue-atlas0-discovered-01",
+      "item_revision": 0,
+      "company_id": "company-demo-atlas",
+      "incoming_source_id": "incoming-demo-atlas",
+      "source_name": "Atlas incoming",
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Zero-Discovered-01.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Zero-Discovered-01.pdf"
+      },
+      "filename": "Atlas-Zero-Discovered-01.pdf",
+      "size_bytes": 512,
+      "modified_at": "2031-05-10T08:15:00Z",
+      "status": "DISCOVERED",
+      "reason_code": null,
+      "selectable": false,
+      "active_attempt_id": null
+    },
+    {
+      "item_id": "queue-atlas0-discovered-02",
+      "item_revision": 0,
+      "company_id": "company-demo-atlas",
+      "incoming_source_id": "incoming-demo-atlas",
+      "source_name": "Atlas incoming",
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Zero-Discovered-02.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Zero-Discovered-02.pdf"
+      },
+      "filename": "Atlas-Zero-Discovered-02.pdf",
+      "size_bytes": 512,
+      "modified_at": "2031-05-10T08:15:00Z",
+      "status": "DISCOVERED",
+      "reason_code": null,
+      "selectable": false,
+      "active_attempt_id": null
+    },
+    {
+      "item_id": "queue-atlas0-waiting-01",
+      "item_revision": 1,
+      "company_id": "company-demo-atlas",
+      "incoming_source_id": "incoming-demo-atlas",
+      "source_name": "Atlas incoming",
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Zero-Waiting-01.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Zero-Waiting-01.pdf"
+      },
+      "filename": "Atlas-Zero-Waiting-01.pdf",
+      "size_bytes": 768,
+      "modified_at": "2031-05-10T08:25:00Z",
+      "status": "WAITING_READY",
+      "reason_code": null,
+      "selectable": false,
+      "active_attempt_id": null
+    }
+  ],
+  "matching_count": 3,
+  "eligible_count": 0,
+  "counters": {
+    "ready": 0,
+    "processing": 0,
+    "attention": 0
+  },
+  "status_counts": [
+    {
+      "status": "DISCOVERED",
+      "count": 2
+    },
+    {
+      "status": "WAITING_READY",
+      "count": 1
+    }
+  ],
+  "next_cursor": null
+}

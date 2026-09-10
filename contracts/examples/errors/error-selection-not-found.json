@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Снимок выбора не найден.",
+    "request_id": "request-selection-not-found",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

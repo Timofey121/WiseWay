@@ -529,7 +529,10 @@ class NegativeFixtureTests(CorpusFixtureMixin, unittest.TestCase):
         self.assertIn("FIX-DLC-001", passed)
         self.assertIn("FIX-DLC-002", passed)
         self.assertIn("FIX-DLC-003", passed)
-        self.assertEqual(77, report.fixtures_validated)
+        self.assertIn("FIX-QUEUE-001", passed)
+        self.assertIn("FIX-QUEUE-002", passed)
+        self.assertIn("FIX-QUEUE-003", passed)
+        self.assertEqual(97, report.fixtures_validated)
         self.assertEqual(164, report.corpus_files)
         self.assertEqual(8, report.lifecycle_fixtures)
         self.assertEqual(51, report.search_scenarios)
@@ -545,6 +548,14 @@ class NegativeFixtureTests(CorpusFixtureMixin, unittest.TestCase):
         self.assertEqual(1, report.lifecycle_replays)
         self.assertEqual(7, report.lifecycle_simulations)
         self.assertEqual(3, report.lifecycle_publishes)
+        self.assertEqual(4, report.queue_profiles)
+        self.assertEqual(8, report.queue_queries)
+        self.assertEqual(3, report.selection_scenarios)
+        self.assertEqual(7, report.selection_errors)
+        self.assertEqual(5, report.readiness_sequences)
+        self.assertEqual(4, report.ownership_scenarios)
+        self.assertEqual(16, report.queue_links)
+        self.assertEqual(12, report.queue_mutations)
 
 
 if __name__ == "__main__":

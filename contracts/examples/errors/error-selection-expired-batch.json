@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "SELECTION_EXPIRED",
+    "message": "Снимок выбора истёк. Создайте его заново.",
+    "request_id": "request-selection-expired-batch",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

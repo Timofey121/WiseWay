@@ -63,6 +63,14 @@ class Report:
     lifecycle_replays: int = 0
     lifecycle_simulations: int = 0
     lifecycle_publishes: int = 0
+    queue_profiles: int = 0
+    queue_queries: int = 0
+    selection_scenarios: int = 0
+    selection_errors: int = 0
+    readiness_sequences: int = 0
+    ownership_scenarios: int = 0
+    queue_links: int = 0
+    queue_mutations: int = 0
 
     def check(self, check_id: str, description: str) -> CheckResult:
         result = CheckResult(check_id=check_id, description=description)

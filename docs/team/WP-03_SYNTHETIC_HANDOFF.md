@@ -678,3 +678,135 @@ git diff --check
   membership/counts, конфликтов/целей, stale-сценариев, restore/идемпотентности
   и негативных мутаций), затем LT-03.3a (очередь/readiness/snapshot).
 - **Блокирующая зависимость:** нет.
+
+# LT-03.3a — эталон очереди, readiness и снимков выбора
+
+Дополнение фиксирует результат leaf LT-03.3a (parent LT-03.3, WP-03, Epic
+E-01). **Status:** IN_PROGRESS (публикация отложена D-06).
+
+## Задача и основание
+
+- **Цель:** конечный независимый эталон очереди компании, готовности входящих
+  и неизменяемого снимка выбора для будущих preview/batch leaf-ов; matcher,
+  readiness-детектор и selection-алгоритм не реализуются.
+- **Основание:** AGENTS; FRONTEND_BACKLOG LT-03.3/LT-03.3a; D-03/D-06; API §7/8
+  (selection ownership + preflight); TZ QUEUE-01/02/03/10; QA §4; MATRIX
+  Q-022/023/024/025/026; OAS `QueueItem`/`QueueResponse`/`QueueFilters`/
+  `SelectionRequest`/`SelectionSnapshot`/`ErrorResponse`; `contracts/semantics.md`.
+
+## Изменённые/добавленные файлы
+
+| Файл | Характер |
+|---|---|
+| `fixtures/synthetic/queue_selections.json` | новый эталон: 4 профиля (0/120/1001 READY + изолированный stability), 8 запросов, 5 readiness-наблюдений, 3 selection, 7 error, 4 ownership, 3 sequence, 10 invalid-request, 16 links, 12 mutations, coverage Q-022…026 |
+| `contracts/examples/sorting/*.json` | 13 публичных QueueResponse/SelectionRequest/SelectionSnapshot |
+| `contracts/examples/errors/error-empty-selection.json` и др. | 7 публичных ErrorResponse |
+| `tests/contract/contractlib/queue_selections.py` | generic declarative loader/checker + `--write-examples`; переиспользует `semantic.validate_fixture`/`queue_response_errors`, `rule_expectations` для RuleSet identity |
+| `tests/contract/contractlib/fixture_checks.py` | FIX-QUEUE-001/002/003 |
+| `tests/contract/contractlib/report.py`, `__init__.py`, `verify_contract.py` | счётчики/экспорт/строка отчёта |
+| `tests/contract/test_queue_selections.py` | тесты: структура/схемы/counts/membership/readiness/TTL/ownership/links/негативные мутации |
+| `tests/contract/test_synthetic_corpus.py` | 77→97 публичных примеров и FIX-QUEUE-счётчики |
+| `fixtures/synthetic/manifest.json` | fixture `queue-selections`, 20 привязанных examples, пересчитанные канонические checksums; version корпуса **1.2.0 без изменения** |
+| `README.md` | раздел LT-03.3a и команда генерации |
+
+OAS, `contracts/semantics.md`, control plane, backlog, backend/UI и
+`corpus.json`/`rule_expectations.json`/`dictionary_lifecycle.json` **не
+изменялись**. Корпус `1.2.0`.
+
+## Что именно зафиксировано
+
+- **Профили READY 0/120/1001.** `status_counts` покрывают все семь состояний;
+  `counters.ready/processing/attention` и `attention = REQUIRES_DECISION +
+  RECOVERY_REQUIRED`; `matching_count`/`eligible_count` различаются для READY
+  (120/120) и default-active (130/121); страница ≤100 при общем 120;
+  `MISSING` отсутствует в default-active и появляется только по явному фильтру.
+- **selectable.** `true` только для стабильного READY или стабильного
+  REQUIRES_DECISION без active claim. Стабильность — не поле `QueueItem`
+  (схема закрыта), а явная метадата группы bundle; `queue_response_errors`
+  проверяет только DTO-инвариант (`selectable=true` запрещён вне
+  READY/REQUIRES_DECISION и при active claim), а `membership_errors` сверяет
+  `selectable` с явной `stable`. Изолированный профиль
+  `QUEUE-Q022-DECISION-STABILITY` добавляет нестабильный REQUIRES_DECISION без
+  claim с `selectable=false`; claimed REQUIRES_DECISION, PROCESSING,
+  RECOVERY_REQUIRED, MISSING, DISCOVERED, WAITING_READY — `false`.
+- **readiness.** Два равных size/mtime ≥5 с без unfinished → READY; изменение и
+  переименование → WAITING_READY с новой содержательной ревизией; unfinished
+  остаётся WAITING_READY; claim → PROCESSING без смены содержательной ревизии.
+  Это конечная последовательность ожиданий, не физическое доказательство.
+- **selection.** EXPLICIT одного/нескольких (включая off-page `0101`/`0120`) и
+  ALL_MATCHING 120: literal membership, `selected_count`, `queue_generation`,
+  TTL 300 с; late arrival и смена фильтра снимок не меняют. ID снимка
+  `selection-atlas-allmatching-120` уникален для bundle и не совпадает с
+  одноимённым встроенным примером OAS (тот не изменялся).
+- **Ошибки.** 422 `EMPTY_SELECTION`, 422 `BATCH_LIMIT_EXCEEDED` (без усечения),
+  409 `SELECTION_CHANGED` до создания, 403 `FORBIDDEN`, 409 `SELECTION_EXPIRED`
+  на реальных `createSortingPreview`/`createSortingBatch`, 404 `NOT_FOUND`.
+  Коды сверяются с канонической response-схемой конкретной операции.
+- **Schema.** Queue/SelectionRequest/SelectionSnapshot/Error payloads валидны;
+  запросы без компании, пустой/1001-элементный EXPLICIT, неизвестный режим и
+  лишние поля помечены `schema_rejected=true`; invalid refs/dups/company shapes
+  проверяются generic links/mutations.
+- **RuleSet.** `rule-set-atlas-published` с members general v1 + invoices v1
+  совпадает с принятой идентичностью LT-03.2b — LT-03.3b обязан её
+  переиспользовать.
+
+## V-S: точные команды и фактические результаты
+
+```powershell
+.\.venv-contract\Scripts\python.exe tests\contract\verify_contract.py
+.\.venv-contract\Scripts\python.exe -m unittest discover -s tests\contract -p "test_*.py"
+.\.venv-contract\Scripts\python.exe -m pip check
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\queue_selections.py --write-examples
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\synthetic.py --update-checksums
+git diff --check
+```
+
+- `verify_contract.py` → `RESULT: PASS (36 checks, 0 failures)`, `Fixtures: 97`,
+  `Queue expectations: 4 profile(s), 8 query(ies), 3 selection, 7 error,
+  5 readiness, 4 ownership scenario(s)`; FIX-QUEUE-001/002/003 — PASS.
+- `unittest discover` → `Ran 287 tests ... OK` (было 243; добавлено 44).
+- `pip check` → `No broken requirements found.`
+- `--write-examples` идемпотентно; повторная генерация совпадает с
+  закоммиченными файлами (FIX-QUEUE-003). `--update-checksums` не меняет
+  пересчитанный manifest.
+- Негативные self-тесты: неверный `status_counts`/`attention`, страница не
+  равная лимиту, MISSING в default-очереди, несовпадение `selected_count`,
+  чужая компания, неизвестный member, несовпадение ревизии, короткий интервал
+  и unfinished-маркер readiness, drift `queue_generation`, drift RuleSet,
+  `selectable=true` у нестабильного REQUIRES_DECISION и пропавшая явная
+  `stable`-метадата — отклоняются `expectation_errors`/`mutation_errors`.
+
+## ID-модель для следующего leaf (LT-03.3b)
+
+- Профили: `QUEUE-Q022-READY-120`, `QUEUE-Q024-READY-0`,
+  `QUEUE-Q024-READY-1001`, `QUEUE-Q022-DECISION-STABILITY`; запросы
+  `Q-Q024-READY-PAGE1`, `Q-Q022-ALL-ACTIVE`, `Q-Q022-MISSING-EXPLICIT`,
+  `Q-Q022-QUERY-TEXT`, `Q-Q024-READY-EMPTY`, `Q-Q022-ALL-ACTIVE-0`,
+  `Q-Q024-READY-LIMIT-PAGE1`, `Q-Q022-STABILITY-ACTIVE`.
+- Снимки: `selection-atlas-explicit-one` (1), `selection-atlas-explicit-multiple`
+  (3, off-page `queue-atlas-ready-0101`/`0120`),
+  `selection-atlas-allmatching-120` (120).
+- Item IDs READY-120: `queue-atlas-ready-0001…0120`; READY-1001:
+  `queue-atlas-limit-0001…1001`; `queue_generation`:
+  `queue-generation-atlas-120`/`-0`/`-1001`.
+- Ошибки: `SEL-ERR-EMPTY`, `SEL-ERR-LIMIT`, `SEL-ERR-CHANGED`,
+  `SEL-ERR-FORBIDDEN`, `SEL-ERR-EXPIRED-PREVIEW`, `SEL-ERR-EXPIRED-BATCH`,
+  `SEL-ERR-NOT-FOUND`.
+- **RuleSet для preview:** `rule-set-atlas-published` (general v1 + invoices v1).
+
+## Ограничения и явно не выполненное
+
+- Это **S**-уровень: схемы/статические проверки и литеральный эталон.
+  **M (mock/UI), A (реальный API/ФС), E (E2E) — NOT_RUN.** Физическая
+  готовность, персистентность, TTL-часы и гонки не проверялись.
+- Matcher/readiness/selection/preflight не реализуются: значения объявлены
+  литерально и сверяются между собой; `query_text` — литеральный список.
+- Backend/UI/control plane/backlog не затрагивались. Staging/commit/push worker
+  не выполняет (D-06).
+
+## Статус и следующий владелец
+
+- **Следующий владелец:** reviewer LT-03.3a (независимая сверка counts,
+  membership, readiness-переходов, ownership/TTL и негативных мутаций), затем
+  LT-03.3b (preview: Prediction/CollisionDetails и DIRECT/PREVIEWED preflight).
+- **Блокирующая зависимость:** нет.
