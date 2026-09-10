@@ -831,13 +831,13 @@ E-01). **Status:** IN_PROGRESS (публикация отложена D-06).
 
 | Файл | Характер |
 |---|---|
-| `fixtures/synthetic/preview_preflight.json` | новый эталон: 6 preview-групп (120 в двух страницах, one, multiple, isolated hetero, conflict, Nova-foreign), 18 preflight-сценариев (3 принятых, 15 отказов), 4 post-acceptance исхода, 8 error, 9 invalid-request, 8 links, 15 mutations, coverage Q-023/026/027 |
+| `fixtures/synthetic/preview_preflight.json` | новый эталон: 6 preview-групп (120 в двух страницах, one, multiple, isolated hetero, conflict, Nova-foreign), 18 preflight-сценариев (3 принятых, 15 отказов), 4 post-acceptance исхода, 8 error, 9 invalid-request, 8 links, 17 mutations, coverage Q-023/026/027 |
 | `contracts/examples/sorting/preview-atlas-*.json` | 5 публичных Preview |
 | `contracts/examples/errors/error-batch-*.json`, `error-preview-*.json` | 8 публичных ErrorResponse |
 | `tests/contract/contractlib/preview_preflight.py` | declarative loader/checker + `--write-examples`; переиспользует `queue_selections` (снимки) и `rule_expectations` (RuleSet/version/rule/target) |
 | `tests/contract/contractlib/fixture_checks.py` | FIX-PREVIEW-001/002/003 |
 | `tests/contract/contractlib/report.py`, `__init__.py`, `verify_contract.py` | счётчики/экспорт/строка отчёта |
-| `tests/contract/test_preview_preflight.py` | 49 тестов: структура/схемы/prediction/collision/binding/preflight/негативные мутации |
+| `tests/contract/test_preview_preflight.py` | 55 тестов: структура/схемы/prediction/collision/binding/preflight/негативные мутации |
 | `tests/contract/test_synthetic_corpus.py` | 110 публичных примеров, FIX-PREVIEW-счётчики |
 | `fixtures/synthetic/manifest.json` | fixture `preview-preflight`, 13 привязанных examples, пересчитанные канонические checksums; версия корпуса **1.2.0 без изменения** |
 | `README.md` | раздел LT-03.3b и команда генерации |
@@ -939,4 +939,153 @@ git diff --check
 - **Следующий владелец:** reviewer LT-03.3b (независимая сверка prediction/
   collision kinds, привязки к снимкам и RuleSet, preflight-пар и негативных
   мутаций), затем LT-03.4a (фактические партии и файловые исходы).
+- **Блокирующая зависимость:** нет.
+
+# LT-03.4a — эталон фактических партий и файловых исходов
+
+Дополнение фиксирует результат leaf LT-03.4a (parent LT-03.4, WP-03, Epic
+E-01). **Status:** IN_PROGRESS (публикация отложена D-06).
+
+## Задача и основание
+
+- **Цель:** конечный независимый эталон принятых партий и пофайловых исходов
+  поверх неизменяемых снимков LT-03.3a, принятых preflight LT-03.3b и полных
+  определений LT-03.2a/2b; matcher, priority resolver, target-name derivation,
+  executor и файловые операции не реализуются.
+- **Основание:** AGENTS; FRONTEND_BACKLOG LT-03.4/LT-03.4a; D-03/D-06; API §8;
+  TZ QUEUE-07…10, FILE-01…06/08/09; QA §4/8; MATRIX Q-031…037/039; OAS
+  `Batch`/`BatchSummary`/`BatchPage`/`Outcome`/`OutcomeCounts`/`BatchState`/
+  `OutcomeState`/`OutcomeReasonCode`; `contracts/semantics.md`.
+
+## Изменённые/добавленные файлы
+
+| Файл | Характер |
+|---|---|
+| `fixtures/synthetic/batch_outcomes.json` | новый эталон: 7 партий (ACCEPTED/RUNNING/COMPLETED/COMPLETED_WITH_ISSUES/RECOVERY_REQUIRED), 9 страниц, 260 outcomes, 7 summary, 23 mutations, 21 link, inventory-контракт, coverage Q-031…037/039 |
+| `contracts/examples/sorting/batch-*.json` | 9 публичных `Batch` + 1 `BatchPage` истории |
+| `tests/contract/contractlib/batch_outcomes.py` | declarative loader/materializer/checker + `--write-examples`; переиспользует `queue_selections`/`preview_preflight`/`rule_expectations`, не дублирует matcher |
+| `tests/contract/contractlib/fixture_checks.py` | FIX-BATCH-001/002/003 |
+| `tests/contract/contractlib/report.py`, `__init__.py`, `verify_contract.py` | счётчики/экспорт/строка отчёта |
+| `tests/contract/contractlib/verify.py` | `run_checks(..., include_fixtures=True)`; default сохраняет полный набор |
+| `tests/contract/test_batch_outcomes.py` | 50 тестов: структура/схемы/state/reason/counts/pagination/placements/preflight links/history/inventory/негативные мутации |
+| `tests/contract/test_verify_contract.py` | `include_fixtures=False` **только** в OAS-corruption unit-тестах |
+| `tests/contract/test_synthetic_corpus.py` | 120 публичных примеров, FIX-BATCH-счётчики |
+| `fixtures/synthetic/manifest.json` | fixture `batch-outcomes`, 10 привязанных examples, пересчитанные канонические checksums; версия корпуса **1.2.0 без изменения** |
+| `README.md` | раздел LT-03.4a и команда генерации |
+| `docs/team/WP-03_SYNTHETIC_HANDOFF.md` | этот раздел; исправлены исторические счётчики LT-03.3b (15 mutations/49 tests → 17/55) |
+
+OAS, `contracts/semantics.md`, control plane, backlog, backend/UI и
+`corpus.json`/`rule_expectations.json`/`dictionary_lifecycle.json`/
+`queue_selections.json`/`preview_preflight.json` **не изменялись**. Корпус
+`1.2.0`.
+
+## Что именно зафиксировано
+
+- **Три принятых preflight получают реальные Batch payloads.**
+  `PF-DIRECT-FRESH` → `batch-atlas-direct-fresh` (ACCEPTED, 120),
+  `PF-PREVIEWED-FRESH` → `batch-atlas-previewed-fresh` (RUNNING, 120, preview
+  `preview-atlas-allmatching-120`), `PF-SAME-USER-NEW-SESSION` →
+  `batch-atlas-same-user-session` (COMPLETED_WITH_ISSUES, 3). `future_batch_id`,
+  selection, RuleSet, execution_mode и preview_id сверены со ссылками LT-03.3b.
+- **Полный 120-элементный план и пагинация.** Обе 120-партии дают страницу
+  100 + 20; membership точно равен `selection-atlas-allmatching-120`; страница
+  не подменяется текущей выдачей.
+- **Все 5 BatchState:** ACCEPTED (только PENDING), RUNNING (есть PENDING/
+  PROCESSING, completed < selected), COMPLETED (все SORTED), COMPLETED_WITH_ISSUES
+  (нет незавершённых, есть хотя бы один несортированный терминальный исход),
+  RECOVERY_REQUIRED (`finished_at=null`, `recovery_required ≥ 1`).
+- **Все 8 OutcomeState и 9 reason_code** встречаются в конечных сценариях;
+  точное соответствие state→reason проверено.
+- **Counts.** Первые пять счётчиков суммируются в `completed_count`;
+  `recovery_required` — незавершённые; `completed + recovery ≤ selected`.
+- **Размещения.** SORTED: `actual_location == planned_target` и равен
+  литеральному `target.relative_directory + target_stem + последний суффикс`
+  выбранного опубликованного правила. Занятая цель: существующий объект
+  неизменён, источник остаётся (`actual_location == source`). Дубликат плановой
+  цели: оба участника REQUIRES_DECISION/TARGET_OCCUPIED, победителя нет.
+  NO_SCENARIO/RULE_CONFLICT: плоская папка ручного разбора с неизменённым
+  basename, `planned_target=null`. Занятое имя ручного разбора: источник
+  остаётся. QUARANTINED/TECHNICAL_ERROR: только подтверждённый перенос, у
+  `actual_location` есть путь карантина. RECOVERY_REQUIRED: `finished_at=null`,
+  неизвестное размещение → `actual_location=null`, известный источник →
+  `actual_location=source`. SKIPPED: ALREADY_PROCESSING/SOURCE_CHANGED/
+  SOURCE_MISSING не выполняют собственной мутации, `actual_location=null`
+  (для SOURCE_MISSING это требует схема).
+- **Изолированный гетерогенный принятый выбор** `selection-batch-atlas-hetero`
+  (7) = preview hetero без `NOT_READY`; post-acceptance source-change вынесен
+  в отдельный SKIPPED-сценарий `batch-atlas-technical`. Исходные snapshot/
+  revision/rules не мутированы.
+- **История.** `BatchPage` из `BatchSummary` сортирована `created_at DESC,
+  batch_id DESC`; summary повторяет actor/counts/batch_id соответствующей
+  партии; все партии присутствуют.
+- **Inventory/hash contract.** Раздел `inventory` — логическое ожидание
+  (`kind=logical-inventory-expectation`), не измеренная ФС. Для подтверждённых
+  переносов источник отсутствует, назначение присутствует, содержимое
+  сохранено; для решений/пропусков назначение не заявлено. Content tag —
+  детерминированная логическая метка (`lt034a-content-*`) по seed, не реальный
+  sha256. Файлы не создаются и не читаются.
+- **Негативные мутации.** 23 конечные мутации отклоняются валидаторами
+  (state/reason, counts, terminal/unfinished, page fullness, membership/
+  revision, duplicate winner, manual review target/basename, occupied source,
+  quarantine/recovery/skip placement, history order, inventory source leftover,
+  attempt uniqueness).
+
+## V-S: точные команды и фактические результаты
+
+```powershell
+.\.venv-contract\Scripts\python.exe tests\contract\verify_contract.py
+.\.venv-contract\Scripts\python.exe -m unittest discover -s tests\contract -p "test_*.py"
+.\.venv-contract\Scripts\python.exe -m pip check
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\batch_outcomes.py --write-examples
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\synthetic.py --update-checksums
+git diff --check
+```
+
+- `verify_contract.py` → `RESULT: PASS (42 checks, 0 failures)`, `Examples: 127`,
+  `Fixtures: 120 public example(s)`, `Batch/outcome expectations: 7 batch(es),
+  9 page(s), 260 outcome(s), 7 summary(ies), 23 mutation(s)`; FIX-BATCH-001/002/
+  003 — PASS.
+- `unittest discover` → `Ran 392 tests ... OK` (было 342; добавлено 50).
+- `test_batch_outcomes.py` → 50 OK; `test_preview_preflight.py` → 55 OK
+  (исторические 49 исправлены).
+- `pip check` → `No broken requirements found.`
+- `--write-examples` идемпотентно; повторная генерация совпадает с
+  закоммиченными файлами (FIX-BATCH-003). `--update-checksums` не меняет
+  пересчитанный manifest.
+- Производительность: полная suite сокращена с ~670 с до ~343 с за счёт
+  `run_checks(include_fixtures=False)` **только** в OAS-corruption unit-тестах;
+  CLI и полный positive suite по-прежнему выполняют все fixtures.
+
+## Ограничения и явно не выполненное
+
+- Это **S**-уровень: схемы/статические проверки и литеральный эталон.
+  **M (mock/UI), A (реальный API/ФС), E (E2E) — NOT_RUN.** Физические
+  перемещения, карантин, checksums, TTL-часы, гонки и восстановление не
+  выполнялись и не заявляются; inventory — логический контракт.
+- Matcher/priority resolver/target derivation/executor/recovery не реализуются:
+  значения объявлены литерально и сверяются между собой. Изолированные
+  сценарии не доказывают поведение backend.
+- Сценарии `lost response`/идемпотентность/claim overlap двух акторов/
+  logout-reload/restart — LT-03.4b; здесь только конечные пофайловые исходы.
+- Backend/UI/control plane/backlog не затрагивались. Staging/commit/push worker
+  не выполняет (D-06).
+
+## ID-модель для следующего leaf (LT-03.4b)
+
+- Партии: `batch-atlas-direct-fresh`, `batch-atlas-previewed-fresh`,
+  `batch-atlas-same-user-session`, `batch-atlas-hetero`, `batch-atlas-conflict`,
+  `batch-atlas-sorted`, `batch-atlas-technical`.
+- Изолированные выборы: `selection-batch-atlas-hetero`,
+  `selection-batch-atlas-conflict`, `selection-batch-atlas-sorted`,
+  `selection-batch-atlas-technical`.
+- Attempt IDs: `attempt-<batch_id>-<item_id>`; quarantine-каталог
+  `_quarantine/atlas/<attempt_id>/`, manual review `_manual_review/atlas/`.
+- RuleSet: published `rule-set-atlas-published`; scenario `rule-set-atlas-eq-diff`.
+
+## Статус и следующий владелец
+
+- **Следующий владелец:** reviewer LT-03.4a (независимая сверка state/reason,
+  counts/attempts/placements, pagination, inventory-контракта, preflight/history
+  links и негативных мутаций), затем LT-03.4b (lost response/идемпотентность/
+  claim overlap/restart).
 - **Блокирующая зависимость:** нет.

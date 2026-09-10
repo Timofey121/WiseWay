@@ -21,13 +21,22 @@ def run_checks(
     document: Dict[str, Any],
     registry=None,
     repo_root: Optional[Path] = None,
+    include_fixtures: bool = True,
 ) -> Report:
-    """Run every structural, example, semantic and fixture check."""
+    """Run every structural, example, semantic and fixture check.
+
+    ``include_fixtures`` defaults to ``True`` so the CLI and the full positive
+    suite stay exhaustive.  Unit tests that corrupt the OpenAPI document and
+    only assert on the structural ``OAS-*`` checks may pass ``False`` to avoid
+    rebuilding every large synthetic fixture for an unrelated mutation; the
+    default never changes.
+    """
     report = Report()
     run_structure_checks(document, report)
     if registry is None:
         registry = build_registry(document)
     run_example_checks(document, report, registry)
     run_semantic_checks(document, report, registry)
-    run_fixture_checks(report, registry, repo_root)
+    if include_fixtures:
+        run_fixture_checks(report, registry, repo_root)
     return report

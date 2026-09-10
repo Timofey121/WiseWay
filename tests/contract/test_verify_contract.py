@@ -70,7 +70,11 @@ class CorruptContractTests(unittest.TestCase):
     def _run(self, mutate):
         document = copy.deepcopy(self.document)
         mutate(document)
-        return run_checks(document)
+        # Structural corruption tests only assert on the OAS-* checks; the
+        # large synthetic fixtures are unrelated and rebuilding them for every
+        # mutation dominated the suite runtime.  The full positive suite and
+        # the CLI keep include_fixtures=True.
+        return run_checks(document, include_fixtures=False)
 
     def _assert_fails(self, report, check_id):
         self.assertFalse(report.ok, "corrupted contract was not detected")
@@ -275,7 +279,7 @@ class CorruptContractTests(unittest.TestCase):
         ] = {"$ref": "https://attacker.invalid/schema.json"}
 
         with mock.patch("openapi_spec_validator.validate") as spy:
-            report = run_checks(document)
+            report = run_checks(document, include_fixtures=False)
 
         self.assertFalse(
             spy.called,

@@ -322,3 +322,57 @@ schema-классификацию запросов и совпадение сг�
 Сгенерированные примеры лежат в `contracts/examples/sorting/` (5 Preview) и
 `contracts/examples/errors/` (8 ErrorResponse) и привязаны в `manifest.json` к
 каноническим схемам. Версия корпуса `1.2.0` не меняется.
+
+## Эталон фактических партий и файловых исходов (WP-03, LT-03.4a)
+
+`fixtures/synthetic/batch_outcomes.json` — конечный, внутренне связанный
+эталон принятых партий и пофайловых исходов поверх неизменяемых снимков
+LT-03.3a, принятых preflight LT-03.3b и полных определений LT-03.2a/2b:
+
+- три принятых preflight получают реальные `Batch` payloads:
+  `PF-DIRECT-FRESH` → `batch-atlas-direct-fresh` (ACCEPTED, 120),
+  `PF-PREVIEWED-FRESH` → `batch-atlas-previewed-fresh` (RUNNING, 120, preview
+  `preview-atlas-allmatching-120`), `PF-SAME-USER-NEW-SESSION` →
+  `batch-atlas-same-user-session` (COMPLETED_WITH_ISSUES, 3). Дополнительно
+  объявлен изолированный гетерогенный принятый выбор
+  `selection-batch-atlas-hetero` (7) = preview hetero без `NOT_READY`;
+- покрыты все пять `BatchState` (`ACCEPTED`, `RUNNING`, `COMPLETED`,
+  `COMPLETED_WITH_ISSUES`, `RECOVERY_REQUIRED`), все восемь `OutcomeState` и все
+  девять `OutcomeReasonCode`; `state → reason_code`, время, actor и ссылки
+  согласованы;
+- `counts`: первые пять счётчиков суммируются в `completed_count`,
+  `recovery_required` — незавершённые неоднозначные исходы, завершённая партия
+  имеет `completed_count == selected_count` и `recovery_required == 0`,
+  `RECOVERY_REQUIRED` — `finished_at=null`;
+- размещения: `SORTED` совпадает с целью выбранного опубликованного правила
+  (каталог + фиксированная основа + последний суффикс); занятая цель не
+  перезаписывается и оставляет источник; дубликат плановой цели даёт
+  `REQUIRES_DECISION`/`TARGET_OCCUPIED` всем участникам без победителя;
+  `NO_SCENARIO`/`RULE_CONFLICT` переносятся в плоскую папку ручного разбора с
+  неизменённым basename; занятое имя ручного разбора оставляет источник;
+  `QUARANTINED`/`TECHNICAL_ERROR` имеет подтверждённое `actual_location`;
+  `RECOVERY_REQUIRED` различает неизвестное (`actual_location=null`) и
+  известное (`actual_location=source`) размещение; `SKIPPED`
+  (`ALREADY_PROCESSING`/`SOURCE_CHANGED`/`SOURCE_MISSING`) не выполняет
+  собственной мутации;
+- обе 120-партии описывают точный membership (`100 + 20`); `history`
+  (`BatchPage` из `BatchSummary`) сортирована `created_at DESC, batch_id DESC` и
+  связывает actor/counts/shared IDs;
+- `inventory` — логический контракт ожидаемого инвентаря: для подтверждённых
+  переносов источник отсутствует, назначение присутствует, содержимое
+  сохранено; content tag (`lt034a-content-*`) детерминирован и не является
+  измеренным sha256; файлы не создаются и не читаются.
+
+`tests/contract/contractlib/batch_outcomes.py` — материализатор по литеральным
+ID без matcher/executor/recovery-движка. Проверки `FIX-BATCH-001/002/003`
+валидируют схемы, конечные state/reason/placement/count/pagination-инварианты,
+inventory-контракт и отклоняют 23 негативные мутации. Документированная
+команда подготовки:
+
+```powershell
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\batch_outcomes.py --write-examples
+```
+
+Сгенерированные примеры лежат в `contracts/examples/sorting/` (9 `Batch` +
+1 `BatchPage`) и привязаны в `manifest.json` к каноническим схемам. Версия
+корпуса `1.2.0` не меняется.

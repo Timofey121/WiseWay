@@ -16,7 +16,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from . import dictionary_lifecycle, preview_preflight, queue_selections, rule_expectations, search_expectations, synthetic
+from . import batch_outcomes, dictionary_lifecycle, preview_preflight, queue_selections, rule_expectations, search_expectations, synthetic
 from .semantic import validate_fixture
 
 
@@ -120,6 +120,7 @@ def run_fixture_checks(report, registry, root: Optional[Path] = None) -> None:
     _run_dictionary_lifecycle(report, registry, base)
     _run_queue_selections(report, registry, base)
     _run_preview_preflight(report, registry, base)
+    _run_batch_outcomes(report, registry, base)
 
 
 def _run_search_expectations(report, registry, base: Path) -> None:
@@ -491,6 +492,72 @@ def _run_preview_preflight(report, registry, base: Path) -> None:
 
     try:
         generated = preview_preflight.generated_examples(expectations, context)
+    except Exception as exc:  # noqa: BLE001
+        examples_check.add(f"cannot regenerate examples: {type(exc).__name__}: {exc}")
+        return
+    for relative, payload in generated.items():
+        target = base / relative
+        if not target.is_file():
+            examples_check.add(f"generated example is missing: {relative}")
+            continue
+        try:
+            committed = synthetic.load_json(target)
+        except Exception as exc:  # noqa: BLE001
+            examples_check.add(f"cannot parse {relative}: {type(exc).__name__}: {exc}")
+            continue
+        if committed != payload:
+            examples_check.add(f"committed example differs from regeneration: {relative}")
+
+
+def _run_batch_outcomes(report, registry, base: Path) -> None:
+    """LT-03.4a: literal batch/outcome oracle and generated examples."""
+    oracle_check = report.check(
+        "FIX-BATCH-001",
+        "Batch/outcome expectations materialize to schema-valid literal payloads "
+        "and satisfy the finite state/reason/placement/count/pagination invariants",
+    )
+    mutation_check = report.check(
+        "FIX-BATCH-002",
+        "Declared batch/outcome negative mutations are rejected by the "
+        "consistency validators",
+    )
+    examples_check = report.check(
+        "FIX-BATCH-003",
+        "Generated public batch/outcome examples match the committed files",
+    )
+    try:
+        expectations = batch_outcomes.load_expectations(base)
+        context = batch_outcomes.build_context(base, expectations)
+    except Exception as exc:  # noqa: BLE001 - report unreadable expectations
+        oracle_check.add(
+            f"cannot load batch/outcome expectations: {type(exc).__name__}: {exc}"
+        )
+        return
+
+    for message in batch_outcomes.expectation_errors(expectations, context):
+        oracle_check.add(message)
+    for message in batch_outcomes.payload_errors(expectations, context, registry):
+        oracle_check.add(message)
+    for message in batch_outcomes.inventory_errors(expectations, context):
+        oracle_check.add(message)
+    for message in batch_outcomes.link_errors(expectations, context):
+        oracle_check.add(message)
+    for message in batch_outcomes.mutation_errors(expectations, context, registry):
+        mutation_check.add(message)
+
+    report.batch_scenarios = len(expectations["batches"])
+    report.batch_pages = sum(len(batch["pages"]) for batch in expectations["batches"])
+    report.batch_outcomes = sum(
+        len(batch_outcomes.row_specs(page))
+        for batch in expectations["batches"]
+        for page in batch["pages"]
+    )
+    report.batch_summaries = sum(len(page["batch_ids"]) for page in expectations["history"])
+    report.batch_mutations = len(expectations["mutations"])
+    report.batch_links = len(expectations["links"])
+
+    try:
+        generated = batch_outcomes.generated_examples(expectations, context)
     except Exception as exc:  # noqa: BLE001
         examples_check.add(f"cannot regenerate examples: {type(exc).__name__}: {exc}")
         return

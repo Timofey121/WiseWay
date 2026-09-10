@@ -1,0 +1,166 @@
+{
+  "items": [
+    {
+      "batch_id": "batch-atlas-technical",
+      "company_id": "company-demo-atlas",
+      "actor": {
+        "user_id": "user-demo-worker-1",
+        "login": "worker.one",
+        "display_name": "Иван Рабочий",
+        "role": "WORKER"
+      },
+      "status": "RECOVERY_REQUIRED",
+      "created_at": "2031-05-10T09:40:00Z",
+      "finished_at": null,
+      "selected_count": 6,
+      "completed_count": 4,
+      "counts": {
+        "sorted": 0,
+        "manual_review": 0,
+        "requires_decision": 0,
+        "quarantined": 1,
+        "skipped": 3,
+        "recovery_required": 2
+      }
+    },
+    {
+      "batch_id": "batch-atlas-sorted",
+      "company_id": "company-demo-atlas",
+      "actor": {
+        "user_id": "user-demo-worker-1",
+        "login": "worker.one",
+        "display_name": "Иван Рабочий",
+        "role": "WORKER"
+      },
+      "status": "COMPLETED",
+      "created_at": "2031-05-10T09:39:00Z",
+      "finished_at": "2031-05-10T09:39:06Z",
+      "selected_count": 3,
+      "completed_count": 3,
+      "counts": {
+        "sorted": 3,
+        "manual_review": 0,
+        "requires_decision": 0,
+        "quarantined": 0,
+        "skipped": 0,
+        "recovery_required": 0
+      }
+    },
+    {
+      "batch_id": "batch-atlas-conflict",
+      "company_id": "company-demo-atlas",
+      "actor": {
+        "user_id": "user-demo-worker-1",
+        "login": "worker.one",
+        "display_name": "Иван Рабочий",
+        "role": "WORKER"
+      },
+      "status": "COMPLETED_WITH_ISSUES",
+      "created_at": "2031-05-10T09:38:00Z",
+      "finished_at": "2031-05-10T09:38:05Z",
+      "selected_count": 1,
+      "completed_count": 1,
+      "counts": {
+        "sorted": 0,
+        "manual_review": 1,
+        "requires_decision": 0,
+        "quarantined": 0,
+        "skipped": 0,
+        "recovery_required": 0
+      }
+    },
+    {
+      "batch_id": "batch-atlas-hetero",
+      "company_id": "company-demo-atlas",
+      "actor": {
+        "user_id": "user-demo-worker-1",
+        "login": "worker.one",
+        "display_name": "Иван Рабочий",
+        "role": "WORKER"
+      },
+      "status": "COMPLETED_WITH_ISSUES",
+      "created_at": "2031-05-10T09:37:00Z",
+      "finished_at": "2031-05-10T09:37:09Z",
+      "selected_count": 7,
+      "completed_count": 7,
+      "counts": {
+        "sorted": 2,
+        "manual_review": 1,
+        "requires_decision": 4,
+        "quarantined": 0,
+        "skipped": 0,
+        "recovery_required": 0
+      }
+    },
+    {
+      "batch_id": "batch-atlas-same-user-session",
+      "company_id": "company-demo-atlas",
+      "actor": {
+        "user_id": "user-demo-worker-1",
+        "login": "worker.one",
+        "display_name": "Иван Рабочий",
+        "role": "WORKER"
+      },
+      "status": "COMPLETED_WITH_ISSUES",
+      "created_at": "2031-05-10T09:36:00Z",
+      "finished_at": "2031-05-10T09:36:05Z",
+      "selected_count": 3,
+      "completed_count": 3,
+      "counts": {
+        "sorted": 0,
+        "manual_review": 3,
+        "requires_decision": 0,
+        "quarantined": 0,
+        "skipped": 0,
+        "recovery_required": 0
+      }
+    },
+    {
+      "batch_id": "batch-atlas-previewed-fresh",
+      "company_id": "company-demo-atlas",
+      "actor": {
+        "user_id": "user-demo-worker-1",
+        "login": "worker.one",
+        "display_name": "Иван Рабочий",
+        "role": "WORKER"
+      },
+      "status": "RUNNING",
+      "created_at": "2031-05-10T09:35:00Z",
+      "finished_at": null,
+      "selected_count": 120,
+      "completed_count": 118,
+      "counts": {
+        "sorted": 0,
+        "manual_review": 118,
+        "requires_decision": 0,
+        "quarantined": 0,
+        "skipped": 0,
+        "recovery_required": 0
+      }
+    },
+    {
+      "batch_id": "batch-atlas-direct-fresh",
+      "company_id": "company-demo-atlas",
+      "actor": {
+        "user_id": "user-demo-worker-1",
+        "login": "worker.one",
+        "display_name": "Иван Рабочий",
+        "role": "WORKER"
+      },
+      "status": "ACCEPTED",
+      "created_at": "2031-05-10T09:35:00Z",
+      "finished_at": null,
+      "selected_count": 120,
+      "completed_count": 0,
+      "counts": {
+        "sorted": 0,
+        "manual_review": 0,
+        "requires_decision": 0,
+        "quarantined": 0,
+        "skipped": 0,
+        "recovery_required": 0
+      }
+    }
+  ],
+  "next_cursor": null
+}

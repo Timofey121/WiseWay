@@ -119,15 +119,26 @@
       "error-batch-selection-not-found": "fcc9e87b97df7ed6a81d7a16a6f99ad8ef509fbb1bfe19aa095ae6c30089eeb3",
       "error-batch-forbidden": "f000b53eea0613ba75023b09c7fdeeff5b446eaab8d63507d54492b7e67435bd",
       "error-preview-selection-expired": "6a2c1816639d7b4d83a0efe7443cb08651f91be7ce312665c05bed75db6f099a",
-      "error-preview-selection-changed": "68829afe54755c95c8985aa301b23c8c402ff2c30cb2d7b28b0a25c177e2eaf1"
+      "error-preview-selection-changed": "68829afe54755c95c8985aa301b23c8c402ff2c30cb2d7b28b0a25c177e2eaf1",
+      "batch-atlas-direct-fresh-page1": "76ad44dec9335ad7b345c4c2fa66ba4a010b1934b35430b0c3ae33484815b2fe",
+      "batch-atlas-direct-fresh-page2": "6c7871057e7bcb0192e55879dff88d36b850e8fe3caf3d0d24ca7709ec09c4a4",
+      "batch-atlas-previewed-fresh-page1": "e6d204d8ffb29503da4f2889dcfa432dac478535c3c55b46b8047bb3d9aaf4a5",
+      "batch-atlas-previewed-fresh-page2": "2d0db2871e619948b170a16a819cd3bc80c3c0c10577447bb057c97cd5e87189",
+      "batch-atlas-same-user-session": "c4d31db7d655677e2251e680e8dc5cfb3ce65633d7190ed44c876e99903ee691",
+      "batch-atlas-hetero": "89e513a4189263dc932599cc80344307b32f4dd69f84a6e7d83990a453b153da",
+      "batch-atlas-conflict": "5c6face2ee75ddb5712e02c0f2cf472400dafd1d2e2f5ce0fdb773f23c7cff32",
+      "batch-atlas-sorted": "4d1f98528c4920faacc823e0d45ce9501e0306e70195339f3ac1364ea35d5a0d",
+      "batch-atlas-technical": "f490e3e54dedcf84597b1b4249ba06089f91ba550f7961b5defe1c3dd682bd00",
+      "batch-history-atlas-page1": "13b37708c3eb4ee196e2a9f8914136557cc7fc9cf685ec97496311f91241796d"
     },
-    "combined": "d17871de34c95c21f9ac58d5dd8a3fcac7df89b49adaa83ede5e8ddfa4bc6706",
+    "combined": "c1d0872d4af041570019d2749c7bf23651e7c7e354e53218914ff03b238f1731",
     "fixtures": {
       "search-expectations": "0910c9bbeb54eaba159105e4d060cd2ca06c7d71f0459946f220886f22751c1b",
       "rule-expectations": "c3577511741d2611c4e951b0e49f5a3a458642d9df17b627f1f60107d2bf74ac",
       "dictionary-lifecycle": "d6bf6fa32cd183a033d65790afd95d7e7d5a4d0d1244156f0051275fce489e9c",
       "queue-selections": "328b828fbc429ca924619157c9f73cb5a7f5f836a4a9f86f149d3173039b8e90",
-      "preview-preflight": "4fac930e3441e1bb3e2bf37e6f81f66564f3fccfe241c08154642350b8050883"
+      "preview-preflight": "4fac930e3441e1bb3e2bf37e6f81f66564f3fccfe241c08154642350b8050883",
+      "batch-outcomes": "c0f162177faabc339fc4f51ffff90ec224553e55a5414180b793465607cf9192"
     }
   },
   "corpus": {
@@ -165,6 +176,12 @@
       "file": "fixtures/synthetic/preview_preflight.json",
       "schema": null,
       "description": "LT-03.3b literal preview and DIRECT/PREVIEWED preflight oracle: 120/one/multiple previews linked to the queue_selections snapshots plus isolated Prediction/CollisionDetails coverage and pre-acceptance error pairs; materialized by contractlib.preview_preflight without a matcher or preflight algorithm."
+    },
+    {
+      "id": "batch-outcomes",
+      "file": "fixtures/synthetic/batch_outcomes.json",
+      "schema": null,
+      "description": "LT-03.4a literal BatchState/OutcomeState/OutcomeReasonCode oracle: real Batch payloads for the three accepted LT-03.3b preflights plus an isolated heterogeneous accepted selection, full 120-item page invariants, confirmed quarantine, per-file skips, unknown/known recovery and the logical inventory expectation contract; materialized by contractlib.batch_outcomes without a matcher, executor or filesystem writer."
     }
   ],
   "examples": [
@@ -833,6 +850,66 @@
       "schema": "#/components/schemas/ErrorResponse",
       "file": "contracts/examples/errors/error-preview-selection-changed.json",
       "description": "LT-03.3b: 409 SELECTION_CHANGED on the preview operation."
+    },
+    {
+      "id": "batch-atlas-direct-fresh-page1",
+      "schema": "#/components/schemas/Batch",
+      "file": "contracts/examples/sorting/batch-atlas-direct-fresh-page1.json",
+      "description": "LT-03.4a: ACCEPTED 120-item DIRECT batch, page 1 of 100 PENDING outcomes."
+    },
+    {
+      "id": "batch-atlas-direct-fresh-page2",
+      "schema": "#/components/schemas/Batch",
+      "file": "contracts/examples/sorting/batch-atlas-direct-fresh-page2.json",
+      "description": "LT-03.4a: ACCEPTED 120-item DIRECT batch, page 2 of 20 PENDING outcomes."
+    },
+    {
+      "id": "batch-atlas-previewed-fresh-page1",
+      "schema": "#/components/schemas/Batch",
+      "file": "contracts/examples/sorting/batch-atlas-previewed-fresh-page1.json",
+      "description": "LT-03.4a: RUNNING 120-item PREVIEWED batch, page 1 full with manual review outcomes."
+    },
+    {
+      "id": "batch-atlas-previewed-fresh-page2",
+      "schema": "#/components/schemas/Batch",
+      "file": "contracts/examples/sorting/batch-atlas-previewed-fresh-page2.json",
+      "description": "LT-03.4a: RUNNING batch page 2 with the last manual review rows plus PENDING and PROCESSING."
+    },
+    {
+      "id": "batch-atlas-same-user-session",
+      "schema": "#/components/schemas/Batch",
+      "file": "contracts/examples/sorting/batch-atlas-same-user-session.json",
+      "description": "LT-03.4a: COMPLETED_WITH_ISSUES EXPLICIT batch accepted from a new session of the same user."
+    },
+    {
+      "id": "batch-atlas-hetero",
+      "schema": "#/components/schemas/Batch",
+      "file": "contracts/examples/sorting/batch-atlas-hetero.json",
+      "description": "LT-03.4a: isolated heterogeneous accepted selection with safe renames, manual review, decisions and an occupied name."
+    },
+    {
+      "id": "batch-atlas-conflict",
+      "schema": "#/components/schemas/Batch",
+      "file": "contracts/examples/sorting/batch-atlas-conflict.json",
+      "description": "LT-03.4a: equal-priority RULE_CONFLICT moves to flat manual review without quarantine."
+    },
+    {
+      "id": "batch-atlas-sorted",
+      "schema": "#/components/schemas/Batch",
+      "file": "contracts/examples/sorting/batch-atlas-sorted.json",
+      "description": "LT-03.4a: COMPLETED batch where every outcome is a confirmed safe rename."
+    },
+    {
+      "id": "batch-atlas-technical",
+      "schema": "#/components/schemas/Batch",
+      "file": "contracts/examples/sorting/batch-atlas-technical.json",
+      "description": "LT-03.4a: RECOVERY_REQUIRED batch with confirmed quarantine, per-file skips and unknown/known recovery."
+    },
+    {
+      "id": "batch-history-atlas-page1",
+      "schema": "#/components/schemas/BatchPage",
+      "file": "contracts/examples/sorting/batch-history-atlas-page1.json",
+      "description": "LT-03.4a: BatchSummary history ordered created_at DESC, batch_id DESC."
     }
   ]
 }

@@ -76,6 +76,12 @@ class Report:
     preflight_scenarios: int = 0
     preflight_failures: int = 0
     post_acceptance_outcomes: int = 0
+    batch_scenarios: int = 0
+    batch_pages: int = 0
+    batch_outcomes: int = 0
+    batch_summaries: int = 0
+    batch_mutations: int = 0
+    batch_links: int = 0
 
     def check(self, check_id: str, description: str) -> CheckResult:
         result = CheckResult(check_id=check_id, description=description)
