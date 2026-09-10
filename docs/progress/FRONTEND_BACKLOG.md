@@ -114,11 +114,13 @@ B-01/B-02 — два технических препятствия раннег�
 
 ## EPIC E-01 — Проверяемый контракт и эталоны
 
-Status: TODO. Scope: FE-01/02; TZ §3/11/14; API §1–12. Существующий OAS — основа, не задача создания нового API.
+Status: IN_PROGRESS. Scope: FE-01/02; TZ §3/11/14; API §1–12. Существующий OAS — основа, не задача создания нового API.
+
+Execution baseline 10.09.2026: `feat/e-01`, HEAD `c271587`, чистое рабочее дерево. После `git fetch origin`: `origin/main=558b9e0`, merge-base `6cdecda`; три исходных commits инфраструктуры/ТЗ унаследованы от launcher и ещё не интегрированы в main. Они не являются изменениями реализации E-01; control plane в этой сессии не изменяется. WP-01 → WP-02 → WP-03 dependency-ready последовательно; внешний backend не требуется для S/V-H. Начальных реализованных leaf E-01 не обнаружено.
 
 ### WP-01 — Точечная нормализация контракта
 
-- **Status:** TODO. **Parent:** E-01. **Dependencies:** D-02/04/05; устраняет B-01/B-03.
+- **Status:** IN_PROGRESS. **Parent:** E-01. **Dependencies:** D-02/04/05; устраняет B-01/B-03.
 - **Goal:** сделать схему и примеры пригодными для проверки без смены бизнес-семантики.
 - **Sources of truth:** OAS listSortingBatches/listQuarantineItems/createDictionarySimulation/createSortingSelection/createSortingPreview; API §6–9; SEM правила/очередь.
 - **Acceptance criteria:** правильные query/path parameters, согласованные примеры; новые продуктовые операции/поля не добавлены; исправления перечислены в handoff.
@@ -127,8 +129,10 @@ Status: TODO. Scope: FE-01/02; TZ §3/11/14; API §1–12. Существующ�
 
 | Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
 |---|---|---|---|---|---|---|
-| LT-01.1 | TODO | D-04 | Исправить ровно B-01 | OAS CompanyId/listSortingBatches/listQuarantineItems; API §8/9 | Отдельный required query company_id со схемой Id в двух GET; CompanyId in:path для `/companies/{company_id}/…` сохранён; пути/ответы прежние | V-H parameter/path matching и всех ссылок на CompanyId/diff; executable regression добавляет LT-02.1 |
+| LT-01.1 | VERIFIED | D-04 | Исправить ровно B-01 | OAS CompanyId/listSortingBatches/listQuarantineItems; API §8/9 | Отдельный required query company_id со схемой Id в двух GET; CompanyId in:path для `/companies/{company_id}/…` сохранён; пути/ответы прежние | V-H parameter/path matching и всех ссылок на CompanyId/diff; executable regression добавляет LT-02.1 |
 | LT-01.2 | TODO | D-04 | Устранить B-03 в examples | OAS Simulation/PlanRow/RuleSet/SelectionSnapshot/Preview/examples; API §6/7; QA §4 | filename/source согласованы; published references входят в RuleSet; snapshot/preview согласованы либо отдельные сценарии имеют разные IDs; без domain implementation | V-H таблицы связей, V-S после LT-02.1; regression LT-02.2 |
+
+LT-01.1 evidence: независимый LEAF reviewer PASS; orchestrator повторил ad-hoc `node .../lt-01-1-verify/check.js contracts/openapi/wiseway-v1.yaml` — 25/25; точный OAS diff (3 hunks), `git diff --check` PASS. Handoff: `docs/team/E-01_CONTRACT_HANDOFF.md`. VERIFIED вступает в силу после успешного push checkpoint с этим progress; V-S ещё не выполнена.
 
 ### WP-02 — Исполняемые контрактные проверки
 
