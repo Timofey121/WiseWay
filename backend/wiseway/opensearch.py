@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+from dataclasses import dataclass
 import http.client
 import json
 import queue
@@ -19,12 +20,14 @@ from .search import (
     _parse_query,
     _validate_context,
     build_item,
+    compile_schema,
 )
 from .sqlite_search import _columns, _encoded_stream, _encoded_token, _natural_blob
 
 FIELDS = (("t_name", 5), ("t_project", 4), ("t_company", 3), ("t_markers", 1), ("t_path", 1))
 MAX_FACETS = 10_000
 MAX_RESPONSE = 16 * 1024 * 1024
+DEFAULT_BULK_TARGET = 12 * 1024 * 1024
 MAX_DEPTH = 64
 _MAX_SCORE_PROBE_THRESHOLD = 10_000
 
@@ -35,6 +38,58 @@ def unavailable():
 
 def _json(value):
     return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+
+
+@dataclass(frozen=True)
+class BulkBatch:
+    """One already encoded bounded bulk request, retaining replay records."""
+
+    records: tuple[tuple[dict, int], ...]
+    payload: bytes
+
+    def __iter__(self):
+        return iter(self.records)
+
+    def __len__(self):
+        return len(self.records)
+
+
+class BulkBatchBuilder:
+    """Encode each action/document once while enforcing byte limits."""
+
+    def __init__(self, *, target_bytes=DEFAULT_BULK_TARGET, hard_limit_bytes=MAX_RESPONSE):
+        if not 1 <= target_bytes <= hard_limit_bytes <= MAX_RESPONSE:
+            raise ValueError("Invalid bulk byte limits")
+        self.target_bytes, self.hard_limit_bytes = target_bytes, hard_limit_bytes
+        self._records, self._parts, self._size = [], [], 0
+
+    def add(self, doc, version):
+        if len(self._records) >= 5000 or type(version) is not int or not 0 < version < 2**63:
+            raise ValueError("Invalid bulk size or external version")
+        encoded = (
+            _json({"index": {"_id": doc["id"], "version": version, "version_type": "external_gte"}}).encode()
+            + b"\n"
+            + _json(doc).encode()
+            + b"\n"
+        )
+        if len(encoded) > self.hard_limit_bytes:
+            raise ValueError("Bulk record exceeds hard limit")
+        if self._records and self._size + len(encoded) > self.target_bytes:
+            return False
+        self._records.append((doc, version))
+        self._parts.append(encoded)
+        self._size += len(encoded)
+        return True
+
+    def finish(self):
+        if not self._records:
+            raise ValueError("Cannot finish an empty bulk batch")
+        batch = BulkBatch(tuple(self._records), b"".join(self._parts))
+        self._records, self._parts, self._size = [], [], 0
+        return batch
+
+    def __bool__(self):
+        return bool(self._records)
 
 
 def index_name(name):
@@ -163,21 +218,29 @@ class OpenSearch:
 
     def bulk(self, name, records):
         index_name(name)
-        lines = []
-        count = 0
-        for doc, version in records:
-            if count >= 5000 or type(version) is not int or not 0 < version < 2**63:
-                raise ValueError("Invalid bulk size or external version")
-            lines.append(
-                _json({"index": {"_id": doc["id"], "version": version, "version_type": "external_gte"}})
-            )
-            lines.append(_json(doc))
-            count += 1
+        if isinstance(records, BulkBatch):
+            count, payload = len(records), records.payload
+            if (
+                not 1 <= count <= 5000
+                or not isinstance(payload, bytes)
+                or not 0 < len(payload) <= MAX_RESPONSE
+            ):
+                raise ValueError("Invalid preencoded bulk batch")
+        else:
+            lines = []
+            count = 0
+            for doc, version in records:
+                if count >= 5000 or type(version) is not int or not 0 < version < 2**63:
+                    raise ValueError("Invalid bulk size or external version")
+                lines.append(
+                    _json({"index": {"_id": doc["id"], "version": version, "version_type": "external_gte"}})
+                )
+                lines.append(_json(doc))
+                count += 1
+            payload = ("\n".join(lines) + "\n").encode() if count else b""
         if not count:
             return
-        value = self.request(
-            "POST", f"/{name}/_bulk?refresh=false", ("\n".join(lines) + "\n").encode(), ndjson=True
-        )
+        value = self.request("POST", f"/{name}/_bulk?refresh=false", payload, ndjson=True)
         items = value.get("items", [])
         if len(items) != count:
             raise unavailable()
@@ -229,13 +292,18 @@ def mapping(shards=8):
             for name in ("id", "path", "name_key", "path_key", "modified", "marker_ids")
         }
     )
-    props.update({f"f{n}": {"type": "keyword"} for n in range(MAX_DEPTH)})
-    props.update(size={"type": "long"}, deleted={"type": "boolean"})
+    for name in ("id", "path", "name_key", "path_key", "modified"):
+        props[name].update(index=False, doc_values=True)
+    props["marker_ids"]["doc_values"] = False
+    props.update({f"f{n}": {"type": "keyword", "index": False, "doc_values": True} for n in range(MAX_DEPTH)})
+    props.update(size={"type": "long"}, deleted={"type": "boolean", "doc_values": False})
     return {
         "settings": {
             "number_of_shards": shards,
             "number_of_replicas": 0,
             "refresh_interval": "-1",
+            "index.sort.field": ["path_key", "path", "id"],
+            "index.sort.order": ["asc", "asc", "asc"],
             "analysis": {
                 "tokenizer": {"encoded_words": {"type": "whitespace", "max_token_length": 32766}},
                 "analyzer": {"encoded": {"type": "custom", "tokenizer": "encoded_words", "filter": []}},
@@ -354,6 +422,7 @@ class SearchSnapshot:
         self.engine, self.manifest = engine, manifest
         self.root = manifest["root"]
         self.deadline = None
+        self._compiled_schema = None
 
     def _request(self, body):
         if self.deadline is not None and monotonic() >= self.deadline:
@@ -374,6 +443,8 @@ class SearchSnapshot:
         return value
 
     def _item(self, source):
+        if self._compiled_schema is None:
+            self._compiled_schema = compile_schema(self.manifest["_schema"])
         return build_item(
             self.root["root_id"],
             self.root["display_prefix"],
@@ -382,6 +453,7 @@ class SearchSnapshot:
             source["modified"],
             self.manifest["_schema"],
             source["id"],
+            compiled_schema=self._compiled_schema,
         )
 
     def _selection(self, request):
@@ -456,21 +528,34 @@ class SearchSnapshot:
                 )
             groups.append(levels)
         for levels in groups:
-            for score in sorted(levels, reverse=True):
-                condition = {"bool": {"should": levels[score], "minimum_should_match": 1}}
-                exists = self._request(
-                    {
-                        "query": {"bool": {"filter": [candidates, condition]}},
-                        "size": 1,
-                        "track_total_hits": False,
-                        "_source": False,
-                    }
-                )
-                if exists["hits"]["hits"]:
-                    chosen.append(condition)
-                    break
-            else:
+            # Every alternative has a constant, integer score.  One score-sorted
+            # probe identifies the highest attainable level for this clause;
+            # trying the levels one-by-one made an eight-part query issue up to
+            # 64 sequential engine requests.
+            alternatives = [
+                {"constant_score": {"filter": condition, "boost": score}}
+                for score, conditions in levels.items()
+                for condition in conditions
+            ]
+            probe = self._request(
+                {
+                    "query": {
+                        "bool": {
+                            "filter": [candidates],
+                            "must": [{"dis_max": {"queries": alternatives, "tie_breaker": 0}}],
+                        }
+                    },
+                    "size": 1,
+                    "track_total_hits": False,
+                    "_source": False,
+                    "sort": [{"_score": "desc"}],
+                }
+            )
+            hits = probe["hits"]["hits"]
+            score = hits[0].get("_score") if hits else None
+            if type(score) not in {int, float} or score not in levels:
                 raise unavailable()
+            chosen.append({"bool": {"should": levels[score], "minimum_should_match": 1}})
         # Independent per-clause maxima are an upper bound. If their
         # intersection cannot fill top-k, fall back to the complete scorer.
         return {"bool": {"filter": [candidates, *chosen]}}

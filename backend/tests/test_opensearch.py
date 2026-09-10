@@ -15,9 +15,30 @@ def test_compact_document_preserves_tokens_and_limits():
     assert encoded["path"] == item["location"]["relative_path"]
     assert "location" not in encoded
     assert encoded["f0"] == json.dumps(item["markers"][0], ensure_ascii=False, separators=(",", ":"))
-    assert mapping(2)["settings"]["number_of_shards"] == 2
+    configured = mapping(2)
+    assert configured["settings"]["number_of_shards"] == 2
+    properties = configured["mappings"]["properties"]
+    for field in ("id", "path", "name_key", "path_key", "modified", "f0", "f63"):
+        assert properties[field]["index"] is False
+        assert properties[field]["doc_values"] is True
     with pytest.raises(ValueError):
         mapping(0)
+
+
+def test_new_physical_index_uses_path_sort_and_omits_unused_doc_values(engine, indexed):
+    rows = list(build_items(golden()).values())[:2]
+    _, name = indexed(rows)
+    settings = engine.request("GET", f"/{name}/_settings?flat_settings=true")[name]["settings"]
+    assert settings["index.sort.field"] == ["path_key", "path", "id"]
+    assert settings["index.sort.order"] == ["asc", "asc", "asc"]
+    properties = engine.request("GET", f"/{name}/_mapping")[name]["mappings"]["properties"]
+    assert properties["marker_ids"]["doc_values"] is False
+    assert properties["deleted"]["doc_values"] is False
+    for field in ("id", "path", "name_key", "path_key", "modified", "f0", "f63"):
+        assert properties[field]["index"] is False
+        assert properties[field]["type"] == "keyword"
+        # The engine omits the default true value when returning a keyword mapping.
+        assert properties[field].get("doc_values", True) is True
 
 
 def test_query_scoring_has_no_bm25_or_user_query_string():
@@ -391,6 +412,119 @@ def test_wide_exact_name_ranking_keeps_lower_score_rows_out_of_top_k(indexed, mo
             "sort": {"field": "RELEVANCE", "direction": "DESC"},
         }
         assert snapshot.search(body) == search(ROOT, rows, body)
+
+
+def test_exact_filename_fast_path_does_not_admit_earlier_prefix_paths(indexed):
+    """The maximum-score shortcut must use an exact filename term, not a prefix."""
+    from wiseway.search import build_item
+
+    rows = [
+        *[
+            build_item(
+                ROOT["root_id"],
+                ROOT["display_prefix"],
+                f"Archive/Atlas/Polaris_2030/Reports/reporting-{number}.txt",
+                number,
+                ROOT["indexed_at"],
+                DEMO_SCHEMAS["schema-demo-1"],
+                f"prefix-{number}",
+            )
+            for number in range(100)
+        ],
+        *[
+            build_item(
+                ROOT["root_id"],
+                ROOT["display_prefix"],
+                f"Archive/Nova/Polaris_2030/North/Reports/report-{number}.txt",
+                number,
+                ROOT["indexed_at"],
+                DEMO_SCHEMAS["schema-demo-1"],
+                f"exact-{number}",
+            )
+            for number in range(100)
+        ],
+    ]
+    snapshot, _ = indexed(rows)
+    body = {
+        "request_state_id": "exact-name",
+        "root_id": ROOT["root_id"],
+        "schema_set_version": ROOT["schema_set_version"],
+        "query_text": "report",
+        "selected_marker_ids": [],
+        "sort": {"field": "RELEVANCE", "direction": "DESC"},
+    }
+    actual = snapshot.search(body)
+    assert actual == search(ROOT, rows, body)
+    assert all(item["item_id"].startswith("exact-") for item in actual["items"])
+
+
+def test_eight_part_relevance_fallback_uses_bounded_engine_requests(indexed, monkeypatch):
+    """A no-filename-match query must not make one round trip per score level."""
+    from wiseway.search import build_item
+
+    values = ("alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel")
+    schema = {
+        "schema_set_version": "eight-levels",
+        "root_levels": [(f"level-{number}", value, {value}, False) for number, value in enumerate(values)],
+        "tail_by_company": {},
+    }
+    root = {**ROOT, "schema_set_version": "eight-levels"}
+    rows = [
+        build_item(
+            root["root_id"],
+            root["display_prefix"],
+            "/".join((*values, f"neutral-{number}.txt")),
+            number,
+            root["indexed_at"],
+            schema,
+            f"eight-{number}",
+        )
+        for number in range(30)
+    ]
+    snapshot, _ = indexed(rows, root)
+    snapshot.manifest["_schema"] = schema
+    monkeypatch.setattr("wiseway.opensearch._MAX_SCORE_PROBE_THRESHOLD", 0)
+    calls = []
+    original = snapshot.engine.request
+
+    def counted(*args, **kwargs):
+        calls.append((args, kwargs))
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(snapshot.engine, "request", counted)
+    body = {
+        "request_state_id": "eight-parts",
+        "root_id": root["root_id"],
+        "schema_set_version": root["schema_set_version"],
+        "query_text": " ".join(values),
+        "selected_marker_ids": [],
+        "sort": {"field": "RELEVANCE", "direction": "DESC"},
+    }
+    assert snapshot.search(body, 7) == search(root, rows, body, 7)
+    # count/facet + exact-name fast path + one probe for each of the eight
+    # clauses + maximum-score intersection.  A full scorer is only a fallback.
+    assert len(calls) <= 11
+    probes = [args[2] for args, _ in calls if args[2].get("_source") is False]
+    assert len(probes) == 8
+    assert all(probe["sort"] == [{"_score": "desc"}] for probe in probes)
+
+
+def test_snapshot_compiles_schema_once_on_first_hydration(indexed, monkeypatch):
+    from wiseway import opensearch
+
+    rows = list(build_items(golden()).values())[:2]
+    snapshot, _ = indexed(rows)
+    calls = []
+    original = opensearch.compile_schema
+
+    def counted(schema):
+        calls.append(schema)
+        return original(schema)
+
+    monkeypatch.setattr(opensearch, "compile_schema", counted)
+    snapshot._item(document(rows[0]))
+    snapshot._item(document(rows[1]))
+    assert len(calls) == 1
 
 
 def test_non_cooccurring_score_maxima_fall_back_to_exact_ranking(indexed, monkeypatch):

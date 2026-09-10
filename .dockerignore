@@ -4,6 +4,8 @@
 !backend/
 !backend/wiseway/
 !backend/wiseway/**
+!backend/benchmarks/
+!backend/benchmarks/**
 !contracts/
 !contracts/openapi/
 !contracts/openapi/wiseway-v1.yaml

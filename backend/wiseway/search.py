@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from hashlib import sha256
 from functools import lru_cache
 import re
+from types import MappingProxyType
 from typing import Any
 
 from .common import ApiError
@@ -54,6 +55,29 @@ class _Level:
     level_name: str
     values: frozenset[str]
     optional: bool = False
+
+
+@dataclass(frozen=True)
+class _CompiledLevel:
+    """A schema level reduced to immutable lookup data for an import run."""
+
+    level_id: str
+    level_name: str
+    folded_values: frozenset[str]
+    optional: bool = False
+
+
+@dataclass(frozen=True)
+class CompiledSchema:
+    """Private snapshot of a schema; callers own its lifetime and invalidation."""
+
+    schema_set_version: str
+    root_levels: tuple[_CompiledLevel, ...]
+    tail_by_company: MappingProxyType
+
+    def levels(self, parsed_values: list[str]) -> tuple[_CompiledLevel, ...]:
+        company = parsed_values[1] if len(parsed_values) > 1 else None
+        return self.root_levels + self.tail_by_company.get(str(company).casefold(), ())
 
 
 @dataclass(frozen=True)
@@ -103,6 +127,37 @@ def _levels(schema: dict[str, Any], parsed_values: list[str]) -> tuple[_Level, .
     return base + tail
 
 
+def compile_schema(schema: dict[str, Any]) -> CompiledSchema:
+    """Snapshot private schema lookups once for a bounded indexing operation.
+
+    The object deliberately has no process-wide cache: a caller that mutates a
+    loaded schema must explicitly create a new snapshot.  This prevents stale
+    permissions/shape validation while avoiding an unbounded cache of schemas.
+    """
+
+    try:
+
+        def compile_level(entry: Any) -> _CompiledLevel:
+            level = _Level(*entry)
+            return _CompiledLevel(
+                level.level_id,
+                level.level_name,
+                frozenset(value.casefold() for value in level.values),
+                level.optional,
+            )
+
+        root_levels = tuple(compile_level(entry) for entry in schema["root_levels"])
+        tail_by_company = MappingProxyType(
+            {
+                str(company).casefold(): tuple(compile_level(entry) for entry in entries)
+                for company, entries in schema["tail_by_company"].items()
+            }
+        )
+        return CompiledSchema(str(schema["schema_set_version"]), root_levels, tail_by_company)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError("Invalid private search schema") from exc
+
+
 def _marker(
     root_id: str,
     schema_version: str,
@@ -149,6 +204,8 @@ def build_item(
     modified_at: str,
     schema: dict[str, Any],
     identity: str,
+    *,
+    compiled_schema: CompiledSchema | None = None,
 ) -> dict[str, Any]:
     """Build the public ``SearchItem`` from one index record's logical path.
 
@@ -161,14 +218,22 @@ def build_item(
         raise ValueError("relative_path must contain a filename")
     filename = parts[-1]
     directories = parts[:-1]
-    schema_version = str(schema["schema_set_version"])
+    schema_version = (
+        compiled_schema.schema_set_version
+        if compiled_schema is not None
+        else str(schema["schema_set_version"])
+    )
     markers: list[dict[str, Any]] = []
     parsed_values: list[str] = []
     issue: dict[str, Any] | None = None
     position = 0
 
     while issue is None:
-        expected = _levels(schema, parsed_values)
+        expected = (
+            compiled_schema.levels(parsed_values)
+            if compiled_schema is not None
+            else _levels(schema, parsed_values)
+        )
         if position == len(expected):
             if position < len(directories):
                 extra = _Level("level-extra-depth", "Дополнительный уровень", frozenset())
@@ -185,7 +250,12 @@ def build_item(
         value = directories[position]
         # Schema values establish the accepted shape.  Their raw casing is never
         # rewritten: ``Atlas`` and ``atlas`` therefore become distinct markers.
-        if value.casefold() not in {allowed.casefold() for allowed in level.values}:
+        allowed = (
+            level.folded_values
+            if compiled_schema is not None
+            else {allowed.casefold() for allowed in level.values}
+        )
+        if value.casefold() not in allowed:
             markers.append(_marker(root_id, schema_version, level, None, parsed_values, "UNRECOGNIZED"))
             issue = _issue(level, "INVALID_LEVEL_VALUE", "Недопустимое значение уровня")
             break

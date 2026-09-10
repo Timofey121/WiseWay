@@ -31,6 +31,7 @@ def main(argv=None):
     ingest.add_argument("--mode", choices=("full", "delta"), default="full")
     ingest.add_argument("--base-generation", help="Required current generation for a delta")
     ingest.add_argument("--shards", type=int, default=8)
+    ingest.add_argument("--batch-size", type=int, default=1000, help="Maximum records per bulk (1..5000)")
     abort = commands.add_parser("abort-import", help="Abandon a stopped import; next import must be full")
     abort.add_argument("root_id")
     maintenance = commands.add_parser("maintain-search", help="Renew or recover completed search snapshots")
@@ -53,6 +54,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if args.command == "index-archive" and args.interval != 0 and args.interval < 30:
         parser.error("Archive scan interval must be 0 or at least 30 seconds")
+    if args.command == "import-archive" and not 1 <= args.batch_size <= 5000:
+        parser.error("Import batch size must be 1..5000")
     settings = Settings()
     if args.command == "init-demo":
         from .seed import initialize
@@ -148,7 +151,9 @@ def main(argv=None):
             from .common import ApiError
 
             try:
-                result = ArchiveImporter(ctx, ctx.search_engine(), shards=args.shards).run(
+                result = ArchiveImporter(
+                    ctx, ctx.search_engine(), shards=args.shards, batch_size=args.batch_size
+                ).run(
                     args.root_id,
                     args.manifest,
                     mode=args.mode,

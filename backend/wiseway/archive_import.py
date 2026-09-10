@@ -9,14 +9,17 @@ from pathlib import Path
 import sqlite3
 import stat
 from threading import Event
+from time import monotonic
 
-from .common import digest, public, timestamp, uid, utc
+from .common import ApiError, digest, public, timestamp, uid, utc
 from .indexer import _index_lock
-from .opensearch import document
-from .search import build_item
+from .opensearch import DEFAULT_BULK_TARGET, BulkBatchBuilder, _complete, document
+from .search import build_item, compile_schema
 
 MAX_LINE = 256 * 1024
 VERSION_RANGE = 1_000_000_000
+PIT_RENEW_SECONDS = 5 * 60
+BULK_TARGET_BYTES = DEFAULT_BULK_TARGET
 
 
 def _configuration(root):
@@ -30,7 +33,7 @@ def _signature(handle):
     return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns
 
 
-def _record(value, root, mode):
+def _record(value, root, mode, *, compiled_schema=None):
     if not isinstance(value, dict) or value.get("op") not in {"upsert", "delete"}:
         raise ValueError("Manifest requires upsert/delete records")
     identity = value.get("item_id")
@@ -62,15 +65,58 @@ def _record(value, root, mode):
         raise ValueError("modified_at must be UTC")
     timestamp(modified)
     return document(
-        build_item(root["root_id"], root["display_prefix"], path, size, modified, root["_schema"], identity)
+        build_item(
+            root["root_id"],
+            root["display_prefix"],
+            path,
+            size,
+            modified,
+            root["_schema"],
+            identity,
+            compiled_schema=compiled_schema,
+        )
     )
 
 
+class _PublishedPitRenewer:
+    """Keep the prior published snapshot readable while a replacement is built."""
+
+    def __init__(self, engine, pit):
+        self.engine, self.pit, self.next_renewal, self.unavailable = engine, pit, 0.0, False
+
+    def renew_if_due(self):
+        now = monotonic()
+        if now < self.next_renewal:
+            return
+        # Renewal deliberately does not recover or replace a PIT. During an
+        # import the index can be mutable, so a lost published snapshot makes
+        # reads fail closed, but must not prevent a checkpointed build from
+        # completing and publishing its new immutable snapshot.
+        try:
+            _complete(
+                self.engine.request(
+                    "POST",
+                    "/_search?allow_partial_search_results=false",
+                    {
+                        "pit": {"id": self.pit, "keep_alive": "24h"},
+                        "size": 0,
+                        "query": {"match_none": {}},
+                        "track_total_hits": False,
+                    },
+                )
+            )
+        except ApiError:
+            self.unavailable = True
+        self.next_renewal = now + PIT_RENEW_SECONDS
+
+
 class ArchiveImporter:
-    def __init__(self, ctx, engine, *, batch_size=1000, shards=8):
+    def __init__(self, ctx, engine, *, batch_size=1000, shards=8, bulk_target_bytes=None):
         if not 1 <= batch_size <= 5000:
             raise ValueError("Import batch size must be 1..5000")
         self.ctx, self.engine, self.batch_size, self.shards = ctx, engine, batch_size, shards
+        self.bulk_target_bytes = BULK_TARGET_BYTES if bulk_target_bytes is None else bulk_target_bytes
+        BulkBatchBuilder(target_bytes=self.bulk_target_bytes)
         self.database = ctx.settings.data_dir / "archive-import.sqlite3"
 
     def _journal(self):
@@ -102,12 +148,23 @@ class ArchiveImporter:
                 raise RuntimeError("Another archive importer/indexer is running")
             descriptor = os.open(Path(source).absolute(), os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
             with os.fdopen(descriptor, "rb") as handle, closing(self._journal()) as db:
+                with self.ctx.store.transaction(write=False) as tx:
+                    previous = tx.get("index", root_id, {})
+                renewer = (
+                    _PublishedPitRenewer(self.engine, previous["_pit_id"])
+                    if previous.get("_storage") == "opensearch" and previous.get("_pit_id")
+                    else None
+                )
+                if renewer is not None:
+                    renewer.renew_if_due()
                 signature = _signature(handle)
                 source_hash = hashlib.sha256()
                 while chunk := handle.read(4 * 1024 * 1024):
                     if stop.is_set():
                         raise InterruptedError("Import stopped before checkpoint allocation")
                     source_hash.update(chunk)
+                    if renewer is not None:
+                        renewer.renew_if_due()
                 if _signature(handle) != signature:
                     raise ValueError("Manifest changed while hashing")
                 handle.seek(0)
@@ -120,36 +177,55 @@ class ArchiveImporter:
                     saved = tx.get("index", root_id, {})
                 if saved.get("_import_generation") == job["generation"]:
                     return self._finish(db, job)
+                # The root configuration is immutable for this claimed job.
+                # Compile its case-folded lookup tables once, rather than once
+                # for every path component in a manifest with hundreds of
+                # millions of records.
+                compiled_schema = compile_schema(root["_schema"])
                 self.engine.ensure(job["index_name"], shards=self.shards, config_hash=job["config_hash"])
                 handle.seek(job["byte_offset"])
                 count = job["records"]
+                pending = None
                 while True:
                     if stop.is_set():
                         raise InterruptedError("Import stopped at a durable checkpoint")
-                    records, encoded_size = [], 0
+                    if renewer is not None:
+                        renewer.renew_if_due()
+                    builder = BulkBatchBuilder(target_bytes=self.bulk_target_bytes)
+                    batch_offset = None
                     for _ in range(self.batch_size):
-                        line = handle.readline(MAX_LINE + 1)
-                        if not line:
+                        if pending is None:
+                            line = handle.readline(MAX_LINE + 1)
+                            if not line:
+                                break
+                            if len(line) > MAX_LINE:
+                                raise ValueError("Manifest record exceeds line limit")
+                            if count + 1 >= VERSION_RANGE or job["id"] >= (2**63 // VERSION_RANGE) - 1:
+                                raise ValueError("Import revision range exhausted")
+                            pending = (
+                                _record(json.loads(line), root, mode, compiled_schema=compiled_schema),
+                                job["id"] * VERSION_RANGE + count + 1,
+                                handle.tell(),
+                            )
+                        doc, version, offset = pending
+                        if not builder.add(doc, version):
                             break
-                        if len(line) > MAX_LINE:
-                            raise ValueError("Manifest record exceeds line limit")
+                        pending = None
                         count += 1
-                        if count >= VERSION_RANGE or job["id"] >= (2**63 // VERSION_RANGE) - 1:
+                        batch_offset = offset
+                    if not builder:
+                        if pending is not None:
                             raise ValueError("Import revision range exhausted")
-                        doc = _record(json.loads(line), root, mode)
-                        records.append((doc, job["id"] * VERSION_RANGE + count))
-                        encoded_size += len(json.dumps(doc, ensure_ascii=False).encode()) + 1024
-                        if encoded_size >= 4 * 1024 * 1024:
-                            break
-                    if not records:
                         break
                     if _signature(handle) != signature:
                         raise ValueError("Manifest changed during import")
-                    self.engine.bulk(job["index_name"], records)
+                    self.engine.bulk(job["index_name"], builder.finish())
+                    if renewer is not None:
+                        renewer.renew_if_due()
                     with db:
                         db.execute(
                             "UPDATE imports SET byte_offset=?,records=? WHERE id=?",
-                            (handle.tell(), count, job["id"]),
+                            (batch_offset, count, job["id"]),
                         )
                     with self.ctx.store.transaction() as tx:
                         tx.put(
@@ -159,7 +235,7 @@ class ArchiveImporter:
                                 "root_id": root_id,
                                 "status": "SCANNING",
                                 "count": count,
-                                "checkpoint": str(handle.tell()),
+                                "checkpoint": str(batch_offset),
                             },
                         )
                 if _signature(handle) != signature:

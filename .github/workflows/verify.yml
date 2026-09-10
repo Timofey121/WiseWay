@@ -204,6 +204,15 @@ jobs:
         env:
           WISEWAY_TEST_SEARCH_URL: http://127.0.0.1:19200
         run: uv run pytest -q backend/tests/test_opensearch.py backend/tests/test_archive_import.py backend/tests/test_search_cache.py backend/tests/test_search_outbox.py --junitxml=test-results/search.xml
+      - name: Exercise resumable capacity CLI on a small diverse corpus
+        env:
+          WISEWAY_SEARCH_URL: http://127.0.0.1:19200
+          WISEWAY_SEARCH_ALLOW_HTTP: "true"
+          WISEWAY_SEARCH_CACHE_BYTES: "0"
+        run: |
+          uv run python backend/benchmarks/archive_capacity.py --data-dir "$RUNNER_TEMP/wiseway-capacity" --corpus diverse --shards 2 --records 10000 --chunk-records 5000 --phase build --min-free-gib 1
+          uv run python backend/benchmarks/archive_capacity.py --data-dir "$RUNNER_TEMP/wiseway-capacity" --corpus diverse --shards 2 --records 20000 --chunk-records 5000 --phase all --min-free-gib 1 --clients 4 --repeats 3
+          cp "$RUNNER_TEMP/wiseway-capacity/capacity-result.json" test-results/capacity-smoke.json
       - name: Collect engine logs
         if: always()
         run: |

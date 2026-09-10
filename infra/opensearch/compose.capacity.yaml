@@ -1,0 +1,56 @@
+# Synthetic metadata only. Retained volumes support interruption and resume.
+name: wiseway-capacity
+services:
+  search:
+    image: opensearchproject/opensearch:3.8.0@sha256:bcc1797519726ceb6d651d4a3e60b7c30da91793914a8dfe75fd441d4f641509
+    labels: {com.wiseway.capacity: "true"}
+    environment:
+      discovery.type: single-node
+      DISABLE_SECURITY_PLUGIN: "true"
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      OPENSEARCH_JAVA_OPTS: -Xms2g -Xmx2g
+    ports: ["127.0.0.1:${WISEWAY_CAPACITY_PORT:-19400}:9200"]
+    mem_limit: 5g
+    cpus: 4
+    pids_limit: 512
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    volumes: ["search-data:/usr/share/opensearch/data"]
+    healthcheck:
+      test: [CMD-SHELL, "curl --fail --silent http://localhost:9200/_cluster/health >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
+  benchmark:
+    profiles: [benchmark]
+    build:
+      context: ../..
+      dockerfile: infra/opensearch/Dockerfile.benchmark
+    labels: {com.wiseway.capacity: "true"}
+    depends_on:
+      search: {condition: service_healthy}
+    network_mode: service:search
+    environment:
+      WISEWAY_SEARCH_URL: http://127.0.0.1:9200
+      WISEWAY_SEARCH_ALLOW_HTTP: "true"
+      WISEWAY_SEARCH_CACHE_BYTES: "0"
+    command: [--data-dir, /benchmark/archive, --corpus, diverse, --shards, "4", --batch-size, "5000", --records, "200000000", --phase, all]
+    volumes: ["benchmark-data:/benchmark"]
+    mem_limit: 2g
+    cpus: 2
+    pids_limit: 256
+    read_only: true
+    tmpfs: [/tmp:size=128m,mode=1777]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    stop_grace_period: 60s
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
+volumes:
+  search-data:
+  benchmark-data:

@@ -12,6 +12,7 @@ class Engine:
         self.docs = {}
         self.fail = False
         self.publications = 0
+        self.renewals = []
 
     def ensure(self, name, **kwargs):
         self.docs.setdefault(name, {})
@@ -27,6 +28,10 @@ class Engine:
     def publish(self, name):
         self.publications += 1
         return f"pit-{self.publications}"
+
+    def request(self, method, path, body):
+        self.renewals.append((method, path, body))
+        return {"_shards": {"total": 1, "successful": 1, "failed": 0}}
 
     def close_pit(self, pit):
         pass
