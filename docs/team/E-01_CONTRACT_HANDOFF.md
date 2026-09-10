@@ -281,3 +281,131 @@ runner.
 - **Блокирующая зависимость:** нет.
 - **Следующий владелец:** повторный reviewer LT-01.2 (независимая проверка diff, examples
   и таблиц), затем WP-02; executable-регрессия — LT-02.2.
+
+## LT-02.1 — воспроизводимая структурная/schema-проверка контракта
+
+### Задача и покрытые требования
+
+- **Leaf:** LT-02.1 (WP-02, Epic E-01). **Status на момент handoff:** IN_PROGRESS.
+- **Цель:** заменить несуществовавшую команду README (B-02) исполняемым runner,
+  который валидирует весь существующий OAS из 33 операций и его встроенные examples.
+- **Основание/требования:** README; FE-01/02; API §2/11/12; PLAN §7; Q-043 S; MATRIX
+  G-1/G-6, V-S; OAS целиком. Backend и промежуточная QA-подпись не требуются.
+
+### Изменённые файлы
+
+| Файл | Характер |
+|---|---|
+| `tests/contract/verify_contract.py` | CLI-runner (README entry point) |
+| `tests/contract/contractlib/*.py` | переиспользуемые helpers: loading/refs, schema-validation, structure, examples, report, expectations |
+| `tests/contract/test_verify_contract.py` | positive/negative self-тесты (stdlib `unittest`) |
+| `tests/contract/requirements.in`, `tests/contract/requirements.txt` | прямые зависимости и полностью закреплённый транзитивный lock |
+| `README.md` | реальные команды Windows и POSIX-эквивалент |
+| `docs/team/E-01_CONTRACT_HANDOFF.md` | этот handoff |
+
+OAS `contracts/openapi/wiseway-v1.yaml` **не изменялся**; точечная нормализация не
+потребовалась.
+
+### Версия контракта
+
+`openapi: 3.1.1`, `info.version: 1.0.0`, 33 operationId, префикс `/api/v1` — без
+изменений. Публичные пути, DTO, examples, security и responses не правились.
+
+### Что проверяет runner (V-S)
+
+Структурные проверки (идентификаторы `OAS-*`): OpenAPI 3.1.1 через поддерживаемый
+`openapi-spec-validator==0.9.0`; метаданные/сервер/`cookieAuth`; отсутствие внешних
+ссылок и разрешимость всех локальных `$ref` (preflight до third-party валидатора);
+ровно 33 уникальных operationId и точное соответствие метод/путь; соответствие
+`{path}`-переменных path-параметрам; эффективный обязательный `company_id` со схемой
+`Id` ровно на двух query-GET (`listSortingBatches`/`listQuarantineItems`) и на
+четырёх path-потребителях (`listTargetDirectories`, `resolveTargetDirectory`,
+`listDictionaries`, `createDictionary`); анонимны только `getHealth`/`login`,
+защищённые операции строго `[{cookieAuth: []}]` без пустой альтернативы; точные
+наборы CSRF (10 мутаций) и Idempotency-Key (publish/batch/return); `X-Request-ID` и
+`Cache-Control: no-store` на всех ответах, `Retry-After` на 429; соответствие
+`error.code` HTTP-статусу; ожидаемые success-статусы и точный набор объявленных
+HTTP-статусов на операцию; обязательные request body; закрытые объекты
+(`additionalProperties: false`); канонические ограничения `Id`/`Revision`/`Count`/
+`Instant`/`RelativeDirectory`/`RelativeFilePath` и `Limit` 1..100.
+
+Examples: все встроенные request/response/parameter/header/schema examples (127 шт.)
+валидируются против канонической схемы через `jsonschema` 2020-12 с format-checker
+(`date-time`, `uuid`), с корректной семантикой nullable-union, `oneOf` и закрытых
+объектов. Внешние `externalValue` запрещены в любом месте; непривязанные к схеме
+component examples отклоняются как непроверяемые.
+
+### V-S: точные команды и фактические результаты
+
+Windows (PowerShell), Python 3.14.7, `.venv-contract`:
+
+```powershell
+python -m venv .venv-contract
+.\.venv-contract\Scripts\python.exe -m pip install -r tests\contract\requirements.txt
+.\.venv-contract\Scripts\python.exe tests\contract\verify_contract.py
+.\.venv-contract\Scripts\python.exe -m unittest discover -s tests\contract -p "test_*.py"
+.\.venv-contract\Scripts\python.exe -m pip check
+```
+
+- `verify_contract.py` → exit 0, `RESULT: PASS (19 checks, 0 failures)`, 127 examples.
+- `unittest discover` → `Ran 45 tests ... OK` (45/45).
+- `pip check` → `No broken requirements found.`
+- Чистая воспроизводимость: отдельный пустой venv, `pip install -r
+  tests/contract/requirements.txt` (exit 0), затем те же три команды — тот же
+  результат (PASS/45 OK/No broken requirements).
+
+### Negative regression (доказательство, что runner ловит дефекты)
+
+Тесты подтверждают обнаружение: исходного B-01 (`CompanyId in:path` на
+`/sorting/batches` без `{company_id}`), удаления `CompanyIdQuery` из
+`listSortingBatches`/`listQuarantineItems` (по одному и из обоих), подмены его схемы
+на неограниченную строку, неверных `required`/`in` и поломки path-потребителя,
+дубликата/отсутствия operationId, внешней и неразрешимой ссылки (в т.ч. что
+third-party валидатор не вызывается при non-local ref — mock-spy), лишней анонимной
+операции и пустой security-альтернативы в обоих порядках, пропавшего
+CSRF/Idempotency-Key, пропавшего `X-Request-ID`, неверной связи error.code↔HTTP,
+неверного success-статуса, отсутствующего объявленного HTTP-статуса, открытого
+объекта, испорченного example, `externalValue` (включая непривязанный component
+example) и непривязанного component example. Payload-уровень: неизвестные поля
+отклоняются; отсутствующее required отклоняется, разрешённый `null` принимается;
+enum; оба варианта `SelectionRequest`/`BatchCreateRequest` и их загрязнённые
+комбинации; границы `Id`, `Count` (0…2^53−1), `Instant` (format+`Z`), `Limit`,
+`RelativeFilePath`. CLI проверяется subprocess-тестами (PASS/FAIL/exit 2).
+
+### Repair cycle 1 (устранение 3 blocking false negatives)
+
+- **CompanyId (B-01).** Раньше проверялось только определение component-параметра;
+  удаление ссылки из операции или подмена схемы на `type: string` проходили. Добавлен
+  `OAS-PARAM-001`: эффективные параметры каждой операции обязаны давать ровно один
+  `company_id` с `required: true` и схемой `$ref Id` — query для двух GET-списков,
+  path для четырёх потребителей `{company_id}`. Добавлены мутации на удаление,
+  схему, `required` и `in`.
+- **Security.** Раньше `[{}, {cookieAuth: []}]` в любом порядке проходило, т.к.
+  требовалось лишь наличие `cookieAuth` среди альтернатив. `OAS-SEC-001` теперь
+  требует ровно `[{cookieAuth: []}]` для защищённых операций и отвергает пустую
+  альтернативу; добавлены регрессии для обоих порядков.
+- **Внешние ссылки.** `openapi-spec-validator` запускался до локальной проверки
+  ссылок и мог разрешать attacker-controlled remote `$ref`. `OAS-REF-001/002` теперь
+  выполняются preflight до third-party валидатора, а `OAS-BASIC-001` не вызывает
+  `validate()` при наличии non-local ref. Тест с mock-spy подтверждает, что
+  `openapi_spec_validator.validate` не вызывается.
+- **Nonblocking внутри границы.** `OAS-RESP-001` фиксирует точный набор объявленных
+  HTTP-статусов на операцию (reviewed baseline в `expectations.py`, не runtime).
+  `OAS-EX-002` отвергает `externalValue` в любом месте и непривязанные component
+  examples. CLI печатает точное число проверенных examples (`Examples: 127 ...`).
+
+### Ограничения и явно не выполненное
+
+- Это LT-02.1: структурная/schema-проверка и примеры. Семантические инварианты
+  примеров (filename/location, IDLE/counts, PlanCounts, selection↔preview↔batch)
+  — следующий LT-02.2; здесь не реализованы и не заявляются.
+- Backend/UI/control plane/backlog не затрагивались; staging/commit/push worker не
+  выполняет (D-06). Mock/real/QA-прогоны не выполнялись.
+
+### Статус и следующий владелец
+
+- **Mock/API/QA статус:** не применимо; проверка контракта — не E2E и не real API.
+- **Оставшиеся дефекты:** B-02 устранён (README-команды существуют и выполняются).
+- **Блокирующая зависимость:** нет.
+- **Следующий владелец:** reviewer LT-02.1; затем LT-02.2 (семантические инварианты)
+  поверх переиспользуемых helpers `contractlib`.

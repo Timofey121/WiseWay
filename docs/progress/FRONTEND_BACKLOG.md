@@ -151,7 +151,9 @@ WP-01 local package completion: commits `7b0843b`, `d64dfdb`; полный WORK_
 | Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
 |---|---|---|---|---|---|---|
 | LT-02.1 | IN_PROGRESS | WP-01 | OpenAPI 3.1 validation | OAS paths/components; API §2/11/12; README; Q-043 S | Unique operationId, refs, path matching, required/nullable/enums/oneOf/additionalProperties, security/CSRF/idempotency/HTTP responses и встроенные examples проверяются; README-команды существуют | V-S с invalid parameter/unknown field; версии, команды и фактический результат |
-| LT-02.2 | TODO | LT-02.1 | Семантические инварианты examples | API §4/6–11; SEM поиск/планы/исходы/аудит; Q-011/017/024/029/038/043 S | filename/location, IDLE/total/returned_count/limited, PlanCounts без двойного счёта, completed_count/recovery, связи сценария/error.operation_id согласованы; страница не весь набор | V-S positive/negative fixtures каждого инварианта; без matcher/ranking алгоритма |
+| LT-02.2 | IN_PROGRESS | LT-02.1 | Семантические инварианты examples | API §4/6–11; SEM поиск/планы/исходы/аудит; Q-011/017/024/029/038/043 S | filename/location, IDLE/total/returned_count/limited, PlanCounts без двойного счёта, completed_count/recovery, связи сценария/error.operation_id согласованы; страница не весь набор | V-S positive/negative fixtures каждого инварианта; без matcher/ranking алгоритма |
+
+LT-02.1 local completion: полный LEAF re-review после repair 1 — PASS (устранены пропуск company_id, анонимная security-альтернатива и network fetch внешнего ref до guard). Orchestrator фактически выполнил `.venv-contract/Scripts/python.exe tests/contract/verify_contract.py` — 19 checks, 127 examples, PASS; `-m unittest discover -s tests/contract -p "test_*.py"` — 45 OK; `-m pip check` — no broken requirements; `git diff --check` PASS. Python 3.14.7, зависимости pinned в `tests/contract/requirements.txt`. B-02 устранён, README runner воспроизводим. IN_PROGRESS только из-за отложенной публикации D-06; техническая зависимость LT-02.2 удовлетворена.
 
 ### WP-03 — Независимые синтетические эталоны
 
