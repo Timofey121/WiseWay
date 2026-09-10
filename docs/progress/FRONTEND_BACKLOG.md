@@ -2,7 +2,7 @@
 
 Дата обследования: 10.09.2026. Область: внешняя синтетическая Demo-MVP.
 
-Это execution backlog: план декомпозиции и учёт подтверждённого прогресса, не доказательство готовой реализации сам по себе. Иерархия: **EPIC → EXECUTION UNIT → WORK PACKAGE → LEAF TASK**. В документе **10 EPIC, 32 WORK PACKAGE, 80 LEAF TASK**. WP-31/32 и их два leaf — условное планирование, не обязательные функции внешней MVP.
+Это execution backlog: план декомпозиции и учёт подтверждённого прогресса, не доказательство готовой реализации сам по себе. Иерархия: **EPIC → EXECUTION UNIT → WORK PACKAGE → LEAF TASK**. В документе **10 EPIC, 32 WORK PACKAGE, 80 исходных leaf IDs**; пять родителей WP-03 рекурсивно разделены на 10 дочерних leaf (85 исполняемых конечных leaf). WP-31/32 и их два leaf — условное планирование, не обязательные функции внешней MVP.
 
 ## 1. Источники истины и решения пользователя
 
@@ -157,9 +157,11 @@ LT-02.1 local completion: полный LEAF re-review после repair 1 — PA
 
 LT-02.2 local completion: полный LEAF re-review после repair 1 — PASS. Orchestrator: `.venv-contract/Scripts/python.exe tests/contract/verify_contract.py` — 22 checks / 127 schema+semantic examples PASS; `-m unittest discover -s tests/contract -p "test_*.py"` — 72 OK; `-m pip check` и `git diff --check` PASS. 48 конечных payloads / 14 инвариантов плюс 2 linked cases; schema-only, не backend evidence. Исправлены vacuous return link, batch references, глобальная RuleSet consistency, overflow completed+recovery; полный handoff в `docs/team/E-01_CONTRACT_HANDOFF.md`. Локальный checkpoint; публикация отложена D-06.
 
+WP-02 local package completion: `a2095d1`, `7c2b5e5`; полный WORK_PACKAGE review диапазона `dc26527..7c2b5e5` — PASS. Полная проверка orchestrator (22 checks, 127 examples, 72 tests, pip check) PASS; `git diff --check` PASS. Формальный VERIFIED ожидает публикации D-06; техническая зависимость WP-03 удовлетворена. Контракт 1.0.0, S/V-S; M/A/E не запускались.
+
 ### WP-03 — Независимые синтетические эталоны
 
-- **Status:** TODO. **Parent:** E-01. **Dependencies:** WP-02, D-03.
+- **Status:** IN_PROGRESS. **Parent:** E-01. **Dependencies:** WP-02, D-03.
 - **Goal:** единый конечный набор A/B/C ожиданий для mocks и real-регрессии.
 - **Sources of truth:** QA §4/5; TZ §6.3/12/14; FE-01/02; API §12; Q-001…045; OAS schemas/examples.
 - **Acceptance criteria:** стабильные IDs, версия/seed, exact expectations независимо от тестируемых алгоритмов; общие публичные схемы. Не QA acceptance и не backend FS-генератор.
@@ -173,6 +175,23 @@ LT-02.2 local completion: полный LEAF re-review после repair 1 — PA
 | LT-03.3 | TODO | WP-02, LT-03.2 | Эталоны очереди, снимков и preview | QUEUE-01…06/10; API §7; QA §4; Q-022…027; OAS QueueResponse/SelectionSnapshot/Preview | READY 0/120/1001, counts всей компании и filtered eligible отдельно; explicit/all matching/late arrivals/count change/expiry/owner scope; PlanRow использует принятые RuleSet references; все Prediction/CollisionDetails kinds, nullable цели; preflight ожидания различают DIRECT и PREVIEWED | V-S/V-H snapshot/preview links и finite входов/ошибок; membership задан таблицей, не вычисляется mock алгоритмом |
 | LT-03.4 | TODO | WP-02, LT-03.3 | Эталоны фактических партий и файловых исходов | QUEUE-07…10, FILE-01…06/08/09; API §8; QA §4/8; Q-028…037/039/040/044; OAS Batch/Outcome/OutcomeCounts | Отдельные fixtures всех BatchState/Outcome/reasons, partial/recovery/null location, lost response/claim overlap/source change, обе коллизии/manual review/confirmed quarantine/restart; exact counts, attempts и expected placements независимы от executor; это описание, не физическое evidence | V-S/V-H каждого state/reason и сцепления с selection; expected inventory/hashes contract описан безопасно, FS-исполнение принадлежит BE |
 | LT-03.5 | TODO | WP-02, LT-03.2, LT-03.4 | Эталоны карантина, возврата и журнала | FILE-07, AUD-01…05; API §9–11; QA §4/8; Q-029 (return)/038/041/043; OAS QuarantineItem/QuarantineReturnResponse/AuditEvent | Confirmed quarantine/can_return/recovery, все return conflicts/retry; BUSINESS/SYSTEM/nullable actor/blocked actors/cursor/new events; события связаны с dictionary/batch/return fixtures, request_id/operation_id/source_attempt_id согласованы; без реальных секретов | V-S/V-H конечных return/audit scenarios и nullable/links; не объявлять реальный аудит или возврат доказанным |
+
+#### Рекурсивная декомпозиция WP-03 перед реализацией
+
+Исходные LT-03.1…5 и все их AC/трассировка выше сохранены как родители. Конечные результаты разделены на данные/сценарии так, чтобы один worker/review не создавал весь предметный цикл. Общие G, источники и verification родителя обязательны для каждого применимого ребёнка. Формальный IN_PROGRESS после local PASS означает только отложенную публикацию D-06; техническое завершение фиксируется evidence отдельно.
+
+| Leaf ID | Parent | Status | Dependencies | Наблюдаемый результат и AC | Verification |
+|---|---|---|---|---|---|
+| LT-03.1a | LT-03.1 | IN_PROGRESS | WP-02 | Версионированный синтетический корпус: два корня, Atlas/Nova разной глубины/годы/проекты, raw-case, optional tail/ошибки, все типы/zero, >100 совпадений, content-only/old-path и metadata lifecycle входы; два WORKER+ADMIN без секретов, auth/config API examples. Формат конечных fixtures для остальных детей и schema validation | V-S/V-H inventory, ID uniqueness, seed/version, schema-bound API examples, независимая сверка markers |
+| LT-03.1b | LT-03.1 | TODO | LT-03.1a | Literal exact search/facet expectations Q-004…014/042/043: IDLE/zero/N10/N100, AND/prefix/все границы/phrase/mixed/ranking numeric/ties/сортировки/raw-case/unrecognized/freshness, auth/error/race сценарии Q-001…003/005/010; не matcher | V-S/V-H каждого параметра Q, literal IDs/order/counts/facets, negative mutations |
+| LT-03.2a | LT-03.2 | TODO | WP-02, LT-03.1a | Две компании/два справочника одной/акторы, разрешённые targets; finite rule-input→expected-output для BASENAME/RELATIVE_PATH, масок/слешей/регистра/суффиксов/приоритетов/одинаковых и разных целей; invalid target/rule cases, round-trip всех полей | V-S/V-H Q-015/018/044, без matcher |
+| LT-03.2b | LT-03.2 | TODO | LT-03.2a | Конечные revision/имя conflict, simulation full READY/empty/full RuleSet, ack/comment/TTL, publication retry/history/restore/manual edit происхождения сценарии Q-016…021/029 | V-S/V-H ссылок draft/version/simulation/publish, negative cases |
+| LT-03.3a | LT-03.3 | TODO | LT-03.2b | Очередь/readiness и snapshot: 0/120/1001 READY, company counts vs filtered eligible/page, explicit/all matching, literal membership, late arrival/change count/expiry/owner scope | V-S/V-H Q-022/024/025 и часть Q-023/026, IDs/revisions не алгоритм |
+| LT-03.3b | LT-03.3 | TODO | LT-03.3a | Preview: все Prediction/CollisionDetails kinds, nullable цели и принятые RuleSet refs; DIRECT/PREVIEWED preflight input/error pairs, stale dependencies до batch | V-S/V-H Q-023/026/027, snapshot/preview links |
+| LT-03.4a | LT-03.4 | TODO | LT-03.3b | Конечные Batch всех состояний и Outcome/reasons, exact counts/attempts/placements, partial/known+unknown recovery, collisions/manual review/quarantine; expected inventory/hash evidence contract без FS исполнения | V-S/V-H Q-031…037/039; каждый enum/reason, selection links |
+| LT-03.4b | LT-03.4 | TODO | LT-03.4a | Сценарии accepted lost response/idempotency, claim overlap двух акторов, source change, logout/reload continuation, поздняя коллизия/перестановка IDs, restart в трёх точках/containment; finite expected attempts/events/placements | V-S/V-H Q-028…030/032/040/044; не concurrency/FS evidence |
+| LT-03.5a | LT-03.5 | TODO | LT-03.2b, LT-03.4b | Confirmed quarantine/can_return/recovery, возврат WAITING_READY, все return conflicts/comment/revision/key retry, exact source_attempt/return_operation/error.operation связи | V-S/V-H Q-029 return/038, без auto sorting |
+| LT-03.5b | LT-03.5 | TODO | LT-03.5a | Связанный audit: все dictionary/batch/attempt/return events, BUSINESS/SYSTEM/nullable actor/blocked actor list, фильтры/UTC день/cursor/new events, безопасные request/operation/source_attempt IDs, отсутствие business read событий | V-S/V-H Q-041/043, сквозная сверка статических fixtures |
 
 ## EPIC E-02 — Toolchain, generated client, транспорт и mocks
 
