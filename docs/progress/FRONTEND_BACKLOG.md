@@ -137,9 +137,11 @@ LT-01.1 evidence: независимый LEAF reviewer PASS; orchestrator пов
 
 LT-01.2 evidence: LEAF reviewer сначала FAIL (имя NO_SCENARIO совпадало с маской; чужой опубликованный участник загрязнял общий RuleSet), после repair 1 полный re-review PASS. Orchestrator: ad-hoc `node .../lt-01-2-verify/check.js <oas>` — 56/56; точный diff и `git diff --check` PASS. Исправления и таблицы связей: тот же handoff. Технически leaf завершён; формальный статус IN_PROGRESS до публикации пользователем по D-06, локальный checkpoint создаётся с этой записью. B-03 исправлен; schema runner ещё не запускался.
 
+WP-01 local package completion: commits `7b0843b`, `d64dfdb`; полный WORK_PACKAGE review `c271587..d64dfdb` — PASS. Orchestrator повторил оба ad-hoc набора (25/25 и 56/56) и `git diff --check c271587..HEAD` — PASS. Технические AC WP-01 завершены, зависимости WP-02 удовлетворены фактическим OAS. Формальный VERIFIED ожидает человеческой публикации (D-06); backend/M/A/E не запускались.
+
 ### WP-02 — Исполняемые контрактные проверки
 
-- **Status:** TODO. **Parent:** E-01. **Dependencies:** WP-01; устраняет B-02.
+- **Status:** IN_PROGRESS. **Parent:** E-01. **Dependencies:** WP-01; устраняет B-02.
 - **Goal:** заменить обещание README воспроизводимым runner.
 - **Sources of truth:** README проверка; FE-01/02; API §2/11/12; PLAN §7; Q-043; OAS целиком.
 - **Acceptance criteria:** 33 операции, структура/examples/negative requests/инварианты проверяются; зависимости закреплены; README содержит выполненные команды. Backend и промежуточная QA-подпись не нужны.
@@ -148,7 +150,7 @@ LT-01.2 evidence: LEAF reviewer сначала FAIL (имя NO_SCENARIO совп
 
 | Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
 |---|---|---|---|---|---|---|
-| LT-02.1 | TODO | WP-01 | OpenAPI 3.1 validation | OAS paths/components; API §2/11/12; README; Q-043 S | Unique operationId, refs, path matching, required/nullable/enums/oneOf/additionalProperties, security/CSRF/idempotency/HTTP responses и встроенные examples проверяются; README-команды существуют | V-S с invalid parameter/unknown field; версии, команды и фактический результат |
+| LT-02.1 | IN_PROGRESS | WP-01 | OpenAPI 3.1 validation | OAS paths/components; API §2/11/12; README; Q-043 S | Unique operationId, refs, path matching, required/nullable/enums/oneOf/additionalProperties, security/CSRF/idempotency/HTTP responses и встроенные examples проверяются; README-команды существуют | V-S с invalid parameter/unknown field; версии, команды и фактический результат |
 | LT-02.2 | TODO | LT-02.1 | Семантические инварианты examples | API §4/6–11; SEM поиск/планы/исходы/аудит; Q-011/017/024/029/038/043 S | filename/location, IDLE/total/returned_count/limited, PlanCounts без двойного счёта, completed_count/recovery, связи сценария/error.operation_id согласованы; страница не весь набор | V-S positive/negative fixtures каждого инварианта; без matcher/ranking алгоритма |
 
 ### WP-03 — Независимые синтетические эталоны
