@@ -16,7 +16,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from . import rule_expectations, search_expectations, synthetic
+from . import dictionary_lifecycle, rule_expectations, search_expectations, synthetic
 from .semantic import validate_fixture
 
 
@@ -117,6 +117,7 @@ def run_fixture_checks(report, registry, root: Optional[Path] = None) -> None:
     _check_checksums(checksum_check, manifest, base)
     _run_search_expectations(report, registry, base)
     _run_rule_expectations(report, registry, base)
+    _run_dictionary_lifecycle(report, registry, base)
 
 
 def _run_search_expectations(report, registry, base: Path) -> None:
@@ -248,6 +249,107 @@ def _run_rule_expectations(report, registry, base: Path) -> None:
 
     try:
         generated = rule_expectations.generated_examples(expectations, context)
+    except Exception as exc:  # noqa: BLE001
+        examples_check.add(f"cannot regenerate examples: {type(exc).__name__}: {exc}")
+        return
+    for relative, payload in generated.items():
+        target = base / relative
+        if not target.is_file():
+            examples_check.add(f"generated example is missing: {relative}")
+            continue
+        try:
+            committed = synthetic.load_json(target)
+        except Exception as exc:  # noqa: BLE001
+            examples_check.add(f"cannot parse {relative}: {type(exc).__name__}: {exc}")
+            continue
+        if committed != payload:
+            examples_check.add(f"committed example differs from regeneration: {relative}")
+
+
+def _run_dictionary_lifecycle(report, registry, base: Path) -> None:
+    """LT-03.2b: literal dictionary lifecycle oracle and generated examples."""
+    lifecycle_check = report.check(
+        "FIX-DLC-001",
+        "Dictionary lifecycle expectations materialize to schema-valid literal "
+        "payloads and satisfy the finite draft/simulation/publication invariants",
+    )
+    request_check = report.check(
+        "FIX-DLC-002",
+        "Every lifecycle failure request is schema-classified (valid or explicitly rejected)",
+    )
+    examples_check = report.check(
+        "FIX-DLC-003",
+        "Generated public dictionary/simulation/error examples match the committed files",
+    )
+    try:
+        expectations = dictionary_lifecycle.load_expectations(base)
+        context = dictionary_lifecycle.build_context(base, expectations)
+    except Exception as exc:  # noqa: BLE001 - report unreadable expectations
+        lifecycle_check.add(
+            f"cannot load dictionary lifecycle expectations: {type(exc).__name__}: {exc}"
+        )
+        return
+
+    for message in dictionary_lifecycle.expectation_errors(expectations, context):
+        lifecycle_check.add(message)
+    for message in dictionary_lifecycle.request_rejection_errors(
+        expectations, context, registry
+    ):
+        request_check.add(message)
+
+    for state in expectations.get("states", []):
+        payload = dictionary_lifecycle.materialize_dictionary(state, context)
+        schema_errors, semantic = validate_fixture(
+            registry, dictionary_lifecycle.DICTIONARY_SCHEMA, payload
+        )
+        for message in schema_errors + semantic:
+            lifecycle_check.add(message, state["state_id"])
+    for version in expectations.get("versions", []):
+        payload = dictionary_lifecycle.materialize_version(
+            context["versions"][version["version_id"]], context
+        )
+        schema_errors, semantic = validate_fixture(
+            registry, dictionary_lifecycle.DICTIONARY_VERSION_SCHEMA, payload
+        )
+        for message in schema_errors + semantic:
+            lifecycle_check.add(message, version["version_id"])
+    for simulation in expectations.get("simulations", []):
+        payload = dictionary_lifecycle.materialize_simulation(simulation, context)
+        schema_errors, semantic = validate_fixture(
+            registry, dictionary_lifecycle.SIMULATION_SCHEMA, payload
+        )
+        for message in schema_errors + semantic:
+            lifecycle_check.add(message, simulation["page_id"])
+    for publish in expectations.get("publishes", []):
+        payload = dictionary_lifecycle.materialize_publish(publish, context)
+        schema_errors, semantic = validate_fixture(
+            registry, dictionary_lifecycle.PUBLISH_SCHEMA, payload
+        )
+        for message in schema_errors + semantic:
+            lifecycle_check.add(message, publish["publish_id"])
+    for page in expectations.get("version_pages", []):
+        payload = dictionary_lifecycle.materialize_page_versions(page, context)
+        schema_errors, semantic = validate_fixture(
+            registry, dictionary_lifecycle.PAGE_VERSION_SCHEMA, payload
+        )
+        for message in schema_errors + semantic:
+            lifecycle_check.add(message, page["page_id"])
+    for failure in expectations.get("failures", []):
+        payload = dictionary_lifecycle.materialize_error(failure)
+        schema_errors, semantic = validate_fixture(
+            registry, dictionary_lifecycle.ERROR_SCHEMA, payload
+        )
+        for message in schema_errors + semantic:
+            lifecycle_check.add(message, failure["failure_id"])
+
+    report.lifecycle_timeline = len(expectations.get("timeline", []))
+    report.lifecycle_failures = len(expectations.get("failures", []))
+    report.lifecycle_replays = len(expectations.get("replays", []))
+    report.lifecycle_simulations = len(expectations.get("simulations", []))
+    report.lifecycle_publishes = len(expectations.get("publishes", []))
+
+    try:
+        generated = dictionary_lifecycle.generated_examples(expectations, context)
     except Exception as exc:  # noqa: BLE001
         examples_check.add(f"cannot regenerate examples: {type(exc).__name__}: {exc}")
         return

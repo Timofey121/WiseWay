@@ -1,0 +1,148 @@
+{
+  "simulation_id": "simulation-atlas-general-v3-restored",
+  "dictionary_id": "dictionary-atlas-general",
+  "draft_revision": 3,
+  "base_rule_set": {
+    "rule_set_id": "rule-set-atlas-v2-invoices-v2",
+    "company_id": "company-demo-atlas",
+    "members": [
+      {
+        "dictionary_id": "dictionary-atlas-general",
+        "version_id": "version-atlas-general-v2"
+      },
+      {
+        "dictionary_id": "dictionary-atlas-invoices",
+        "version_id": "version-atlas-invoices-v2"
+      }
+    ]
+  },
+  "ready_snapshot_id": "ready-snapshot-atlas-full",
+  "created_at": "2031-05-10T09:40:30Z",
+  "expires_at": "2031-05-10T09:45:30Z",
+  "total": 5,
+  "counts": {
+    "will_move": 2,
+    "will_manual_review": 3,
+    "requires_decision": 0,
+    "not_ready": 0,
+    "rule_conflicts": 0,
+    "no_scenario": 3
+  },
+  "warnings": [],
+  "rows": [
+    {
+      "item_id": "ready-item-atlas-archive",
+      "item_revision": 4,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/atlas/archive.tar.gz",
+        "display_path": "DEMO:/SandboxRoot/Incoming/atlas/archive.tar.gz"
+      },
+      "filename": "archive.tar.gz",
+      "company_id": "company-demo-atlas",
+      "predicted_state": "WILL_MOVE",
+      "reason_code": null,
+      "target": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Reports/Archive.gz",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/Archive.gz"
+      },
+      "matched_rules": [
+        {
+          "dictionary_id": "dictionary-atlas-general",
+          "version_id": null,
+          "rule_id": "rule-atlas-general-archive"
+        }
+      ],
+      "selected_rule": {
+        "dictionary_id": "dictionary-atlas-general",
+        "version_id": null,
+        "rule_id": "rule-atlas-general-archive"
+      },
+      "collision": null
+    },
+    {
+      "item_id": "ready-item-atlas-invoice",
+      "item_revision": 3,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/atlas/invoice-2031.TXT",
+        "display_path": "DEMO:/SandboxRoot/Incoming/atlas/invoice-2031.TXT"
+      },
+      "filename": "invoice-2031.TXT",
+      "company_id": "company-demo-atlas",
+      "predicted_state": "WILL_MOVE",
+      "reason_code": null,
+      "target": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Invoices/Invoice.TXT",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Invoices/Invoice.TXT"
+      },
+      "matched_rules": [
+        {
+          "dictionary_id": "dictionary-atlas-invoices",
+          "version_id": "version-atlas-invoices-v2",
+          "rule_id": "rule-atlas-invoices-invoice"
+        }
+      ],
+      "selected_rule": {
+        "dictionary_id": "dictionary-atlas-invoices",
+        "version_id": "version-atlas-invoices-v2",
+        "rule_id": "rule-atlas-invoices-invoice"
+      },
+      "collision": null
+    },
+    {
+      "item_id": "ready-item-atlas-uncovered",
+      "item_revision": 2,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/atlas/unmatched.bin",
+        "display_path": "DEMO:/SandboxRoot/Incoming/atlas/unmatched.bin"
+      },
+      "filename": "unmatched.bin",
+      "company_id": "company-demo-atlas",
+      "predicted_state": "WILL_MANUAL_REVIEW",
+      "reason_code": "NO_SCENARIO",
+      "target": null,
+      "matched_rules": [],
+      "selected_rule": null,
+      "collision": null
+    },
+    {
+      "item_id": "ready-item-atlas-hidden",
+      "item_revision": 5,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/atlas/hidden.log",
+        "display_path": "DEMO:/SandboxRoot/Incoming/atlas/hidden.log"
+      },
+      "filename": "hidden.log",
+      "company_id": "company-demo-atlas",
+      "predicted_state": "WILL_MANUAL_REVIEW",
+      "reason_code": "NO_SCENARIO",
+      "target": null,
+      "matched_rules": [],
+      "selected_rule": null,
+      "collision": null
+    },
+    {
+      "item_id": "ready-item-atlas-occupied",
+      "item_revision": 6,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/atlas/occupied.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/atlas/occupied.pdf"
+      },
+      "filename": "occupied.pdf",
+      "company_id": "company-demo-atlas",
+      "predicted_state": "WILL_MANUAL_REVIEW",
+      "reason_code": "NO_SCENARIO",
+      "target": null,
+      "matched_rules": [],
+      "selected_rule": null,
+      "collision": null
+    }
+  ],
+  "next_cursor": null
+}

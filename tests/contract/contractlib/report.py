@@ -58,6 +58,11 @@ class Report:
     rule_scenarios: int = 0
     target_scenarios: int = 0
     invalid_rule_cases: int = 0
+    lifecycle_timeline: int = 0
+    lifecycle_failures: int = 0
+    lifecycle_replays: int = 0
+    lifecycle_simulations: int = 0
+    lifecycle_publishes: int = 0
 
     def check(self, check_id: str, description: str) -> CheckResult:
         result = CheckResult(check_id=check_id, description=description)

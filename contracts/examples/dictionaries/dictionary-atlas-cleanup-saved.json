@@ -1,0 +1,32 @@
+{
+  "dictionary_id": "dictionary-atlas-cleanup",
+  "company_id": "company-demo-atlas",
+  "name": "Уборка Atlas",
+  "description": "Черновик для проверки ревизий и уникальности имени.",
+  "draft": {
+    "draft_revision": 1,
+    "rules": [
+      {
+        "rule_id": "rule-cleanup-archive",
+        "priority": 30,
+        "match_field": "BASENAME",
+        "mask": "*.cleanup",
+        "target_stem": "Cleanup",
+        "target": {
+          "root_id": "root-demo-atlas",
+          "relative_directory": "Archive/Atlas/Orion_2031/Data"
+        }
+      }
+    ],
+    "based_on_version_id": null
+  },
+  "active_version_id": null,
+  "versions_count": 0,
+  "updated_at": "2031-05-10T09:22:00Z",
+  "updated_by": {
+    "user_id": "user-demo-worker-1",
+    "login": "worker.one",
+    "display_name": "Иван Рабочий",
+    "role": "WORKER"
+  }
+}

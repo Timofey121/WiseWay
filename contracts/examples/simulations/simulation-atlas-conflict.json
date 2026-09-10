@@ -1,0 +1,63 @@
+{
+  "simulation_id": "simulation-atlas-general-conflict",
+  "dictionary_id": "dictionary-atlas-general",
+  "draft_revision": 101,
+  "base_rule_set": {
+    "rule_set_id": "rule-set-atlas-scenario-conflict",
+    "company_id": "company-demo-atlas",
+    "members": [
+      {
+        "dictionary_id": "dictionary-atlas-general",
+        "version_id": "version-atlas-general-scenario-conflict-v1"
+      },
+      {
+        "dictionary_id": "dictionary-atlas-invoices",
+        "version_id": "version-atlas-invoices-v1"
+      }
+    ]
+  },
+  "ready_snapshot_id": "ready-snapshot-atlas-conflict",
+  "created_at": "2031-05-10T09:52:00Z",
+  "expires_at": "2031-05-10T09:57:00Z",
+  "total": 1,
+  "counts": {
+    "will_move": 0,
+    "will_manual_review": 1,
+    "requires_decision": 0,
+    "not_ready": 0,
+    "rule_conflicts": 1,
+    "no_scenario": 0
+  },
+  "warnings": [],
+  "rows": [
+    {
+      "item_id": "ready-item-atlas-shared",
+      "item_revision": 7,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/atlas/shared.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/atlas/shared.pdf"
+      },
+      "filename": "shared.pdf",
+      "company_id": "company-demo-atlas",
+      "predicted_state": "WILL_MANUAL_REVIEW",
+      "reason_code": "RULE_CONFLICT",
+      "target": null,
+      "matched_rules": [
+        {
+          "dictionary_id": "dictionary-atlas-general",
+          "version_id": null,
+          "rule_id": "rule-atlas-conflict-a"
+        },
+        {
+          "dictionary_id": "dictionary-atlas-general",
+          "version_id": null,
+          "rule_id": "rule-atlas-conflict-b"
+        }
+      ],
+      "selected_rule": null,
+      "collision": null
+    }
+  ],
+  "next_cursor": null
+}

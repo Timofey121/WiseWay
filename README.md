@@ -172,3 +172,50 @@ counts, ID и совпадение сгенерированных публичн
 Сгенерированные примеры лежат в `contracts/examples/dictionaries/`,
 `contracts/examples/targets/` и `contracts/examples/errors/` и привязаны в
 `manifest.json` к каноническим схемам.
+
+## Эталон жизненного цикла справочника (WP-03, LT-03.2b)
+
+`fixtures/synthetic/dictionary_lifecycle.json` — конечный, внутренне связанный
+эталон draft/simulation/publication/history/restore поверх неизменяемых
+определений LT-03.2a и актёров auth-fixtures:
+
+- `timeline` — связная последовательность Atlas/Nova: create с пустым черновиком
+  revision 0, save ожидаемой revision 0 → 1 и 1 → 2, полный READY-тест,
+  принятая публикация, restore старой версии → simulate → publish с
+  `restored_from_version_id`, ручная правка после restore, очищающая
+  `based_on_version_id`;
+- `simulations` — тестируемый черновик заменяет только свою активную версию в
+  полном наборе компании на всех READY-файлах, включая скрытые/отфильтрованные и
+  покрытые другим справочником; явные membership/total/PlanCounts/rows/pages;
+  пустой READY даёт warning `EMPTY_READY_SET`; конфликт правил блокирует
+  публикацию, одинаковая цель — нет, занятая цель — нет;
+- `publishes` — полный активный `RuleSet`, неизменяемая версия и история;
+  `batch_bindings` описывает ожидаемое связывание будущей партии (партии ещё
+  нет);
+- `failures` — устаревшая revision, trim+casefold конфликт имени (без ложного
+  межкомпанийного), отдельные stale draft/RuleSet/READY/TTL, NO_SCENARIO
+  ack false/true и комментарий 0/501, блокировка конфликтом и повтор ключа
+  идемпотентности; у каждого точный request/preconditions/HTTP/operation-схема и
+  отсутствие мутации;
+- `replays` — потерянный ответ с тем же UUID/пользователем/телом возвращает ту же
+  версию до проверки TTL; изменённое тело тем же пользователем — 409
+  `IDEMPOTENCY_KEY_REUSED`; другой актор с тем же UUID — новая операция (ключ
+  scoped по user), а не конфликт ключа; она оценивается по текущим условиям
+  (устаревший тест → 409 `STALE_SIMULATION`). Конфликтные сценарии conflict/
+  same-target используют собственные изолированные состояния справочника
+  (ревизии 101/102, метка `universe`, без живой истории);
+- `coverage` — Q-016…021/029 привязаны к конечным scenario_id. Ожидаемые
+  action/audit ID зафиксированы для LT-03.5b, но не являются audit evidence.
+
+`tests/contract/contractlib/dictionary_lifecycle.py` — материализатор по
+литеральным ID без runtime-домена. Проверки `FIX-DLC-001/002/003` валидируют
+схемы, конечные инварианты, классификацию request-схем и совпадение
+сгенерированных публичных примеров. Документированная команда подготовки:
+
+```powershell
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\dictionary_lifecycle.py --write-examples
+```
+
+Сгенерированные примеры лежат в `contracts/examples/dictionaries/`,
+`contracts/examples/simulations/` и `contracts/examples/errors/` и привязаны в
+`manifest.json` к каноническим схемам. Версия корпуса `1.2.0` не меняется.

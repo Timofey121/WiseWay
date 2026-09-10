@@ -512,3 +512,169 @@ git diff --check
   ожиданий/целей/суффиксов, полного RuleSet, классификации invalid rules и
   негативных мутаций), затем LT-03.2b (simulation/publish lifecycle).
 - **Блокирующая зависимость:** нет.
+
+# LT-03.2b — эталон жизненного цикла справочника
+
+Дополнение фиксирует результат leaf LT-03.2b (parent LT-03.2, WP-03, Epic
+E-01). **Status:** IN_PROGRESS (публикация отложена D-06).
+
+## Задача и основание
+
+- **Цель:** конечный, внутренне связанный эталон draft/simulation/publication/
+  history/restore двух актёров поверх неизменяемых определений LT-03.2a; runtime
+  домен (matcher/резолвер/подсчёт) не реализуется.
+- **Основание:** AGENTS; FRONTEND_BACKLOG LT-03.2/LT-03.2b; D-03/D-06; TZ
+  DICT-08…12; API §2 (идемпотентность) и §6; QA §4; MATRIX Q-016…021/029; OAS
+  createDictionary/replaceDictionaryDraft/restoreDictionaryDraft/
+  createDictionarySimulation/getSimulation/publishDictionary/listDictionaryVersions/
+  getDictionaryVersion и схемы Dictionary/DictionaryDraft/DictionaryVersion/
+  RuleSet/RuleReference/PlanRow/Simulation/PlanCounts/PublishedDictionaryResponse/
+  ErrorResponse.
+
+## Изменённые/добавленные файлы
+
+| Файл | Характер |
+|---|---|
+| `fixtures/synthetic/dictionary_lifecycle.json` | новый эталон: 19 timeline, 16 failure, 1 replay, 7 simulation pages, 3 publishes, 14 states, 5 rule sets, 5 ready sets, 5 lifecycle versions, coverage Q-016…021/029 |
+| `contracts/examples/dictionaries/*.json` | 14 публичных Dictionary/Version/RuleSet/PublishedDictionaryResponse примеров |
+| `contracts/examples/simulations/*.json` | 6 публичных Simulation (полный READY page1/page2, empty, conflict, same-target, restored) |
+| `contracts/examples/errors/*.json` | 6 новых ErrorResponse (draft/name/stale/ack/conflict/idempotency) |
+| `tests/contract/contractlib/dictionary_lifecycle.py` | загрузчик/материализатор/валидатор + `--write-examples`; переиспользует `rule_expectations` для определений, не дублирует matcher |
+| `tests/contract/contractlib/fixture_checks.py` | FIX-DLC-001/002/003 |
+| `tests/contract/contractlib/report.py`, `__init__.py`, `verify_contract.py` | счётчики/экспорт/строка отчёта |
+| `tests/contract/test_dictionary_lifecycle.py` | 48 тестов: структура/покрытие/переходы/audit expectations/негативные мутации |
+| `tests/contract/test_synthetic_corpus.py` | 49→77 публичных примеров и FIX-DLC-счётчики |
+| `fixtures/synthetic/manifest.json` | fixture `dictionary-lifecycle`, 28 привязанных examples, пересчитанные канонические checksums; version корпуса **1.2.0 без изменения** |
+| `README.md` | раздел LT-03.2b и команда генерации |
+
+OAS, `contracts/semantics.md`, control plane, backlog, backend/UI и
+`corpus.json`/`rule_expectations.json` **не изменялись**. Корпус `1.2.0`.
+
+## Что именно зафиксировано
+
+- **Timeline:** create пустого черновика revision 0; save 0→1 и 1→2; полный
+  READY-тест; принятая публикация v2; поздняя публикация второго справочника
+  Atlas; restore v1 → simulate → publish v3 с `restored_from_version_id=v1`;
+  ручная правка после restore очищает `based_on_version_id`; чтение истории
+  v3/v2/v1.
+- **Stale shared revision:** второй актор с ожидаемой revision 1 получает 409
+  `DRAFT_VERSION_CONFLICT` без записи; первая версия не перезаписана.
+- **Имя:** конфликт после trim+casefold внутри компании (409
+  `DICTIONARY_NAME_CONFLICT`); то же имя в другой компании разрешено (201).
+- **Simulation:** кандидат заменяет только свою версию в полном RuleSet
+  (`rule-set-atlas-v2`: general v2 + invoices v1); охвачены все READY, включая
+  скрытые/отфильтрованные и элемент, покрытый другим справочником; явные
+  membership/total/PlanCounts/rows/pages; пустой READY даёт `EMPTY_READY_SET`.
+- **Конфликты/цели:** равный приоритет с разными целями → `RULE_CONFLICT` и 409
+  при publish; одинаковая итоговая цель конфликтом не является (stable
+  dictionary_id → rule_id); занятая цель → `REQUIRES_DECISION`/`TARGET_OCCUPIED`
+  и **не** блокирует публикацию.
+- **NO_SCENARIO:** ack=false → 409 `NO_SCENARIO_ACK_REQUIRED`; ack=true с
+  комментарием 1…500 → 201; пустой и 501-символьный комментарий — 422
+  `VALIDATION_ERROR` (схемное отклонение request).
+- **Устаревание:** отдельные сценарии stale draft (409
+  `DRAFT_VERSION_CONFLICT`), изменённый участник RuleSet, изменённый READY-набор
+  и истёкший TTL (409 `STALE_SIMULATION`).
+- **Публикация/history:** принятая публикация отдаёт полный активный RuleSet,
+  неизменяемую версию и историю; `batch_bindings` описывает ожидаемое
+  связывание будущей партии (партии ещё нет) и требует immutable published
+  версии; поздняя правка/публикация историю не меняет.
+- **Идемпотентность:** replay того же UUID/пользователя/тела возвращает ту же
+  версию до проверки TTL; изменённое тело тем же пользователем — 409
+  `IDEMPOTENCY_KEY_REUSED`; другой актор с тем же UUID — новая операция (ключ
+  scoped по user), не конфликт ключа, и оценивается по текущим условиям
+  (устаревший тест → 409 `STALE_SIMULATION`).
+- **Изолированные состояния:** conflict/same-target используют собственные
+  состояния справочника с ревизиями 101/102 и меткой `universe`, без ссылки на
+  живую revision 2; публикация invoices v2 проходит через отдельный save
+  (revision 1→2, точные v2-правила), base RuleSet до публикации содержит
+  предыдущую active invoices v1, а публикация фиксирует v2.
+- **Crosslinks:** каждый успешный шаг timeline структурно связан со своим
+  состоянием/симуляцией/публикацией: ревизии, `expected_draft_revision`,
+  `candidate_version_id`, base RuleSet (предыдущая active), комментарий
+  запроса == комментарий версии, draft.rules после публикации == правила
+  версии.
+- **Ссылки:** все version/rule/target refs разрешаются в полные определения;
+  сценарные version/rule-set ID отделены от опубликованной истории; `history`
+  считает только собственные published версии словаря.
+- **Failures:** у каждого точный operation/request/preconditions/HTTP/код,
+  `mutates=false`, `before_state == after_state`; код проверяется по
+  канонической response-схеме конкретной операции.
+- **Audit expectations:** `audit_expectations` фиксирует ожидаемые
+  `AuditAction`/`AuditResult` каждого успешного сценария для LT-03.5b с
+  `evidence=false`; это ожидание, а не записанное audit evidence.
+
+## V-S: точные команды и фактические результаты
+
+```powershell
+.\.venv-contract\Scripts\python.exe tests\contract\verify_contract.py
+.\.venv-contract\Scripts\python.exe -m unittest discover -s tests\contract -p "test_*.py"
+.\.venv-contract\Scripts\python.exe -m pip check
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\dictionary_lifecycle.py --write-examples
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\synthetic.py --update-checksums
+git diff --check
+```
+
+- `verify_contract.py` → `RESULT: PASS (33 checks, 0 failures)`, `Fixtures: 77`,
+  `Dictionary lifecycle: 19 timeline, 16 failure, 1 replay, 7 simulation page(s)`;
+  FIX-DLC-001/002/003 — PASS.
+- `unittest discover` → `Ran 243 tests ... OK` (было 195; добавлено 48).
+- `pip check` → `No broken requirements found.`
+- `--write-examples` идемпотентно; повторная генерация совпадает с
+  закоммиченными файлами (FIX-DLC-003). `--update-checksums` не меняет
+  пересчитанный manifest.
+- Негативные self-тесты: undefined rule ref, total не покрывает READY,
+  PlanCounts не сходятся с total, пропавший `EMPTY_READY_SET`, конфликт с одним
+  совпадением, failure с мутацией, чужой код ошибки для операции, история не
+  растёт на новую версию, `restored_from` из чужого словаря, replay с другим
+  телом, сценарная версия в published rule set, пропавшее покрытие,
+  неверная классификация `schema_rejected`, а также crosslink-дефекты:
+  комментарий запроса ≠ комментарий версии, draft.rules ≠ правила версии,
+  base RuleSet уже привязан к публикуемой версии, `draft_revision` симуляции ≠
+  before_state, `candidate_version_id` чужого словаря, `universe` симуляции ≠
+  before_state, save без инкремента ревизии, restore с чужим `based_on`.
+
+## Repair cycle 1 (устранённые блокирующие замечания)
+
+1. **User-scoped idempotency.** `publish-idempotency-other-user` больше не
+   объявляет 409 `IDEMPOTENCY_KEY_REUSED`: другой актор с тем же UUID — новая
+   операция (ключ scoped по user), которая оценивается по текущим условиям.
+   Заменено на `publish-other-user-new-operation-stale` → 409
+   `STALE_SIMULATION` (тест реально устарел после поздней публикации invoices
+   v2). Убрано неверное утверждение из README/handoff.
+2. **Invoices v2 flow.** Добавлен `state-atlas-invoices-draft-v2` (revision 1→2,
+   точные 4 правила v2) и шаг `save-atlas-invoices-v2`; симуляция
+   `simulation-atlas-invoices-v2` использует base RuleSet `rule-set-atlas-v2`
+   (предыдущая active invoices v1), а публикация фиксирует v2
+   (`rule-set-atlas-v2-invoices-v2`). `candidate_version_id` задан явно.
+3. **Комментарии публикаций.** Комментарии версий v2/v3/invoices v2 приведены
+   к комментариям соответствующих запросов; добавлена проверка для всех
+   успешных publish: `request.comment == version.comment` и
+   `after_state.draft.rules == version.rules`.
+4. **Изолированные conflict/same-target.** Добавлены собственные состояния
+   `state-atlas-general-scenario-conflict` (revision 101) и
+   `state-atlas-general-scenario-same-target` (revision 102) с фактическими
+   candidate-правилами, меткой `universe`, без живой истории; timeline-шаги и
+   failure `publish-conflict-blocked` переведены на них. Добавлены crosslink-
+   проверки для всех успешных шагов timeline (ревизии, base RuleSet =
+   предыдущая active, candidate version, комментарий, draft.rules), а также
+   негативные тесты на эти crosslinks.
+
+## Ограничения и явно не выполненное
+
+- Это **S**-уровень: схемы/статические проверки и литеральный эталон.
+  **M (mock/UI), A (реальный API/ФС), E (E2E) — NOT_RUN.** Файловая
+  безопасность, персистентность, TTL-часы и гонки не проверялись.
+- Runtime домен (matcher/резолвер/подсчёты/revision bump) не реализуется:
+  значения объявлены литерально и сверяются между собой.
+- Ожидаемые action/audit ID зафиксированы для LT-03.5b, но не являются
+  audit evidence. Batch runtime отсутствует; связывание описано.
+- Backend/UI/control plane/backlog не затрагивались. Staging/commit/push worker
+  не выполняет (D-06).
+
+## Статус и следующий владелец
+
+- **Следующий владелец:** reviewer LT-03.2b (независимая сверка timeline,
+  membership/counts, конфликтов/целей, stale-сценариев, restore/идемпотентности
+  и негативных мутаций), затем LT-03.3a (очередь/readiness/snapshot).
+- **Блокирующая зависимость:** нет.

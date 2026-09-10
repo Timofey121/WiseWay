@@ -3,7 +3,7 @@
   "version": "1.2.0",
   "seed": "wiseway-demo-seed-2031",
   "contract_version": "1.0.0",
-  "generated_by": "corpus: tests/contract/contractlib/synthetic.py (deterministic; no randomness); search/error examples: tests/contract/contractlib/search_expectations.py --write-examples (from literal expectations); rule/target examples: tests/contract/contractlib/rule_expectations.py --write-examples (from literal expectations)",
+  "generated_by": "corpus: tests/contract/contractlib/synthetic.py (deterministic; no randomness); search/error examples: tests/contract/contractlib/search_expectations.py --write-examples (from literal expectations); rule/target examples: tests/contract/contractlib/rule_expectations.py --write-examples (from literal expectations); dictionary lifecycle examples: tests/contract/contractlib/dictionary_lifecycle.py --write-examples (from literal expectations)",
   "checksum": {
     "algorithm": "sha256",
     "canonicalization": "json.dumps(parse(content), sort_keys=True, separators=(',', ':'), ensure_ascii=False)",
@@ -58,12 +58,41 @@
       "plan-row-atlas-conflict": "904283a5cbf6334d59bb32bf47c32dc5f543cd2bc4887c5cb364cac67a09e7bb",
       "plan-row-atlas-no-scenario": "3055189b17527a9188569339ba1f589714720a891c070c57a8657135d2e93fc7",
       "error-invalid-target": "8b27b28be27c9dbc1de1cdcba0d736fabe2d0b7e35c19c34deef4ab6fee0b3a4",
-      "error-path-outside-root": "4386282cd698de3039471ba4be0c9617f324a68ff1aecf22d0c353e475462fe4"
+      "error-path-outside-root": "4386282cd698de3039471ba4be0c9617f324a68ff1aecf22d0c353e475462fe4",
+      "dictionary-atlas-cleanup-created": "ca72b926783b80e6c7c9ea554ae2d13aa3f8716c932a14975f6ae856b30aebea",
+      "dictionary-atlas-cleanup-saved": "03d97014ae360bb430dad8401a437b09fba92f9165e41063906532deb3db5796",
+      "dictionary-atlas-general-rev2": "b59061cf96700f6718df1e8e33454d8f89da20f6a30e9eb7a5a1a4fcef54923e",
+      "dictionary-atlas-general-published-v2": "ab7917f31c0f53db0bfc8501e21d022c24eaa7940157a7fff5a2a85ee656a9d5",
+      "dictionary-atlas-general-restored-v1": "c9e691804506ea082b4b9da4057c6116e9d24b2cf05b45ad5793d4269bca5fc8",
+      "dictionary-atlas-general-manual-edit": "6631b38839d9d9a3b1477d75e2b4d3317a239de232133b737598b3cf2aa83b8f",
+      "dictionary-atlas-general-published-v3": "2fcced00c63d78c9dc44d41b34bff42d451e30dbf4ceb034893c1cea612dd460",
+      "dictionary-nova-scope-created": "81750f035fc4f6d8204db3c8d1b2fd254e05b765c36dcb58cd0a7491a3b61e2e",
+      "dictionary-atlas-general-list": "723abde3ab5ee2fd35bc7a93d08e73face739f9315535dfbcc1281c2e19f33af",
+      "version-atlas-general-v2": "bf2e5512fd839167fa0c26603b7b67cdf5c18ae893422ff5c45cc579fbe159b0",
+      "version-atlas-general-v3": "475c0eb00228c5430a8933e9f083160cbbeb13c964d3073acf221dc9f726c6db",
+      "versions-atlas-general": "69eabccb7ee0f735e8dc7f502dc442a2435cd8437c47564bcf65a9429d61eb27",
+      "rule-set-atlas-v2": "11067e1a95e164a40ccbdaff5e1c65ab6a98780cc08529ee21a2305f0f875d70",
+      "rule-set-atlas-v3": "7ee6d9666d2b57e9c191757df5795901c3561defd90fa22e395d211d8bdf4163",
+      "simulation-atlas-full-page1": "285b542399c8cc96b9e52106760e5df7810b5712874f3a16c2a130a6652e168c",
+      "simulation-atlas-full-page2": "fd29f99469fe5766284135e0872970dfc3262c100701c9079d78739c63bb0edc",
+      "simulation-atlas-empty": "60a3d0f142c21b2ca4b84f5f4ab19607c0de4d66ca4274f8bf9df7ca615f113e",
+      "simulation-atlas-conflict": "60bbccdb9de6e27d3e88fcc193f48b765501c788b0b30437df8124d37d611af5",
+      "simulation-atlas-same-target": "d39d220c9ab9564ab28738251f892f6f85efdfe69cf6c413c249da97f79b8707",
+      "simulation-atlas-v3-restored": "f1312d0ffcf99e3055b81670da858295dc33054312f077e43f75f6537acbea96",
+      "publish-atlas-general-v2": "aa9eb5a0933fae3ca7d9a35530da1c1a0370f8fb004441ed1402601f9a2867f1",
+      "publish-atlas-general-v3": "e1c2360bd8663945f6e7e577557984b4f84adc70123f4f9680416a7fd1950abe",
+      "error-draft-version-conflict": "7dcd043996fc5311b32b6d2e4504fe405db92b8ee60edfb142a64f77f8e121f4",
+      "error-dictionary-name-conflict": "361103e7c4c139853b0f0c2285e7bc5ca643dc744f2d83df7c7ec5bb679c93ef",
+      "error-stale-simulation": "cdddf9d71c4e46210a493b44b49f22529e4dcff982871141fc8d38cca6a31177",
+      "error-no-scenario-ack-required": "c42a2f274ed410bf91f121b5762aa06d6a9e91c1cffdcf7ea406c2030cd7fda9",
+      "error-rule-conflict": "5da3b2dbedcae485ffb538fc608b85a4e72a54f6f7a03750db422248c77fc8f5",
+      "error-idempotency-key-reused": "13fef2000904aa7f6b63b967e2dec84d10b3253702281ba3d8811eb3592cfc94"
     },
-    "combined": "4ae0479ce20f784d963c4dca70b83bdb3fef9e917a617fb66b823a2801ef6937",
+    "combined": "fa9411f2f3057c7c66ef5f27a90811eba96be58aa8ebe2777ea57f5b01a83398",
     "fixtures": {
       "search-expectations": "0910c9bbeb54eaba159105e4d060cd2ca06c7d71f0459946f220886f22751c1b",
-      "rule-expectations": "c3577511741d2611c4e951b0e49f5a3a458642d9df17b627f1f60107d2bf74ac"
+      "rule-expectations": "c3577511741d2611c4e951b0e49f5a3a458642d9df17b627f1f60107d2bf74ac",
+      "dictionary-lifecycle": "d6bf6fa32cd183a033d65790afd95d7e7d5a4d0d1244156f0051275fce489e9c"
     }
   },
   "corpus": {
@@ -83,6 +112,12 @@
       "file": "fixtures/synthetic/rule_expectations.json",
       "schema": null,
       "description": "LT-03.2a literal rule-input => target/name/reason and target resolver expectations with complete immutable version/rule-set definitions; materialized by contractlib.rule_expectations without a matcher."
+    },
+    {
+      "id": "dictionary-lifecycle",
+      "file": "fixtures/synthetic/dictionary_lifecycle.json",
+      "schema": null,
+      "description": "LT-03.2b literal draft/simulation/publication/history/restore expectations across two actors, built on the LT-03.2a immutable definitions; materialized by contractlib.dictionary_lifecycle without a runtime domain."
     }
   ],
   "examples": [
@@ -385,6 +420,174 @@
       "schema": "#/components/schemas/ErrorResponse",
       "file": "contracts/examples/errors/error-path-outside-root.json",
       "description": "422 PATH_OUTSIDE_ROOT for a path escaping the allowed root."
+    },
+    {
+      "id": "dictionary-atlas-cleanup-created",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-atlas-cleanup-created.json",
+      "description": "New Atlas dictionary created with an empty draft revision 0."
+    },
+    {
+      "id": "dictionary-atlas-cleanup-saved",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-atlas-cleanup-saved.json",
+      "description": "Saved Atlas cleanup draft: expected revision 0 became revision 1."
+    },
+    {
+      "id": "dictionary-atlas-general-rev2",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-atlas-general-rev2.json",
+      "description": "Shared Atlas general draft after a successful save (revision 1 -> 2)."
+    },
+    {
+      "id": "dictionary-atlas-general-published-v2",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-atlas-general-published-v2.json",
+      "description": "Atlas general dictionary after publishing version 2 (history 1 -> 2)."
+    },
+    {
+      "id": "dictionary-atlas-general-restored-v1",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-atlas-general-restored-v1.json",
+      "description": "Atlas general draft restored from version 1, based_on_version_id set."
+    },
+    {
+      "id": "dictionary-atlas-general-manual-edit",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-atlas-general-manual-edit.json",
+      "description": "Manual edit after restore clears based_on_version_id."
+    },
+    {
+      "id": "dictionary-atlas-general-published-v3",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-atlas-general-published-v3.json",
+      "description": "Atlas general dictionary after publishing the restored version 3."
+    },
+    {
+      "id": "dictionary-nova-scope-created",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-nova-scope-created.json",
+      "description": "The same name is allowed in another company: no cross-company conflict."
+    },
+    {
+      "id": "dictionary-atlas-general-list",
+      "schema": "#/components/schemas/DictionaryListResponse",
+      "file": "contracts/examples/dictionaries/dictionary-list-atlas.json",
+      "description": "Atlas dictionary list at the base state (general + invoices)."
+    },
+    {
+      "id": "version-atlas-general-v2",
+      "schema": "#/components/schemas/DictionaryVersion",
+      "file": "contracts/examples/dictionaries/version-atlas-general-v2.json",
+      "description": "Immutable published Atlas general version 2."
+    },
+    {
+      "id": "version-atlas-general-v3",
+      "schema": "#/components/schemas/DictionaryVersion",
+      "file": "contracts/examples/dictionaries/version-atlas-general-v3.json",
+      "description": "Immutable published Atlas general version 3 restored from version 1."
+    },
+    {
+      "id": "versions-atlas-general",
+      "schema": "#/components/schemas/PageDictionaryVersion",
+      "file": "contracts/examples/dictionaries/versions-atlas-general.json",
+      "description": "Atlas general published history page: v3, v2, v1."
+    },
+    {
+      "id": "rule-set-atlas-v2",
+      "schema": "#/components/schemas/RuleSet",
+      "file": "contracts/examples/dictionaries/rule-set-atlas-v2.json",
+      "description": "Full active Atlas RuleSet after publishing general version 2."
+    },
+    {
+      "id": "rule-set-atlas-v3",
+      "schema": "#/components/schemas/RuleSet",
+      "file": "contracts/examples/dictionaries/rule-set-atlas-v3.json",
+      "description": "Full active Atlas RuleSet after publishing the restored version 3."
+    },
+    {
+      "id": "simulation-atlas-full-page1",
+      "schema": "#/components/schemas/Simulation",
+      "file": "contracts/examples/simulations/simulation-atlas-full-page1.json",
+      "description": "Full READY simulation page 1: candidate + other dictionary + NO_SCENARIO."
+    },
+    {
+      "id": "simulation-atlas-full-page2",
+      "schema": "#/components/schemas/Simulation",
+      "file": "contracts/examples/simulations/simulation-atlas-full-page2.json",
+      "description": "Full READY simulation page 2: the remaining hidden and occupied rows."
+    },
+    {
+      "id": "simulation-atlas-empty",
+      "schema": "#/components/schemas/Simulation",
+      "file": "contracts/examples/simulations/simulation-atlas-empty.json",
+      "description": "Zero READY items: valid EMPTY_READY_SET warning, total 0."
+    },
+    {
+      "id": "simulation-atlas-conflict",
+      "schema": "#/components/schemas/Simulation",
+      "file": "contracts/examples/simulations/simulation-atlas-conflict.json",
+      "description": "Equal-priority rules with different targets: RULE_CONFLICT blocks publish."
+    },
+    {
+      "id": "simulation-atlas-same-target",
+      "schema": "#/components/schemas/Simulation",
+      "file": "contracts/examples/simulations/simulation-atlas-same-target.json",
+      "description": "Equal-priority rules with the same final target: not a conflict."
+    },
+    {
+      "id": "simulation-atlas-v3-restored",
+      "schema": "#/components/schemas/Simulation",
+      "file": "contracts/examples/simulations/simulation-atlas-v3-restored.json",
+      "description": "Simulation of the restored version 1 content over the same full READY set."
+    },
+    {
+      "id": "publish-atlas-general-v2",
+      "schema": "#/components/schemas/PublishedDictionaryResponse",
+      "file": "contracts/examples/dictionaries/publish-atlas-general-v2.json",
+      "description": "Accepted publication of Atlas general version 2 and the full RuleSet."
+    },
+    {
+      "id": "publish-atlas-general-v3",
+      "schema": "#/components/schemas/PublishedDictionaryResponse",
+      "file": "contracts/examples/dictionaries/publish-atlas-general-v3.json",
+      "description": "Accepted publication of the restored version 3 with restored_from_version_id."
+    },
+    {
+      "id": "error-draft-version-conflict",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-draft-version-conflict.json",
+      "description": "409 DRAFT_VERSION_CONFLICT for a stale shared draft revision."
+    },
+    {
+      "id": "error-dictionary-name-conflict",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-dictionary-name-conflict.json",
+      "description": "409 DICTIONARY_NAME_CONFLICT after trim+casefold."
+    },
+    {
+      "id": "error-stale-simulation",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-stale-simulation.json",
+      "description": "409 STALE_SIMULATION after another RuleSet member changed."
+    },
+    {
+      "id": "error-no-scenario-ack-required",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-no-scenario-ack-required.json",
+      "description": "409 NO_SCENARIO_ACK_REQUIRED for a test containing NO_SCENARIO."
+    },
+    {
+      "id": "error-rule-conflict",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-rule-conflict.json",
+      "description": "409 RULE_CONFLICT blocks publication."
+    },
+    {
+      "id": "error-idempotency-key-reused",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-idempotency-key-reused.json",
+      "description": "409 IDEMPOTENCY_KEY_REUSED for the same key with a different body."
     }
   ]
 }
