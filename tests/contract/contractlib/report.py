@@ -71,6 +71,11 @@ class Report:
     ownership_scenarios: int = 0
     queue_links: int = 0
     queue_mutations: int = 0
+    preview_scenarios: int = 0
+    preview_rows: int = 0
+    preflight_scenarios: int = 0
+    preflight_failures: int = 0
+    post_acceptance_outcomes: int = 0
 
     def check(self, check_id: str, description: str) -> CheckResult:
         result = CheckResult(check_id=check_id, description=description)

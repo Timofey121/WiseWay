@@ -32,10 +32,11 @@ from .semantic import (
     validate_fixture,
 )
 from .verify import run_checks
-from . import dictionary_lifecycle, queue_selections, rule_expectations, search_expectations, synthetic
+from . import dictionary_lifecycle, preview_preflight, queue_selections, rule_expectations, search_expectations, synthetic
 
 __all__ = [
     "dictionary_lifecycle",
+    "preview_preflight",
     "queue_selections",
     "rule_expectations",
     "search_expectations",

@@ -3,7 +3,7 @@
   "version": "1.2.0",
   "seed": "wiseway-demo-seed-2031",
   "contract_version": "1.0.0",
-  "generated_by": "corpus: tests/contract/contractlib/synthetic.py (deterministic; no randomness); search/error examples: tests/contract/contractlib/search_expectations.py --write-examples (from literal expectations); rule/target examples: tests/contract/contractlib/rule_expectations.py --write-examples (from literal expectations); dictionary lifecycle examples: tests/contract/contractlib/dictionary_lifecycle.py --write-examples (from literal expectations); queue/selection examples: tests/contract/contractlib/queue_selections.py --write-examples (from literal expectations)",
+  "generated_by": "corpus: tests/contract/contractlib/synthetic.py (deterministic; no randomness); search/error examples: tests/contract/contractlib/search_expectations.py --write-examples (from literal expectations); rule/target examples: tests/contract/contractlib/rule_expectations.py --write-examples (from literal expectations); dictionary lifecycle examples: tests/contract/contractlib/dictionary_lifecycle.py --write-examples (from literal expectations); queue/selection examples: tests/contract/contractlib/queue_selections.py --write-examples (from literal expectations); preview/preflight examples: tests/contract/contractlib/preview_preflight.py --write-examples (from literal expectations)",
   "checksum": {
     "algorithm": "sha256",
     "canonicalization": "json.dumps(parse(content), sort_keys=True, separators=(',', ':'), ensure_ascii=False)",
@@ -106,14 +106,28 @@
       "error-selection-forbidden": "a64ec698e9fb39730d24eb2bc1820b7b02bf2f9fd296c17c039d2eac85f468ef",
       "error-selection-expired-preview": "f6b45764635f52a1fa9cb7bc27093181e1a38312f6b44c21b6af1d79a2509ef3",
       "error-selection-expired-batch": "d26bc18bdb371153df557353f5c1bd02bb045e8b177c455a9e3a36735c294577",
-      "error-selection-not-found": "bec3d835dac8993c8e87f04e7295157db8d29b13fd5f4555e0e65374264261f7"
+      "error-selection-not-found": "bec3d835dac8993c8e87f04e7295157db8d29b13fd5f4555e0e65374264261f7",
+      "preview-atlas-allmatching-120-page1": "736ace269c25cab358e9447e58dd8d3896440a2072ec4a319c32288327a55dbe",
+      "preview-atlas-explicit-one": "50d773616d071d89ed37d4b07cd159a4f69e9d5659d67b405b10090e55844679",
+      "preview-atlas-explicit-multiple": "1e56b6738918ffbdb171db4028c89f29963211eaae91996605f9d28c765bf3b1",
+      "preview-atlas-hetero": "1316cc5dfed18c76034b3f490cdf724e6cb040ed70fe2b4b0e0b48d5f9c0c1cf",
+      "preview-atlas-conflict": "afd7224bb34e4ac659e332de67313155ac6605ad766f1eb7cdc6ad30e9471082",
+      "error-batch-selection-changed": "709f58efe2a74503f656f2054c6f20a2520f384a65ca17b08bb6f2c2277a8b0b",
+      "error-batch-stale-preview": "c31abe25fa3018b1bf01047e4e1f0dbd082aa3ae88bc977006378b2efba7cdc3",
+      "error-batch-selection-expired": "743ff8473668821f264b069fb042ae81e76551cd970265d0e44273266d4d4dca",
+      "error-batch-invalid-state": "ec8664aaf91bac7ad21d08ccfd09da203bcdaf0d0b6a1c23500039bcc7febf3c",
+      "error-batch-selection-not-found": "fcc9e87b97df7ed6a81d7a16a6f99ad8ef509fbb1bfe19aa095ae6c30089eeb3",
+      "error-batch-forbidden": "f000b53eea0613ba75023b09c7fdeeff5b446eaab8d63507d54492b7e67435bd",
+      "error-preview-selection-expired": "6a2c1816639d7b4d83a0efe7443cb08651f91be7ce312665c05bed75db6f099a",
+      "error-preview-selection-changed": "68829afe54755c95c8985aa301b23c8c402ff2c30cb2d7b28b0a25c177e2eaf1"
     },
-    "combined": "e6a2232296e780047b282b130c4ef07ae7bf7393a1ea77f7cf0faa576c1c8655",
+    "combined": "d17871de34c95c21f9ac58d5dd8a3fcac7df89b49adaa83ede5e8ddfa4bc6706",
     "fixtures": {
       "search-expectations": "0910c9bbeb54eaba159105e4d060cd2ca06c7d71f0459946f220886f22751c1b",
       "rule-expectations": "c3577511741d2611c4e951b0e49f5a3a458642d9df17b627f1f60107d2bf74ac",
       "dictionary-lifecycle": "d6bf6fa32cd183a033d65790afd95d7e7d5a4d0d1244156f0051275fce489e9c",
-      "queue-selections": "328b828fbc429ca924619157c9f73cb5a7f5f836a4a9f86f149d3173039b8e90"
+      "queue-selections": "328b828fbc429ca924619157c9f73cb5a7f5f836a4a9f86f149d3173039b8e90",
+      "preview-preflight": "4fac930e3441e1bb3e2bf37e6f81f66564f3fccfe241c08154642350b8050883"
     }
   },
   "corpus": {
@@ -145,6 +159,12 @@
       "file": "fixtures/synthetic/queue_selections.json",
       "schema": null,
       "description": "LT-03.3a literal queue/readiness/selection oracle: 0/120/1001 READY profiles, explicit and ALL_MATCHING membership, pre-batch ownership/expiry errors; materialized by contractlib.queue_selections without a matcher, readiness detector or selection algorithm."
+    },
+    {
+      "id": "preview-preflight",
+      "file": "fixtures/synthetic/preview_preflight.json",
+      "schema": null,
+      "description": "LT-03.3b literal preview and DIRECT/PREVIEWED preflight oracle: 120/one/multiple previews linked to the queue_selections snapshots plus isolated Prediction/CollisionDetails coverage and pre-acceptance error pairs; materialized by contractlib.preview_preflight without a matcher or preflight algorithm."
     }
   ],
   "examples": [
@@ -735,6 +755,84 @@
       "schema": "#/components/schemas/ErrorResponse",
       "file": "contracts/examples/errors/error-selection-not-found.json",
       "description": "LT-03.3a: 404 NOT_FOUND for an unknown selection id on the preview operation."
+    },
+    {
+      "id": "preview-atlas-allmatching-120-page1",
+      "schema": "#/components/schemas/Preview",
+      "file": "contracts/examples/sorting/preview-atlas-allmatching-120-page1.json",
+      "description": "LT-03.3b: page 1 of the 120-item preview; all rows NO_SCENARIO with no target."
+    },
+    {
+      "id": "preview-atlas-explicit-one",
+      "schema": "#/components/schemas/Preview",
+      "file": "contracts/examples/sorting/preview-atlas-explicit-one.json",
+      "description": "LT-03.3b: single-item EXPLICIT preview (total=1)."
+    },
+    {
+      "id": "preview-atlas-explicit-multiple",
+      "schema": "#/components/schemas/Preview",
+      "file": "contracts/examples/sorting/preview-atlas-explicit-multiple.json",
+      "description": "LT-03.3b: three-item EXPLICIT preview (total=3)."
+    },
+    {
+      "id": "preview-atlas-hetero",
+      "schema": "#/components/schemas/Preview",
+      "file": "contracts/examples/sorting/preview-atlas-hetero.json",
+      "description": "LT-03.3b: isolated heterogeneous preview covering all four Prediction kinds and all three CollisionDetails kinds."
+    },
+    {
+      "id": "preview-atlas-conflict",
+      "schema": "#/components/schemas/Preview",
+      "file": "contracts/examples/sorting/preview-atlas-conflict.json",
+      "description": "LT-03.3b: isolated equal-priority RULE_CONFLICT preview."
+    },
+    {
+      "id": "error-batch-selection-changed",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-batch-selection-changed.json",
+      "description": "LT-03.3b: 409 SELECTION_CHANGED on the DIRECT batch preflight."
+    },
+    {
+      "id": "error-batch-stale-preview",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-batch-stale-preview.json",
+      "description": "LT-03.3b: 409 STALE_PREVIEW on the PREVIEWED batch preflight."
+    },
+    {
+      "id": "error-batch-selection-expired",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-batch-selection-expired.json",
+      "description": "LT-03.3b: 409 SELECTION_EXPIRED on the batch operation."
+    },
+    {
+      "id": "error-batch-invalid-state",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-batch-invalid-state.json",
+      "description": "LT-03.3b: 409 INVALID_STATE for a mismatched selection/preview pair."
+    },
+    {
+      "id": "error-batch-selection-not-found",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-batch-selection-not-found.json",
+      "description": "LT-03.3b: 404 NOT_FOUND for an unknown selection/preview id."
+    },
+    {
+      "id": "error-batch-forbidden",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-batch-forbidden.json",
+      "description": "LT-03.3b: 403 FORBIDDEN for another user of a bound selection."
+    },
+    {
+      "id": "error-preview-selection-expired",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-preview-selection-expired.json",
+      "description": "LT-03.3b: 409 SELECTION_EXPIRED on the preview operation."
+    },
+    {
+      "id": "error-preview-selection-changed",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-preview-selection-changed.json",
+      "description": "LT-03.3b: 409 SELECTION_CHANGED on the preview operation."
     }
   ]
 }

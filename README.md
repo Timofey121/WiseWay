@@ -265,3 +265,60 @@ schema-классификацию запросов и совпадение сг�
 Сгенерированные примеры лежат в `contracts/examples/sorting/` и
 `contracts/examples/errors/` и привязаны в `manifest.json` к каноническим
 схемам. Версия корпуса `1.2.0` не меняется.
+
+## Эталон preview и DIRECT/PREVIEWED preflight (WP-03, LT-03.3b)
+
+`fixtures/synthetic/preview_preflight.json` — конечный, внутренне связанный
+эталон не мутирующего расчёта preview и проверок до принятия партии поверх
+неизменяемых снимков LT-03.3a и полных определений LT-03.2a/2b:
+
+- `selections` связывают previews с уже принятыми снимками
+  `selection-atlas-allmatching-120` (120), `selection-atlas-explicit-one` (1),
+  `selection-atlas-explicit-multiple` (3, включая off-page IDs) и добавляют
+  явно изолированные наборы `selection-preview-atlas-hetero` (8 источников),
+  `selection-preview-atlas-conflict` (1) и `selection-preview-nova-foreign`
+  (1, другая компания) — существующие элементы очереди при этом не меняются;
+- `previews` — страницы `Preview` с полным published RuleSet
+  `rule-set-atlas-published` (120/1/3), изолированным scenario-RuleSet
+  `rule-set-atlas-eq-diff` для `RULE_CONFLICT` и Nova-набором для проверки
+  компании. `total` равен `selected_count` снимка, страница ≤100 при 120,
+  `expires_at` не позже снимка, а `matched_rules`/`selected_rule` всегда
+  ссылаются на непустые version_id (черновиков нет);
+- `previews[*].rows` покрывают ровно замороженный membership снимка с теми же
+  ревизиями, источниками и компанией. Гетерогенный набор демонстрирует все
+  четыре `Prediction` (`WILL_MOVE`, `WILL_MANUAL_REVIEW`, `REQUIRES_DECISION`,
+  `NOT_READY`) и все три `CollisionDetails` (`EXISTING_TARGET` с метаданными
+  занятой цели, `DUPLICATE_PLAN_TARGET` со всеми участниками,
+  `MANUAL_REVIEW_NAME` без цели). `NO_SCENARIO` — пустой `matched_rules`,
+  `RULE_CONFLICT` — два равных приоритета с разными целями без победителя,
+  выбранное правило — минимальный числовой приоритет с устойчивой
+  атрибуцией dictionary_id → rule_id;
+- `preflight` — 18 сценариев `createSortingBatch`/`createSortingPreview`:
+  принятые DIRECT/PREVIEWED и та же сессия другого запроса пользователя
+  объявляют только ожидаемый будущий batch ID и RuleSet (payload результата —
+  LT-03.4a); отказы до принятия дают 409 `SELECTION_CHANGED` (DIRECT,
+  источник изменился/исчез), 409 `STALE_PREVIEW` (PREVIEWED, источник, правила,
+  цель или TTL), 409 `SELECTION_EXPIRED`, 409 `INVALID_STATE` (несовместимая
+  пара/компания), 404 `NOT_FOUND`, 403 `FORBIDDEN` — всегда с реальным
+  запросом, предусловием и отсутствием партии/файловых операций;
+- `post_acceptance` описывает пофайловые `SOURCE_CHANGED`/`ALREADY_PROCESSING`
+  (а также `TARGET_OCCUPIED`/`MANUAL_REVIEW_NAME_OCCUPIED`) как результат уже
+  принятой партии, а не как общий HTTP-отказ;
+- `invalid_requests`, `links` и `mutations` классифицируют тела
+  `BatchCreateRequest`/`PreviewCreateRequest` и отклоняют негативные мутации
+  (total/ревизия/TTL/приоритет/collision/предусловие).
+
+`tests/contract/contractlib/preview_preflight.py` — материализатор по
+литеральным ID без matcher/priority/preflight-алгоритма; `_last_suffix` и
+проверка цели повторяют документированное DICT-05. Проверки
+`FIX-PREVIEW-001/002/003` валидируют схемы, конечные инварианты,
+schema-классификацию запросов и совпадение сгенерированных публичных примеров.
+Документированная команда подготовки:
+
+```powershell
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\preview_preflight.py --write-examples
+```
+
+Сгенерированные примеры лежат в `contracts/examples/sorting/` (5 Preview) и
+`contracts/examples/errors/` (8 ErrorResponse) и привязаны в `manifest.json` к
+каноническим схемам. Версия корпуса `1.2.0` не меняется.

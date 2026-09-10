@@ -62,6 +62,7 @@ def main(argv=None) -> int:
     print(f"Rule expectations: {report.rule_scenarios} rule, {report.target_scenarios} target, {report.invalid_rule_cases} invalid-rule scenario(s)")
     print(f"Dictionary lifecycle: {report.lifecycle_timeline} timeline, {report.lifecycle_failures} failure, {report.lifecycle_replays} replay, {report.lifecycle_simulations} simulation page(s)")
     print(f"Queue expectations: {report.queue_profiles} profile(s), {report.queue_queries} query(ies), {report.selection_scenarios} selection, {report.selection_errors} error, {report.readiness_sequences} readiness, {report.ownership_scenarios} ownership scenario(s)")
+    print(f"Preview/preflight expectations: {report.preview_scenarios} preview(s), {report.preview_rows} row(s), {report.preflight_scenarios} preflight scenario(s), {report.preflight_failures} rejection(s), {report.post_acceptance_outcomes} post-acceptance outcome(s)")
     print("")
     print(report.format())
     return 0 if report.ok else 1

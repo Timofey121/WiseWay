@@ -810,3 +810,133 @@ git diff --check
   membership, readiness-переходов, ownership/TTL и негативных мутаций), затем
   LT-03.3b (preview: Prediction/CollisionDetails и DIRECT/PREVIEWED preflight).
 - **Блокирующая зависимость:** нет.
+
+# LT-03.3b — эталон preview и DIRECT/PREVIEWED preflight
+
+Дополнение фиксирует результат leaf LT-03.3b (parent LT-03.3, WP-03, Epic
+E-01). **Status:** IN_PROGRESS (публикация отложена D-06).
+
+## Задача и основание
+
+- **Цель:** конечный независимый эталон не мутирующего preview и проверок
+  `DIRECT`/`PREVIEWED` до принятия партии поверх неизменяемых снимков LT-03.3a
+  и полных определений LT-03.2a/2b; matcher, priority resolver, target-name
+  derivation и preflight-алгоритм не реализуются.
+- **Основание:** AGENTS; FRONTEND_BACKLOG LT-03.3/LT-03.3b; D-03/D-06; API §7/8
+  (таблица preflight-ошибок); TZ QUEUE-04/05/06, DICT-12; QA §4; MATRIX
+  Q-023/026/027; OAS `Preview`/`PlanRow`/`Prediction`/`CollisionDetails`/
+  `BatchCreateRequest`/`ErrorResponse`; `contracts/semantics.md`.
+
+## Изменённые/добавленные файлы
+
+| Файл | Характер |
+|---|---|
+| `fixtures/synthetic/preview_preflight.json` | новый эталон: 6 preview-групп (120 в двух страницах, one, multiple, isolated hetero, conflict, Nova-foreign), 18 preflight-сценариев (3 принятых, 15 отказов), 4 post-acceptance исхода, 8 error, 9 invalid-request, 8 links, 15 mutations, coverage Q-023/026/027 |
+| `contracts/examples/sorting/preview-atlas-*.json` | 5 публичных Preview |
+| `contracts/examples/errors/error-batch-*.json`, `error-preview-*.json` | 8 публичных ErrorResponse |
+| `tests/contract/contractlib/preview_preflight.py` | declarative loader/checker + `--write-examples`; переиспользует `queue_selections` (снимки) и `rule_expectations` (RuleSet/version/rule/target) |
+| `tests/contract/contractlib/fixture_checks.py` | FIX-PREVIEW-001/002/003 |
+| `tests/contract/contractlib/report.py`, `__init__.py`, `verify_contract.py` | счётчики/экспорт/строка отчёта |
+| `tests/contract/test_preview_preflight.py` | 49 тестов: структура/схемы/prediction/collision/binding/preflight/негативные мутации |
+| `tests/contract/test_synthetic_corpus.py` | 110 публичных примеров, FIX-PREVIEW-счётчики |
+| `fixtures/synthetic/manifest.json` | fixture `preview-preflight`, 13 привязанных examples, пересчитанные канонические checksums; версия корпуса **1.2.0 без изменения** |
+| `README.md` | раздел LT-03.3b и команда генерации |
+
+OAS, `contracts/semantics.md`, control plane, backlog, backend/UI и
+`corpus.json`/`rule_expectations.json`/`dictionary_lifecycle.json`/
+`queue_selections.json` **не изменялись**. Корпус `1.2.0`.
+
+## Что именно зафиксировано
+
+- **Привязка к снимкам.** `selection-atlas-allmatching-120` (120),
+  `selection-atlas-explicit-one` (1) и `selection-atlas-explicit-multiple` (3,
+  off-page `0101`/`0120`) материализуются из `queue_selections.json`; страницы
+  preview покрывают ровно их membership с теми же item_id/revision/source, а
+  `total` равен `selected_count`. `expires_at` preview не позже снимка.
+- **Изолированные наборы.** `selection-preview-atlas-hetero` (8 источников),
+  `selection-preview-atlas-conflict` (1) и `selection-preview-nova-foreign`
+  (1) объявлены в самом fixture; существующие элементы очереди не мутированы.
+- **Predictions.** Гетерогенный preview покрывает все четыре:
+  `WILL_MOVE` (README и `invoice.TXT` с приоритетом 10 против 100),
+  `WILL_MANUAL_REVIEW` (`NO_SCENARIO`), `REQUIRES_DECISION` (occupied/duplicate/
+  manual-name) и `NOT_READY` (источник больше не готов, target=null).
+- **Collisions.** `EXISTING_TARGET` несёт метаданные занятой цели,
+  `DUPLICATE_PLAN_TARGET` перечисляет обоих участников и не имеет
+  existing-метаданных, `MANUAL_REVIEW_NAME` не имеет target и ссылается на
+  занятый файл плоского ручного разбора `_manual_review/atlas`.
+- **RULE_CONFLICT.** Изолированный preview использует объявленный scenario
+  RuleSet `rule-set-atlas-eq-diff` (general+invoices, приоритет 100, разные
+  цели): два matched, `selected_rule=null`, target=null. Primary previews
+  используют полный published `rule-set-atlas-published`; ни одна ссылка
+  `matched_rules`/`selected_rule` не имеет `version_id=null`.
+- **Preflight.** Принятые DIRECT/PREVIEWED и same-user-new-session ожидают 202,
+  `batch_created=true`, отсутствие файловых операций и будущий batch ID/RuleSet
+  (payload результата — LT-03.4a). Отказы до принятия: 409 `SELECTION_CHANGED`
+  (DIRECT источник изменился/исчез), 409 `STALE_PREVIEW` (PREVIEWED источник,
+  правила, цель, TTL), 409 `SELECTION_EXPIRED`, 409 `INVALID_STATE`
+  (pairing/company), 404 `NOT_FOUND`, 403 `FORBIDDEN`; каждый с реальным
+  запросом, предусловием и `batch_created=false`/`file_operations=false`.
+- **Post-acceptance.** `SOURCE_CHANGED` и `ALREADY_PROCESSING` описаны как
+  пофайловые исходы уже принятой партии (HTTP 200, `global_refusal=false`), а
+  не как общий preflight-отказ.
+
+## V-S: точные команды и фактические результаты
+
+```powershell
+.\.venv-contract\Scripts\python.exe tests\contract\verify_contract.py
+.\.venv-contract\Scripts\python.exe -m unittest discover -s tests\contract -p "test_*.py"
+.\.venv-contract\Scripts\python.exe -m pip check
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\preview_preflight.py --write-examples
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\synthetic.py --update-checksums
+git diff --check
+```
+
+- `verify_contract.py` → `RESULT: PASS (39 checks, 0 failures)`, `Fixtures: 110`,
+  `Preview/preflight expectations: 6 preview(s), 134 row(s), 18 preflight
+  scenario(s), 15 rejection(s), 4 post-acceptance outcome(s)`; FIX-PREVIEW-001/
+  002/003 — PASS.
+- `unittest discover` → `Ran 342 tests ... OK` (было 287; добавлено 55).
+- `pip check` → `No broken requirements found.`
+- `--write-examples` идемпотентно; повторная генерация совпадает с
+  закоммиченными файлами. `--update-checksums` не меняет пересчитанный manifest.
+- `git diff --check` → только предупреждения LF/CRLF, пробельных ошибок нет.
+- Негативные self-тесты: неверный total/TTL/revision, дрейф selected_count,
+  выбранное правило не минимального приоритета, `NO_SCENARIO` с совпадением,
+  пропавшие existing-метаданные, неполный список участников duplicate,
+  код у принятого сценария, DIRECT как `STALE_PREVIEW` и неверная
+  schema-классификация — отклоняются валидаторами.
+
+## ID-модель для следующего leaf (LT-03.4a)
+
+- Снимки: `selection-atlas-allmatching-120`, `selection-atlas-explicit-one`,
+  `selection-atlas-explicit-multiple`, `selection-preview-atlas-hetero`,
+  `selection-preview-atlas-conflict`, `selection-preview-nova-foreign`.
+- Preview: `preview-atlas-allmatching-120` (page1/page2), `preview-atlas-explicit-one`,
+  `preview-atlas-explicit-multiple`, `preview-atlas-hetero`,
+  `preview-atlas-conflict`, `preview-nova-foreign`.
+- Принятые preflight: `PF-DIRECT-FRESH` (`batch-atlas-direct-fresh`),
+  `PF-PREVIEWED-FRESH` (`batch-atlas-previewed-fresh`),
+  `PF-SAME-USER-NEW-SESSION` (`batch-atlas-same-user-session`).
+- RuleSet: published `rule-set-atlas-published` (general v1 + invoices v1);
+  scenario `rule-set-atlas-eq-diff` только для изолированного конфликта.
+- Batch payload/outcomes/attempts — предмет LT-03.4a; здесь объявлены только
+  ожидаемые future batch ID и RuleSet.
+
+## Ограничения и явно не выполненное
+
+- Это **S**-уровень: схемы/статические проверки и литеральный эталон.
+  **M (mock/UI), A (реальный API/ФС), E (E2E) — NOT_RUN.** TTL-часы,
+  занятость целей, гонки и физическая готовность не проверялись.
+- Matcher/priority resolver/target derivation/preflight не реализуются:
+  значения объявлены литерально и сверяются между собой; `NOT_READY`,
+  `MANUAL_REVIEW_NAME` и `DUPLICATE_PLAN_TARGET` — изолированные конечные
+  сценарии, а не доказательство поведения backend.
+- Backend/UI/control plane/backlog не затрагивались. Staging/commit/push worker
+  не выполняет (D-06).
+
+## Статус и следующий владелец
+
+- **Следующий владелец:** reviewer LT-03.3b (независимая сверка prediction/
+  collision kinds, привязки к снимкам и RuleSet, preflight-пар и негативных
+  мутаций), затем LT-03.4a (фактические партии и файловые исходы).
+- **Блокирующая зависимость:** нет.

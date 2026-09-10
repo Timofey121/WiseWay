@@ -1,0 +1,1643 @@
+{
+  "fixture_set": "wiseway-preview-preflight",
+  "version": "1.0.0",
+  "seed": "wiseway-demo-seed-2031",
+  "contract_version": "1.0.0",
+  "corpus_version": "1.2.0",
+  "queue_fixture": "queue_selections.json",
+  "rule_fixture": "rule_expectations.json",
+  "target_display_prefix": "DEMO:/SandboxRoot",
+  "notes": "LT-03.3b finite preview and DIRECT/PREVIEWED preflight oracle. Preview pages and plan rows are literal data bound to the frozen queue_selections membership and the complete rule_expectations version/rule/RuleSet/target definitions; the module cross-checks the declared rows, target derivation, counts and preflight expectations without a matcher, priority resolver or preflight algorithm. Accepted scenarios state the expected future batch id and RuleSet only: the Batch payload result belongs to LT-03.4a.",
+  "constants": {
+    "preview_page_limit": 100,
+    "snapshot_ttl_seconds": 300
+  },
+  "actors": {
+    "worker1": "user-demo-worker-1",
+    "worker2": "user-demo-worker-2",
+    "admin": "user-demo-admin-1"
+  },
+  "companies": {
+    "atlas": {
+      "company_id": "company-demo-atlas",
+      "root_id": "root-demo-atlas"
+    },
+    "nova": {
+      "company_id": "company-demo-nova",
+      "root_id": "root-demo-nova"
+    }
+  },
+  "manual_review": {
+    "company-demo-atlas": {
+      "root_id": "root-demo-atlas",
+      "relative_directory": "_manual_review/atlas"
+    }
+  },
+  "selections": [
+    {
+      "selection_id": "selection-atlas-allmatching-120",
+      "from_queue_scenario": "SEL-Q024-ALL-MATCHING-120",
+      "owner": "worker1",
+      "q_ids": ["Q-023"]
+    },
+    {
+      "selection_id": "selection-atlas-explicit-one",
+      "from_queue_scenario": "SEL-Q024-EXPLICIT-ONE",
+      "owner": "worker1",
+      "q_ids": ["Q-023"]
+    },
+    {
+      "selection_id": "selection-atlas-explicit-multiple",
+      "from_queue_scenario": "SEL-Q024-EXPLICIT-MULTIPLE-OFFPAGE",
+      "owner": "worker1",
+      "q_ids": ["Q-023"]
+    },
+    {
+      "selection_id": "selection-preview-atlas-hetero",
+      "owner": "worker1",
+      "q_ids": ["Q-023", "Q-026"],
+      "company": "atlas",
+      "mode": "EXPLICIT",
+      "snapshot": {
+        "selection_id": "selection-preview-atlas-hetero",
+        "company_id": "company-demo-atlas",
+        "mode": "EXPLICIT",
+        "selected_count": 8,
+        "created_at": "2031-05-10T09:31:00Z",
+        "expires_at": "2031-05-10T09:36:00Z",
+        "queue_generation": "queue-generation-atlas-120"
+      },
+      "members": [
+        {
+          "item_id": "preview-atlas-move-upper",
+          "item_revision": 3,
+          "filename": "invoice.TXT",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Data/invoice.TXT",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/invoice.TXT"
+          },
+          "size_bytes": 2048,
+          "modified_at": "2031-05-10T08:00:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "preview-atlas-move-readme",
+          "item_revision": 3,
+          "filename": "README",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Data/README",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/README"
+          },
+          "size_bytes": 1024,
+          "modified_at": "2031-05-10T08:01:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "preview-atlas-no-scenario",
+          "item_revision": 3,
+          "filename": "data.bin",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Data/data.bin",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/data.bin"
+          },
+          "size_bytes": 512,
+          "modified_at": "2031-05-10T08:02:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "preview-atlas-occupied-report",
+          "item_revision": 2,
+          "filename": "occupied.pdf",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Reports/occupied.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/occupied.pdf"
+          },
+          "size_bytes": 2048,
+          "modified_at": "2031-05-10T08:03:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "preview-atlas-invoice-a",
+          "item_revision": 1,
+          "filename": "invoice-a.pdf",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Data/invoice-a.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/invoice-a.pdf"
+          },
+          "size_bytes": 1024,
+          "modified_at": "2031-05-10T08:04:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "preview-atlas-invoice-b",
+          "item_revision": 1,
+          "filename": "invoice-b.pdf",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Data/invoice-b.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/invoice-b.pdf"
+          },
+          "size_bytes": 1024,
+          "modified_at": "2031-05-10T08:05:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "preview-atlas-manual-name",
+          "item_revision": 2,
+          "filename": "unmatched.bin",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Incoming/atlas/unmatched.bin",
+            "display_path": "DEMO:/SandboxRoot/Incoming/atlas/unmatched.bin"
+          },
+          "size_bytes": 100,
+          "modified_at": "2031-05-10T08:06:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "preview-atlas-not-ready",
+          "item_revision": 1,
+          "filename": "changed.pdf",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Incoming/atlas/changed.pdf",
+            "display_path": "DEMO:/SandboxRoot/Incoming/atlas/changed.pdf"
+          },
+          "size_bytes": 2048,
+          "modified_at": "2031-05-10T08:07:00Z",
+          "source_ready": false
+        }
+      ]
+    },
+    {
+      "selection_id": "selection-preview-atlas-conflict",
+      "owner": "worker1",
+      "q_ids": ["Q-023"],
+      "company": "atlas",
+      "mode": "EXPLICIT",
+      "snapshot": {
+        "selection_id": "selection-preview-atlas-conflict",
+        "company_id": "company-demo-atlas",
+        "mode": "EXPLICIT",
+        "selected_count": 1,
+        "created_at": "2031-05-10T09:31:00Z",
+        "expires_at": "2031-05-10T09:36:00Z",
+        "queue_generation": "queue-generation-atlas-120"
+      },
+      "members": [
+        {
+          "item_id": "preview-atlas-shared",
+          "item_revision": 1,
+          "filename": "shared-file.pdf",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Data/shared-file.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/shared-file.pdf"
+          },
+          "size_bytes": 2048,
+          "modified_at": "2031-05-10T08:08:00Z",
+          "source_ready": true
+        }
+      ]
+    },
+    {
+      "selection_id": "selection-preview-nova-foreign",
+      "owner": "worker1",
+      "q_ids": ["Q-026"],
+      "company": "nova",
+      "mode": "EXPLICIT",
+      "snapshot": {
+        "selection_id": "selection-preview-nova-foreign",
+        "company_id": "company-demo-nova",
+        "mode": "EXPLICIT",
+        "selected_count": 1,
+        "created_at": "2031-05-10T09:31:00Z",
+        "expires_at": "2031-05-10T09:36:00Z",
+        "queue_generation": "queue-generation-nova-1"
+      },
+      "members": [
+        {
+          "item_id": "preview-nova-item",
+          "item_revision": 1,
+          "filename": "nova-foreign.pdf",
+          "location": {
+            "root_id": "root-demo-nova",
+            "relative_path": "Incoming/nova/nova-foreign.pdf",
+            "display_path": "DEMO:/SandboxRoot/Incoming/nova/nova-foreign.pdf"
+          },
+          "size_bytes": 512,
+          "modified_at": "2031-05-10T08:09:00Z",
+          "source_ready": true
+        }
+      ]
+    }
+  ],
+  "previews": [
+    {
+      "page_id": "preview-atlas-allmatching-120-page1",
+      "preview_id": "preview-atlas-allmatching-120",
+      "q_ids": ["Q-023"],
+      "selection_id": "selection-atlas-allmatching-120",
+      "rule_set_id": "rule-set-atlas-published",
+      "owner": "worker1",
+      "created_at": "2031-05-10T09:32:00Z",
+      "expires_at": "2031-05-10T09:36:00Z",
+      "total": 120,
+      "counts": {
+        "will_move": 0,
+        "will_manual_review": 120,
+        "requires_decision": 0,
+        "not_ready": 0,
+        "rule_conflicts": 0,
+        "no_scenario": 120
+      },
+      "next_cursor": "cursor-preview-atlas-allmatching-0101",
+      "rows": {
+        "$repeat_rows": {
+          "item_prefix": "queue-atlas-ready-",
+          "index_start": 1,
+          "index_end": 100,
+          "index_width": 4,
+          "item_revision": 1,
+          "predicted_state": "WILL_MANUAL_REVIEW",
+          "reason_code": "NO_SCENARIO",
+          "target": null,
+          "matched_rules": [],
+          "selected_rule": null,
+          "collision": null
+        }
+      }
+    },
+    {
+      "page_id": "preview-atlas-allmatching-120-page2",
+      "preview_id": "preview-atlas-allmatching-120",
+      "q_ids": ["Q-023"],
+      "selection_id": "selection-atlas-allmatching-120",
+      "rule_set_id": "rule-set-atlas-published",
+      "owner": "worker1",
+      "created_at": "2031-05-10T09:32:00Z",
+      "expires_at": "2031-05-10T09:36:00Z",
+      "total": 120,
+      "counts": {
+        "will_move": 0,
+        "will_manual_review": 120,
+        "requires_decision": 0,
+        "not_ready": 0,
+        "rule_conflicts": 0,
+        "no_scenario": 120
+      },
+      "next_cursor": null,
+      "rows": {
+        "$repeat_rows": {
+          "item_prefix": "queue-atlas-ready-",
+          "index_start": 101,
+          "index_end": 120,
+          "index_width": 4,
+          "item_revision": 1,
+          "predicted_state": "WILL_MANUAL_REVIEW",
+          "reason_code": "NO_SCENARIO",
+          "target": null,
+          "matched_rules": [],
+          "selected_rule": null,
+          "collision": null
+        }
+      }
+    },
+    {
+      "page_id": "preview-atlas-explicit-one",
+      "preview_id": "preview-atlas-explicit-one",
+      "q_ids": ["Q-023"],
+      "selection_id": "selection-atlas-explicit-one",
+      "rule_set_id": "rule-set-atlas-published",
+      "owner": "worker1",
+      "created_at": "2031-05-10T09:32:00Z",
+      "expires_at": "2031-05-10T09:36:00Z",
+      "total": 1,
+      "counts": {
+        "will_move": 0,
+        "will_manual_review": 1,
+        "requires_decision": 0,
+        "not_ready": 0,
+        "rule_conflicts": 0,
+        "no_scenario": 1
+      },
+      "next_cursor": null,
+      "rows": [
+        {
+          "item_id": "queue-atlas-ready-0001",
+          "item_revision": 1,
+          "predicted_state": "WILL_MANUAL_REVIEW",
+          "reason_code": "NO_SCENARIO",
+          "target": null,
+          "matched_rules": [],
+          "selected_rule": null,
+          "collision": null
+        }
+      ]
+    },
+    {
+      "page_id": "preview-atlas-explicit-multiple",
+      "preview_id": "preview-atlas-explicit-multiple",
+      "q_ids": ["Q-023"],
+      "selection_id": "selection-atlas-explicit-multiple",
+      "rule_set_id": "rule-set-atlas-published",
+      "owner": "worker1",
+      "created_at": "2031-05-10T09:32:00Z",
+      "expires_at": "2031-05-10T09:36:30Z",
+      "total": 3,
+      "counts": {
+        "will_move": 0,
+        "will_manual_review": 3,
+        "requires_decision": 0,
+        "not_ready": 0,
+        "rule_conflicts": 0,
+        "no_scenario": 3
+      },
+      "next_cursor": null,
+      "rows": [
+        {
+          "item_id": "queue-atlas-ready-0001",
+          "item_revision": 1,
+          "predicted_state": "WILL_MANUAL_REVIEW",
+          "reason_code": "NO_SCENARIO",
+          "target": null,
+          "matched_rules": [],
+          "selected_rule": null,
+          "collision": null
+        },
+        {
+          "item_id": "queue-atlas-ready-0101",
+          "item_revision": 1,
+          "predicted_state": "WILL_MANUAL_REVIEW",
+          "reason_code": "NO_SCENARIO",
+          "target": null,
+          "matched_rules": [],
+          "selected_rule": null,
+          "collision": null
+        },
+        {
+          "item_id": "queue-atlas-ready-0120",
+          "item_revision": 1,
+          "predicted_state": "WILL_MANUAL_REVIEW",
+          "reason_code": "NO_SCENARIO",
+          "target": null,
+          "matched_rules": [],
+          "selected_rule": null,
+          "collision": null
+        }
+      ]
+    },
+    {
+      "page_id": "preview-atlas-hetero",
+      "preview_id": "preview-atlas-hetero",
+      "q_ids": ["Q-023", "Q-026"],
+      "selection_id": "selection-preview-atlas-hetero",
+      "rule_set_id": "rule-set-atlas-published",
+      "owner": "worker1",
+      "created_at": "2031-05-10T09:32:00Z",
+      "expires_at": "2031-05-10T09:35:30Z",
+      "total": 8,
+      "counts": {
+        "will_move": 2,
+        "will_manual_review": 1,
+        "requires_decision": 4,
+        "not_ready": 1,
+        "rule_conflicts": 0,
+        "no_scenario": 1
+      },
+      "next_cursor": null,
+      "rows": [
+        {
+          "item_id": "preview-atlas-move-upper",
+          "item_revision": 3,
+          "predicted_state": "WILL_MOVE",
+          "reason_code": null,
+          "target": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Invoices/Invoice.TXT",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Invoices/Invoice.TXT"
+          },
+          "matched_rules": [
+            {
+              "dictionary_id": "dictionary-atlas-invoices",
+              "version_id": "version-atlas-invoices-v1",
+              "rule_id": "rule-atlas-invoices-invoice"
+            },
+            {
+              "dictionary_id": "dictionary-atlas-invoices",
+              "version_id": "version-atlas-invoices-v1",
+              "rule_id": "rule-atlas-invoices-upper"
+            }
+          ],
+          "selected_rule": {
+            "dictionary_id": "dictionary-atlas-invoices",
+            "version_id": "version-atlas-invoices-v1",
+            "rule_id": "rule-atlas-invoices-invoice"
+          },
+          "collision": null
+        },
+        {
+          "item_id": "preview-atlas-move-readme",
+          "item_revision": 3,
+          "predicted_state": "WILL_MOVE",
+          "reason_code": null,
+          "target": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Data/Readme",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/Readme"
+          },
+          "matched_rules": [
+            {
+              "dictionary_id": "dictionary-atlas-general",
+              "version_id": "version-atlas-general-v1",
+              "rule_id": "rule-atlas-general-readme"
+            }
+          ],
+          "selected_rule": {
+            "dictionary_id": "dictionary-atlas-general",
+            "version_id": "version-atlas-general-v1",
+            "rule_id": "rule-atlas-general-readme"
+          },
+          "collision": null
+        },
+        {
+          "item_id": "preview-atlas-no-scenario",
+          "item_revision": 3,
+          "predicted_state": "WILL_MANUAL_REVIEW",
+          "reason_code": "NO_SCENARIO",
+          "target": null,
+          "matched_rules": [],
+          "selected_rule": null,
+          "collision": null
+        },
+        {
+          "item_id": "preview-atlas-occupied-report",
+          "item_revision": 2,
+          "predicted_state": "REQUIRES_DECISION",
+          "reason_code": "TARGET_OCCUPIED",
+          "target": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Reports/Report.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/Report.pdf"
+          },
+          "matched_rules": [
+            {
+              "dictionary_id": "dictionary-atlas-invoices",
+              "version_id": "version-atlas-invoices-v1",
+              "rule_id": "rule-atlas-invoices-pdf"
+            }
+          ],
+          "selected_rule": {
+            "dictionary_id": "dictionary-atlas-invoices",
+            "version_id": "version-atlas-invoices-v1",
+            "rule_id": "rule-atlas-invoices-pdf"
+          },
+          "collision": {
+            "kind": "EXISTING_TARGET",
+            "source_metadata": {
+              "filename": "occupied.pdf",
+              "location": {
+                "root_id": "root-demo-atlas",
+                "relative_path": "Archive/Atlas/Orion_2031/Reports/occupied.pdf",
+                "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/occupied.pdf"
+              },
+              "size_bytes": 2048,
+              "modified_at": "2031-05-10T08:03:00Z"
+            },
+            "existing_target_metadata": {
+              "filename": "Report.pdf",
+              "location": {
+                "root_id": "root-demo-atlas",
+                "relative_path": "Archive/Atlas/Orion_2031/Reports/Report.pdf",
+                "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/Report.pdf"
+              },
+              "size_bytes": 4096,
+              "modified_at": "2031-05-09T08:00:00Z"
+            },
+            "conflicting_item_ids": []
+          }
+        },
+        {
+          "item_id": "preview-atlas-invoice-a",
+          "item_revision": 1,
+          "predicted_state": "REQUIRES_DECISION",
+          "reason_code": "TARGET_OCCUPIED",
+          "target": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Invoices/Invoice.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Invoices/Invoice.pdf"
+          },
+          "matched_rules": [
+            {
+              "dictionary_id": "dictionary-atlas-invoices",
+              "version_id": "version-atlas-invoices-v1",
+              "rule_id": "rule-atlas-invoices-invoice"
+            }
+          ],
+          "selected_rule": {
+            "dictionary_id": "dictionary-atlas-invoices",
+            "version_id": "version-atlas-invoices-v1",
+            "rule_id": "rule-atlas-invoices-invoice"
+          },
+          "collision": {
+            "kind": "DUPLICATE_PLAN_TARGET",
+            "source_metadata": {
+              "filename": "invoice-a.pdf",
+              "location": {
+                "root_id": "root-demo-atlas",
+                "relative_path": "Archive/Atlas/Orion_2031/Data/invoice-a.pdf",
+                "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/invoice-a.pdf"
+              },
+              "size_bytes": 1024,
+              "modified_at": "2031-05-10T08:04:00Z"
+            },
+            "existing_target_metadata": null,
+            "conflicting_item_ids": [
+              "preview-atlas-invoice-a",
+              "preview-atlas-invoice-b"
+            ]
+          }
+        },
+        {
+          "item_id": "preview-atlas-invoice-b",
+          "item_revision": 1,
+          "predicted_state": "REQUIRES_DECISION",
+          "reason_code": "TARGET_OCCUPIED",
+          "target": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Invoices/Invoice.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Invoices/Invoice.pdf"
+          },
+          "matched_rules": [
+            {
+              "dictionary_id": "dictionary-atlas-invoices",
+              "version_id": "version-atlas-invoices-v1",
+              "rule_id": "rule-atlas-invoices-invoice"
+            }
+          ],
+          "selected_rule": {
+            "dictionary_id": "dictionary-atlas-invoices",
+            "version_id": "version-atlas-invoices-v1",
+            "rule_id": "rule-atlas-invoices-invoice"
+          },
+          "collision": {
+            "kind": "DUPLICATE_PLAN_TARGET",
+            "source_metadata": {
+              "filename": "invoice-b.pdf",
+              "location": {
+                "root_id": "root-demo-atlas",
+                "relative_path": "Archive/Atlas/Orion_2031/Data/invoice-b.pdf",
+                "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/invoice-b.pdf"
+              },
+              "size_bytes": 1024,
+              "modified_at": "2031-05-10T08:05:00Z"
+            },
+            "existing_target_metadata": null,
+            "conflicting_item_ids": [
+              "preview-atlas-invoice-a",
+              "preview-atlas-invoice-b"
+            ]
+          }
+        },
+        {
+          "item_id": "preview-atlas-manual-name",
+          "item_revision": 2,
+          "predicted_state": "REQUIRES_DECISION",
+          "reason_code": "MANUAL_REVIEW_NAME_OCCUPIED",
+          "target": null,
+          "matched_rules": [],
+          "selected_rule": null,
+          "collision": {
+            "kind": "MANUAL_REVIEW_NAME",
+            "source_metadata": {
+              "filename": "unmatched.bin",
+              "location": {
+                "root_id": "root-demo-atlas",
+                "relative_path": "Incoming/atlas/unmatched.bin",
+                "display_path": "DEMO:/SandboxRoot/Incoming/atlas/unmatched.bin"
+              },
+              "size_bytes": 100,
+              "modified_at": "2031-05-10T08:06:00Z"
+            },
+            "existing_target_metadata": {
+              "filename": "unmatched.bin",
+              "location": {
+                "root_id": "root-demo-atlas",
+                "relative_path": "_manual_review/atlas/unmatched.bin",
+                "display_path": "DEMO:/SandboxRoot/_manual_review/atlas/unmatched.bin"
+              },
+              "size_bytes": 100,
+              "modified_at": "2031-05-09T08:00:00Z"
+            },
+            "conflicting_item_ids": []
+          }
+        },
+        {
+          "item_id": "preview-atlas-not-ready",
+          "item_revision": 1,
+          "predicted_state": "NOT_READY",
+          "reason_code": null,
+          "target": null,
+          "matched_rules": [],
+          "selected_rule": null,
+          "collision": null
+        }
+      ]
+    },
+    {
+      "page_id": "preview-atlas-conflict",
+      "preview_id": "preview-atlas-conflict",
+      "q_ids": ["Q-023"],
+      "selection_id": "selection-preview-atlas-conflict",
+      "rule_set_id": "rule-set-atlas-eq-diff",
+      "owner": "worker1",
+      "created_at": "2031-05-10T09:32:00Z",
+      "expires_at": "2031-05-10T09:35:00Z",
+      "total": 1,
+      "counts": {
+        "will_move": 0,
+        "will_manual_review": 1,
+        "requires_decision": 0,
+        "not_ready": 0,
+        "rule_conflicts": 1,
+        "no_scenario": 0
+      },
+      "next_cursor": null,
+      "rows": [
+        {
+          "item_id": "preview-atlas-shared",
+          "item_revision": 1,
+          "predicted_state": "WILL_MANUAL_REVIEW",
+          "reason_code": "RULE_CONFLICT",
+          "target": null,
+          "matched_rules": [
+            {
+              "dictionary_id": "dictionary-atlas-general",
+              "version_id": "version-atlas-eq-diff-general-v1",
+              "rule_id": "rule-atlas-eq-diff-general"
+            },
+            {
+              "dictionary_id": "dictionary-atlas-invoices",
+              "version_id": "version-atlas-eq-diff-invoices-v1",
+              "rule_id": "rule-atlas-eq-diff-invoices"
+            }
+          ],
+          "selected_rule": null,
+          "collision": null
+        }
+      ]
+    },
+    {
+      "page_id": "preview-nova-foreign",
+      "preview_id": "preview-nova-foreign",
+      "q_ids": ["Q-026"],
+      "selection_id": "selection-preview-nova-foreign",
+      "rule_set_id": "rule-set-nova-published",
+      "owner": "worker1",
+      "created_at": "2031-05-10T09:32:00Z",
+      "expires_at": "2031-05-10T09:35:00Z",
+      "total": 1,
+      "counts": {
+        "will_move": 0,
+        "will_manual_review": 1,
+        "requires_decision": 0,
+        "not_ready": 0,
+        "rule_conflicts": 0,
+        "no_scenario": 1
+      },
+      "next_cursor": null,
+      "rows": [
+        {
+          "item_id": "preview-nova-item",
+          "item_revision": 1,
+          "predicted_state": "WILL_MANUAL_REVIEW",
+          "reason_code": "NO_SCENARIO",
+          "target": null,
+          "matched_rules": [],
+          "selected_rule": null,
+          "collision": null
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "error_id": "PF-ERR-BATCH-CHANGED",
+      "q_ids": ["Q-027"],
+      "operation": "createSortingBatch",
+      "status": 409,
+      "code": "SELECTION_CHANGED",
+      "request_id": "request-batch-source-changed",
+      "message": "Изменился или исчез выбранный источник. Обновите выбор."
+    },
+    {
+      "error_id": "PF-ERR-BATCH-STALE",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingBatch",
+      "status": 409,
+      "code": "STALE_PREVIEW",
+      "request_id": "request-batch-stale-preview",
+      "message": "Данные изменились. Выполните проверку повторно."
+    },
+    {
+      "error_id": "PF-ERR-BATCH-EXPIRED",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingBatch",
+      "status": 409,
+      "code": "SELECTION_EXPIRED",
+      "request_id": "request-batch-selection-expired",
+      "message": "Снимок выбора истёк. Создайте его заново."
+    },
+    {
+      "error_id": "PF-ERR-BATCH-INVALID-STATE",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingBatch",
+      "status": 409,
+      "code": "INVALID_STATE",
+      "request_id": "request-batch-invalid-state",
+      "message": "Снимок или просмотр несовместимы с запросом."
+    },
+    {
+      "error_id": "PF-ERR-BATCH-NOT-FOUND",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingBatch",
+      "status": 404,
+      "code": "NOT_FOUND",
+      "request_id": "request-batch-not-found",
+      "message": "Объект не найден."
+    },
+    {
+      "error_id": "PF-ERR-BATCH-FORBIDDEN",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingBatch",
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "request-batch-forbidden",
+      "message": "Снимок создан другим пользователем."
+    },
+    {
+      "error_id": "PF-ERR-PREVIEW-EXPIRED",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingPreview",
+      "status": 409,
+      "code": "SELECTION_EXPIRED",
+      "request_id": "request-preview-selection-expired",
+      "message": "Снимок выбора истёк. Создайте его заново."
+    },
+    {
+      "error_id": "PF-ERR-PREVIEW-CHANGED",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingPreview",
+      "status": 409,
+      "code": "SELECTION_CHANGED",
+      "request_id": "request-preview-selection-changed",
+      "message": "Состав подходящих файлов изменился. Обновите выбор."
+    }
+  ],
+  "preflight": [
+    {
+      "scenario_id": "PF-DIRECT-FRESH",
+      "q_ids": ["Q-027"],
+      "operation": "createSortingBatch",
+      "execution_mode": "DIRECT",
+      "selection_id": "selection-atlas-allmatching-120",
+      "preview_id": null,
+      "owner": "worker1",
+      "requesting_actor": "worker1",
+      "new_session": false,
+      "cause": "fresh",
+      "precondition": "Свежий selection, источники не изменились, preview не запрашивался.",
+      "expected": {
+        "status": 202,
+        "code": null,
+        "accepted": true,
+        "batch_created": true,
+        "file_operations": false,
+        "future_batch_id": "batch-atlas-direct-fresh",
+        "rule_set_id": "rule-set-atlas-published"
+      },
+      "error_id": null,
+      "reason": "DIRECT рассчитывает свежий план и полный RuleSet без preview; партия ещё не создана в этом leaf."
+    },
+    {
+      "scenario_id": "PF-PREVIEWED-FRESH",
+      "q_ids": ["Q-026", "Q-027"],
+      "operation": "createSortingBatch",
+      "execution_mode": "PREVIEWED",
+      "selection_id": "selection-atlas-allmatching-120",
+      "preview_id": "preview-atlas-allmatching-120",
+      "owner": "worker1",
+      "requesting_actor": "worker1",
+      "new_session": false,
+      "cause": "fresh",
+      "precondition": "Свежий preview принадлежит тому же selection; правила, источники и цели не изменились.",
+      "expected": {
+        "status": 202,
+        "code": null,
+        "accepted": true,
+        "batch_created": true,
+        "file_operations": false,
+        "future_batch_id": "batch-atlas-previewed-fresh",
+        "rule_set_id": "rule-set-atlas-published"
+      },
+      "error_id": null,
+      "reason": "PREVIEWED принимает только свежий preview того же selection; план фиксируется без файловых операций."
+    },
+    {
+      "scenario_id": "PF-SAME-USER-NEW-SESSION",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingBatch",
+      "execution_mode": "DIRECT",
+      "selection_id": "selection-atlas-explicit-multiple",
+      "preview_id": null,
+      "owner": "worker1",
+      "requesting_actor": "worker1",
+      "new_session": true,
+      "cause": "fresh",
+      "precondition": "Новая сессия того же user_id использует свой снимок.",
+      "expected": {
+        "status": 202,
+        "code": null,
+        "accepted": true,
+        "batch_created": true,
+        "file_operations": false,
+        "future_batch_id": "batch-atlas-same-user-session",
+        "rule_set_id": "rule-set-atlas-published"
+      },
+      "error_id": null,
+      "reason": "Снимок привязан к user_id, а не к сессии: новая сессия того же пользователя допустима."
+    },
+    {
+      "scenario_id": "PF-DIRECT-SOURCE-CHANGED",
+      "q_ids": ["Q-027"],
+      "operation": "createSortingBatch",
+      "execution_mode": "DIRECT",
+      "selection_id": "selection-atlas-allmatching-120",
+      "preview_id": null,
+      "owner": "worker1",
+      "requesting_actor": "worker1",
+      "new_session": false,
+      "cause": "source_changed",
+      "precondition": "Содержательная ревизия выбранного источника изменилась до принятия DIRECT.",
+      "expected": {
+        "status": 409,
+        "code": "SELECTION_CHANGED",
+        "accepted": false,
+        "batch_created": false,
+        "file_operations": false,
+        "future_batch_id": null,
+        "rule_set_id": null
+      },
+      "error_id": "PF-ERR-BATCH-CHANGED",
+      "reason": "В DIRECT изменившийся источник отклоняется до создания партии: 409 SELECTION_CHANGED."
+    },
+    {
+      "scenario_id": "PF-DIRECT-SOURCE-MISSING",
+      "q_ids": ["Q-027"],
+      "operation": "createSortingBatch",
+      "execution_mode": "DIRECT",
+      "selection_id": "selection-atlas-explicit-multiple",
+      "preview_id": null,
+      "owner": "worker1",
+      "requesting_actor": "worker1",
+      "new_session": false,
+      "cause": "source_missing",
+      "precondition": "Один из выбранных источников исчез до принятия DIRECT.",
+      "expected": {
+        "status": 409,
+        "code": "SELECTION_CHANGED",
+        "accepted": false,
+        "batch_created": false,
+        "file_operations": false,
+        "future_batch_id": null,
+        "rule_set_id": null
+      },
+      "error_id": "PF-ERR-BATCH-CHANGED",
+      "reason": "Исчезнувший источник в DIRECT — тот же preflight-отказ SELECTION_CHANGED, без партии и файловых операций."
+    },
+    {
+      "scenario_id": "PF-PREVIEWED-SOURCE-CHANGED",
+      "q_ids": ["Q-026", "Q-027"],
+      "operation": "createSortingBatch",
+      "execution_mode": "PREVIEWED",
+      "selection_id": "selection-atlas-allmatching-120",
+      "preview_id": "preview-atlas-allmatching-120",
+      "owner": "worker1",
+      "requesting_actor": "worker1",
+      "new_session": false,
+      "cause": "source_changed",
+      "precondition": "Источник изменился после расчёта preview.",
+      "expected": {
+        "status": 409,
+        "code": "STALE_PREVIEW",
+        "accepted": false,
+        "batch_created": false,
+        "file_operations": false,
+        "future_batch_id": null,
+        "rule_set_id": null
+      },
+      "error_id": "PF-ERR-BATCH-STALE",
+      "reason": "В PREVIEWED изменение источника делает просмотр устаревшим: 409 STALE_PREVIEW до партии."
+    },
+    {
+      "scenario_id": "PF-PREVIEWED-RULES-CHANGED",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingBatch",
+      "execution_mode": "PREVIEWED",
+      "selection_id": "selection-atlas-allmatching-120",
+      "preview_id": "preview-atlas-allmatching-120",
+      "owner": "worker1",
+      "requesting_actor": "worker1",
+      "new_session": false,
+      "cause": "rules_changed",
+      "precondition": "После расчёта preview опубликована другая версия участника RuleSet.",
+      "expected": {
+        "status": 409,
+        "code": "STALE_PREVIEW",
+        "accepted": false,
+        "batch_created": false,
+        "file_operations": false,
+        "future_batch_id": null,
+        "rule_set_id": null
+      },
+      "error_id": "PF-ERR-BATCH-STALE",
+      "reason": "DICT-12: изменение правил делает непринятый preview устаревшим; принятая партия не затрагивается."
+    },
+    {
+      "scenario_id": "PF-PREVIEWED-TARGET-CHANGED",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingBatch",
+      "execution_mode": "PREVIEWED",
+      "selection_id": "selection-atlas-allmatching-120",
+      "preview_id": "preview-atlas-allmatching-120",
+      "owner": "worker1",
+      "requesting_actor": "worker1",
+      "new_session": false,
+      "cause": "target_changed",
+      "precondition": "Рассчитанная цель изменилась или занята после preview.",
+      "expected": {
+        "status": 409,
+        "code": "STALE_PREVIEW",
+        "accepted": false,
+        "batch_created": false,
+        "file_operations": false,
+        "future_batch_id": null,
+        "rule_set_id": null
+      },
+      "error_id": "PF-ERR-BATCH-STALE",
+      "reason": "Изменение рассчитанной цели — устаревший preview, а не пофайловый TARGET_OCCUPIED до принятия."
+    },
+    {
+      "scenario_id": "PF-PREVIEWED-PREVIEW-EXPIRED",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingBatch",
+      "execution_mode": "PREVIEWED",
+      "selection_id": "selection-atlas-allmatching-120",
+      "preview_id": "preview-atlas-allmatching-120",
+      "owner": "worker1",
+      "requesting_actor": "worker1",
+      "new_session": false,
+      "cause": "preview_ttl",
+      "expired": { "selection": false, "preview": true },
+      "precondition": "TTL preview истёк, selection ещё действует.",
+      "expected": {
+        "status": 409,
+        "code": "STALE_PREVIEW",
+        "accepted": false,
+        "batch_created": false,
+        "file_operations": false,
+        "future_batch_id": null,
+        "rule_set_id": null
+      },
+      "error_id": "PF-ERR-BATCH-STALE",
+      "reason": "Истёкший preview отклоняется как STALE_PREVIEW; TTL проверяет сервер, не только таймер браузера."
+    },
+    {
+      "scenario_id": "PF-SELECTION-EXPIRED-DIRECT",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingBatch",
+      "execution_mode": "DIRECT",
+      "selection_id": "selection-atlas-allmatching-120",
+      "preview_id": null,
+      "owner": "worker1",
+      "requesting_actor": "worker1",
+      "new_session": false,
+      "cause": "selection_expired",
+      "expired": { "selection": true, "preview": false },
+      "precondition": "Снимок выбора истёк до принятия DIRECT.",
+      "expected": {
+        "status": 409,
+        "code": "SELECTION_EXPIRED",
+        "accepted": false,
+        "batch_created": false,
+        "file_operations": false,
+        "future_batch_id": null,
+        "rule_set_id": null
+      },
+      "error_id": "PF-ERR-BATCH-EXPIRED",
+      "reason": "Истёкший selection отклоняется с 409 SELECTION_EXPIRED на реальной операции партии."
+    },
+    {
+      "scenario_id": "PF-SELECTION-EXPIRED-PREVIEWED",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingBatch",
+      "execution_mode": "PREVIEWED",
+      "selection_id": "selection-atlas-allmatching-120",
+      "preview_id": "preview-atlas-allmatching-120",
+      "owner": "worker1",
+      "requesting_actor": "worker1",
+      "new_session": false,
+      "cause": "selection_expired",
+      "expired": { "selection": true, "preview": false },
+      "precondition": "Снимок выбора истёк, хотя preview был рассчитан ранее.",
+      "expected": {
+        "status": 409,
+        "code": "SELECTION_EXPIRED",
+        "accepted": false,
+        "batch_created": false,
+        "file_operations": false,
+        "future_batch_id": null,
+        "rule_set_id": null
+      },
+      "error_id": "PF-ERR-BATCH-EXPIRED",
+      "reason": "Материализация preview не продлевает срок selection; истечение проверяется заново."
+    },
+    {
+      "scenario_id": "PF-INVALID-STATE-PAIRING",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingBatch",
+      "execution_mode": "PREVIEWED",
+      "selection_id": "selection-atlas-allmatching-120",
+      "preview_id": "preview-atlas-explicit-one",
+      "owner": "worker1",
+      "requesting_actor": "worker1",
+      "new_session": false,
+      "cause": "preview_pairing",
+      "pairing_mismatch": true,
+      "precondition": "Preview относится к другому selection, а не к переданному.",
+      "expected": {
+        "status": 409,
+        "code": "INVALID_STATE",
+        "accepted": false,
+        "batch_created": false,
+        "file_operations": false,
+        "future_batch_id": null,
+        "rule_set_id": null
+      },
+      "error_id": "PF-ERR-BATCH-INVALID-STATE",
+      "reason": "Несовместимая пара selection/preview отклоняется с 409 INVALID_STATE до любых операций."
+    },
+    {
+      "scenario_id": "PF-INVALID-STATE-COMPANY",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingBatch",
+      "execution_mode": "PREVIEWED",
+      "selection_id": "selection-atlas-allmatching-120",
+      "preview_id": "preview-nova-foreign",
+      "owner": "worker1",
+      "requesting_actor": "worker1",
+      "new_session": false,
+      "cause": "company_mismatch",
+      "company_mismatch": true,
+      "precondition": "Preview принадлежит другой компании, чем связанный selection.",
+      "expected": {
+        "status": 409,
+        "code": "INVALID_STATE",
+        "accepted": false,
+        "batch_created": false,
+        "file_operations": false,
+        "future_batch_id": null,
+        "rule_set_id": null
+      },
+      "error_id": "PF-ERR-BATCH-INVALID-STATE",
+      "reason": "Selection и preview разных компаний несовместимы: 409 INVALID_STATE."
+    },
+    {
+      "scenario_id": "PF-NOT-FOUND-SELECTION",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingBatch",
+      "execution_mode": "DIRECT",
+      "selection_id": "selection-unknown",
+      "preview_id": null,
+      "owner": "worker1",
+      "requesting_actor": "worker1",
+      "new_session": false,
+      "cause": "unknown_selection",
+      "precondition": "Передан неизвестный selection ID.",
+      "expected": {
+        "status": 404,
+        "code": "NOT_FOUND",
+        "accepted": false,
+        "batch_created": false,
+        "file_operations": false,
+        "future_batch_id": null,
+        "rule_set_id": null
+      },
+      "error_id": "PF-ERR-BATCH-NOT-FOUND",
+      "reason": "Неизвестный selection ID — 404 NOT_FOUND без создания партии."
+    },
+    {
+      "scenario_id": "PF-NOT-FOUND-PREVIEW",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingBatch",
+      "execution_mode": "PREVIEWED",
+      "selection_id": "selection-atlas-allmatching-120",
+      "preview_id": "preview-unknown",
+      "owner": "worker1",
+      "requesting_actor": "worker1",
+      "new_session": false,
+      "cause": "unknown_preview",
+      "precondition": "Передан неизвестный preview ID.",
+      "expected": {
+        "status": 404,
+        "code": "NOT_FOUND",
+        "accepted": false,
+        "batch_created": false,
+        "file_operations": false,
+        "future_batch_id": null,
+        "rule_set_id": null
+      },
+      "error_id": "PF-ERR-BATCH-NOT-FOUND",
+      "reason": "Неизвестный preview ID — 404 NOT_FOUND без создания партии."
+    },
+    {
+      "scenario_id": "PF-FORBIDDEN-OTHER-USER",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingBatch",
+      "execution_mode": "DIRECT",
+      "selection_id": "selection-atlas-allmatching-120",
+      "preview_id": null,
+      "owner": "worker1",
+      "requesting_actor": "worker2",
+      "new_session": false,
+      "cause": "other_user",
+      "precondition": "Другой пользователь использует снимок, привязанный к worker1.",
+      "expected": {
+        "status": 403,
+        "code": "FORBIDDEN",
+        "accepted": false,
+        "batch_created": false,
+        "file_operations": false,
+        "future_batch_id": null,
+        "rule_set_id": null
+      },
+      "error_id": "PF-ERR-BATCH-FORBIDDEN",
+      "reason": "Снимок привязан к создавшему user_id; другой пользователь получает 403 FORBIDDEN."
+    },
+    {
+      "scenario_id": "PF-PREVIEW-SELECTION-EXPIRED",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingPreview",
+      "execution_mode": null,
+      "selection_id": "selection-atlas-allmatching-120",
+      "preview_id": null,
+      "owner": "worker1",
+      "requesting_actor": "worker1",
+      "new_session": false,
+      "cause": "selection_expired",
+      "expired": { "selection": true, "preview": false },
+      "precondition": "Запрос preview по истёкшему снимку.",
+      "expected": {
+        "status": 409,
+        "code": "SELECTION_EXPIRED",
+        "accepted": false,
+        "batch_created": false,
+        "file_operations": false,
+        "future_batch_id": null,
+        "rule_set_id": null
+      },
+      "error_id": "PF-ERR-PREVIEW-EXPIRED",
+      "reason": "Истёкший selection отклоняется на реальной preview-операции: 409 SELECTION_EXPIRED."
+    },
+    {
+      "scenario_id": "PF-PREVIEW-SOURCE-CHANGED",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingPreview",
+      "execution_mode": null,
+      "selection_id": "selection-atlas-allmatching-120",
+      "preview_id": null,
+      "owner": "worker1",
+      "requesting_actor": "worker1",
+      "new_session": false,
+      "cause": "source_changed",
+      "precondition": "Источник изменился между снимком и расчётом preview.",
+      "expected": {
+        "status": 409,
+        "code": "SELECTION_CHANGED",
+        "accepted": false,
+        "batch_created": false,
+        "file_operations": false,
+        "future_batch_id": null,
+        "rule_set_id": null
+      },
+      "error_id": "PF-ERR-PREVIEW-CHANGED",
+      "reason": "Preview-операция объявляет SELECTION_CHANGED для изменившегося снимка до расчёта."
+    }
+  ],
+  "post_acceptance": [
+    {
+      "outcome_id": "PF-POST-SOURCE-CHANGED",
+      "q_ids": ["Q-027"],
+      "operation": "createSortingBatch",
+      "batch_created": true,
+      "http_status": 200,
+      "state": "SKIPPED",
+      "reason_code": "SOURCE_CHANGED",
+      "global_refusal": false,
+      "other_items_continue": true,
+      "returns_to_waiting_ready": true,
+      "reason": "Изменение после принятия — пофайловый SOURCE_CHANGED без мутации, не HTTP-отказ preflight."
+    },
+    {
+      "outcome_id": "PF-POST-CLAIM-OVERLAP",
+      "q_ids": ["Q-026", "Q-027"],
+      "operation": "createSortingBatch",
+      "batch_created": true,
+      "http_status": 200,
+      "state": "SKIPPED",
+      "reason_code": "ALREADY_PROCESSING",
+      "global_refusal": false,
+      "other_items_continue": true,
+      "returns_to_waiting_ready": false,
+      "reason": "Пересечение claim — пофайловый ALREADY_PROCESSING; остальные безопасные элементы продолжаются, общего отказа нет."
+    },
+    {
+      "outcome_id": "PF-POST-TARGET-OCCUPIED",
+      "q_ids": ["Q-027"],
+      "operation": "createSortingBatch",
+      "batch_created": true,
+      "http_status": 200,
+      "state": "REQUIRES_DECISION",
+      "reason_code": "TARGET_OCCUPIED",
+      "global_refusal": false,
+      "other_items_continue": true,
+      "returns_to_waiting_ready": false,
+      "reason": "Появившаяся занятая цель — пофайловый TARGET_OCCUPIED без перезаписи, не отказ всей партии."
+    },
+    {
+      "outcome_id": "PF-POST-MANUAL-REVIEW-NAME",
+      "q_ids": ["Q-027"],
+      "operation": "createSortingBatch",
+      "batch_created": true,
+      "http_status": 200,
+      "state": "REQUIRES_DECISION",
+      "reason_code": "MANUAL_REVIEW_NAME_OCCUPIED",
+      "global_refusal": false,
+      "other_items_continue": true,
+      "returns_to_waiting_ready": false,
+      "reason": "Занятое имя в ручном разборе — пофайловый исход, источник остаётся во входящих."
+    }
+  ],
+  "invalid_requests": [
+    {
+      "request_id": "PF-NEG-DIRECT-VALID",
+      "operation": "createSortingBatch",
+      "schema": "#/components/schemas/BatchCreateRequest",
+      "schema_rejected": false,
+      "expected": { "status": 202, "code": null },
+      "value": {
+        "selection_id": "selection-atlas-allmatching-120",
+        "execution_mode": "DIRECT"
+      },
+      "reason": "DIRECT не передаёт preview_id и остаётся schema-валидным."
+    },
+    {
+      "request_id": "PF-NEG-DIRECT-WITH-PREVIEW",
+      "operation": "createSortingBatch",
+      "schema": "#/components/schemas/BatchCreateRequest",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "value": {
+        "selection_id": "selection-atlas-allmatching-120",
+        "execution_mode": "DIRECT",
+        "preview_id": "preview-atlas-allmatching-120"
+      },
+      "reason": "DIRECT не принимает preview_id: additionalProperties=false."
+    },
+    {
+      "request_id": "PF-NEG-PREVIEWED-NO-PREVIEW",
+      "operation": "createSortingBatch",
+      "schema": "#/components/schemas/BatchCreateRequest",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "value": {
+        "selection_id": "selection-atlas-allmatching-120",
+        "execution_mode": "PREVIEWED"
+      },
+      "reason": "PREVIEWED требует preview_id."
+    },
+    {
+      "request_id": "PF-NEG-PREVIEWED-VALID",
+      "operation": "createSortingBatch",
+      "schema": "#/components/schemas/BatchCreateRequest",
+      "schema_rejected": false,
+      "expected": { "status": 202, "code": null },
+      "value": {
+        "selection_id": "selection-atlas-allmatching-120",
+        "execution_mode": "PREVIEWED",
+        "preview_id": "preview-atlas-allmatching-120"
+      },
+      "reason": "PREVIEWED с preview_id — schema-валидная пара."
+    },
+    {
+      "request_id": "PF-NEG-UNKNOWN-MODE",
+      "operation": "createSortingBatch",
+      "schema": "#/components/schemas/BatchCreateRequest",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "value": {
+        "selection_id": "selection-atlas-allmatching-120",
+        "execution_mode": "RUNNING"
+      },
+      "reason": "execution_mode ограничен DIRECT/PREVIEWED."
+    },
+    {
+      "request_id": "PF-NEG-EXTRA-PROPERTY",
+      "operation": "createSortingBatch",
+      "schema": "#/components/schemas/BatchCreateRequest",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "value": {
+        "selection_id": "selection-atlas-allmatching-120",
+        "execution_mode": "DIRECT",
+        "expected_batch_id": "batch-atlas-direct-fresh"
+      },
+      "reason": "Клиент не может предопределить batch ID: additionalProperties=false."
+    },
+    {
+      "request_id": "PF-NEG-PREVIEW-VALID",
+      "operation": "createSortingPreview",
+      "schema": "#/components/schemas/PreviewCreateRequest",
+      "schema_rejected": false,
+      "expected": { "status": 201, "code": null },
+      "value": { "selection_id": "selection-atlas-allmatching-120" },
+      "reason": "Preview-запрос содержит только selection_id."
+    },
+    {
+      "request_id": "PF-NEG-PREVIEW-NO-SELECTION",
+      "operation": "createSortingPreview",
+      "schema": "#/components/schemas/PreviewCreateRequest",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "value": {},
+      "reason": "selection_id обязателен для preview."
+    },
+    {
+      "request_id": "PF-NEG-PREVIEW-EXTRA",
+      "operation": "createSortingPreview",
+      "schema": "#/components/schemas/PreviewCreateRequest",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "value": {
+        "selection_id": "selection-atlas-allmatching-120",
+        "preview_id": "preview-atlas-allmatching-120"
+      },
+      "reason": "Клиент не передаёт preview_id при создании preview: additionalProperties=false."
+    }
+  ],
+  "links": [
+    {
+      "link_id": "PF-LINK-PREVIEW-SELECTION",
+      "relation": "equals",
+      "source": { "payload": "preview:preview-atlas-allmatching-120-page1", "path": ["selection_id"] },
+      "target": { "payload": "selection:selection-atlas-allmatching-120", "path": ["selection_id"] }
+    },
+    {
+      "link_id": "PF-LINK-PREVIEW-TOTAL",
+      "relation": "equals",
+      "source": { "payload": "preview:preview-atlas-allmatching-120-page1", "path": ["total"] },
+      "target": { "payload": "selection:selection-atlas-allmatching-120", "path": ["selected_count"] }
+    },
+    {
+      "link_id": "PF-LINK-PREVIEW-RULESET",
+      "relation": "equals",
+      "source": { "payload": "preview:preview-atlas-allmatching-120-page1", "path": ["rule_set", "rule_set_id"] },
+      "target": { "payload": "rule_set:rule-set-atlas-published", "path": ["rule_set_id"] }
+    },
+    {
+      "link_id": "PF-LINK-PAGE1-ROWS",
+      "relation": "length_equals",
+      "source": { "payload": "rows:preview-atlas-allmatching-120-page1", "path": [] },
+      "target": { "payload": "constants", "path": ["preview_page_limit"] }
+    },
+    {
+      "link_id": "PF-LINK-HETERO-ROWS",
+      "relation": "length_equals",
+      "source": { "payload": "rows:preview-atlas-hetero", "path": [] },
+      "target": { "payload": "preview:preview-atlas-hetero", "path": ["total"] }
+    },
+    {
+      "link_id": "PF-LINK-HETERO-MEMBERSHIP",
+      "relation": "membership_equals",
+      "source": { "payload": "rows:preview-atlas-hetero", "path": [] },
+      "target": { "payload": "membership:selection-preview-atlas-hetero", "path": [] }
+    },
+    {
+      "link_id": "PF-LINK-COLLISION-METADATA",
+      "relation": "not_equals",
+      "source": { "payload": "preview:preview-atlas-hetero", "path": ["rows", 3, "collision", "existing_target_metadata"] },
+      "target": { "payload": "preview:preview-atlas-hetero", "path": ["rows", 3, "collision", "source_metadata"] }
+    },
+    {
+      "link_id": "PF-LINK-CONFLICT-RULESET",
+      "relation": "equals",
+      "source": { "payload": "preview:preview-atlas-conflict", "path": ["rule_set", "rule_set_id"] },
+      "target": { "payload": "rule_set:rule-set-atlas-eq-diff", "path": ["rule_set_id"] }
+    }
+  ],
+  "mutations": [
+    {
+      "mutation_id": "PF-NEG-PREVIEW-TOTAL",
+      "validator": "expectations",
+      "operation": "set",
+      "path": ["previews", 0, "total"],
+      "value": 119,
+      "reason": "preview total must equal the frozen selection selected_count."
+    },
+    {
+      "mutation_id": "PF-NEG-PREVIEW-TTL",
+      "validator": "expectations",
+      "operation": "set",
+      "path": ["previews", 0, "expires_at"],
+      "value": "2031-05-10T09:40:00Z",
+      "reason": "preview TTL must not outlive the selection."
+    },
+    {
+      "mutation_id": "PF-NEG-SELECTION-COUNT",
+      "validator": "expectations",
+      "operation": "set",
+      "path": ["selections", 3, "snapshot", "selected_count"],
+      "value": 7,
+      "reason": "preview total must equal the frozen selection selected_count."
+    },
+    {
+      "mutation_id": "PF-NEG-ROW-REVISION",
+      "validator": "expectations",
+      "operation": "set",
+      "path": ["previews", 0, "rows", "$repeat_rows", "item_revision"],
+      "value": 99,
+      "reason": "preview rows must keep the frozen selection revision."
+    },
+    {
+      "mutation_id": "PF-NEG-SELECTED-NOT-MIN",
+      "validator": "expectations",
+      "operation": "set",
+      "path": ["previews", 4, "rows", 0, "selected_rule"],
+      "value": {
+        "dictionary_id": "dictionary-atlas-invoices",
+        "version_id": "version-atlas-invoices-v1",
+        "rule_id": "rule-atlas-invoices-upper"
+      },
+      "reason": "the selected rule must be the minimum-priority match."
+    },
+    {
+      "mutation_id": "PF-NEG-NO-SCENARIO-MATCHED",
+      "validator": "expectations",
+      "operation": "set",
+      "path": ["previews", 4, "rows", 2, "matched_rules"],
+      "value": [
+        {
+          "dictionary_id": "dictionary-atlas-general",
+          "version_id": "version-atlas-general-v1",
+          "rule_id": "rule-atlas-general-readme"
+        }
+      ],
+      "reason": "NO_SCENARIO must not match any rule."
+    },
+    {
+      "mutation_id": "PF-NEG-EXISTING-MISSING",
+      "validator": "expectations",
+      "operation": "remove",
+      "path": ["previews", 4, "rows", 3, "collision", "existing_target_metadata"],
+      "reason": "EXISTING_TARGET needs the occupying target metadata."
+    },
+    {
+      "mutation_id": "PF-NEG-DUP-IDS",
+      "validator": "expectations",
+      "operation": "set",
+      "path": ["previews", 4, "rows", 4, "collision", "conflicting_item_ids"],
+      "value": ["preview-atlas-invoice-a"],
+      "reason": "DUPLICATE_PLAN_TARGET must list every participant."
+    },
+    {
+      "mutation_id": "PF-NEG-PREFLIGHT-ACCEPTED-CODE",
+      "validator": "expectations",
+      "operation": "set",
+      "path": ["preflight", 0, "expected", "code"],
+      "value": "STALE_PREVIEW",
+      "reason": "an accepted batch must not carry an error code."
+    },
+    {
+      "mutation_id": "PF-NEG-PREFLIGHT-DIRECT-STALE",
+      "validator": "expectations",
+      "operation": "set",
+      "path": ["preflight", 3, "expected", "code"],
+      "value": "STALE_PREVIEW",
+      "reason": "DIRECT source change must be SELECTION_CHANGED, not STALE_PREVIEW."
+    },
+    {
+      "mutation_id": "PF-NEG-INVALID-REQUEST",
+      "validator": "schema",
+      "operation": "set",
+      "path": ["invalid_requests", 1, "schema_rejected"],
+      "value": false,
+      "reason": "a DIRECT body with preview_id must stay schema-rejected."
+    },
+    {
+      "mutation_id": "PF-NEG-REF-NOT-MEMBER",
+      "validator": "expectations",
+      "operation": "set",
+      "path": ["previews", 4, "rows", 0, "matched_rules", 0, "version_id"],
+      "value": "version-nova-general-v1",
+      "reason": "every matched rule must be a member of the preview RuleSet."
+    },
+    {
+      "mutation_id": "PF-NEG-REF-UNKNOWN",
+      "validator": "expectations",
+      "operation": "set",
+      "path": ["previews", 4, "rows", 1, "matched_rules", 0, "rule_id"],
+      "value": "rule-does-not-exist",
+      "reason": "every matched rule must resolve to a declared rule definition."
+    },
+    {
+      "mutation_id": "PF-NEG-COLLISION-SOURCE",
+      "validator": "expectations",
+      "operation": "set",
+      "path": ["previews", 4, "rows", 3, "collision", "source_metadata", "filename"],
+      "value": "other.pdf",
+      "reason": "collision source metadata must match the plan row source."
+    },
+    {
+      "mutation_id": "PF-NEG-PREFLIGHT-MODE",
+      "validator": "expectations",
+      "operation": "set",
+      "path": ["preflight", 1, "execution_mode"],
+      "value": "DIRECT",
+      "reason": "PREVIEWED with a preview_id must not be relabelled DIRECT."
+    },
+    {
+      "mutation_id": "PF-NEG-PREFLIGHT-CONTEXT",
+      "validator": "expectations",
+      "operation": "set",
+      "path": ["preflight", 12, "company_mismatch"],
+      "value": false,
+      "reason": "INVALID_STATE needs a real company or pairing mismatch precondition."
+    },
+    {
+      "mutation_id": "PF-NEG-PREFLIGHT-PRECONDITION",
+      "validator": "expectations",
+      "operation": "remove",
+      "path": ["preflight", 3, "precondition"],
+      "reason": "every preflight scenario must state its actual precondition."
+    }
+  ],
+  "coverage": {
+    "Q-023": [
+      "selection-atlas-allmatching-120",
+      "selection-atlas-explicit-one",
+      "selection-atlas-explicit-multiple",
+      "selection-preview-atlas-hetero",
+      "selection-preview-atlas-conflict",
+      "preview-atlas-allmatching-120-page1",
+      "preview-atlas-allmatching-120-page2",
+      "preview-atlas-explicit-one",
+      "preview-atlas-explicit-multiple",
+      "preview-atlas-hetero",
+      "preview-atlas-conflict"
+    ],
+    "Q-026": [
+      "PF-PREVIEWED-FRESH",
+      "PF-SAME-USER-NEW-SESSION",
+      "PF-PREVIEWED-SOURCE-CHANGED",
+      "PF-PREVIEWED-RULES-CHANGED",
+      "PF-PREVIEWED-TARGET-CHANGED",
+      "PF-PREVIEWED-PREVIEW-EXPIRED",
+      "PF-SELECTION-EXPIRED-DIRECT",
+      "PF-SELECTION-EXPIRED-PREVIEWED",
+      "PF-INVALID-STATE-PAIRING",
+      "PF-INVALID-STATE-COMPANY",
+      "PF-NOT-FOUND-SELECTION",
+      "PF-NOT-FOUND-PREVIEW",
+      "PF-FORBIDDEN-OTHER-USER",
+      "PF-PREVIEW-SELECTION-EXPIRED",
+      "PF-PREVIEW-SOURCE-CHANGED",
+      "PF-POST-SOURCE-CHANGED",
+      "PF-POST-CLAIM-OVERLAP"
+    ],
+    "Q-027": [
+      "PF-DIRECT-FRESH",
+      "PF-PREVIEWED-FRESH",
+      "PF-DIRECT-SOURCE-CHANGED",
+      "PF-DIRECT-SOURCE-MISSING",
+      "PF-POST-SOURCE-CHANGED",
+      "PF-POST-CLAIM-OVERLAP",
+      "PF-POST-TARGET-OCCUPIED",
+      "PF-POST-MANUAL-REVIEW-NAME"
+    ]
+  }
+}
