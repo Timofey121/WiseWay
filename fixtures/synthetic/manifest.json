@@ -1,14 +1,14 @@
 {
   "fixture_set": "wiseway-synthetic-metadata",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "seed": "wiseway-demo-seed-2031",
   "contract_version": "1.0.0",
-  "generated_by": "tests/contract/contractlib/synthetic.py (deterministic; no randomness)",
+  "generated_by": "corpus: tests/contract/contractlib/synthetic.py (deterministic; no randomness); search/error examples: tests/contract/contractlib/search_expectations.py --write-examples (from literal expectations)",
   "checksum": {
     "algorithm": "sha256",
     "canonicalization": "json.dumps(parse(content), sort_keys=True, separators=(',', ':'), ensure_ascii=False)",
-    "method": "content_hash(file) = sha256(canonical JSON bytes) so LF/CRLF checkouts hash identically; combined = sha256(utf8('fixture_set=<set>\\nversion=<version>\\nseed=<seed>\\ncorpus=<content_hash(corpus.json)>\\n' + concat('<example id>=<content_hash(payload)>\\n' in manifest order)))",
-    "corpus": "843659eef9aa39b1ea09e1b7a6cafe91d78eb48ca91abbb17764bc0fc9b5dced",
+    "method": "content_hash(file) = sha256(canonical JSON bytes) so LF/CRLF checkouts hash identically; combined = sha256(utf8('fixture_set=<set>\\nversion=<version>\\nseed=<seed>\\ncorpus=<content_hash(corpus.json)>\\n' + concat('<example id>=<content_hash(payload)>\\n' in manifest order) + concat('fixture:<fixture id>=<content_hash(fixture)>\\n' in manifest order)))",
+    "corpus": "a6a7581d017c0d81a36f7e7a8e8bc1fce4d85c01a60ccde97d10b8dabb775535",
     "examples": {
       "auth-actor-worker-one": "91fe7ba2396c6f3ed3ba031c485c9b0b51cc7d7891527bf1e078d324745a9f36",
       "auth-actor-worker-two": "1c3c5f5b4f9d5611ef9318b34c976c60c2901daa3ed283b094137e563532ee6b",
@@ -24,15 +24,43 @@
       "roots-two": "c4c3e4d39c5fb497e08077987c32acf9b08e7ecf8dea9a5f1265a9933ee75787",
       "roots-empty": "eef46741adfc3a9f76294d3b78f37a45f113092ac9d44ee77c7a038a88ff09a1",
       "companies-atlas-nova": "ee53d85061ad6c0aa97abb2df22dd7fa4611c4c8e901ae1103fb9d7f32936354",
-      "companies-empty": "eef46741adfc3a9f76294d3b78f37a45f113092ac9d44ee77c7a038a88ff09a1"
+      "companies-empty": "eef46741adfc3a9f76294d3b78f37a45f113092ac9d44ee77c7a038a88ff09a1",
+      "search-idle-atlas": "123036dc4f24dc28c9dbcd5dc62460b973b8213142f8c991b56e97422620bbbb",
+      "search-results-n10-limited": "560179581a3d70d3dd1e9758199941c9c7aae2ede430098f4c918405d0184e9f",
+      "search-results-met-ranking": "26a879f360adec5df6a923eb50ec54375b4db7c4654853e1db911fd5a91cc0f3",
+      "search-results-and-markers": "ff104cb811c4ec53a64fab4bb72f070c1c08a4a51f83e5fd7315003d650d7717",
+      "facet-nova-orion-north": "3eee0effa0dd12d91989850d28952a991e7458584966bdfcbc654c0d1cdf4154",
+      "error-unauthenticated": "050de7d6f9f94ef154ff1e05b72371144be977ecbf5d40cf8ddeb546d12c8c2a",
+      "error-login-failed": "5298c48739d3166577872c4c5fb6b1e209bc384a7b7900f3d1345a43cee0b485",
+      "error-search-unavailable": "40b100dc119080aeb7c5fbea989799834321a3f9bc872c81006b96b142d4d7b0",
+      "error-internal-error": "83d5b2f21b0f102e6fd6f8586d9d1743702188852596e4a77472d358dce6a59c",
+      "error-invalid-query": "ebe03b9029b0b463ab895341df0310d65cfaf2ae01437f08193743708822ee65",
+      "error-validation-error": "d482ce7e063c7e02588c514b5547e48dd79fa56e0d375fa2be5f383c741db7cd",
+      "error-invalid-marker-selection": "574a5947cacb21d3b26b218d5760093d5b7d1ed4976b985ab4fc0c535f7335e1",
+      "error-schema-version-changed": "56a4f3a94b8771d39ad09f534a3dad5abf01bf593883b3de8b48fd99bb31603c",
+      "error-root-not-ready": "7aa7580156915a260903608ddc1b0589aa1b33d8190d21528e6b33692dd2e371",
+      "error-csrf-failed": "6db531040e0a23de9b17ad78fe3d61dd4ddbf8379fed630d4fd6138595689473",
+      "error-forbidden": "ba1ad2bb2caf3f4fe56c17e8d4db35d822c71083e2df9b7cf266a382a1293781",
+      "error-rate-limited": "cbd5a13963a9d6f334fdf83941778c6ff6e5ce7ff1cf30cf2347c9aea75e564b"
     },
-    "combined": "cef77933500ed97336e2d38d8be670baf448de37ba2d33661bc3afad7e42a7b3"
+    "combined": "7bc8406c0a7e823ee49bbd4b3354da0cec6290bd0fb7228c099d766de4135795",
+    "fixtures": {
+      "search-expectations": "0910c9bbeb54eaba159105e4d060cd2ca06c7d71f0459946f220886f22751c1b"
+    }
   },
   "corpus": {
     "file": "fixtures/synthetic/corpus.json",
     "schema": "#/components/schemas/SearchItem",
     "notes": "Compact corpus; synthetic.py materializes marker references and explicit ID/range cohorts into plain SearchItem JSON. Service objects are excluded from the searchable inventory."
   },
+  "fixtures": [
+    {
+      "id": "search-expectations",
+      "file": "fixtures/synthetic/search_expectations.json",
+      "schema": null,
+      "description": "LT-03.1b literal search/facet/auth/error/race/lifecycle/format expectations over the corpus; materialized by contractlib.search_expectations without computing membership."
+    }
+  ],
   "examples": [
     {
       "id": "auth-actor-worker-one",
@@ -129,6 +157,108 @@
       "schema": "#/components/schemas/CompaniesResponse",
       "file": "contracts/examples/companies/companies-empty.json",
       "description": "Empty companies state."
+    },
+    {
+      "id": "search-idle-atlas",
+      "schema": "#/components/schemas/SearchResponse",
+      "file": "contracts/examples/search/search-idle-atlas.json",
+      "description": "IDLE SearchResponse for root-demo-atlas with the first level-section facet."
+    },
+    {
+      "id": "search-results-n10-limited",
+      "schema": "#/components/schemas/SearchResponse",
+      "file": "contracts/examples/search/search-results-n10-limited.json",
+      "description": "RESULTS SearchResponse with total=13 > result_limit=10 and limited=true."
+    },
+    {
+      "id": "search-results-met-ranking",
+      "schema": "#/components/schemas/SearchResponse",
+      "file": "contracts/examples/search/search-results-met-ranking.json",
+      "description": "RELEVANCE DESC result for token met with the manual score order 10/5/2."
+    },
+    {
+      "id": "search-results-and-markers",
+      "schema": "#/components/schemas/SearchResponse",
+      "file": "contracts/examples/search/search-results-and-markers.json",
+      "description": "RESULTS SearchResponse for a marker chain AND text; terminal next_facet=null."
+    },
+    {
+      "id": "facet-nova-orion-north",
+      "schema": "#/components/schemas/FacetResponse",
+      "file": "contracts/examples/search/facet-nova-orion-north.json",
+      "description": "FacetResponse reopening level-category under Archive/Nova/Orion_2031/North."
+    },
+    {
+      "id": "error-unauthenticated",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-unauthenticated.json",
+      "description": "401 UNAUTHENTICATED for a protected operation without a session."
+    },
+    {
+      "id": "error-login-failed",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-login-failed.json",
+      "description": "401 LOGIN_FAILED for a wrong login/password."
+    },
+    {
+      "id": "error-search-unavailable",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-search-unavailable.json",
+      "description": "503 SEARCH_UNAVAILABLE; the previous result is stale, never a false success."
+    },
+    {
+      "id": "error-internal-error",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-internal-error.json",
+      "description": "500 INTERNAL_ERROR without technical details, request_id for triage."
+    },
+    {
+      "id": "error-invalid-query",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-invalid-query.json",
+      "description": "400 INVALID_QUERY for an unclosed quote."
+    },
+    {
+      "id": "error-validation-error",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-validation-error.json",
+      "description": "422 VALIDATION_ERROR with a safe field_errors entry for an over-long query."
+    },
+    {
+      "id": "error-invalid-marker-selection",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-invalid-marker-selection.json",
+      "description": "422 INVALID_MARKER_SELECTION for a stale marker chain."
+    },
+    {
+      "id": "error-schema-version-changed",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-schema-version-changed.json",
+      "description": "409 SCHEMA_VERSION_CHANGED after a schema generation change."
+    },
+    {
+      "id": "error-root-not-ready",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-root-not-ready.json",
+      "description": "409 ROOT_NOT_READY for an unpublished search root."
+    },
+    {
+      "id": "error-csrf-failed",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-csrf-failed.json",
+      "description": "403 CSRF_FAILED for an invalid X-CSRF-Token."
+    },
+    {
+      "id": "error-forbidden",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-forbidden.json",
+      "description": "403 FORBIDDEN for a disallowed action."
+    },
+    {
+      "id": "error-rate-limited",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-rate-limited.json",
+      "description": "429 RATE_LIMITED, retryable=true; the client honors Retry-After."
     }
   ]
 }

@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "UNAUTHENTICATED",
+    "message": "Сессия отсутствует или истекла. Войдите снова.",
+    "request_id": "request-auth-q001-unauth",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

@@ -58,6 +58,7 @@ def main(argv=None) -> int:
     print(f"Examples: {report.examples_validated} schema-bound example(s) validated")
     print(f"Semantics: {report.semantics_checked} example(s) checked for semantic invariants")
     print(f"Fixtures: {report.fixtures_validated} public example(s), {report.corpus_files} corpus file(s) and {report.lifecycle_fixtures} lifecycle payload(s) validated")
+    print(f"Search expectations: {report.search_scenarios} search, {report.facet_scenarios} facet, {report.error_scenarios} error, {report.race_scenarios} race, {report.format_samples} format scenario(s)")
     print("")
     print(report.format())
     return 0 if report.ok else 1

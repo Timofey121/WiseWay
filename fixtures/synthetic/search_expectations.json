@@ -1,0 +1,3634 @@
+{
+  "fixture_set": "wiseway-synthetic-search-expectations",
+  "version": "1.0.0",
+  "seed": "wiseway-demo-seed-2031",
+  "contract_version": "1.0.0",
+  "corpus_version": "1.2.0",
+  "corpus_file": "fixtures/synthetic/corpus.json",
+  "notes": "Конечные точные ожидания поиска/фасетов/auth/ошибок/гонок/стадий/lifecycle/freshness поверх LT-03.1a корпуса. Значения — явные литералы; materializer собирает ответ только по literal ID и не вычисляет membership/ranking/facets. SearchItem.markers содержит только распознанные VALUE-родителей; привязка терминальной UNRECOGNIZED-опции к первому отклонению задана литерально в unrecognized_sources. sort_profiles — отдельная stand-alone таблица comparator без физического инвентаря. Reasoning в reason каждого сценария.",
+  "constants": {
+    "ranking_profile_version": "ranking-demo-1",
+    "freshness_profiles": {
+      "CURRENT": {
+        "indexed_at": "2031-05-10T09:30:00Z",
+        "last_successful_sync_at": "2031-05-10T09:30:00Z",
+        "status": "CURRENT"
+      },
+      "UPDATING": {
+        "indexed_at": "2031-05-10T09:30:00Z",
+        "last_successful_sync_at": "2031-05-10T09:30:00Z",
+        "status": "UPDATING"
+      },
+      "STALE": {
+        "indexed_at": "2031-05-10T09:30:00Z",
+        "last_successful_sync_at": "2031-05-10T09:00:00Z",
+        "status": "STALE"
+      }
+    },
+    "result_limit_default": 100,
+    "result_limit_n10": 10,
+    "tie_break": {
+      "order": [
+        "natural_path_asc",
+        "raw_path_asc",
+        "item_id_asc"
+      ],
+      "note": "natural path и raw path проверены SRCH-Q011-TIE-NATURAL/SRCH-Q011-TIE-RAW; item_id — финальный детерминированный fallback, при уникальных путях корпуса недостижим."
+    },
+    "roots": {
+      "root-demo-atlas": {
+        "schema_set_version": "schema-demo-1",
+        "index_generation": "generation-demo-1"
+      },
+      "root-demo-nova": {
+        "schema_set_version": "schema-demo-2",
+        "index_generation": "generation-demo-2"
+      }
+    },
+    "level_names": {
+      "level-section": "Раздел",
+      "level-company": "Компания",
+      "level-project": "Проект",
+      "level-area": "Область",
+      "level-category": "Категория",
+      "level-subcategory": "Подкатегория"
+    }
+  },
+  "search_scenarios": [
+    {
+      "scenario_id": "SRCH-Q004-IDLE-ATLAS",
+      "q_ids": [
+        "Q-004"
+      ],
+      "parameters": [
+        "idle",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q004-idle-atlas",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "",
+        "sort": {
+          "field": "PATH",
+          "direction": "ASC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "IDLE",
+        "total": null,
+        "returned_count": 0,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "",
+        "item_ids": [],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 151
+            }
+          ]
+        }
+      },
+      "reason": "Только выбранный корень Atlas без текста/цепочки даёт IDLE: items=[], total=null, первый facet level-section. Count 151 — все поисковые файлы Atlas; service objects исключены."
+    },
+    {
+      "scenario_id": "SRCH-Q004-IDLE-NOVA",
+      "q_ids": [
+        "Q-004"
+      ],
+      "parameters": [
+        "idle",
+        "root-demo-nova"
+      ],
+      "request": {
+        "request_state_id": "srch-q004-idle-nova",
+        "root_id": "root-demo-nova",
+        "selected_marker_ids": [],
+        "query_text": "",
+        "sort": {
+          "field": "PATH",
+          "direction": "ASC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "IDLE",
+        "total": null,
+        "returned_count": 0,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "",
+        "item_ids": [],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-nova-archive",
+              "count": 13
+            }
+          ]
+        }
+      },
+      "reason": "Второй корень Nova даёт собственный IDLE; count 13 — все поисковые файлы Nova."
+    },
+    {
+      "scenario_id": "SRCH-Q004-ZERO",
+      "q_ids": [
+        "Q-004",
+        "Q-005"
+      ],
+      "parameters": [
+        "zero-results",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q004-zero",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "zzzznothing",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 0,
+        "returned_count": 0,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "zzzznothing",
+        "item_ids": [],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": []
+        }
+      },
+      "reason": "Точный ноль в RESULTS: total=0, items=[], limited=false; нулевые варианты скрыты, поэтому options=[]."
+    },
+    {
+      "scenario_id": "SRCH-Q006-DEEP-TEXT",
+      "q_ids": [
+        "Q-006"
+      ],
+      "parameters": [
+        "deep-text",
+        "no-parents",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q006-deep-text",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "polaris",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 2,
+        "returned_count": 2,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "polaris",
+        "item_ids": [
+          "file-atlas-polaris-data",
+          "file-atlas-rawcase-polaris-lower"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 2
+            }
+          ]
+        }
+      },
+      "reason": "Глубокий признак polaris вводится без выбора родителей; совпадают два файла проекта Polaris_2030, оба 10 (полный токен в имени)."
+    },
+    {
+      "scenario_id": "SRCH-Q006-PARENTS-TABLE",
+      "q_ids": [
+        "Q-006"
+      ],
+      "parameters": [
+        "parents",
+        "next-facet",
+        "root-demo-nova"
+      ],
+      "request": {
+        "request_state_id": "srch-q006-parents-table",
+        "root_id": "root-demo-nova",
+        "selected_marker_ids": [
+          "marker-root-demo-nova-archive",
+          "marker-root-demo-nova-archive-nova",
+          "marker-root-demo-nova-archive-nova-orion",
+          "marker-root-demo-nova-archive-nova-orion-north"
+        ],
+        "query_text": "",
+        "sort": {
+          "field": "PATH",
+          "direction": "ASC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 8,
+        "returned_count": 8,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "",
+        "item_ids": [
+          "file-nova-q007-atlas-only",
+          "file-nova-q008-inserted",
+          "file-nova-q008-mixed",
+          "file-nova-q008-atlas-main",
+          "file-nova-q008-prefix",
+          "file-nova-q007-both",
+          "file-nova-q008-reversed",
+          "file-nova-q007-reports-only"
+        ],
+        "next_facet": {
+          "level_id": "level-category",
+          "level_name": "Категория",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-nova-archive-nova-orion-north-data",
+              "count": 1
+            },
+            {
+              "marker_id": "marker-root-demo-nova-archive-nova-orion-north-reports",
+              "count": 7
+            }
+          ]
+        }
+      },
+      "reason": "Выбрана цепочка до Area North; next_facet — уровень Категория по тому же множеству: Data=1, Reports=7."
+    },
+    {
+      "scenario_id": "SRCH-Q006-FACET-PREFIX-TABLE",
+      "q_ids": [
+        "Q-006"
+      ],
+      "parameters": [
+        "facet_prefix",
+        "table-unchanged",
+        "root-demo-nova"
+      ],
+      "request": {
+        "request_state_id": "srch-q006-facet-prefix-table",
+        "root_id": "root-demo-nova",
+        "selected_marker_ids": [
+          "marker-root-demo-nova-archive",
+          "marker-root-demo-nova-archive-nova",
+          "marker-root-demo-nova-archive-nova-orion",
+          "marker-root-demo-nova-archive-nova-orion-north"
+        ],
+        "query_text": "",
+        "sort": {
+          "field": "PATH",
+          "direction": "ASC"
+        },
+        "facet_prefix": "re"
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 8,
+        "returned_count": 8,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "",
+        "item_ids": [
+          "file-nova-q007-atlas-only",
+          "file-nova-q008-inserted",
+          "file-nova-q008-mixed",
+          "file-nova-q008-atlas-main",
+          "file-nova-q008-prefix",
+          "file-nova-q007-both",
+          "file-nova-q008-reversed",
+          "file-nova-q007-reports-only"
+        ],
+        "next_facet": {
+          "level_id": "level-category",
+          "level_name": "Категория",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-nova-archive-nova-orion-north-reports",
+              "count": 7
+            }
+          ]
+        }
+      },
+      "reason": "facet_prefix=re фильтрует только options (Reports), items/total те же 8; сравнить с SRCH-Q006-PARENTS-TABLE."
+    },
+    {
+      "scenario_id": "SRCH-Q006-SORT-NAME-ASC",
+      "q_ids": [
+        "Q-006"
+      ],
+      "parameters": [
+        "sort-NAME-ASC",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q006-sort-name-asc",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "met",
+        "sort": {
+          "field": "NAME",
+          "direction": "ASC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 8,
+        "returned_count": 8,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "met",
+        "item_ids": [
+          "file-atlas-q009-space",
+          "file-atlas-q009-hyphen",
+          "file-atlas-q009-dot",
+          "file-atlas-q009-letter-digit",
+          "file-atlas-q009-underscore",
+          "file-atlas-q009-metrics",
+          "file-atlas-q009-backslash",
+          "file-atlas-q009-slash"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 8
+            }
+          ]
+        }
+      },
+      "reason": "Ручная сортировка NAME ASC: имя natural, регистронезависимо."
+    },
+    {
+      "scenario_id": "SRCH-Q006-SORT-NAME-DESC",
+      "q_ids": [
+        "Q-006"
+      ],
+      "parameters": [
+        "sort-NAME-DESC",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q006-sort-name-desc",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "met",
+        "sort": {
+          "field": "NAME",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 8,
+        "returned_count": 8,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "met",
+        "item_ids": [
+          "file-atlas-q009-slash",
+          "file-atlas-q009-backslash",
+          "file-atlas-q009-metrics",
+          "file-atlas-q009-underscore",
+          "file-atlas-q009-letter-digit",
+          "file-atlas-q009-dot",
+          "file-atlas-q009-hyphen",
+          "file-atlas-q009-space"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 8
+            }
+          ]
+        }
+      },
+      "reason": "Повтор меняет направление NAME DESC; равенств нет."
+    },
+    {
+      "scenario_id": "SRCH-Q006-SORT-SIZE-ASC",
+      "q_ids": [
+        "Q-006"
+      ],
+      "parameters": [
+        "sort-SIZE-ASC",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q006-sort-size-asc",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "met",
+        "sort": {
+          "field": "SIZE",
+          "direction": "ASC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 8,
+        "returned_count": 8,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "met",
+        "item_ids": [
+          "file-atlas-q009-metrics",
+          "file-atlas-q009-space",
+          "file-atlas-q009-hyphen",
+          "file-atlas-q009-underscore",
+          "file-atlas-q009-dot",
+          "file-atlas-q009-slash",
+          "file-atlas-q009-backslash",
+          "file-atlas-q009-letter-digit"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 8
+            }
+          ]
+        }
+      },
+      "reason": "Ручная сортировка SIZE ASC по точным size_bytes 1200..2100."
+    },
+    {
+      "scenario_id": "SRCH-Q006-SORT-SIZE-DESC",
+      "q_ids": [
+        "Q-006"
+      ],
+      "parameters": [
+        "sort-SIZE-DESC",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q006-sort-size-desc",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "met",
+        "sort": {
+          "field": "SIZE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 8,
+        "returned_count": 8,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "met",
+        "item_ids": [
+          "file-atlas-q009-letter-digit",
+          "file-atlas-q009-backslash",
+          "file-atlas-q009-slash",
+          "file-atlas-q009-dot",
+          "file-atlas-q009-underscore",
+          "file-atlas-q009-hyphen",
+          "file-atlas-q009-space",
+          "file-atlas-q009-metrics"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 8
+            }
+          ]
+        }
+      },
+      "reason": "Первое ручное направление размера DESC; равенств нет."
+    },
+    {
+      "scenario_id": "SRCH-Q006-SORT-MODIFIED-ASC",
+      "q_ids": [
+        "Q-006"
+      ],
+      "parameters": [
+        "sort-MODIFIED_AT-ASC",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q006-sort-modified-asc",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "met",
+        "sort": {
+          "field": "MODIFIED_AT",
+          "direction": "ASC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 8,
+        "returned_count": 8,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "met",
+        "item_ids": [
+          "file-atlas-q009-space",
+          "file-atlas-q009-hyphen",
+          "file-atlas-q009-dot",
+          "file-atlas-q009-underscore",
+          "file-atlas-q009-metrics",
+          "file-atlas-q009-backslash",
+          "file-atlas-q009-slash",
+          "file-atlas-q009-letter-digit"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 8
+            }
+          ]
+        }
+      },
+      "reason": "Ручная сортировка MODIFIED_AT ASC: space=09:00, letter-digit=10:00, остальные default 09:30; равенство 09:30 разрешается natural path ASC."
+    },
+    {
+      "scenario_id": "SRCH-Q006-SORT-MODIFIED-DESC",
+      "q_ids": [
+        "Q-006"
+      ],
+      "parameters": [
+        "sort-MODIFIED_AT-DESC",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q006-sort-modified-desc",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "met",
+        "sort": {
+          "field": "MODIFIED_AT",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 8,
+        "returned_count": 8,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "met",
+        "item_ids": [
+          "file-atlas-q009-letter-digit",
+          "file-atlas-q009-hyphen",
+          "file-atlas-q009-dot",
+          "file-atlas-q009-underscore",
+          "file-atlas-q009-metrics",
+          "file-atlas-q009-backslash",
+          "file-atlas-q009-slash",
+          "file-atlas-q009-space"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 8
+            }
+          ]
+        }
+      },
+      "reason": "MODIFIED_AT DESC: letter-digit 10:00 первый, space 09:00 последний; группа 09:30 — natural path ASC."
+    },
+    {
+      "scenario_id": "SRCH-Q006-SORT-PATH-ASC",
+      "q_ids": [
+        "Q-006"
+      ],
+      "parameters": [
+        "sort-PATH-ASC",
+        "default-no-text",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q006-sort-path-asc",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "met",
+        "sort": {
+          "field": "PATH",
+          "direction": "ASC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 8,
+        "returned_count": 8,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "met",
+        "item_ids": [
+          "file-atlas-q009-space",
+          "file-atlas-q009-hyphen",
+          "file-atlas-q009-dot",
+          "file-atlas-q009-letter-digit",
+          "file-atlas-q009-underscore",
+          "file-atlas-q009-metrics",
+          "file-atlas-q009-backslash",
+          "file-atlas-q009-slash"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 8
+            }
+          ]
+        }
+      },
+      "reason": "Без текста default PATH ASC; полный natural path, числовые фрагменты как числа."
+    },
+    {
+      "scenario_id": "SRCH-Q006-SORT-PATH-DESC",
+      "q_ids": [
+        "Q-006"
+      ],
+      "parameters": [
+        "sort-PATH-DESC",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q006-sort-path-desc",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "met",
+        "sort": {
+          "field": "PATH",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 8,
+        "returned_count": 8,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "met",
+        "item_ids": [
+          "file-atlas-q009-slash",
+          "file-atlas-q009-backslash",
+          "file-atlas-q009-metrics",
+          "file-atlas-q009-underscore",
+          "file-atlas-q009-letter-digit",
+          "file-atlas-q009-dot",
+          "file-atlas-q009-hyphen",
+          "file-atlas-q009-space"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 8
+            }
+          ]
+        }
+      },
+      "reason": "PATH DESC — обратный natural path; вторичный порядок остаётся ASC, равенств нет."
+    },
+    {
+      "scenario_id": "SRCH-Q007-AND",
+      "q_ids": [
+        "Q-007"
+      ],
+      "parameters": [
+        "and",
+        "root-demo-nova"
+      ],
+      "request": {
+        "request_state_id": "srch-q007-and",
+        "root_id": "root-demo-nova",
+        "selected_marker_ids": [],
+        "query_text": "atlas reports",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 6,
+        "returned_count": 6,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "atlas reports",
+        "item_ids": [
+          "file-nova-q008-inserted",
+          "file-nova-q008-mixed",
+          "file-nova-q008-atlas-main",
+          "file-nova-q008-prefix",
+          "file-nova-q007-both",
+          "file-nova-q008-reversed"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-nova-archive",
+              "count": 6
+            }
+          ]
+        }
+      },
+      "reason": "Оба слова обязательны как префиксы токенов и ищутся по filename+display_path; все 6 файлов ветки Reports с Atlas подходят, reports-only/atlas-only — нет. Score каждого = atlas(имя,10)+reports(категория,2)=12."
+    },
+    {
+      "scenario_id": "SRCH-Q007-AND-CASE",
+      "q_ids": [
+        "Q-007"
+      ],
+      "parameters": [
+        "and",
+        "case-insensitive",
+        "root-demo-nova"
+      ],
+      "request": {
+        "request_state_id": "srch-q007-and-case",
+        "root_id": "root-demo-nova",
+        "selected_marker_ids": [],
+        "query_text": "ATLAS REPORTS",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 6,
+        "returned_count": 6,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "ATLAS REPORTS",
+        "item_ids": [
+          "file-nova-q008-inserted",
+          "file-nova-q008-mixed",
+          "file-nova-q008-atlas-main",
+          "file-nova-q008-prefix",
+          "file-nova-q007-both",
+          "file-nova-q008-reversed"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-nova-archive",
+              "count": 6
+            }
+          ]
+        }
+      },
+      "reason": "Регистр не меняет множество: те же 6 ID и порядок, что и SRCH-Q007-AND."
+    },
+    {
+      "scenario_id": "SRCH-Q007-MARKER-AND",
+      "q_ids": [
+        "Q-007"
+      ],
+      "parameters": [
+        "markers-and-text",
+        "root-demo-nova"
+      ],
+      "request": {
+        "request_state_id": "srch-q007-marker-and",
+        "root_id": "root-demo-nova",
+        "selected_marker_ids": [
+          "marker-root-demo-nova-archive",
+          "marker-root-demo-nova-archive-nova",
+          "marker-root-demo-nova-archive-nova-orion",
+          "marker-root-demo-nova-archive-nova-orion-north",
+          "marker-root-demo-nova-archive-nova-orion-north-reports"
+        ],
+        "query_text": "atlas",
+        "sort": {
+          "field": "PATH",
+          "direction": "ASC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 6,
+        "returned_count": 6,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "atlas",
+        "item_ids": [
+          "file-nova-q008-inserted",
+          "file-nova-q008-mixed",
+          "file-nova-q008-atlas-main",
+          "file-nova-q008-prefix",
+          "file-nova-q007-both",
+          "file-nova-q008-reversed"
+        ],
+        "next_facet": null
+      },
+      "reason": "Выбранная цепочка Archive/Nova/Orion_2031/North/Reports добавляется через AND; текст atlas оставляет 6 файлов."
+    },
+    {
+      "scenario_id": "SRCH-Q008-PHRASE",
+      "q_ids": [
+        "Q-008"
+      ],
+      "parameters": [
+        "phrase",
+        "adjacent-full-tokens",
+        "root-demo-nova"
+      ],
+      "request": {
+        "request_state_id": "srch-q008-phrase",
+        "root_id": "root-demo-nova",
+        "selected_marker_ids": [],
+        "query_text": "\"atlas main\"",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 2,
+        "returned_count": 2,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "\"atlas main\"",
+        "item_ids": [
+          "file-nova-q008-mixed",
+          "file-nova-q008-atlas-main"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-nova-archive",
+              "count": 2
+            }
+          ]
+        }
+      },
+      "reason": "Фраза — соседние полные токены одного поля. Atlas-Main.pdf и Atlas-Main-Metrics.pdf содержат Atlas Main подряд в имени; вставка (Atlas Final Main), обратный порядок (Main-Atlas) и Maintenance (не полный токен) не подходят. Оба 2x2x5=20, равенство natural path.",
+      "scores": {
+        "file-nova-q008-mixed": 20,
+        "file-nova-q008-atlas-main": 20
+      }
+    },
+    {
+      "scenario_id": "SRCH-Q008-PHRASE-CROSS-FIELD",
+      "q_ids": [
+        "Q-008"
+      ],
+      "parameters": [
+        "phrase",
+        "cross-field",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q008-phrase-cross-field",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "\"atlas main\"",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 1,
+        "returned_count": 1,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "\"atlas main\"",
+        "item_ids": [
+          "file-atlas-rank-phrase"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "reason": "Atlas (компания) и Main (имя) лежат в разных полях/несоседних сегментах пути, поэтому file-atlas-q008-cross-field фразе не соответствует; соответствует только file-atlas-rank-phrase (Atlas-Main.pdf), score 20.",
+      "scores": {
+        "file-atlas-rank-phrase": 20
+      }
+    },
+    {
+      "scenario_id": "SRCH-Q008-PHRASE-MIXED",
+      "q_ids": [
+        "Q-008"
+      ],
+      "parameters": [
+        "phrase",
+        "external-prefix",
+        "root-demo-nova"
+      ],
+      "request": {
+        "request_state_id": "srch-q008-phrase-mixed",
+        "root_id": "root-demo-nova",
+        "selected_marker_ids": [],
+        "query_text": "\"atlas main\" met",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 1,
+        "returned_count": 1,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "\"atlas main\" met",
+        "item_ids": [
+          "file-nova-q008-mixed"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-nova-archive",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "reason": "Внешнее met — отдельное обязательное префиксное условие: подходит только Atlas-Main-Metrics.pdf; фраза 20 + met(prefix имени Metrics, 5) = 25.",
+      "scores": {
+        "file-nova-q008-mixed": 25
+      }
+    },
+    {
+      "scenario_id": "SRCH-Q009-BOUNDARIES",
+      "q_ids": [
+        "Q-009"
+      ],
+      "parameters": [
+        "token-prefix",
+        "separators",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q009-boundaries",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "met",
+        "sort": {
+          "field": "PATH",
+          "direction": "ASC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 8,
+        "returned_count": 8,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "met",
+        "item_ids": [
+          "file-atlas-q009-space",
+          "file-atlas-q009-hyphen",
+          "file-atlas-q009-dot",
+          "file-atlas-q009-letter-digit",
+          "file-atlas-q009-underscore",
+          "file-atlas-q009-metrics",
+          "file-atlas-q009-backslash",
+          "file-atlas-q009-slash"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 8
+            }
+          ]
+        }
+      },
+      "reason": "Совпадает начало токена: пробел, дефис, подчёркивание, точка, оба слеша и переход буква-цифра. Внутренняя подстрока (symmetry, submet), буква перед met (smet) и опечатка (mte) не подходят. Slash/backslash совпадают только через display_path."
+    },
+    {
+      "scenario_id": "SRCH-Q009-RANKING",
+      "q_ids": [
+        "Q-009",
+        "Q-011"
+      ],
+      "parameters": [
+        "ranking",
+        "full-prefix-other",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q009-ranking",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "met",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 8,
+        "returned_count": 8,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "met",
+        "item_ids": [
+          "file-atlas-q009-space",
+          "file-atlas-q009-hyphen",
+          "file-atlas-q009-dot",
+          "file-atlas-q009-letter-digit",
+          "file-atlas-q009-underscore",
+          "file-atlas-q009-metrics",
+          "file-atlas-q009-backslash",
+          "file-atlas-q009-slash"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 8
+            }
+          ]
+        }
+      },
+      "reason": "Score: полный токен в имени 5x2=10 (space/hyphen/dot/letter-digit/underscore); префикс в имени 5x1=5 (metrics); совпадение в display-only сегменте 1x2=2 (backslash/slash). Равенства 10 разрешаются natural path ASC, 2 — natural path.",
+      "scores": {
+        "file-atlas-q009-space": 10,
+        "file-atlas-q009-hyphen": 10,
+        "file-atlas-q009-dot": 10,
+        "file-atlas-q009-letter-digit": 10,
+        "file-atlas-q009-underscore": 10,
+        "file-atlas-q009-metrics": 5,
+        "file-atlas-q009-backslash": 2,
+        "file-atlas-q009-slash": 2
+      }
+    },
+    {
+      "scenario_id": "SRCH-Q011-RANK-FULL",
+      "q_ids": [
+        "Q-011"
+      ],
+      "parameters": [
+        "ranking",
+        "filename-full",
+        "root-demo-nova"
+      ],
+      "request": {
+        "request_state_id": "srch-q011-rank-full",
+        "root_id": "root-demo-nova",
+        "selected_marker_ids": [],
+        "query_text": "atlas",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 7,
+        "returned_count": 7,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "atlas",
+        "item_ids": [
+          "file-nova-q007-atlas-only",
+          "file-nova-q008-inserted",
+          "file-nova-q008-mixed",
+          "file-nova-q008-atlas-main",
+          "file-nova-q008-prefix",
+          "file-nova-q007-both",
+          "file-nova-q008-reversed"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-nova-archive",
+              "count": 7
+            }
+          ]
+        }
+      },
+      "reason": "Полный токен atlas в имени даёт 5x2=10 каждому из 7 файлов; дублирование имени в display_path и повтор не добавляют.",
+      "scores": {
+        "file-nova-q007-atlas-only": 10,
+        "file-nova-q008-inserted": 10,
+        "file-nova-q008-mixed": 10,
+        "file-nova-q008-atlas-main": 10,
+        "file-nova-q008-prefix": 10,
+        "file-nova-q007-both": 10,
+        "file-nova-q008-reversed": 10
+      }
+    },
+    {
+      "scenario_id": "SRCH-Q011-RANK-PREFIX",
+      "q_ids": [
+        "Q-011"
+      ],
+      "parameters": [
+        "ranking",
+        "filename-prefix",
+        "root-demo-nova"
+      ],
+      "request": {
+        "request_state_id": "srch-q011-rank-prefix",
+        "root_id": "root-demo-nova",
+        "selected_marker_ids": [],
+        "query_text": "atla",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 7,
+        "returned_count": 7,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "atla",
+        "item_ids": [
+          "file-nova-q007-atlas-only",
+          "file-nova-q008-inserted",
+          "file-nova-q008-mixed",
+          "file-nova-q008-atlas-main",
+          "file-nova-q008-prefix",
+          "file-nova-q007-both",
+          "file-nova-q008-reversed"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-nova-archive",
+              "count": 7
+            }
+          ]
+        }
+      },
+      "reason": "Префикс atla в имени даёт 5x1=5; сравнить с полным токеном 10 в SRCH-Q011-RANK-FULL — множество то же.",
+      "scores": {
+        "file-nova-q007-atlas-only": 5,
+        "file-nova-q008-inserted": 5,
+        "file-nova-q008-mixed": 5,
+        "file-nova-q008-atlas-main": 5,
+        "file-nova-q008-prefix": 5,
+        "file-nova-q007-both": 5,
+        "file-nova-q008-reversed": 5
+      }
+    },
+    {
+      "scenario_id": "SRCH-Q011-RANK-COMPANY",
+      "q_ids": [
+        "Q-011"
+      ],
+      "parameters": [
+        "ranking",
+        "company-weight",
+        "root-demo-nova"
+      ],
+      "request": {
+        "request_state_id": "srch-q011-rank-company",
+        "root_id": "root-demo-nova",
+        "selected_marker_ids": [],
+        "query_text": "nova",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 13,
+        "returned_count": 13,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "nova",
+        "item_ids": [
+          "file-nova-rawcase",
+          "file-nova-south-data",
+          "file-nova-q007-atlas-only",
+          "file-nova-q008-inserted",
+          "file-nova-q008-mixed",
+          "file-nova-q008-atlas-main",
+          "file-nova-q008-prefix",
+          "file-nova-q007-both",
+          "file-nova-q008-reversed",
+          "file-nova-q007-reports-only",
+          "file-nova-polaris-report",
+          "file-nova-issue-missing-area",
+          "file-nova-polaris-data"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-nova-archive",
+              "count": 13
+            }
+          ]
+        }
+      },
+      "reason": "max(имя 5x2, компания 3x2)=10 для nova-upper.txt и nova-south.xlsx, не 16; остальные совпадают только как компания Nova 3x2=6.",
+      "scores": {
+        "file-nova-rawcase": 10,
+        "file-nova-south-data": 10,
+        "file-nova-q007-atlas-only": 6,
+        "file-nova-q008-inserted": 6,
+        "file-nova-q008-mixed": 6,
+        "file-nova-q008-atlas-main": 6,
+        "file-nova-q008-prefix": 6,
+        "file-nova-q007-both": 6,
+        "file-nova-q008-reversed": 6,
+        "file-nova-q007-reports-only": 6,
+        "file-nova-polaris-report": 6,
+        "file-nova-issue-missing-area": 6,
+        "file-nova-polaris-data": 6
+      }
+    },
+    {
+      "scenario_id": "SRCH-Q011-RANK-REPEAT",
+      "q_ids": [
+        "Q-011"
+      ],
+      "parameters": [
+        "ranking",
+        "repeated-token",
+        "root-demo-nova"
+      ],
+      "request": {
+        "request_state_id": "srch-q011-rank-repeat",
+        "root_id": "root-demo-nova",
+        "selected_marker_ids": [],
+        "query_text": "atlas atlas",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 7,
+        "returned_count": 7,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "atlas atlas",
+        "item_ids": [
+          "file-nova-q007-atlas-only",
+          "file-nova-q008-inserted",
+          "file-nova-q008-mixed",
+          "file-nova-q008-atlas-main",
+          "file-nova-q008-prefix",
+          "file-nova-q007-both",
+          "file-nova-q008-reversed"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-nova-archive",
+              "count": 7
+            }
+          ]
+        }
+      },
+      "reason": "Повтор токена не добавляет score: те же 7 ID, порядок и score, что и SRCH-Q011-RANK-FULL.",
+      "scores": {
+        "file-nova-q007-atlas-only": 10,
+        "file-nova-q008-inserted": 10,
+        "file-nova-q008-mixed": 10,
+        "file-nova-q008-atlas-main": 10,
+        "file-nova-q008-prefix": 10,
+        "file-nova-q007-both": 10,
+        "file-nova-q008-reversed": 10
+      }
+    },
+    {
+      "scenario_id": "SRCH-Q011-RANK-PHRASE-CROSS",
+      "q_ids": [
+        "Q-011"
+      ],
+      "parameters": [
+        "ranking",
+        "phrase-crosses-levels",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q011-rank-phrase-cross",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "\"data main\"",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 1,
+        "returned_count": 1,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "\"data main\"",
+        "item_ids": [
+          "file-atlas-q008-cross-field"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "reason": "Фраза пересекает уровни пути (категория Data -> имя Main), поэтому вклад 2x2x1=4; единственный файл Main.pdf.",
+      "scores": {
+        "file-atlas-q008-cross-field": 4
+      }
+    },
+    {
+      "scenario_id": "SRCH-Q011-TIE-NATURAL",
+      "q_ids": [
+        "Q-011"
+      ],
+      "parameters": [
+        "tie",
+        "natural-path",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q011-tie-natural",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "item",
+        "sort": {
+          "field": "PATH",
+          "direction": "ASC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 4,
+        "returned_count": 4,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "item",
+        "item_ids": [
+          "file-atlas-natural-2",
+          "file-atlas-natural-10",
+          "file-atlas-tie-a",
+          "file-atlas-tie-b"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 4
+            }
+          ]
+        }
+      },
+      "reason": "Равный score 10; вторичный natural path: item-2 < item-10 (числа как числа), затем Item.pdf (Data), затем Reports/Text/Item.pdf.",
+      "scores": {
+        "file-atlas-natural-2": 10,
+        "file-atlas-natural-10": 10,
+        "file-atlas-tie-a": 10,
+        "file-atlas-tie-b": 10
+      }
+    },
+    {
+      "scenario_id": "SRCH-Q011-TIE-RAW",
+      "q_ids": [
+        "Q-011"
+      ],
+      "parameters": [
+        "tie",
+        "raw-path",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q011-tie-raw",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "note",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 2,
+        "returned_count": 2,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "note",
+        "item_ids": [
+          "file-atlas-tie-raw-note-upper",
+          "file-atlas-tie-raw-note-lower"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 2
+            }
+          ]
+        }
+      },
+      "reason": "NOTE.pdf и Note.pdf дают одинаковый score 10 и одинаковый natural path; второе звено tie-break — raw path ASC, поэтому NOTE.pdf раньше Note.pdf.",
+      "scores": {
+        "file-atlas-tie-raw-note-upper": 10,
+        "file-atlas-tie-raw-note-lower": 10
+      }
+    },
+    {
+      "scenario_id": "SRCH-Q012-RAWCASE-LOWER",
+      "q_ids": [
+        "Q-012"
+      ],
+      "parameters": [
+        "raw-case",
+        "distinct-markers",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q012-rawcase-lower",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [
+          "marker-root-demo-atlas-archive",
+          "marker-root-demo-atlas-archive-atlas-lower"
+        ],
+        "query_text": "",
+        "sort": {
+          "field": "PATH",
+          "direction": "ASC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 2,
+        "returned_count": 2,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "",
+        "item_ids": [
+          "file-atlas-rawcase-lower",
+          "file-atlas-rawcase-polaris-lower"
+        ],
+        "next_facet": {
+          "level_id": "level-project",
+          "level_name": "Проект",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive-atlas-lower-orion-lower",
+              "count": 1
+            },
+            {
+              "marker_id": "marker-root-demo-atlas-archive-atlas-lower-polaris-lower",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "reason": "Компания 'atlas' — отдельный marker_id от 'Atlas'/'ATLAS'; подходят только два lower-файла."
+    },
+    {
+      "scenario_id": "SRCH-Q012-RAWCASE-UPPER",
+      "q_ids": [
+        "Q-012"
+      ],
+      "parameters": [
+        "raw-case",
+        "distinct-markers",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q012-rawcase-upper",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [
+          "marker-root-demo-atlas-archive",
+          "marker-root-demo-atlas-archive-atlas-upper"
+        ],
+        "query_text": "",
+        "sort": {
+          "field": "PATH",
+          "direction": "ASC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 1,
+        "returned_count": 1,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "",
+        "item_ids": [
+          "file-atlas-rawcase-company"
+        ],
+        "next_facet": {
+          "level_id": "level-project",
+          "level_name": "Проект",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive-atlas-upper-orion-lower",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "reason": "Компания 'ATLAS' — третий отдельный marker_id; подходит только raw-case.txt."
+    },
+    {
+      "scenario_id": "SRCH-Q012-TAIL-TEXT",
+      "q_ids": [
+        "Q-012"
+      ],
+      "parameters": [
+        "optional-tail",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q012-tail-text",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [
+          "marker-root-demo-atlas-archive",
+          "marker-root-demo-atlas-archive-atlas",
+          "marker-root-demo-atlas-archive-atlas-orion",
+          "marker-root-demo-atlas-archive-atlas-orion-reports",
+          "marker-root-demo-atlas-archive-atlas-orion-reports-text"
+        ],
+        "query_text": "",
+        "sort": {
+          "field": "PATH",
+          "direction": "ASC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 3,
+        "returned_count": 3,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "",
+        "item_ids": [
+          "file-atlas-issue-unexpected-depth",
+          "file-atlas-tie-b",
+          "file-atlas-tail-text"
+        ],
+        "next_facet": null
+      },
+      "reason": "Необязательный конечный суффикс Text выбран; достигнут конец схемы Atlas, next_facet=null. too-deep.pdf входит по распознанным родителям."
+    },
+    {
+      "scenario_id": "SRCH-Q012-AREA",
+      "q_ids": [
+        "Q-012"
+      ],
+      "parameters": [
+        "mandatory-area",
+        "root-demo-nova"
+      ],
+      "request": {
+        "request_state_id": "srch-q012-area",
+        "root_id": "root-demo-nova",
+        "selected_marker_ids": [
+          "marker-root-demo-nova-archive",
+          "marker-root-demo-nova-archive-nova",
+          "marker-root-demo-nova-archive-nova-orion"
+        ],
+        "query_text": "",
+        "sort": {
+          "field": "PATH",
+          "direction": "ASC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 9,
+        "returned_count": 9,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "",
+        "item_ids": [
+          "file-nova-q007-atlas-only",
+          "file-nova-q008-inserted",
+          "file-nova-q008-mixed",
+          "file-nova-q008-atlas-main",
+          "file-nova-q008-prefix",
+          "file-nova-q007-both",
+          "file-nova-q008-reversed",
+          "file-nova-q007-reports-only",
+          "file-nova-south-data"
+        ],
+        "next_facet": {
+          "level_id": "level-area",
+          "level_name": "Область",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-nova-archive-nova-orion-north",
+              "count": 8
+            },
+            {
+              "marker_id": "marker-root-demo-nova-archive-nova-orion-south",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "reason": "Nova требует уровень Area; next_facet level-area: North=8, South=1."
+    },
+    {
+      "scenario_id": "SRCH-Q012-UNRECOGNIZED-TERMINAL",
+      "q_ids": [
+        "Q-012"
+      ],
+      "parameters": [
+        "unrecognized",
+        "terminal",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q012-unrecognized-terminal",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [
+          "marker-root-demo-atlas-archive",
+          "marker-root-demo-atlas-archive-atlas",
+          "marker-root-demo-atlas-archive-atlas-orion",
+          "marker-root-demo-atlas-archive-atlas-orion-unrecognized-category"
+        ],
+        "query_text": "",
+        "sort": {
+          "field": "PATH",
+          "direction": "ASC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 1,
+        "returned_count": 1,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "",
+        "item_ids": [
+          "file-atlas-issue-invalid-value"
+        ],
+        "next_facet": null
+      },
+      "reason": "UNRECOGNIZED-category завершает каскад; выбран именно он, next_facet=null; файл с первым отклонением Категория."
+    },
+    {
+      "scenario_id": "SRCH-Q012-ISSUE-UNEXPECTED-DEPTH",
+      "q_ids": [
+        "Q-012"
+      ],
+      "parameters": [
+        "issue-UNEXPECTED_DEPTH",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q012-issue-unexpected-depth",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "too",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 1,
+        "returned_count": 1,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "too",
+        "item_ids": [
+          "file-atlas-issue-unexpected-depth"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "reason": "Первое отклонение UNEXPECTED_DEPTH: лишний уровень после суффикса, structure_issue.level_id=null."
+    },
+    {
+      "scenario_id": "SRCH-Q012-ISSUE-INVALID-VALUE",
+      "q_ids": [
+        "Q-012"
+      ],
+      "parameters": [
+        "issue-INVALID_LEVEL_VALUE",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q012-issue-invalid-value",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "bad-category",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 1,
+        "returned_count": 1,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "bad-category",
+        "item_ids": [
+          "file-atlas-issue-invalid-value"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "reason": "Первое отклонение INVALID_LEVEL_VALUE на уровне Категория; распознанные родители Archive/Atlas/Orion_2031 + UNRECOGNIZED-category."
+    },
+    {
+      "scenario_id": "SRCH-Q012-ISSUE-INVALID-COMPOSITE",
+      "q_ids": [
+        "Q-012"
+      ],
+      "parameters": [
+        "issue-INVALID_COMPOSITE_SEGMENT",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q012-issue-invalid-composite",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "bad-project",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 1,
+        "returned_count": 1,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "bad-project",
+        "item_ids": [
+          "file-atlas-issue-invalid-composite"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "reason": "Первое отклонение INVALID_COMPOSITE_SEGMENT на уровне Проект; родители Archive/Atlas + UNRECOGNIZED-project."
+    },
+    {
+      "scenario_id": "SRCH-Q012-ISSUE-MISSING-AREA",
+      "q_ids": [
+        "Q-012"
+      ],
+      "parameters": [
+        "issue-MISSING_REQUIRED_LEVEL",
+        "root-demo-nova"
+      ],
+      "request": {
+        "request_state_id": "srch-q012-issue-missing-area",
+        "root_id": "root-demo-nova",
+        "selected_marker_ids": [],
+        "query_text": "missing",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 1,
+        "returned_count": 1,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "missing",
+        "item_ids": [
+          "file-nova-issue-missing-area"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-nova-archive",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "reason": "Первое отклонение MISSING_REQUIRED_LEVEL: обязательный уровень Area отсутствует; родители Archive/Nova/Polaris_2030 + UNRECOGNIZED-area."
+    },
+    {
+      "scenario_id": "SRCH-Q013-N10",
+      "q_ids": [
+        "Q-013"
+      ],
+      "parameters": [
+        "N10",
+        "L+3",
+        "limited",
+        "root-demo-nova"
+      ],
+      "request": {
+        "request_state_id": "srch-q013-n10",
+        "root_id": "root-demo-nova",
+        "selected_marker_ids": [],
+        "query_text": "nova",
+        "sort": {
+          "field": "PATH",
+          "direction": "ASC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 13,
+        "returned_count": 10,
+        "result_limit": 10,
+        "limited": true,
+        "applied_query_text": "nova",
+        "item_ids": [
+          "file-nova-q007-atlas-only",
+          "file-nova-q008-inserted",
+          "file-nova-q008-mixed",
+          "file-nova-q008-atlas-main",
+          "file-nova-q008-prefix",
+          "file-nova-q007-both",
+          "file-nova-q008-reversed",
+          "file-nova-rawcase",
+          "file-nova-q007-reports-only",
+          "file-nova-south-data"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-nova-archive",
+              "count": 13
+            }
+          ]
+        }
+      },
+      "reason": "L=10, total=13=L+3, limited=true, returned=10. Корень Nova содержит ровно 13 файлов; выданы первые 10 по PATH ASC."
+    },
+    {
+      "scenario_id": "SRCH-Q013-N100",
+      "q_ids": [
+        "Q-013"
+      ],
+      "parameters": [
+        "N100",
+        "L+3",
+        "limited",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q013-n100",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "\"orion report\"",
+        "sort": {
+          "field": "PATH",
+          "direction": "ASC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 103,
+        "returned_count": 100,
+        "result_limit": 100,
+        "limited": true,
+        "applied_query_text": "\"orion report\"",
+        "item_ids": [
+          "file-atlas-orion-report-0001",
+          "file-atlas-orion-report-0002",
+          "file-atlas-orion-report-0003",
+          "file-atlas-orion-report-0004",
+          "file-atlas-orion-report-0005",
+          "file-atlas-orion-report-0006",
+          "file-atlas-orion-report-0007",
+          "file-atlas-orion-report-0008",
+          "file-atlas-orion-report-0009",
+          "file-atlas-orion-report-0010",
+          "file-atlas-orion-report-0011",
+          "file-atlas-orion-report-0012",
+          "file-atlas-orion-report-0013",
+          "file-atlas-orion-report-0014",
+          "file-atlas-orion-report-0015",
+          "file-atlas-orion-report-0016",
+          "file-atlas-orion-report-0017",
+          "file-atlas-orion-report-0018",
+          "file-atlas-orion-report-0019",
+          "file-atlas-orion-report-0020",
+          "file-atlas-orion-report-0021",
+          "file-atlas-orion-report-0022",
+          "file-atlas-orion-report-0023",
+          "file-atlas-orion-report-0024",
+          "file-atlas-orion-report-0025",
+          "file-atlas-orion-report-0026",
+          "file-atlas-orion-report-0027",
+          "file-atlas-orion-report-0028",
+          "file-atlas-orion-report-0029",
+          "file-atlas-orion-report-0030",
+          "file-atlas-orion-report-0031",
+          "file-atlas-orion-report-0032",
+          "file-atlas-orion-report-0033",
+          "file-atlas-orion-report-0034",
+          "file-atlas-orion-report-0035",
+          "file-atlas-orion-report-0036",
+          "file-atlas-orion-report-0037",
+          "file-atlas-orion-report-0038",
+          "file-atlas-orion-report-0039",
+          "file-atlas-orion-report-0040",
+          "file-atlas-orion-report-0041",
+          "file-atlas-orion-report-0042",
+          "file-atlas-orion-report-0043",
+          "file-atlas-orion-report-0044",
+          "file-atlas-orion-report-0045",
+          "file-atlas-orion-report-0046",
+          "file-atlas-orion-report-0047",
+          "file-atlas-orion-report-0048",
+          "file-atlas-orion-report-0049",
+          "file-atlas-orion-report-0050",
+          "file-atlas-orion-report-0051",
+          "file-atlas-orion-report-0052",
+          "file-atlas-orion-report-0053",
+          "file-atlas-orion-report-0054",
+          "file-atlas-orion-report-0055",
+          "file-atlas-orion-report-0056",
+          "file-atlas-orion-report-0057",
+          "file-atlas-orion-report-0058",
+          "file-atlas-orion-report-0059",
+          "file-atlas-orion-report-0060",
+          "file-atlas-orion-report-0061",
+          "file-atlas-orion-report-0062",
+          "file-atlas-orion-report-0063",
+          "file-atlas-orion-report-0064",
+          "file-atlas-orion-report-0065",
+          "file-atlas-orion-report-0066",
+          "file-atlas-orion-report-0067",
+          "file-atlas-orion-report-0068",
+          "file-atlas-orion-report-0069",
+          "file-atlas-orion-report-0070",
+          "file-atlas-orion-report-0071",
+          "file-atlas-orion-report-0072",
+          "file-atlas-orion-report-0073",
+          "file-atlas-orion-report-0074",
+          "file-atlas-orion-report-0075",
+          "file-atlas-orion-report-0076",
+          "file-atlas-orion-report-0077",
+          "file-atlas-orion-report-0078",
+          "file-atlas-orion-report-0079",
+          "file-atlas-orion-report-0080",
+          "file-atlas-orion-report-0081",
+          "file-atlas-orion-report-0082",
+          "file-atlas-orion-report-0083",
+          "file-atlas-orion-report-0084",
+          "file-atlas-orion-report-0085",
+          "file-atlas-orion-report-0086",
+          "file-atlas-orion-report-0087",
+          "file-atlas-orion-report-0088",
+          "file-atlas-orion-report-0089",
+          "file-atlas-orion-report-0090",
+          "file-atlas-orion-report-0091",
+          "file-atlas-orion-report-0092",
+          "file-atlas-orion-report-0093",
+          "file-atlas-orion-report-0094",
+          "file-atlas-orion-report-0095",
+          "file-atlas-orion-report-0096",
+          "file-atlas-orion-report-0097",
+          "file-atlas-orion-report-0098",
+          "file-atlas-orion-report-0099",
+          "file-atlas-orion-report-0100"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 103
+            }
+          ]
+        }
+      },
+      "reason": "L=100, total=103=L+3, limited=true, returned=100 (0001..0100). Фраза Orion Report совпадает только с веткой Atlas-Orion-Report-NNNN.pdf."
+    },
+    {
+      "scenario_id": "SRCH-Q014-CONTENT-ONLY",
+      "q_ids": [
+        "Q-014"
+      ],
+      "parameters": [
+        "content-only",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q014-content-only",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "zephyr",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 0,
+        "returned_count": 0,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "zephyr",
+        "item_ids": [],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": []
+        }
+      },
+      "reason": "zephyr есть только в синтетическом содержимом opaque.bin; поиск по содержимому не выполняется, total=0."
+    },
+    {
+      "scenario_id": "SRCH-Q014-OLD-PATH",
+      "q_ids": [
+        "Q-014"
+      ],
+      "parameters": [
+        "old-path",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q014-old-path",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "legacy",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 0,
+        "returned_count": 0,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "legacy",
+        "item_ids": [],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": []
+        }
+      },
+      "reason": "legacy есть только в старом пути legacy-token.pdf; старый путь не участвует в поиске, total=0."
+    },
+    {
+      "scenario_id": "SRCH-Q014-CURRENT-CONTROL",
+      "q_ids": [
+        "Q-014"
+      ],
+      "parameters": [
+        "current-path-control",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q014-current-control",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "current",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 1,
+        "returned_count": 1,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "current",
+        "item_ids": [
+          "file-atlas-old-path"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "reason": "Положительный контроль: текущее имя current-name.pdf находится."
+    },
+    {
+      "scenario_id": "SRCH-Q014-SERVICE-INCOMING",
+      "q_ids": [
+        "Q-014"
+      ],
+      "parameters": [
+        "service-incoming-excluded",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q014-service-incoming",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "upload",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 0,
+        "returned_count": 0,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "upload",
+        "item_ids": [],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": []
+        }
+      },
+      "reason": "Служебный _incoming/atlas/new-upload.pdf исключён из инвентаря, total=0."
+    },
+    {
+      "scenario_id": "SRCH-Q014-SERVICE-QUARANTINE",
+      "q_ids": [
+        "Q-014"
+      ],
+      "parameters": [
+        "service-quarantine-excluded",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q014-service-quarantine",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "broken",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 0,
+        "returned_count": 0,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "broken",
+        "item_ids": [],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": []
+        }
+      },
+      "reason": "Служебный _quarantine/atlas/broken.xlsx исключён, total=0."
+    },
+    {
+      "scenario_id": "SRCH-Q014-SERVICE-TMP",
+      "q_ids": [
+        "Q-014"
+      ],
+      "parameters": [
+        "service-tmp-excluded",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q014-service-tmp",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "partial",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 0,
+        "returned_count": 0,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "partial",
+        "item_ids": [],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": []
+        }
+      },
+      "reason": "Технический _tmp/atlas/.partial-upload исключён, total=0."
+    },
+    {
+      "scenario_id": "SRCH-Q014-ZERO-SIZE",
+      "q_ids": [
+        "Q-014"
+      ],
+      "parameters": [
+        "zero-size-indexed",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q014-zero-size",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "zero-byte",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 1,
+        "returned_count": 1,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "zero-byte",
+        "item_ids": [
+          "file-atlas-type-zero"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "reason": "Файл нулевого размера индексируется: zero-byte.pdf, size_bytes=0."
+    },
+    {
+      "scenario_id": "SRCH-Q014-NO-EXTENSION",
+      "q_ids": [
+        "Q-014"
+      ],
+      "parameters": [
+        "no-extension-indexed",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q014-no-extension",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "README",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 1,
+        "returned_count": 1,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "README",
+        "item_ids": [
+          "file-atlas-type-noext"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "reason": "Файл без расширения README индексируется, extension=''."
+    },
+    {
+      "scenario_id": "SRCH-Q014-UPPER-EXTENSION",
+      "q_ids": [
+        "Q-014"
+      ],
+      "parameters": [
+        "upper-extension-indexed",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "srch-q014-upper-extension",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [],
+        "query_text": "invoice txt",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 1,
+        "returned_count": 1,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "invoice txt",
+        "item_ids": [
+          "file-atlas-type-upper"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-atlas-archive",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "reason": "Исходный регистр расширения сохраняется (.TXT); запрос invoice+txt находит только invoice.TXT."
+    },
+    {
+      "scenario_id": "SRCH-Q011-FRESHNESS-UPDATING",
+      "q_ids": [
+        "Q-011"
+      ],
+      "parameters": [
+        "freshness-UPDATING",
+        "previous-generation-available",
+        "root-demo-nova"
+      ],
+      "request": {
+        "request_state_id": "srch-q011-freshness-updating",
+        "root_id": "root-demo-nova",
+        "selected_marker_ids": [],
+        "query_text": "atlas",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 7,
+        "returned_count": 7,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "atlas",
+        "item_ids": [
+          "file-nova-q007-atlas-only",
+          "file-nova-q008-inserted",
+          "file-nova-q008-mixed",
+          "file-nova-q008-atlas-main",
+          "file-nova-q008-prefix",
+          "file-nova-q007-both",
+          "file-nova-q008-reversed"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-nova-archive",
+              "count": 7
+            }
+          ]
+        }
+      },
+      "reason": "Во время фонового обновления читается предыдущее завершённое поколение: items/total/score совпадают с CURRENT-сценарием SRCH-Q011-RANK-FULL, freshness.status=UPDATING.",
+      "freshness_profile": "UPDATING"
+    },
+    {
+      "scenario_id": "SRCH-Q003-FRESHNESS-STALE",
+      "q_ids": [
+        "Q-003",
+        "Q-011"
+      ],
+      "parameters": [
+        "freshness-STALE",
+        "previous-generation-available",
+        "root-demo-nova"
+      ],
+      "request": {
+        "request_state_id": "srch-q003-freshness-stale",
+        "root_id": "root-demo-nova",
+        "selected_marker_ids": [],
+        "query_text": "atlas",
+        "sort": {
+          "field": "RELEVANCE",
+          "direction": "DESC"
+        },
+        "facet_prefix": ""
+      },
+      "expected": {
+        "mode": "RESULTS",
+        "total": 7,
+        "returned_count": 7,
+        "result_limit": 100,
+        "limited": false,
+        "applied_query_text": "atlas",
+        "item_ids": [
+          "file-nova-q007-atlas-only",
+          "file-nova-q008-inserted",
+          "file-nova-q008-mixed",
+          "file-nova-q008-atlas-main",
+          "file-nova-q008-prefix",
+          "file-nova-q007-both",
+          "file-nova-q008-reversed"
+        ],
+        "next_facet": {
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "options": [
+            {
+              "marker_id": "marker-root-demo-nova-archive",
+              "count": 7
+            }
+          ]
+        }
+      },
+      "reason": "После неуспешного обновления/503 последняя успешная выдача сохраняется и помечается STALE, а не подменяется новой; items/total те же.",
+      "freshness_profile": "STALE"
+    }
+  ],
+  "facet_scenarios": [
+    {
+      "scenario_id": "FACET-Q006-NOVA-ORION-NORTH",
+      "q_ids": [
+        "Q-006"
+      ],
+      "parameters": [
+        "facet-parents-only",
+        "root-demo-nova"
+      ],
+      "request": {
+        "request_state_id": "facet-q006-nova-orion-north",
+        "root_id": "root-demo-nova",
+        "selected_marker_ids": [
+          "marker-root-demo-nova-archive",
+          "marker-root-demo-nova-archive-nova",
+          "marker-root-demo-nova-archive-nova-orion",
+          "marker-root-demo-nova-archive-nova-orion-north"
+        ],
+        "query_text": "",
+        "facet_prefix": ""
+      },
+      "expected": {
+        "facet_level_id": "level-category",
+        "options": [
+          {
+            "marker_id": "marker-root-demo-nova-archive-nova-orion-north-data",
+            "count": 1
+          },
+          {
+            "marker_id": "marker-root-demo-nova-archive-nova-orion-north-reports",
+            "count": 7
+          }
+        ]
+      },
+      "reason": "Facet-запрос получает только родителей редактируемого уровня (Archive/Nova/Orion/North); options уровня Категория: Data=1, Reports=7."
+    },
+    {
+      "scenario_id": "FACET-Q006-NOVA-ORION-AREA",
+      "q_ids": [
+        "Q-006"
+      ],
+      "parameters": [
+        "facet-alternatives",
+        "root-demo-nova"
+      ],
+      "request": {
+        "request_state_id": "facet-q006-nova-orion-area",
+        "root_id": "root-demo-nova",
+        "selected_marker_ids": [
+          "marker-root-demo-nova-archive",
+          "marker-root-demo-nova-archive-nova",
+          "marker-root-demo-nova-archive-nova-orion"
+        ],
+        "query_text": "",
+        "facet_prefix": ""
+      },
+      "expected": {
+        "facet_level_id": "level-area",
+        "options": [
+          {
+            "marker_id": "marker-root-demo-nova-archive-nova-orion-north",
+            "count": 8
+          },
+          {
+            "marker_id": "marker-root-demo-nova-archive-nova-orion-south",
+            "count": 1
+          }
+        ]
+      },
+      "reason": "Альтернативы уровня Area: North=8, South=1; natural порядок."
+    },
+    {
+      "scenario_id": "FACET-Q006-NOVA-ORION-AREA-PREFIX",
+      "q_ids": [
+        "Q-006"
+      ],
+      "parameters": [
+        "facet_prefix",
+        "root-demo-nova"
+      ],
+      "request": {
+        "request_state_id": "facet-q006-nova-orion-area-prefix",
+        "root_id": "root-demo-nova",
+        "selected_marker_ids": [
+          "marker-root-demo-nova-archive",
+          "marker-root-demo-nova-archive-nova",
+          "marker-root-demo-nova-archive-nova-orion"
+        ],
+        "query_text": "",
+        "facet_prefix": "no"
+      },
+      "expected": {
+        "facet_level_id": "level-area",
+        "options": [
+          {
+            "marker_id": "marker-root-demo-nova-archive-nova-orion-north",
+            "count": 8
+          }
+        ]
+      },
+      "reason": "facet_prefix=no оставляет только North=8; counts полного AND-пересечения."
+    },
+    {
+      "scenario_id": "FACET-Q012-ATLAS-ORION-CATEGORY",
+      "q_ids": [
+        "Q-012"
+      ],
+      "parameters": [
+        "unrecognized-last",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "facet-q012-atlas-orion-category",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [
+          "marker-root-demo-atlas-archive",
+          "marker-root-demo-atlas-archive-atlas",
+          "marker-root-demo-atlas-archive-atlas-orion"
+        ],
+        "query_text": "",
+        "facet_prefix": ""
+      },
+      "expected": {
+        "facet_level_id": "level-category",
+        "options": [
+          {
+            "marker_id": "marker-root-demo-atlas-archive-atlas-orion-data",
+            "count": 37
+          },
+          {
+            "marker_id": "marker-root-demo-atlas-archive-atlas-orion-reports",
+            "count": 108
+          },
+          {
+            "marker_id": "marker-root-demo-atlas-archive-atlas-orion-unrecognized-category",
+            "count": 1
+          }
+        ],
+        "unrecognized_sources": [
+          {
+            "marker_id": "marker-root-demo-atlas-archive-atlas-orion-unrecognized-category",
+            "item_id": "file-atlas-issue-invalid-value",
+            "issue_code": "INVALID_LEVEL_VALUE",
+            "issue_level_id": "level-category"
+          }
+        ]
+      },
+      "reason": "Категории Atlas/Orion: Data=37, Reports=108, Не распознано=1; UNRECOGNIZED всегда последний. Первое отклонение file-atlas-issue-invalid-value (INVALID_LEVEL_VALUE, level-category) — литеральная привязка к терминальной опции; сам SearchItem.markers содержит только распознанных VALUE-родителей."
+    },
+    {
+      "scenario_id": "FACET-Q012-ATLAS-REPORTS-SUBCATEGORY",
+      "q_ids": [
+        "Q-012"
+      ],
+      "parameters": [
+        "optional-tail",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "facet-q012-atlas-reports-subcategory",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [
+          "marker-root-demo-atlas-archive",
+          "marker-root-demo-atlas-archive-atlas",
+          "marker-root-demo-atlas-archive-atlas-orion",
+          "marker-root-demo-atlas-archive-atlas-orion-reports"
+        ],
+        "query_text": "",
+        "facet_prefix": ""
+      },
+      "expected": {
+        "facet_level_id": "level-subcategory",
+        "options": [
+          {
+            "marker_id": "marker-root-demo-atlas-archive-atlas-orion-reports-maps",
+            "count": 1
+          },
+          {
+            "marker_id": "marker-root-demo-atlas-archive-atlas-orion-reports-text",
+            "count": 3
+          }
+        ]
+      },
+      "reason": "Необязательный суффикс: Maps=1, Text=3."
+    },
+    {
+      "scenario_id": "FACET-Q012-ATLAS-COMPANY-RAW",
+      "q_ids": [
+        "Q-012"
+      ],
+      "parameters": [
+        "raw-variants-distinct",
+        "root-demo-atlas"
+      ],
+      "request": {
+        "request_state_id": "facet-q012-atlas-company-raw",
+        "root_id": "root-demo-atlas",
+        "selected_marker_ids": [
+          "marker-root-demo-atlas-archive"
+        ],
+        "query_text": "",
+        "facet_prefix": ""
+      },
+      "expected": {
+        "facet_level_id": "level-company",
+        "options": [
+          {
+            "marker_id": "marker-root-demo-atlas-archive-atlas-upper",
+            "count": 1
+          },
+          {
+            "marker_id": "marker-root-demo-atlas-archive-atlas",
+            "count": 148
+          },
+          {
+            "marker_id": "marker-root-demo-atlas-archive-atlas-lower",
+            "count": 2
+          }
+        ]
+      },
+      "reason": "Разные написания компании — отдельные значения: natural равны, затем raw ASC -> ATLAS=1, Atlas=148, atlas=2."
+    }
+  ],
+  "auth_scenarios": [
+    {
+      "operation": "login",
+      "status": 200,
+      "response_example_id": "auth-session-worker-one",
+      "reason": "Успешный вход возвращает Session с неизменяемым actor, expires_at и csrf_token; пароль не возвращается.",
+      "q_ids": [
+        "Q-001"
+      ],
+      "scenario_id": "AUTH-Q001-LOGIN-SUCCESS",
+      "parameters": [
+        "login-success",
+        "login"
+      ]
+    },
+    {
+      "operation": "getSession",
+      "status": 200,
+      "response_example_ids": [
+        "auth-session-worker-one",
+        "auth-session-admin"
+      ],
+      "reason": "GET /session возвращает actor с role WORKER/ADMIN; оба синтетических актора без реальных секретов.",
+      "q_ids": [
+        "Q-001"
+      ],
+      "scenario_id": "AUTH-Q001-ROLES",
+      "parameters": [
+        "worker",
+        "admin",
+        "session"
+      ]
+    },
+    {
+      "operation": "logout",
+      "status": 204,
+      "reason": "Успешный logout завершает сессию и удаляет cookie; тела нет.",
+      "q_ids": [
+        "Q-002"
+      ],
+      "scenario_id": "AUTH-Q002-LOGOUT",
+      "parameters": [
+        "logout",
+        "logout"
+      ]
+    }
+  ],
+  "error_scenarios": [
+    {
+      "operation": "getSession",
+      "status": 401,
+      "code": "UNAUTHENTICATED",
+      "message": "Сессия отсутствует или истекла. Войдите снова.",
+      "request_id": "request-auth-q001-unauth",
+      "operation_id": null,
+      "retryable": false,
+      "reason": "Защищённая операция без сессии — 401 UNAUTHENTICATED; error.request_id совпадает с X-Request-ID, operation_id=null.",
+      "precondition": "Защищённая операция GET /api/v1/session без cookie wiseway_session",
+      "q_ids": [
+        "Q-001"
+      ],
+      "scenario_id": "AUTH-Q001-UNAUTHENTICATED",
+      "parameters": [
+        "unauthenticated",
+        "getSession"
+      ]
+    },
+    {
+      "operation": "login",
+      "status": 401,
+      "code": "LOGIN_FAILED",
+      "message": "Неверный логин или пароль.",
+      "request_id": "request-auth-q001-login-failed",
+      "operation_id": null,
+      "retryable": false,
+      "reason": "Единая безопасная ошибка неверного логина/пароля — 401 LOGIN_FAILED.",
+      "precondition": "POST /api/v1/auth/login с неверным паролем",
+      "q_ids": [
+        "Q-001"
+      ],
+      "scenario_id": "AUTH-Q001-LOGIN-FAILED",
+      "parameters": [
+        "login-failed",
+        "login"
+      ]
+    },
+    {
+      "operation": "getSession",
+      "status": 401,
+      "code": "UNAUTHENTICATED",
+      "message": "Сессия отсутствует или истекла. Войдите снова.",
+      "request_id": "request-auth-q002-expiry",
+      "operation_id": null,
+      "retryable": false,
+      "reason": "Истёкшая сессия — 401 UNAUTHENTICATED; UI очищает приватный контекст.",
+      "precondition": "Сессия истекла (absolute 8ч / idle 30мин); GET /api/v1/session",
+      "q_ids": [
+        "Q-002"
+      ],
+      "scenario_id": "AUTH-Q002-EXPIRY",
+      "parameters": [
+        "expired-session",
+        "getSession"
+      ]
+    },
+    {
+      "operation": "getSession",
+      "status": 401,
+      "code": "UNAUTHENTICATED",
+      "message": "Сессия отсутствует или истекла. Войдите снова.",
+      "request_id": "request-auth-q002-block",
+      "operation_id": null,
+      "retryable": false,
+      "reason": "Заблокированный синтетический пользователь — 401 UNAUTHENTICATED; сохранённые данные не исчезают.",
+      "precondition": "Синтетический пользователь заблокирован администратором; GET /api/v1/session",
+      "q_ids": [
+        "Q-002"
+      ],
+      "scenario_id": "AUTH-Q002-BLOCK",
+      "parameters": [
+        "blocked-user",
+        "getSession"
+      ]
+    },
+    {
+      "operation": "searchFiles",
+      "status": 503,
+      "code": "SEARCH_UNAVAILABLE",
+      "message": "Поиск временно недоступен.",
+      "request_id": "request-auth-q003-search-503",
+      "operation_id": null,
+      "retryable": true,
+      "reason": "Недоступность поиска — 503 SEARCH_UNAVAILABLE; прежняя выдача помечается stale, не выдаётся за новую.",
+      "precondition": "POST /api/v1/search при недоступном поисковом индексе",
+      "q_ids": [
+        "Q-003"
+      ],
+      "scenario_id": "AUTH-Q003-SEARCH-503",
+      "parameters": [
+        "search-unavailable",
+        "searchFiles"
+      ]
+    },
+    {
+      "operation": "searchFiles",
+      "status": 500,
+      "code": "INTERNAL_ERROR",
+      "message": "Не удалось выполнить запрос. Сохраните идентификатор запроса для разбора.",
+      "request_id": "request-auth-q003-internal-500",
+      "operation_id": null,
+      "retryable": false,
+      "reason": "Внутренняя ошибка — 500 INTERNAL_ERROR без технических подробностей, request_id для разбора.",
+      "precondition": "POST /api/v1/search при внутреннем сбое",
+      "q_ids": [
+        "Q-003"
+      ],
+      "scenario_id": "AUTH-Q003-INTERNAL-500",
+      "parameters": [
+        "internal-error",
+        "searchFiles"
+      ]
+    },
+    {
+      "operation": "searchFiles",
+      "status": 400,
+      "code": "INVALID_QUERY",
+      "message": "Неверный синтаксис поискового запроса.",
+      "request_id": "request-q010-invalid-quote",
+      "operation_id": null,
+      "retryable": false,
+      "reason": "Незакрытая кавычка — 400 INVALID_QUERY; запрос не отправляется, UI подсказывает закрыть кавычку.",
+      "precondition": "POST /api/v1/search с query_text = \"atlas (незакрытая кавычка)",
+      "q_ids": [
+        "Q-010"
+      ],
+      "scenario_id": "SRCH-Q010-INVALID-QUOTE",
+      "parameters": [
+        "unclosed-quote",
+        "searchFiles"
+      ]
+    },
+    {
+      "operation": "searchFiles",
+      "status": 422,
+      "code": "VALIDATION_ERROR",
+      "message": "Проверьте значения полей запроса.",
+      "request_id": "request-q010-length",
+      "operation_id": null,
+      "retryable": false,
+      "field_errors": [
+        {
+          "field": "query_text",
+          "code": "MAX_LENGTH",
+          "message": "Допустимо не более 512 символов."
+        }
+      ],
+      "reason": "Текст длиннее max_query_length=512 — 422 VALIDATION_ERROR с field_errors, без тихого усечения.",
+      "precondition": "POST /api/v1/search с query_text длиной 513 > max_query_length=512",
+      "q_ids": [
+        "Q-010"
+      ],
+      "scenario_id": "SRCH-Q010-LENGTH",
+      "parameters": [
+        "query-length-513",
+        "searchFiles"
+      ]
+    },
+    {
+      "operation": "searchFiles",
+      "status": 422,
+      "code": "INVALID_MARKER_SELECTION",
+      "message": "Выбранная цепочка уровней недопустима. Обновите выбор.",
+      "request_id": "request-q010-invalid-marker",
+      "operation_id": null,
+      "retryable": false,
+      "reason": "Исчезнувший/недопустимый маркер — 422 INVALID_MARKER_SELECTION; UI перечитывает значения, сохраняя текст.",
+      "precondition": "POST /api/v1/search с исчезнувшим marker_id",
+      "q_ids": [
+        "Q-010"
+      ],
+      "scenario_id": "SRCH-Q010-INVALID-MARKER",
+      "parameters": [
+        "invalid-marker-chain",
+        "searchFiles"
+      ]
+    },
+    {
+      "operation": "searchFiles",
+      "status": 409,
+      "code": "SCHEMA_VERSION_CHANGED",
+      "message": "Схема уровней изменилась. Обновите корни и выбранные уровни.",
+      "request_id": "request-q010-schema-changed",
+      "operation_id": null,
+      "retryable": false,
+      "reason": "Новая версия схемы — 409 SCHEMA_VERSION_CHANGED; несовместимые маркеры очищаются.",
+      "precondition": "POST /api/v1/search со schema_set_version предыдущего поколения",
+      "q_ids": [
+        "Q-010"
+      ],
+      "scenario_id": "SRCH-Q010-SCHEMA-CHANGED",
+      "parameters": [
+        "schema-version-changed",
+        "searchFiles"
+      ]
+    },
+    {
+      "operation": "searchFiles",
+      "status": 409,
+      "code": "ROOT_NOT_READY",
+      "message": "Выбранный корень сейчас не опубликован для поиска.",
+      "request_id": "request-q010-root-not-ready",
+      "operation_id": null,
+      "retryable": false,
+      "reason": "Корень снят/не опубликован — 409 ROOT_NOT_READY.",
+      "precondition": "POST /api/v1/search с root_id снятого с публикации корня",
+      "q_ids": [
+        "Q-010"
+      ],
+      "scenario_id": "SRCH-Q010-ROOT-NOT-READY",
+      "parameters": [
+        "root-not-ready",
+        "searchFiles"
+      ]
+    },
+    {
+      "operation": "logout",
+      "status": 403,
+      "code": "CSRF_FAILED",
+      "message": "Не удалось подтвердить запрос текущей сессии.",
+      "request_id": "request-q043-csrf",
+      "operation_id": null,
+      "retryable": false,
+      "precondition": "Активная сессия; POST /api/v1/auth/logout с неверным X-CSRF-Token",
+      "request_headers": {
+        "X-CSRF-Token": "<wrong-token-placeholder>"
+      },
+      "reason": "Logout — изменяющая операция, её 403 (WriteForbidden) допускает CSRF_FAILED; searchFiles 403 допускает только FORBIDDEN. Неверный токен не повторяется автоматически.",
+      "q_ids": [
+        "Q-043"
+      ],
+      "scenario_id": "CONTRACT-Q043-CSRF",
+      "parameters": [
+        "csrf-failed",
+        "logout",
+        "wrong-token"
+      ]
+    },
+    {
+      "operation": "login",
+      "status": 403,
+      "code": "FORBIDDEN",
+      "message": "Действие недоступно.",
+      "request_id": "request-q043-forbidden",
+      "operation_id": null,
+      "retryable": false,
+      "precondition": "POST /api/v1/auth/login с Origin, не входящим в разрешённый список",
+      "request_headers": {
+        "Origin": "https://disallowed.example.invalid"
+      },
+      "reason": "Login проверяет Origin; запрещённый Origin — 403 FORBIDDEN (login 403 = Forbidden, только FORBIDDEN). Не выдуманная WORKER-ACL.",
+      "q_ids": [
+        "Q-043"
+      ],
+      "scenario_id": "CONTRACT-Q043-FORBIDDEN",
+      "parameters": [
+        "forbidden",
+        "login",
+        "invalid-origin"
+      ]
+    },
+    {
+      "operation": "searchFiles",
+      "status": 429,
+      "code": "RATE_LIMITED",
+      "message": "Слишком много запросов. Повторите позже.",
+      "request_id": "request-q043-rate-limited",
+      "operation_id": null,
+      "retryable": true,
+      "reason": "Превышен лимит — 429 RATE_LIMITED, retryable=true; учитывается Retry-After.",
+      "precondition": "POST /api/v1/search при превышении лимита запросов",
+      "q_ids": [
+        "Q-043"
+      ],
+      "scenario_id": "CONTRACT-Q043-RATE-LIMITED",
+      "parameters": [
+        "rate-limited",
+        "searchFiles"
+      ]
+    }
+  ],
+  "race_scenarios": [
+    {
+      "scope": "table",
+      "sends": [
+        {
+          "seq": 1,
+          "request_state_id": "state-race-table-a",
+          "conditions_key": "root-demo-atlas|atlas|[]|",
+          "outcome": "200"
+        },
+        {
+          "seq": 2,
+          "request_state_id": "state-race-table-b",
+          "conditions_key": "root-demo-atlas|atlas|[]|",
+          "outcome": "200"
+        }
+      ],
+      "accepted": "state-race-table-b",
+      "stale_ignored": [
+        "state-race-table-a"
+      ],
+      "dedup_key": "dedup-root-demo-atlas-atlas",
+      "reason": "Каждая отправка получает новый request_state_id; UI принимает только последний ответ своего scope (таблица), поздний A игнорируется.",
+      "q_ids": [
+        "Q-005"
+      ],
+      "scenario_id": "RACE-Q005-TABLE-LATEST",
+      "parameters": [
+        "request_state_id",
+        "table-scope"
+      ]
+    },
+    {
+      "scope": "level-list",
+      "sends": [
+        {
+          "seq": 1,
+          "request_state_id": "state-race-level-a",
+          "conditions_key": "root-demo-nova|[]|level-category|",
+          "outcome": "200"
+        },
+        {
+          "seq": 2,
+          "request_state_id": "state-race-level-b",
+          "conditions_key": "root-demo-nova|[]|level-category|",
+          "outcome": "200"
+        }
+      ],
+      "accepted": "state-race-level-b",
+      "stale_ignored": [
+        "state-race-level-a"
+      ],
+      "dedup_key": "dedup-root-demo-nova-level-category",
+      "reason": "У списка уровня собственный scope/последний ID; поздний ответ A не влияет на таблицу и не принимается.",
+      "q_ids": [
+        "Q-005"
+      ],
+      "scenario_id": "RACE-Q005-LEVEL-LATEST",
+      "parameters": [
+        "request_state_id",
+        "level-list-scope"
+      ]
+    },
+    {
+      "scope": "table",
+      "sends": [
+        {
+          "seq": 1,
+          "request_state_id": "state-retry-a",
+          "conditions_key": "root-demo-atlas|\"atlas|[]|",
+          "outcome": "400 INVALID_QUERY"
+        },
+        {
+          "seq": 2,
+          "request_state_id": "state-retry-b",
+          "conditions_key": "root-demo-atlas|\"atlas\"|[]|",
+          "outcome": "200"
+        }
+      ],
+      "accepted": "state-retry-b",
+      "stale_ignored": [
+        "state-retry-a"
+      ],
+      "dedup_key": "dedup-root-demo-atlas-atlas-quoted",
+      "reason": "Разрешённый повтор после ошибки обходит дедупликацию и получает новый request_state_id даже при том же тексте.",
+      "q_ids": [
+        "Q-010"
+      ],
+      "scenario_id": "RACE-Q010-RETRY-NEW-STATE",
+      "parameters": [
+        "retry-after-error",
+        "new-request-state-id"
+      ]
+    }
+  ],
+  "lifecycle_scenarios": [
+    {
+      "stage": "create",
+      "item_id": "file-lifecycle-created",
+      "before_path": null,
+      "after_path": "Archive/Atlas/Orion_2031/Data/created.pdf",
+      "before_match_item_ids": [],
+      "after_match_item_ids": [
+        "file-lifecycle-created"
+      ],
+      "reason": "После создания файл появляется в индексе; новый путь участвует в поиске.",
+      "q_ids": [
+        "Q-014"
+      ],
+      "scenario_id": "LIFECYCLE-Q014-CREATE",
+      "parameters": [
+        "create"
+      ]
+    },
+    {
+      "stage": "change",
+      "item_id": "file-lifecycle-changed",
+      "before_path": "Archive/Atlas/Orion_2031/Data/changed.pdf",
+      "after_path": "Archive/Atlas/Orion_2031/Data/changed.pdf",
+      "before_match_item_ids": [
+        "file-lifecycle-changed"
+      ],
+      "after_match_item_ids": [
+        "file-lifecycle-changed"
+      ],
+      "reason": "Изменение метаданных (size 100->250, modified 09:30->10:15) не меняет путь; файл остаётся в индексе.",
+      "q_ids": [
+        "Q-014"
+      ],
+      "scenario_id": "LIFECYCLE-Q014-CHANGE",
+      "parameters": [
+        "change"
+      ]
+    },
+    {
+      "stage": "rename",
+      "item_id": "file-lifecycle-renamed",
+      "before_path": "Archive/Atlas/Orion_2031/Data/old-name.pdf",
+      "after_path": "Archive/Atlas/Orion_2031/Data/new-name.pdf",
+      "before_match_item_ids": [
+        "file-lifecycle-renamed"
+      ],
+      "after_match_item_ids": [
+        "file-lifecycle-renamed"
+      ],
+      "removed_token": "old-name",
+      "added_token": "new-name",
+      "reason": "После переименования старое имя больше не участвует в поиске, новое — участвует.",
+      "q_ids": [
+        "Q-014"
+      ],
+      "scenario_id": "LIFECYCLE-Q014-RENAME",
+      "parameters": [
+        "rename"
+      ]
+    },
+    {
+      "stage": "move",
+      "item_id": "file-lifecycle-moved",
+      "before_path": "Archive/Atlas/Orion_2031/Data/moved.pdf",
+      "after_path": "Archive/Atlas/Orion_2031/Reports/Text/moved.pdf",
+      "before_match_item_ids": [
+        "file-lifecycle-moved"
+      ],
+      "after_match_item_ids": [
+        "file-lifecycle-moved"
+      ],
+      "reason": "После переноса путь обновлён; старый путь не активная поисковая копия.",
+      "q_ids": [
+        "Q-014"
+      ],
+      "scenario_id": "LIFECYCLE-Q014-MOVE",
+      "parameters": [
+        "move"
+      ]
+    },
+    {
+      "stage": "delete",
+      "item_id": "file-lifecycle-deleted",
+      "before_path": "Archive/Atlas/Orion_2031/Data/deleted.pdf",
+      "after_path": null,
+      "before_match_item_ids": [
+        "file-lifecycle-deleted"
+      ],
+      "after_match_item_ids": [],
+      "reason": "После внешнего удаления объект исчезает из индекса.",
+      "q_ids": [
+        "Q-014"
+      ],
+      "scenario_id": "LIFECYCLE-Q014-DELETE",
+      "parameters": [
+        "delete"
+      ]
+    }
+  ],
+  "format_samples": [
+    {
+      "kind": "size",
+      "cases": [
+        {
+          "bytes": 0,
+          "expected": "0 B"
+        },
+        {
+          "bytes": 999,
+          "expected": "999 B"
+        },
+        {
+          "bytes": 1000,
+          "expected": "1 KB"
+        },
+        {
+          "bytes": 1500,
+          "expected": "1.5 KB"
+        },
+        {
+          "bytes": 4096,
+          "expected": "4.1 KB"
+        },
+        {
+          "bytes": 1000000,
+          "expected": "1 MB"
+        },
+        {
+          "bytes": 1500000,
+          "expected": "1.5 MB"
+        },
+        {
+          "bytes": 1000000000,
+          "expected": "1 GB"
+        },
+        {
+          "bytes": 1000000000000,
+          "expected": "1 TB"
+        }
+      ],
+      "reason": "Десятичные единицы с делителем 1000, максимум один дробный знак; 4096 B = 4.096 KB -> 4.1 KB.",
+      "q_ids": [
+        "Q-042"
+      ],
+      "scenario_id": "FORMAT-Q042-SIZE",
+      "parameters": [
+        "size",
+        "decimal-1000",
+        "max-one-fraction"
+      ]
+    },
+    {
+      "kind": "date",
+      "cases": [
+        {
+          "instant": "2031-05-10T09:30:00Z",
+          "timezone": "Europe/Moscow",
+          "expected": "10.05.2031 12:30"
+        },
+        {
+          "instant": "2031-12-31T21:30:00Z",
+          "timezone": "Europe/Moscow",
+          "expected": "01.01.2032 00:30"
+        },
+        {
+          "instant": "2031-01-01T00:00:00Z",
+          "timezone": "Europe/Moscow",
+          "expected": "01.01.2031 03:00"
+        }
+      ],
+      "reason": "UTC Z хранится на сервере, отображается в Europe/Moscow (UTC+3) как ДД.ММ.ГГГГ ЧЧ:ММ.",
+      "q_ids": [
+        "Q-042"
+      ],
+      "scenario_id": "FORMAT-Q042-DATE",
+      "parameters": [
+        "date",
+        "Europe/Moscow",
+        "DD.MM.YYYY HH:MM"
+      ]
+    },
+    {
+      "kind": "display_path",
+      "cases": [
+        {
+          "item_id": "file-atlas-q009-slash",
+          "expected_display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/met/report-slash.pdf"
+        },
+        {
+          "item_id": "file-atlas-q009-backslash",
+          "expected_display_path": "DEMO:\\SandboxRoot\\Archive\\Atlas\\Orion_2031\\Data\\met\\report-backslash.pdf"
+        }
+      ],
+      "reason": "Копируется display_path целиком одной строкой без многоточия; канонический relative_path всегда '/'.",
+      "q_ids": [
+        "Q-042"
+      ],
+      "scenario_id": "FORMAT-Q042-DISPLAY-PATH",
+      "parameters": [
+        "display-path",
+        "copy",
+        "one-line"
+      ]
+    }
+  ],
+  "sort_profiles": [
+    {
+      "kind": "tie_profile",
+      "standalone": true,
+      "sort": {
+        "field": "PATH",
+        "direction": "ASC"
+      },
+      "inputs": [
+        {
+          "item_id": "item-tie-beta",
+          "filename": "Same.pdf",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Data/Same.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/Same.pdf"
+          },
+          "markers": [],
+          "extension": ".pdf",
+          "size_bytes": 100,
+          "modified_at": "2031-05-10T09:30:00Z",
+          "structure_status": "VALID",
+          "structure_issue": null
+        },
+        {
+          "item_id": "item-tie-alpha",
+          "filename": "Same.pdf",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Data/Same.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/Same.pdf"
+          },
+          "markers": [],
+          "extension": ".pdf",
+          "size_bytes": 100,
+          "modified_at": "2031-05-10T09:30:00Z",
+          "structure_status": "VALID",
+          "structure_issue": null
+        }
+      ],
+      "expected_item_ids": [
+        "item-tie-alpha",
+        "item-tie-beta"
+      ],
+      "reason": "Отдельный stand-alone comparator-профиль (не физический инвентарь): два логических SearchItem с одинаковым display sort key и разными item_id. После natural path и raw path применяется финальное звено item_id ASC -> item-tie-alpha < item-tie-beta. Backend-алгоритм не реализуется.",
+      "q_ids": [
+        "Q-011"
+      ],
+      "scenario_id": "TIE-Q011-ITEM-ID",
+      "parameters": [
+        "tie",
+        "item_id",
+        "stand-alone-profile"
+      ]
+    }
+  ],
+  "coverage": {
+    "Q-004": [
+      "SRCH-Q004-IDLE-ATLAS",
+      "SRCH-Q004-IDLE-NOVA",
+      "SRCH-Q004-ZERO"
+    ],
+    "Q-005": [
+      "SRCH-Q004-ZERO",
+      "RACE-Q005-TABLE-LATEST",
+      "RACE-Q005-LEVEL-LATEST"
+    ],
+    "Q-006": [
+      "SRCH-Q006-DEEP-TEXT",
+      "SRCH-Q006-PARENTS-TABLE",
+      "SRCH-Q006-FACET-PREFIX-TABLE",
+      "SRCH-Q006-SORT-NAME-ASC",
+      "SRCH-Q006-SORT-NAME-DESC",
+      "SRCH-Q006-SORT-SIZE-ASC",
+      "SRCH-Q006-SORT-SIZE-DESC",
+      "SRCH-Q006-SORT-MODIFIED-ASC",
+      "SRCH-Q006-SORT-MODIFIED-DESC",
+      "SRCH-Q006-SORT-PATH-ASC",
+      "SRCH-Q006-SORT-PATH-DESC",
+      "FACET-Q006-NOVA-ORION-NORTH",
+      "FACET-Q006-NOVA-ORION-AREA",
+      "FACET-Q006-NOVA-ORION-AREA-PREFIX"
+    ],
+    "Q-007": [
+      "SRCH-Q007-AND",
+      "SRCH-Q007-AND-CASE",
+      "SRCH-Q007-MARKER-AND"
+    ],
+    "Q-008": [
+      "SRCH-Q008-PHRASE",
+      "SRCH-Q008-PHRASE-CROSS-FIELD",
+      "SRCH-Q008-PHRASE-MIXED"
+    ],
+    "Q-009": [
+      "SRCH-Q009-BOUNDARIES",
+      "SRCH-Q009-RANKING"
+    ],
+    "Q-011": [
+      "SRCH-Q009-RANKING",
+      "SRCH-Q011-RANK-FULL",
+      "SRCH-Q011-RANK-PREFIX",
+      "SRCH-Q011-RANK-COMPANY",
+      "SRCH-Q011-RANK-REPEAT",
+      "SRCH-Q011-RANK-PHRASE-CROSS",
+      "SRCH-Q011-TIE-NATURAL",
+      "SRCH-Q011-TIE-RAW",
+      "SRCH-Q011-FRESHNESS-UPDATING",
+      "SRCH-Q003-FRESHNESS-STALE",
+      "TIE-Q011-ITEM-ID"
+    ],
+    "Q-012": [
+      "SRCH-Q012-RAWCASE-LOWER",
+      "SRCH-Q012-RAWCASE-UPPER",
+      "SRCH-Q012-TAIL-TEXT",
+      "SRCH-Q012-AREA",
+      "SRCH-Q012-UNRECOGNIZED-TERMINAL",
+      "SRCH-Q012-ISSUE-UNEXPECTED-DEPTH",
+      "SRCH-Q012-ISSUE-INVALID-VALUE",
+      "SRCH-Q012-ISSUE-INVALID-COMPOSITE",
+      "SRCH-Q012-ISSUE-MISSING-AREA",
+      "FACET-Q012-ATLAS-ORION-CATEGORY",
+      "FACET-Q012-ATLAS-REPORTS-SUBCATEGORY",
+      "FACET-Q012-ATLAS-COMPANY-RAW"
+    ],
+    "Q-013": [
+      "SRCH-Q013-N10",
+      "SRCH-Q013-N100"
+    ],
+    "Q-014": [
+      "SRCH-Q014-CONTENT-ONLY",
+      "SRCH-Q014-OLD-PATH",
+      "SRCH-Q014-CURRENT-CONTROL",
+      "SRCH-Q014-SERVICE-INCOMING",
+      "SRCH-Q014-SERVICE-QUARANTINE",
+      "SRCH-Q014-SERVICE-TMP",
+      "SRCH-Q014-ZERO-SIZE",
+      "SRCH-Q014-NO-EXTENSION",
+      "SRCH-Q014-UPPER-EXTENSION",
+      "LIFECYCLE-Q014-CREATE",
+      "LIFECYCLE-Q014-CHANGE",
+      "LIFECYCLE-Q014-RENAME",
+      "LIFECYCLE-Q014-MOVE",
+      "LIFECYCLE-Q014-DELETE"
+    ],
+    "Q-003": [
+      "SRCH-Q003-FRESHNESS-STALE",
+      "AUTH-Q003-SEARCH-503",
+      "AUTH-Q003-INTERNAL-500"
+    ],
+    "Q-001": [
+      "AUTH-Q001-LOGIN-SUCCESS",
+      "AUTH-Q001-ROLES",
+      "AUTH-Q001-UNAUTHENTICATED",
+      "AUTH-Q001-LOGIN-FAILED"
+    ],
+    "Q-002": [
+      "AUTH-Q002-LOGOUT",
+      "AUTH-Q002-EXPIRY",
+      "AUTH-Q002-BLOCK"
+    ],
+    "Q-010": [
+      "SRCH-Q010-INVALID-QUOTE",
+      "SRCH-Q010-LENGTH",
+      "SRCH-Q010-INVALID-MARKER",
+      "SRCH-Q010-SCHEMA-CHANGED",
+      "SRCH-Q010-ROOT-NOT-READY",
+      "RACE-Q010-RETRY-NEW-STATE"
+    ],
+    "Q-043": [
+      "CONTRACT-Q043-CSRF",
+      "CONTRACT-Q043-FORBIDDEN",
+      "CONTRACT-Q043-RATE-LIMITED"
+    ],
+    "Q-042": [
+      "FORMAT-Q042-SIZE",
+      "FORMAT-Q042-DATE",
+      "FORMAT-Q042-DISPLAY-PATH"
+    ]
+  }
+}

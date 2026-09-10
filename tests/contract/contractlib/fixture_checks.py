@@ -16,7 +16,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from . import synthetic
+from . import search_expectations, synthetic
 from .semantic import validate_fixture
 
 
@@ -115,6 +115,85 @@ def run_fixture_checks(report, registry, root: Optional[Path] = None) -> None:
         report.lifecycle_fixtures = lifecycle_count
 
     _check_checksums(checksum_check, manifest, base)
+    _run_search_expectations(report, registry, base)
+
+
+def _run_search_expectations(report, registry, base: Path) -> None:
+    """LT-03.1b: literal search/facet/auth/error oracle and generated examples."""
+    search_check = report.check(
+        "FIX-SRCH-001",
+        "Search/facet/auth/error expectations materialize to schema-valid literal responses",
+    )
+    examples_check = report.check(
+        "FIX-SRCH-002",
+        "Generated public search/error examples match the committed files",
+    )
+    try:
+        expectations = search_expectations.load_expectations(base)
+        context = search_expectations.build_context(base)
+    except Exception as exc:  # noqa: BLE001 - report unreadable expectations
+        search_check.add(f"cannot load search expectations: {type(exc).__name__}: {exc}")
+        return
+
+    for message in search_expectations.expectation_errors(expectations, context):
+        search_check.add(message)
+
+    for scenario in expectations.get("search_scenarios", []):
+        payload = search_expectations.materialize_search_response(
+            expectations, scenario, context
+        )
+        schema_errors, semantic = validate_fixture(
+            registry, search_expectations.SEARCH_SCHEMA, payload
+        )
+        for message in schema_errors + semantic:
+            search_check.add(message, scenario["scenario_id"])
+    for scenario in expectations.get("facet_scenarios", []):
+        payload = search_expectations.materialize_facet_response(
+            expectations, scenario, context
+        )
+        schema_errors, semantic = validate_fixture(
+            registry, search_expectations.FACET_SCHEMA, payload
+        )
+        for message in schema_errors + semantic:
+            search_check.add(message, scenario["scenario_id"])
+    for scenario in expectations.get("error_scenarios", []):
+        payload = search_expectations.materialize_error_response(scenario)
+        schema_errors, semantic = validate_fixture(
+            registry, search_expectations.ERROR_SCHEMA, payload
+        )
+        for message in schema_errors + semantic:
+            search_check.add(message, scenario["scenario_id"])
+    for profile in expectations.get("sort_profiles", []):
+        for entry in profile.get("inputs", []):
+            schema_errors, semantic = validate_fixture(
+                registry, search_expectations.SEARCH_ITEM, entry
+            )
+            for message in schema_errors + semantic:
+                search_check.add(message, profile["scenario_id"])
+
+    report.search_scenarios = len(expectations.get("search_scenarios", []))
+    report.facet_scenarios = len(expectations.get("facet_scenarios", []))
+    report.error_scenarios = len(expectations.get("error_scenarios", []))
+    report.race_scenarios = len(expectations.get("race_scenarios", []))
+    report.format_samples = len(expectations.get("format_samples", []))
+
+    try:
+        generated = search_expectations.generated_examples(expectations, context)
+    except Exception as exc:  # noqa: BLE001
+        examples_check.add(f"cannot regenerate examples: {type(exc).__name__}: {exc}")
+        return
+    for relative, payload in generated.items():
+        target = base / relative
+        if not target.is_file():
+            examples_check.add(f"generated example is missing: {relative}")
+            continue
+        try:
+            committed = synthetic.load_json(target)
+        except Exception as exc:  # noqa: BLE001
+            examples_check.add(f"cannot parse {relative}: {type(exc).__name__}: {exc}")
+            continue
+        if committed != payload:
+            examples_check.add(f"committed example differs from regeneration: {relative}")
 
 
 def _check_checksums(checksum_check, manifest, base: Path) -> None:
@@ -135,3 +214,12 @@ def _check_checksums(checksum_check, manifest, base: Path) -> None:
     for example_id, digest in expected["examples"].items():
         if declared_examples.get(example_id) != digest:
             checksum_check.add(f"checksum for example {example_id!r} mismatch")
+    declared_fixtures = declared.get("fixtures") or {}
+    if set(declared_fixtures) != set(expected["fixtures"]):
+        checksum_check.add(
+            "checksum.fixtures keys differ from the manifest fixture ids: "
+            f"{sorted(set(declared_fixtures) ^ set(expected['fixtures']))}"
+        )
+    for fixture_id, digest in expected["fixtures"].items():
+        if declared_fixtures.get(fixture_id) != digest:
+            checksum_check.add(f"checksum for fixture {fixture_id!r} mismatch")

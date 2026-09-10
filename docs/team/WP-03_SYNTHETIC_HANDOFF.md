@@ -199,3 +199,160 @@ dangling `marker_context`, дубликат `context_id`, дубликат пу�
   негативов), затем LT-03.1b (точные поисковые/фасетные ожидания поверх
   `search_inputs`).
 - **Блокирующая зависимость:** нет.
+
+# LT-03.1b — точные поисковые/фасетные/auth/error ожидания
+
+Дополнение ниже фиксирует результат leaf LT-03.1b (parent LT-03.1, WP-03,
+Epic E-01). **Status:** IN_PROGRESS (публикация отложена D-06).
+
+## Задача и покрытые требования
+
+- **Цель:** конечный независимый эталон поиска/фасетов/auth/ошибок поверх
+  корпуса LT-03.1a, пригодный для mocks и real-регрессии; не matcher.
+- **Основание:** AGENTS; FRONTEND_BACKLOG LT-03.1/LT-03.1b; TZ §5/6/12;
+  API §2–4/11/12; QA §4/5; MATRIX Q-001…014/042/043 (все параметры);
+  `contracts/semantics.md`; OAS `SearchRequest/SearchResponse/FacetRequest/
+  FacetResponse/SearchItem/Marker/ErrorResponse`.
+
+## Изменённые/добавленные файлы
+
+| Файл | Характер |
+|---|---|
+| `fixtures/synthetic/search_expectations.json` | новый литеральный эталон: 51 search, 6 facet, 3 auth, 14 error, 3 race, 5 lifecycle, 3 format, 1 sort_profile + coverage Q-001…014/042/043 |
+| `fixtures/synthetic/corpus.json` | исправления/дополнения корпуса (см. ниже), version 1.2.0 |
+| `fixtures/synthetic/manifest.json` | version 1.2.0, секция `fixtures`, 17 новых привязанных examples, канонические checksums |
+| `tests/contract/contractlib/search_expectations.py` | загрузчик/материализатор/валидатор + `--write-examples`; per-operation error-code check |
+| `tests/contract/contractlib/fixture_checks.py` | FIX-SRCH-001/002, `checksum.fixtures` |
+| `tests/contract/contractlib/synthetic.py` | `compute_checksums` учитывает `fixtures`; `path_marker_errors` требует VALUE-only маркеры и path prefix |
+| `tests/contract/contractlib/report.py`, `__init__.py`, `verify_contract.py` | поля/экспорт/строка отчёта |
+| `tests/contract/test_search_expectations.py` | 45 тестов: схемы/counts/ID/coverage/генерация/негативные мутации |
+| `contracts/examples/search/*.json`, `contracts/examples/errors/*.json` | 17 сгенерированных публичных payloads |
+| `tests/contract/test_synthetic_corpus.py` | 162→164 и обновлённый отчёт runner |
+| `README.md` | раздел LT-03.1b и команда генерации |
+
+OAS, `contracts/semantics.md`, control plane, backlog и backend/UI **не
+изменялись**.
+
+## Что именно зафиксировано
+
+- **IDLE:** оба корня (Atlas 151 / Nova 13), `total=null`, `items=[]`,
+  первый level-section facet; точный ноль `zzzznothing` → `options=[]`.
+- **L+3:** N10 `nova` → total 13, returned 10, `limited=true`; N100
+  `"orion report"` → total 103, returned 100 (0001..0100).
+- **AND/регистр:** `atlas reports` = `ATLAS REPORTS` = 6 файлов; цепочка
+  markers+text.
+- **Фраза:** `"atlas main"` → `Atlas-Main.pdf`, `Atlas-Main-Metrics.pdf`;
+  вставка/перестановка/Maintenance/межполевой случай отрицательны; `met`
+  снаружи — отдельное обязательное условие (25).
+- **Границы токенов:** пробел, дефис, подчёркивание, точка, `/`, `\`,
+  буква↔цифра положительны; внутренняя подстрока, буква перед `met`, опечатка
+  отрицательны. Slash/backslash — только через `display_path`.
+- **Ранжирование:** ручные score 10/5/2 (`met`), 10 (`atlas` full), 5
+  (`atla` prefix), 10/6 (`nova`), 20 (фраза), 4 (фраза через уровни), 25
+  (фраза+внешний prefix); повтор токена и дубль имени в `display_path` не
+  добавляют.
+- **Tie-break:** natural path (`item-2` < `item-10` < `Item.pdf`),
+  raw path (`NOTE.pdf` < `Note.pdf`); item_id — отдельный stand-alone
+  `sort_profiles[0]` (два логических `SearchItem` с одинаковым display sort key
+  и разными ID; ожидаемый порядок alpha < beta). Это comparator-профиль, не
+  физический инвентарь; backend-алгоритм не реализуется.
+- **Сортировки:** NAME/SIZE/MODIFIED_AT/PATH ASC и DESC.
+- **Raw-case/tail/Area/UNRECOGNIZED:** отдельные marker_id (`ATLAS`/`Atlas`/
+  `atlas`), optional Text/Maps, Nova Area North/South, терминал
+  UNRECOGNIZED=1 последним; четыре issue-типа с первым отклонением.
+- **Freshness:** `constants.freshness_profiles` CURRENT/UPDATING/STALE; при
+  UPDATING/STALE предыдущее завершённое поколение остаётся доступным
+  (`SRCH-Q011-FRESHNESS-UPDATING`, `SRCH-Q003-FRESHNESS-STALE` дают те же
+  items/total, что CURRENT-сценарий).
+- **Q-014:** content-only/old-path/service-папки → 0, текущий контроль
+  находится, zero-size/без расширения/.TXT индексируются; lifecycle
+  create/change/rename/move/delete.
+- **Auth/errors:** точные 401 `UNAUTHENTICATED`/`LOGIN_FAILED`, 204 logout,
+  503 `SEARCH_UNAVAILABLE`, 500 `INTERNAL_ERROR`, 400 `INVALID_QUERY`,
+  422 `VALIDATION_ERROR`/`INVALID_MARKER_SELECTION`, 409
+  `SCHEMA_VERSION_CHANGED`/`ROOT_NOT_READY`, 429 `RATE_LIMITED`;
+  `error.request_id` совпадает с заголовком, `operation_id=null`. 403
+  привязан к операции: `CSRF_FAILED` — `logout` (WriteForbidden, реальная
+  мутация, неверный X-CSRF-Token), `FORBIDDEN` — `login` с запрещённым Origin.
+  Код проверяется против **канонической response-схемы конкретной операции**,
+  а не глобальной таблицы HTTP/код.
+- **Races:** последний `request_state_id` scope побеждает; разрешённый retry
+  после ошибки получает новый ID.
+- **Q-042:** литеральные `0 B`/`1.5 KB`/`4.1 KB`/`1 MB`…, дата
+  `10.05.2031 12:30` в Europe/Moscow, `display_path` одной строкой.
+
+## Исправления корпуса (все затронутые ожидания обновлены, не скрытое исключение)
+
+1. **UNRECOGNIZED-терминал.** Три issue-файла (`invalid-value`,
+   `invalid-composite`, `missing-area`) сохранены на **распознанных VALUE-
+   родителях** (baseline-контексты), как требует `SearchItem.markers`. Каталожные
+   UNRECOGNIZED-контексты (`...-unrecognized-category/project/area`) остаются в
+   `marker_catalog` отдельно — для `selected_markers`/фасетов; они намеренно не
+   привязаны к item. Связь «первое отклонение → терминальная опция» задана
+   литерально в `facet.expected.unrecognized_sources` (item, code, level), без
+   парсера. `path_marker_errors` теперь строго требует VALUE-only маркеры и
+   prefix-совпадение с сегментами пути.
+2. **Q-007/Q-008 prepared inputs.** `q007_and.matching_item_ids` включал только
+   `q007-both`, хотя под `Reports/` с `Atlas` в имени подходят ещё пять q008-
+   файлов; `q008_phrase` не включал `mixed`, который тоже содержит соседние
+   `Atlas Main`. Оба списка приведены к семантике filename+display_path.
+3. **Raw tie.** Добавлена минимальная пара `file-atlas-tie-raw-note-upper`
+   (`NOTE.pdf`) и `file-atlas-tie-raw-note-lower` (`Note.pdf`) — равный natural
+   path, разный raw path; это делает второе звено tie-break проверяемым.
+4. **MODIFIED_AT.** `q009-space` (09:00Z) и `q009-letter-digit` (10:00Z)
+   получили отличимые `modified_at`, чтобы направление ручной сортировки
+   даты было проверяемым.
+5. Baseline VALUE-контексты (`atlas-archive-atlas`,
+   `atlas-archive-atlas-orion`, `nova-archive-nova-polaris`) сохранены —
+   они нужны распознанным родителям issue-файлов.
+
+Итог: корпус 164 файла (Atlas 151 / Nova 13), 6 service objects, 37 marker_id,
+8 lifecycle payloads, fixture version `1.2.0`.
+
+## V-S: точные команды и фактические результаты
+
+```powershell
+.\.venv-contract\Scripts\python.exe tests\contract\verify_contract.py
+.\.venv-contract\Scripts\python.exe -m unittest discover -s tests\contract -p "test_*.py"
+.\.venv-contract\Scripts\python.exe -m pip check
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\synthetic.py --update-checksums
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\search_expectations.py --write-examples
+git diff --check
+```
+
+- `verify_contract.py` → `RESULT: PASS (28 checks, 0 failures)`,
+  `Examples: 127`, `Fixtures: 32 public example(s), 164 corpus file(s) and
+  8 lifecycle payload(s) validated`,
+  `Search expectations: 51 search, 6 facet, 14 error, 3 race, 3 format`.
+  FIX-SRCH-001/002 — PASS.
+- `unittest discover` → `Ran 159 tests ... OK`.
+- `pip check` → `No broken requirements found.`
+- `--write-examples` идемпотентно; повторная генерация совпадает с
+  закоммиченными файлами (FIX-SRCH-002).
+
+Негативные self-тесты: испорченный `returned_count`/`total`, обратный порядок
+при разных score, неизвестный `item_id`, count=0 во фасете, пустая coverage,
+неизвестный `error.code`, разорванная цепочка маркеров, пустой `reason`,
+**код ошибки, не объявленный канонической response-схемой операции**
+(`CSRF_FAILED` на `searchFiles`), **UNRECOGNIZED-маркер внутри
+`SearchItem.markers`** и обратный порядок stand-alone tie-профиля —
+отклоняются `expectation_errors`/`path_marker_errors`.
+
+## Ограничения и явно не выполненное
+
+- Это **S**-уровень: схема/статические проверки и литеральный эталон.
+  **M (mock/UI), A (реальный API/ФС), E (E2E) — NOT_RUN.** Физическая
+  безопасность, персистентность, гонки и производительность не проверялись.
+- `search_expectations.py` — материализатор по литеральным ID; он не содержит
+  matcher/ranking/facet-вычислений. Значения `item_ids`/`score`/`count`
+  получены ручным разбором корпуса и зафиксированы в `reason` каждого сценария.
+- `error.operation_id` во всех auth/search-ошибках равен null; не-null случай
+  (registered recovery) относится к QUEUE/FILE/AUD и покрывается LT-03.5b.
+- Backend/UI/control plane/backlog не затрагивались. Staging/commit/push
+  worker не выполняет (D-06).
+
+## Статус и следующий владелец
+
+- **Следующий владелец:** reviewer LT-03.1b — независимая сверка конечных ID,
+  порядка, counts и фасетов по `reason` и корпусу, а также негативных мутаций.
+- **Блокирующая зависимость:** нет.

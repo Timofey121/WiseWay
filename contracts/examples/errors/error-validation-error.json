@@ -1,0 +1,16 @@
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Проверьте значения полей запроса.",
+    "request_id": "request-q010-length",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": [
+      {
+        "field": "query_text",
+        "code": "MAX_LENGTH",
+        "message": "Допустимо не более 512 символов."
+      }
+    ]
+  }
+}

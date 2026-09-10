@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "LOGIN_FAILED",
+    "message": "Неверный логин или пароль.",
+    "request_id": "request-auth-q001-login-failed",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

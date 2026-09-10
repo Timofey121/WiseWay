@@ -78,7 +78,48 @@ Runner проверяет эти внешние файлы теми же кан�
 .\.venv-contract\Scripts\python.exe tests\contract\contractlib\synthetic.py --write fixtures\synthetic\inventory.json
 ```
 
-Ожидания точных поисковых запросов, порядка и фасетов формируются в следующем
-leaf LT-03.1b; здесь публикуется только конечный корпус и его инвентарь.
-Списки natural/русской сортировки в `search_inputs` — неупорядоченные
-кандидатные входы; точный порядок определяет LT-03.1b.
+## Точные поисковые ожидания (WP-03, LT-03.1b)
+
+`fixtures/synthetic/search_expectations.json` — конечный независимый эталон
+поверх корпуса LT-03.1a:
+
+- `search_scenarios` — литеральные `SearchResponse`: точные упорядоченные
+  `item_ids`, `total`, `returned_count`, `result_limit`, `limited` и варианты
+  `next_facet` (marker_id + точный count) для IDLE/RESULTS/N10/N100, AND,
+  фраз, границ токенов, ранжирования (ручные score 10/5/2/20/4), tie-break
+  natural/raw path, ручных сортировок NAME/SIZE/MODIFIED_AT/PATH, raw-case,
+  optional tail, Nova Area, UNRECOGNIZED-терминала, четырёх issue-типов и
+  freshness CURRENT/UPDATING/STALE;
+- `facet_scenarios` — литеральные `FacetResponse` для родителей уровня,
+  альтернатив, `facet_prefix` и UNRECOGNIZED последним; терминальная опция
+  связана с первым отклонением литерально (`unrecognized_sources`);
+- `auth_scenarios`, `error_scenarios` — точные пары HTTP/`error.code` и
+  безопасные `ErrorResponse` (401/403/409/422/429/500/503); код проверяется
+  против канонической response-схемы конкретной операции (`CSRF_FAILED` →
+  logout, `FORBIDDEN` → login с запрещённым Origin);
+- `race_scenarios` — сценарии `request_state_id` (последний ответ scope
+  побеждает, разрешённый retry получает новый ID);
+- `lifecycle_scenarios` — ожидания create/change/rename/move/delete;
+- `format_samples` — Q-042 литеральные UI-значения размера/даты/display path;
+- `sort_profiles` — stand-alone comparator-таблица для tie-break по `item_id`
+  (два логических `SearchItem` с одинаковым display sort key, не инвентарь);
+- `coverage` — каждый Q-001…014/042/043 привязан к конечным scenario_id.
+
+`SearchItem.markers` в корпусе содержит только распознанные VALUE-родителей;
+каталожные UNRECOGNIZED-терминалы существуют отдельно для
+`selected_markers`/фасетов.
+
+`tests/contract/contractlib/search_expectations.py` — материализатор: он
+собирает ответы **только по литеральным ID** (item/marker/facet), не вычисляя
+membership, ranking или facets. Проверки `FIX-SRCH-001/002` валидируют схемы,
+counts, ID и совпадение сгенерированных публичных примеров с закоммиченными.
+Документированная команда подготовки публичных примеров:
+
+```powershell
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\search_expectations.py --write-examples
+```
+
+Сгенерированные примеры лежат в `contracts/examples/search/` и
+`contracts/examples/errors/` и привязаны в `manifest.json` к каноническим
+схемам. Списки natural/русской сортировки в `search_inputs` остаются
+неупорядоченными кандидатными входами; точный порядок задают сценарии.

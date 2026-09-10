@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "INVALID_QUERY",
+    "message": "Неверный синтаксис поискового запроса.",
+    "request_id": "request-q010-invalid-quote",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

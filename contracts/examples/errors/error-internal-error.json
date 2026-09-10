@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "INTERNAL_ERROR",
+    "message": "Не удалось выполнить запрос. Сохраните идентификатор запроса для разбора.",
+    "request_id": "request-auth-q003-internal-500",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

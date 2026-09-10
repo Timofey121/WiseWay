@@ -50,6 +50,11 @@ class Report:
     fixtures_validated: int = 0
     corpus_files: int = 0
     lifecycle_fixtures: int = 0
+    search_scenarios: int = 0
+    facet_scenarios: int = 0
+    error_scenarios: int = 0
+    race_scenarios: int = 0
+    format_samples: int = 0
 
     def check(self, check_id: str, description: str) -> CheckResult:
         result = CheckResult(check_id=check_id, description=description)

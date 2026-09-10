@@ -449,6 +449,13 @@ def path_marker_errors(
     relative_path = item.get("location", {}).get("relative_path", "")
     leading = relative_path.split("/")[:-1]
     markers = item.get("markers", [])
+    for marker in markers:
+        if marker.get("kind") != "VALUE":
+            errors.append(
+                f"{name}: SearchItem.markers must contain only recognized VALUE "
+                f"parents, found kind {marker.get('kind')!r} "
+                f"({marker.get('marker_id')!r})"
+            )
     if len(markers) > len(leading):
         errors.append(
             f"{name}: {len(markers)} recognized marker(s) exceed the "
@@ -734,6 +741,10 @@ def compute_checksums(manifest: Dict[str, Any], root: Optional[Path] = None) -> 
         entry["id"]: content_hash(base / entry["file"])
         for entry in manifest.get("examples", [])
     }
+    fixtures = {
+        entry["id"]: content_hash(base / entry["file"])
+        for entry in manifest.get("fixtures", [])
+    }
     combined_input = (
         f"fixture_set={manifest['fixture_set']}\n"
         f"version={manifest['version']}\n"
@@ -742,11 +753,14 @@ def compute_checksums(manifest: Dict[str, Any], root: Optional[Path] = None) -> 
     )
     for entry in manifest.get("examples", []):
         combined_input += f"{entry['id']}={examples[entry['id']]}\n"
+    for entry in manifest.get("fixtures", []):
+        combined_input += f"fixture:{entry['id']}={fixtures[entry['id']]}\n"
     return {
         "algorithm": "sha256",
         "canonicalization": "json.dumps(parse(content), sort_keys=True, separators=(',', ':'), ensure_ascii=False)",
         "corpus": corpus_hash,
         "examples": examples,
+        "fixtures": fixtures,
         "combined": hashlib.sha256(combined_input.encode("utf-8")).hexdigest(),
     }
 

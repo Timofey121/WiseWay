@@ -1,6 +1,6 @@
 {
   "fixture_set": "wiseway-synthetic-metadata",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "seed": "wiseway-demo-seed-2031",
   "contract_version": "1.0.0",
   "display_timezone": "Europe/Moscow",
@@ -152,6 +152,7 @@
       "relative_path": "Archive/Atlas/Orion_2031/Data/met report.pdf",
       "extension": ".pdf",
       "size_bytes": 1500,
+      "modified_at": "2031-05-10T09:00:00Z",
       "marker_context": "atlas-archive-atlas-orion-data"
     },
     {
@@ -202,6 +203,7 @@
       "relative_path": "Archive/Atlas/Orion_2031/Data/met2report.pdf",
       "extension": ".pdf",
       "size_bytes": 2100,
+      "modified_at": "2031-05-10T10:00:00Z",
       "marker_context": "atlas-archive-atlas-orion-data"
     },
     {
@@ -456,6 +458,22 @@
       "extension": ".pdf",
       "size_bytes": 100,
       "marker_context": "atlas-archive-atlas-orion-reports-text"
+    },
+    {
+      "item_id": "file-atlas-tie-raw-note-upper",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/NOTE.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-tie-raw-note-lower",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/Note.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "marker_context": "atlas-archive-atlas-orion-data"
     },
     {
       "item_id": "file-atlas-rank-name-full",
@@ -784,7 +802,12 @@
       "root_id": "root-demo-nova",
       "query_text": "atlas reports",
       "matching_item_ids": [
-        "file-nova-q007-both"
+        "file-nova-q007-both",
+        "file-nova-q008-atlas-main",
+        "file-nova-q008-inserted",
+        "file-nova-q008-mixed",
+        "file-nova-q008-prefix",
+        "file-nova-q008-reversed"
       ],
       "non_matching": {
         "reports_only": [
@@ -794,13 +817,14 @@
           "file-nova-q007-atlas-only"
         ]
       },
-      "note": "Все обычные слова обязательны как префиксы токенов; файл Reports/summary.pdf не содержит atlas, файл Data/atlas-notes.pdf не содержит reports."
+      "note": "Все обычные слова обязательны как префиксы токенов и ищутся по filename+display_path, поэтому любой файл ветки Reports с Atlas в имени подходит; Reports/summary.pdf не содержит atlas, Data/atlas-notes.pdf не содержит reports. Точные ID/порядок — LT-03.1b."
     },
     "q008_phrase": {
       "root_id": "root-demo-nova",
       "query_text": "\"atlas main\"",
       "matching_item_ids": [
-        "file-nova-q008-atlas-main"
+        "file-nova-q008-atlas-main",
+        "file-nova-q008-mixed"
       ],
       "non_matching": {
         "inserted": [
@@ -877,7 +901,11 @@
         "file-atlas-tie-a",
         "file-atlas-tie-b"
       ],
-      "note": "Списки — неупорядоченные кандидатные входы (unordered); точный ожидаемый порядок natural/русской сортировки и tie-break определяет LT-03.1b.",
+      "raw_ties": [
+        "file-atlas-tie-raw-note-upper",
+        "file-atlas-tie-raw-note-lower"
+      ],
+      "note": "Списки — неупорядоченные кандидатные входы (unordered); точный ожидаемый порядок natural/русской сортировки и tie-break определяет LT-03.1b. raw_ties — пара с равным natural path и разным raw path для проверки второго звена tie-break.",
       "ordered": false
     },
     "ranking": {

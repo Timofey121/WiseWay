@@ -32,9 +32,10 @@ from .semantic import (
     validate_fixture,
 )
 from .verify import run_checks
-from . import synthetic
+from . import search_expectations, synthetic
 
 __all__ = [
+    "search_expectations",
     "CONTRACT_URI",
     "CheckResult",
     "ExampleSite",

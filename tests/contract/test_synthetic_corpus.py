@@ -212,7 +212,7 @@ class CorpusStructureTests(CorpusFixtureMixin, unittest.TestCase):
 
     def test_every_recognized_marker_matches_its_path_segments(self):
         files = self.materialized["files"]
-        self.assertEqual(162, len(files))
+        self.assertEqual(164, len(files))
         for item in files:
             with self.subTest(item=item["item_id"]):
                 self.assertEqual([], synthetic.path_marker_errors(item), item["item_id"])
@@ -522,9 +522,16 @@ class NegativeFixtureTests(CorpusFixtureMixin, unittest.TestCase):
         self.assertIn("FIX-EX-002", passed)
         self.assertIn("FIX-CORPUS-001", passed)
         self.assertIn("FIX-CHK-001", passed)
-        self.assertEqual(15, report.fixtures_validated)
-        self.assertEqual(162, report.corpus_files)
+        self.assertIn("FIX-SRCH-001", passed)
+        self.assertIn("FIX-SRCH-002", passed)
+        self.assertEqual(32, report.fixtures_validated)
+        self.assertEqual(164, report.corpus_files)
         self.assertEqual(8, report.lifecycle_fixtures)
+        self.assertEqual(51, report.search_scenarios)
+        self.assertEqual(6, report.facet_scenarios)
+        self.assertEqual(14, report.error_scenarios)
+        self.assertEqual(3, report.race_scenarios)
+        self.assertEqual(3, report.format_samples)
 
 
 if __name__ == "__main__":
