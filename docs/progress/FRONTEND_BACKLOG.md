@@ -1,0 +1,765 @@
+# WiseWay — frontend backlog
+
+Дата обследования: 10.09.2026. Область: внешняя синтетическая Demo-MVP.
+
+Это execution backlog: план декомпозиции и учёт подтверждённого прогресса, не доказательство готовой реализации сам по себе. Иерархия: **EPIC → EXECUTION UNIT → WORK PACKAGE → LEAF TASK**. В документе **10 EPIC, 32 WORK PACKAGE, 80 LEAF TASK**. WP-31/32 и их два leaf — условное планирование, не обязательные функции внешней MVP.
+
+## 1. Источники истины и решения пользователя
+
+Сокращения раскрывают точные пути. Разделы, IDs требований и operationId в карточках относятся именно к этим файлам.
+
+| Ключ | Источник |
+|---|---|
+| RULES | `AGENTS.md` целиком |
+| START | `docs/team/00_START_HERE.md` |
+| TZ | `docs/team/01_PROJECT_TZ.md` |
+| API | `docs/team/02_API_CONTRACT.md` |
+| FE | `docs/team/03_FRONTEND.md` |
+| BE | `docs/team/04_BACKEND.md` |
+| QA | `docs/team/05_QA.md` |
+| PLAN | `docs/team/06_EXECUTION_PLAN.md` |
+| MATRIX | `docs/team/07_ACCEPTANCE_MATRIX.md`, Q-001…045 со всеми параметрами |
+| OAS | `contracts/openapi/wiseway-v1.yaml`, OpenAPI 3.1.1, info.version=1.0.0 |
+| SEM | `contracts/semantics.md` |
+| README | `README.md` |
+
+`OAS <operationId>` обозначает операцию в `paths`, названия DTO — `components/schemas`. Публичный префикс `/api/v1`. Frontend routes здесь намеренно не изобретаются.
+
+### Долговременные решения пользователя
+
+- **D-01 — название.** Текущее название WiseWay. Старое название, ссылки на контракт и cookie в Markdown ТЗ заменяются на WiseWay, `wiseway-v1.yaml`, `wiseway_session`. Второй контракт не создаётся.
+- **D-02 — согласование.** Пользователь подтвердил проведённое совместное согласование контракта: в целом стороны его приняли. SEM и командные документы в части «ещё не согласован/не создан» устарели. Это подтверждение пользователя, **не свидетельство валидности схемы или прохождения тестов**.
+- **D-03 — QA.** Отдельные человеческие QA-проверки до готовности MVP не выполняются. Промежуточные подписи QA из FE/PLAN не блокируют разработку. Разработчики готовят независимые от алгоритмов ожидаемые результаты и выполняют автоматические проверки; `reviewer` проверяет каждый leaf. Финальная человеческая приёмка сохранена. Никакого фиктивного QA PASS.
+- **D-04 — изменения контракта.** Точечные исправления допустимы в рабочем порядке без повторного вопроса, с отчётом пользователю. Глобальные изменения и изменение бизнес-семантики требуют согласования. Worker brief должен назвать одобренную коррекцию и разрешённые пути по RULES; само планирование не изменяет OAS.
+- **D-05 — порядок.** Принят порядок: коррекция схемы → контрактные проверки и согласованные примеры → generated client/mocks → shell/auth/search → dictionaries/sorting; real-интеграция посрезовая, а не только финальная.
+
+Противоречащие этим решениям формулировки о промежуточных согласованиях/QA не исполняются как gates и не объявляются выполненными. Остальные функциональные AC и safety-требования не ослабляются. Backlog не подменяет исходные ТЗ; уточнения зафиксированы явно здесь, execution workflow определяется текущим RULES.
+
+## 2. Фактическая исходная точка на дату обследования
+
+Исходное обследование охватило RULES, README, все восемь документов `docs/team/`, OAS и SEM, корень worktree, `docs/`, `contracts/`. Таблица фиксирует baseline планирования на 10.09.2026, а не неизменное состояние репозитория: перед исполнением WP orchestrator сверяет её и статусы с фактическими артефактами.
+
+| Артефакт | Evidence | Вывод |
+|---|---|---|
+| ТЗ и 45 сценариев | START…MATRIX присутствуют; MATRIX содержит ожидаемые проверки, не протокол | План существует; выполнение не доказано |
+| Контракт A/B/C | OAS содержит 33 operationId, DTO, security, errors, встроенные examples; SEM описывает семантику | Документальная часть FE-01/02 существенно подготовлена; не создавать заново |
+| Согласование | Подтверждение пользователя D-02 | Не blocker; FE-01/02 целиком не DONE: клиент/mocks/проверки отсутствуют |
+| UI, клиент, mocks, сервер | Нет `frontend/`, `backend/` и product code | Ни один AUTH/SRCH/DICT/QUEUE/FILE/AUD UI-сценарий не реализован |
+| Корпус и отдельные examples | Нет `contracts/examples/`, `fixtures/synthetic/`; examples только в YAML | Примеры не равны исполняемому корпусу или golden tests |
+| Тесты/сборка | Нет `tests/`, product manifest/lock/ADR, команд запуска приложения | Обещанные README проверки сейчас невоспроизводимы |
+| `.opencode/` | Агентная инфраструктура и её зависимости | Не frontend scaffold и не тестовая инфраструктура продукта |
+
+Наличие документа само по себе не переводит leaf в VERIFIED/DONE; IN_PROGRESS не применяется к ещё не начатой задаче. Согласование, schema verification, mock pass, real API pass и приёмка MVP — разные факты.
+
+## 3. Статусы и общие критерии
+
+- **TODO:** известный результат ожидает выполнения; обычные зависимости могут быть не готовы.
+- **IN_PROGRESS:** исполнение leaf, WP или выбранного Execution Unit действительно началось; включает implementation, review, verification и подготовку checkpoint.
+- **BLOCKED:** конкретный внешний отсутствующий вход или противоречие указан в dependencies. Не распространяется автоматически на всех транзитивных потребителей.
+- **VERIFIED:** leaf реализован, независимый reviewer дал PASS, требуемая verification фактически выполнена и успешна, проверенный checkpoint успешно committed и pushed в текущую feature branch. Внутренний WP в Epic становится VERIFIED после VERIFIED всех обязательных leaf, полного package review с PASS, успешной package-level verification и commit/push итогового состояния. Одного reviewer PASS или локального commit недостаточно.
+- **READY_FOR_HUMAN_REVIEW:** все обязательные работы выбранного Execution Unit завершены: leaf — VERIFIED, внутренние WP — VERIFIED, если применимо; выполнена полная verification, независимый финальный review всего Execution Unit дал PASS, итоговое состояние feature branch committed и pushed. Это финальный агентный статус выбранного Execution Unit (Epic или отдельно выбранного WP) до человеческой интеграции, а не каждого внутреннего WP.
+- **DONE:** результат интегрирован в `main` либо человек явно подтвердил эквивалентное состояние интеграции. Завершение feature branch само по себе не DONE; DONE mock-пакета не означает готовую MVP.
+
+Execution Unit — единица автономного выполнения от постановки человеком до финального человеческого review: одна feature branch, один worktree, одна OpenCode-сессия и один eventual PR. По умолчанию выбирается целый Epic `E-XX`; его WP выполняются последовательно и автономно по готовности dependencies в одной ветке, без остановки для подтверждения человеком между пакетами. В исключительном случае отдельный `WP-XX` выбирается как Execution Unit, если Epic слишком велик, внешне блокирован или иначе не подходит для одной branch/PR. Launcher или человек создаёт branch/worktree выбранного Execution Unit **до старта OpenCode**. Переход между WP или leaf внутри него не создаёт отдельную branch/worktree/session/PR. За пределы выбранного Execution Unit orchestrator автоматически не переходит; при блокировке одного пути продолжает другую допустимую работу внутри него, если это возможно.
+
+WP — связный внутренний implementation/review checkpoint в Execution Unit; несколько последовательных worker/reviewer runs допустимы. Leaf целиком передаётся одному worker и целиком проверяется reviewer; код, тесты и handoff входят в тот же leaf. Родитель `LT-XX.Y` — `WP-XX`, заданный заголовком. Перед исполнением составляется brief с точными ALLOWED/FORBIDDEN PATHS по фактическому дереву. Backlog не разрешает менять защищённые пути или backend. Слишком широкий обнаруженный repair оформляется отдельным ограниченным результатом, не задачей «исправить всё».
+
+Git lifecycle внутри выбранного Execution Unit по RULES:
+
+1. `frontend-worker` реализует leaf, но не выполняет staging/commit/push, не переключает ветки и не публикует checkpoints; `reviewer` независимо проверяет результат и только инспектирует Git.
+2. После reviewer PASS и успешной требуемой verification orchestrator проверяет текущую ветку (не `main`/`master`), status и точный diff, обновляет progress, stages только предназначенные изменения, создаёт checkpoint commit и делает push **текущей feature branch**. Чужие изменения, секреты и неожиданные изменения control plane не включаются.
+3. Переход leaf в VERIFIED действителен только после успешного commit/push. При неуспехе checkpoint/push leaf не считается VERIFIED; orchestrator сохраняет фактический progress и устраняет сбой, не переходя к следующему leaf как будто публикация прошла. После успешного checkpoint он автономно продолжает следующий допустимый leaf того же WP.
+4. После всех обязательных leaf WP orchestrator проводит полный package review и verification, фиксирует и публикует итоговое состояние. Внутренний WP выбранного Epic становится VERIFIED; orchestrator сразу продолжает следующий допустимый WP того же Epic в текущей ветке, не возвращая управление человеку только из-за завершения пакета.
+5. После завершения всех обязательных работ выбранного Execution Unit orchestrator проводит финальный review всего Execution Unit и полную verification, фиксирует и публикует итоговое состояние и progress READY_FOR_HUMAN_REVIEW. Для отдельно выбранного WP это финальный review всего WP; для Epic — всего Epic после VERIFIED внутренних WP. Статус действителен только при выполнении всех условий выше. Затем orchestrator останавливается и не начинает другой Execution Unit автоматически.
+6. Человек выполняет final PR review и merge в `main`; создание PR агентом требует отдельного явного запроса. Force-push и переписывание опубликованной истории запрещены.
+
+### Общие acceptance criteria G — часть всех применимых карточек
+
+- **G-1:** только синтетика, DTO из OAS, без ручных копий/generated edits. Matcher/ranking/readiness/totals/FS/snapshot membership — серверные алгоритмы. Нет скрытого преобразования несовместимых ответов.
+- **G-2:** русский UI и безопасные ошибки; loading/empty/success/error/disabled с объяснением; для поиска и расчётов stale. Labels, клавиатура, видимый фокус, ошибка не только цветом. Desktop 1280×720, при меньшей ширине допустима прокрутка. Raw-имена/пути не переводятся.
+- **G-3:** API §11: 401 прекращает сессию; 403 не повторяет запись; 404 предлагает перечитать список; 409 — предметная реакция; 422 — поля/предел; 429 — Retry-After; 500/503/сеть — без ложного успеха. Безопасные request_id/operation_id доступны для разбора, тела/секреты не журналируются.
+- **G-4:** старые ответы/данные предыдущего контекста не заменяют новые. Cursor только где предусмотрен OAS; counts не вычисляются по странице. Nullable не подменяется отсутствующим полем или выдуманным размещением.
+- **G-5:** поиск/пути/ответы/CSRF не сохраняются в URL/history state/localStorage/sessionStorage/cookie/cache приложения. Межраздельное сохранение поиска только в памяти вкладки. Logout/401/смена пользователя очищают приватный state и старые requests/polls, не отменяя серверные партии.
+- **G-6:** handoff по FE §7: IDs, diff, версии схемы/fixtures, точные команды/результаты, S/M/A/E, ограничения. Ни mock, ни схема не доказывают файловую безопасность. Промежуточная QA-подпись не нужна, финальная человеческая приёмка нужна.
+
+### Verification expectations V
+
+Это **будущие проверки**, не утверждение об уже выполненных командах. Имена runner/команд фиксируются в WP-02/04 и README, не придумываются заранее.
+
+- **V-S:** OpenAPI 3.1 validation, refs/operationId/параметры/security, schema-validation examples, отклонение negative payload, семантические инварианты примеров.
+- **V-C:** typecheck/lint, unit/component tests затронутого поведения, production build на закреплённых зависимостях; для клиента повторная генерация без diff.
+- **V-M:** браузер со schema-valid mocks, все G-2 состояния, задержки/ошибки/races, network calls/focus/storage. Не проверка настоящего FS.
+- **V-E:** настоящий UI → настоящий API без mock fallback; independent golden expectations, версии FE/BE/OAS/seed/generation/RuleSet и команды; безопасные API/audit/FS evidence. Серверные/FS проверки предоставляет backend, финальный QA — человек.
+- **V-H:** документарный review полноты, ссылок, границ и доказательств; не имитация исполнения тестов.
+
+WP принимает объединение AC своих leaf + G и совместимость результатов. Q-ID означает все параметры строки MATRIX на применимом уровне, не один happy path. Реализация включает локальные тесты в сам leaf; поздняя регрессия их не заменяет.
+
+## 4. Blockers, внешние зависимости и технические решения
+
+| ID | Факт и источник | Решение, владелец и влияние |
+|---|---|---|
+| B-01 | OAS listSortingBatches/listQuarantineItems используют CompanyId `in: path`, но `/sorting/batches` и `/quarantine` не содержат `{company_id}`; API §8/9 требует query | LT-01.1: отдельный required query-параметр, настоящий path-параметр сохранить. Точечная коррекция одобрена; до неё валидность схемы/генерация не подтверждены |
+| B-02 | README обещает `tests/contract/requirements.txt` и `tests/contract/verify_contract.py`; отсутствует весь `tests/` | WP-02: frontend создаёт исполняемые проверки и правдивую инструкцию; до появления runner обещание README не является evidence |
+| B-03 | OAS createDictionarySimulation: в simulation_no_scenario/rule_conflict filename отличается от basename source; у conflict ссылка на вторую опубликованную версию отсутствует в base_rule_set. Связанные по selection_id examples selection/preview показывают 120/1 элемент | LT-01.2 и LT-02.2: согласовать конечные примеры и проверки; не runtime-transformation UI. Частный дефект контрактного пакета, не новая бизнес-функция |
+| X-STACK | TZ §11 предлагает React+TypeScript; runtime/package manager/generator/test runners и обычный frontend toolchain предстоит закрепить в ADR/lock | **Неблокирующее техническое решение orchestrator в LT-04.1**, не человеческий blocker и не blocking dependency. Выбор внутри требований выполняется автономно, без отдельного согласования с человеком; инструменты не считать уже установленными |
+| X-BE-A | Нет BE-01/02: auth/config, опубликованного индекса/search API | Backend; блокирует real-pass WP-25, не mock UI |
+| X-BE-B | Нет BE-03/04a/b: drafts/matcher/simulation/publish/readiness/snapshots/preview | Backend; блокирует real-pass WP-26/27. BE-04a зависит от BE-01, simulation от READY BE-04a, BE-04b от BE-03+BE-04a; цикл не создавать |
+| X-BE-C | Нет BE-05/06: sandbox executor/durable batches/quarantine/return/общего запуска; нет реализованного audit API BE-01 | Backend; блокирует WP-28/29/30, не mock-отображение |
+| X-LAB | Нет стенда, controlled clocks/fault points, синхронизации гонок и безопасного FS-инвентаря | Backend предоставляет тестовые механизмы вне публичного API. Без них нельзя доказать races/restart/performance; случайная сетевая ошибка не замена |
+| X-RECOVERY | SEM оставляет открытой процедуру доказательства размещения/записи результата/снятия claim; публичного recovery endpoint нет | Предложен технический серверный административный порядок без нового UI/endpoint. Backend и человек фиксируют механизм перед передачей. UI показывает факт RECOVERY_REQUIRED без слепого retry; этот UI не блокирован |
+| X-HELP | FE-06 требует принятого UI и назначения backend; D-03 убирает промежуточные QA-прогоны | До явного принятия доступного UI человеком и назначения backend помощь не начинается. Ранний QA gate не выдумывается |
+| X-INTERNAL | TZ §13: неизвестны реальные схема/SMB/FS/права/ресурсы/accounts/timezone/reserve/rollback | Человек и владельцы внутренней среды; WP-32 только уточнение scope, не реализация по догадке |
+
+B-01/B-02 — два технических препятствия раннего пути; B-03 устраняется в том же контрактном потоке. X-RECOVERY — отдельный операционный вопрос, не причина остановить весь frontend. Историческое название и отсутствие промежуточных QA-подписей больше не blockers (D-01…03). Новые противоречия регистрируются явно.
+
+## EPIC E-01 — Проверяемый контракт и эталоны
+
+Status: TODO. Scope: FE-01/02; TZ §3/11/14; API §1–12. Существующий OAS — основа, не задача создания нового API.
+
+### WP-01 — Точечная нормализация контракта
+
+- **Status:** TODO. **Parent:** E-01. **Dependencies:** D-02/04/05; устраняет B-01/B-03.
+- **Goal:** сделать схему и примеры пригодными для проверки без смены бизнес-семантики.
+- **Sources of truth:** OAS listSortingBatches/listQuarantineItems/createDictionarySimulation/createSortingSelection/createSortingPreview; API §6–9; SEM правила/очередь.
+- **Acceptance criteria:** правильные query/path parameters, согласованные примеры; новые продуктовые операции/поля не добавлены; исправления перечислены в handoff.
+- **Verification expectations:** V-H точного diff параметров и таблицы связей examples достаточен для review этой документальной коррекции. Полная schema validation — самостоятельный результат WP-02, не обратная зависимость WP-01 и не уже пройденный этап.
+- **Leaf tasks:** LT-01.1, LT-01.2. Будущий scope: OAS и контрактный handoff; не backend/UI.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-01.1 | TODO | D-04 | Исправить ровно B-01 | OAS CompanyId/listSortingBatches/listQuarantineItems; API §8/9 | Отдельный required query company_id со схемой Id в двух GET; CompanyId in:path для `/companies/{company_id}/…` сохранён; пути/ответы прежние | V-H parameter/path matching и всех ссылок на CompanyId/diff; executable regression добавляет LT-02.1 |
+| LT-01.2 | TODO | D-04 | Устранить B-03 в examples | OAS Simulation/PlanRow/RuleSet/SelectionSnapshot/Preview/examples; API §6/7; QA §4 | filename/source согласованы; published references входят в RuleSet; snapshot/preview согласованы либо отдельные сценарии имеют разные IDs; без domain implementation | V-H таблицы связей, V-S после LT-02.1; regression LT-02.2 |
+
+### WP-02 — Исполняемые контрактные проверки
+
+- **Status:** TODO. **Parent:** E-01. **Dependencies:** WP-01; устраняет B-02.
+- **Goal:** заменить обещание README воспроизводимым runner.
+- **Sources of truth:** README проверка; FE-01/02; API §2/11/12; PLAN §7; Q-043; OAS целиком.
+- **Acceptance criteria:** 33 операции, структура/examples/negative requests/инварианты проверяются; зависимости закреплены; README содержит выполненные команды. Backend и промежуточная QA-подпись не нужны.
+- **Verification expectations:** V-S positive/negative; V-H инструкции/результатов.
+- **Leaf tasks:** LT-02.1, LT-02.2. Scope: `tests/contract/`, README, контрактные examples.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-02.1 | TODO | WP-01 | OpenAPI 3.1 validation | OAS paths/components; API §2/11/12; README; Q-043 S | Unique operationId, refs, path matching, required/nullable/enums/oneOf/additionalProperties, security/CSRF/idempotency/HTTP responses и встроенные examples проверяются; README-команды существуют | V-S с invalid parameter/unknown field; версии, команды и фактический результат |
+| LT-02.2 | TODO | LT-02.1 | Семантические инварианты examples | API §4/6–11; SEM поиск/планы/исходы/аудит; Q-011/017/024/029/038/043 S | filename/location, IDLE/total/returned_count/limited, PlanCounts без двойного счёта, completed_count/recovery, связи сценария/error.operation_id согласованы; страница не весь набор | V-S positive/negative fixtures каждого инварианта; без matcher/ranking алгоритма |
+
+### WP-03 — Независимые синтетические эталоны
+
+- **Status:** TODO. **Parent:** E-01. **Dependencies:** WP-02, D-03.
+- **Goal:** единый конечный набор A/B/C ожиданий для mocks и real-регрессии.
+- **Sources of truth:** QA §4/5; TZ §6.3/12/14; FE-01/02; API §12; Q-001…045; OAS schemas/examples.
+- **Acceptance criteria:** стабильные IDs, версия/seed, exact expectations независимо от тестируемых алгоритмов; общие публичные схемы. Не QA acceptance и не backend FS-генератор.
+- **Verification expectations:** V-S/V-H таблиц; повторное использование в M/E.
+- **Leaf tasks:** LT-03.1, LT-03.2, LT-03.3, LT-03.4, LT-03.5. Scope: `contracts/examples/`, `fixtures/synthetic/` — описания/fixtures, не executor. Каждый leaf создаёт свой конечный набор ожиданий, а не весь B/C-контур одним run.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-03.1 | TODO | WP-02 | Эталоны auth/search | AUTH-01…05/SRCH-01…25; TZ §12; API §3/4; QA §4; Q-001…014/042/043; OAS Session/SearchResponse/FacetResponse | Два корня, Atlas/Nova разной глубины, raw-case/unrecognized/optional tail; exact AND/prefix/phrase/token boundaries/ranking/ties; IDLE/zero/N=10 и 100 с >N; content-only/old-path отрицательные случаи, разные типы/нулевой размер; роли без встроенных секретов | V-S и ручная независимая сверка golden; параметры Q-007…014 перечислены |
+| LT-03.2 | TODO | WP-02 | Эталоны целей, правил и публикаций | DICT-01…12; API §5/6; QA §4; Q-015…021/029 (publish)/044 (target); OAS TargetDirectory/Dictionary/Simulation/RuleSet | Две компании/два справочника одной/два актора; конечные пары rule→ожидание для полей/масок/суффиксов/приоритетов/одинаковых и разных целей; round-trip/revision/empty READY/full RuleSet/ack/TTL/restore/publication retry; значения независимы от matcher | V-S/V-H конечной таблицы Q-015…021 и отрицательных target/revision/ack cases; не реализация домена |
+| LT-03.3 | TODO | WP-02, LT-03.2 | Эталоны очереди, снимков и preview | QUEUE-01…06/10; API §7; QA §4; Q-022…027; OAS QueueResponse/SelectionSnapshot/Preview | READY 0/120/1001, counts всей компании и filtered eligible отдельно; explicit/all matching/late arrivals/count change/expiry/owner scope; PlanRow использует принятые RuleSet references; все Prediction/CollisionDetails kinds, nullable цели; preflight ожидания различают DIRECT и PREVIEWED | V-S/V-H snapshot/preview links и finite входов/ошибок; membership задан таблицей, не вычисляется mock алгоритмом |
+| LT-03.4 | TODO | WP-02, LT-03.3 | Эталоны фактических партий и файловых исходов | QUEUE-07…10, FILE-01…06/08/09; API §8; QA §4/8; Q-028…037/039/040/044; OAS Batch/Outcome/OutcomeCounts | Отдельные fixtures всех BatchState/Outcome/reasons, partial/recovery/null location, lost response/claim overlap/source change, обе коллизии/manual review/confirmed quarantine/restart; exact counts, attempts и expected placements независимы от executor; это описание, не физическое evidence | V-S/V-H каждого state/reason и сцепления с selection; expected inventory/hashes contract описан безопасно, FS-исполнение принадлежит BE |
+| LT-03.5 | TODO | WP-02, LT-03.2, LT-03.4 | Эталоны карантина, возврата и журнала | FILE-07, AUD-01…05; API §9–11; QA §4/8; Q-029 (return)/038/041/043; OAS QuarantineItem/QuarantineReturnResponse/AuditEvent | Confirmed quarantine/can_return/recovery, все return conflicts/retry; BUSINESS/SYSTEM/nullable actor/blocked actors/cursor/new events; события связаны с dictionary/batch/return fixtures, request_id/operation_id/source_attempt_id согласованы; без реальных секретов | V-S/V-H конечных return/audit scenarios и nullable/links; не объявлять реальный аудит или возврат доказанным |
+
+## EPIC E-02 — Toolchain, generated client, транспорт и mocks
+
+Status: TODO. Scope: FE-02; TZ §11/14; NFR-02/05. Браузерная сборка — frontend, backend/infra здесь не реализуются.
+
+### WP-04 — Воспроизводимая браузерная основа
+
+- **Status:** TODO. **Parent:** E-02. **Dependencies:** WP-02.
+- **Goal:** одна собираемая frontend-структура и generated client.
+- **Sources of truth:** TZ §11/NFR-02; FE §2/3, FE-02; PLAN §2/3/7; OAS целиком.
+- **Acceptance criteria:** toolchain/ADR/lock закреплены; typecheck/lint/component/browser/build доступны; поддержка OpenAPI 3.1, без ручных DTO.
+- **Verification expectations:** V-C/V-S, повторная генерация без diff, чистая установка.
+- **Leaf tasks:** LT-04.1, LT-04.2. Scope: frontend bootstrap/config/generated/tests, согласованный frontend ADR/README.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-04.1 | TODO | — | Scaffold с runner | TZ §11/NFR-02; FE §3; PLAN §2/3/7 | Orchestrator принимает X-STACK внутри требований: runtime/package manager/generator/test runners и обычный frontend toolchain; решение закреплено в ADR, runtime/dependencies/lock зафиксированы; одна структура features/api/generated/mocks/tests; реальные typecheck/lint/component/browser/build команды; без лишних экранов/design system | V-C smoke/build/установки по lock; V-H ADR/README; React+TS не объявлены уже установленными |
+| LT-04.2 | TODO | LT-04.1, WP-02 | Клиент единственного OAS | Все 33 OAS operationId/schemas; API §12; FE-02; Q-043 S | Generated types/client в `frontend/src/api/generated`; nullable/unions/oneOf/headers/query/body корректны; генерация документирована, без ручных DTO/правок output | V-C usage tests A/B/C, DIRECT/PREVIEWED/query company_id; повторная генерация без diff |
+
+### WP-05 — Безопасный HTTP-транспорт
+
+- **Status:** TODO. **Parent:** E-02. **Dependencies:** WP-04.
+- **Goal:** единое mock/real-подключение с корректными ошибками/повторами.
+- **Sources of truth:** API §2/11; SEM транспорт/повторы; AUTH-02/04, NFR-05/07; OAS security/headers/errors.
+- **Acceptance criteria:** credentials/CSRF/no-store, safe errors, строго ограниченные retry; нет сохранения чувствительных данных/скрытой адаптации ответа.
+- **Verification expectations:** V-C HTTP tests; V-M с feature UI; G-1/3/5.
+- **Leaf tasks:** LT-05.1, LT-05.2. Scope: `frontend/src/api/` вне generated output, tests.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-05.1 | TODO | WP-04 | Session headers и safe errors | API §2/11; OAS cookieAuth/XCSRFToken/RequestId/NoStore/RetryAfter/ErrorResponse; Q-001/003/043 | Cookie обслуживает браузер, CSRF в памяти; заголовок на объявленных мутациях, включая simulation/selection/preview; читающие POST не мутации; 401 сигнал очистки, 403 без retry; failure не success; request_id/operation_id/field_errors доступны без утечки | V-C 200/204/401/403/404/409/422/429/500/503/сеть, состав requests/очистка token; режим меняет transport config |
+| LT-05.2 | TODO | LT-05.1 | Политика безопасного повтора | API §2 «Идемпотентность», §11; SEM повторы; QUEUE-09; Q-003/029/030 | Publish/batch/return удерживают UUID+исходное тело в памяти; новый ключ — новое явное действие; прочие мутации без auto retry/фиктивного ключа; retryable не отменяет ограничения; Retry-After/backoff, без одинаковых параллельных polls; session scope | V-C lost response, тело/ключ, запрет слепого нового ключа, controlled clocks; feature reconciliation в своих leaf |
+
+### WP-06 — Контрактные mocks A
+
+- **Status:** TODO. **Parent:** E-02. **Dependencies:** WP-03, WP-05.
+- **Goal:** воспроизводимые auth/search сценарии без backend.
+- **Sources of truth:** FE-02; API §3/4/12; QA §4/5; Q-001…014/043; OAS A-операции.
+- **Acceptance criteria:** requests/responses schema-valid, delay/error/reset управляемы; нет клиентского поиска/ranking по dataset; mock указан в evidence.
+- **Verification expectations:** V-S/V-C handlers/negative payload; V-M потребителей позднее.
+- **Leaf tasks:** LT-06.1, LT-06.2. Scope: mocks/tests/общие fixtures.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-06.1 | TODO | WP-03, WP-05 | Mock bootstrap/session/config | OAS getHealth/login/getSession/logout/getAppConfig/listRoots/listCompanies; API §2/3; Q-001…004/043 | Session/401/403, empty roots/companies, разные limits/timezone, сеть/delay воспроизводимы; requests валидируются; реальных credentials нет; mock не защищённый auth backend | V-S/V-C всех handlers/headers/reset/invalid fields |
+| LT-06.2 | TODO | LT-06.1, LT-03.1 | Mock выдачи/facets/races | OAS searchFiles/getSearchFacet; API §4; Q-004…014 | IDLE/zero/limited/unrecognized/freshness, schema/marker/503 ошибки, управляемый порядок ответов таблицы/dropdown; request_state_id конкретной отправки; totals/order из эталона, не matcher | V-S/V-C handlers/delays; invalid request не даёт правдоподобный успех |
+
+### WP-07 — Контрактные mocks B/C
+
+- **Status:** TODO. **Parent:** E-02. **Dependencies:** WP-03, WP-05, LT-06.1.
+- **Goal:** finite сценарии операционных экранов без файловых действий.
+- **Sources of truth:** FE-02/04; API §5–12; Q-015…041/043/044; OAS B/C operations.
+- **Acceptance criteria:** revisions/stale/TTL/access/lost responses/все исходы; mocks не domain backend; схемы общие с real.
+- **Verification expectations:** V-S/V-C трёх групп handlers, M-smoke с UI.
+- **Leaf tasks:** LT-07.1, LT-07.2, LT-07.3. Scope: mocks/tests/fixtures, не backend.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-07.1 | TODO | LT-03.2, WP-05, LT-06.1 | Mock targets/dictionaries lifecycle | OAS target/dictionary/simulation operations; API §5/6; Q-015…021 | Canned responses разрешённой/невалидной цели, create/save/revision/lost response, simulation READY/empty/stale/conflict/no-scenario, publish retry/restore/history; schemas, без правил/FS алгоритма | V-S/V-C handlers/error/cursor/references/reset |
+| LT-07.2 | TODO | LT-03.3, LT-03.4, WP-05, LT-06.1 | Mock sorting lifecycle | OAS sorting operations; API §7/8; Q-022…037/039/040 | EXPLICIT/ALL_MATCHING, 0/120/1001, late arrivals, stale/expiry, DIRECT/PREVIEWED/lost response/retry; все BatchState/Outcome/reasons/progress/cursor; scripted scenarios, не claim/snapshot алгоритмы | V-S/V-C finite scenarios/таймеров/request variants; mock race не доказательство реальной гонки |
+| LT-07.3 | TODO | LT-03.5, WP-05, LT-06.1 | Mock quarantine/audit | OAS quarantine/audit operations; API §9–11; Q-029/038/041/043 | Confirmed quarantine/can_return/recovery/return conflicts; BUSINESS/SYSTEM/nullable actor/заблокированные авторы; cursor/new events/operation_id/source_attempt_id; без recovery endpoint | V-S/V-C handlers/null/cursor/reset/late responses/errors |
+
+## EPIC E-03 — Оболочка и сессия
+
+Status: TODO. Scope: FE-03; AUTH-01…05, SRCH-18, TZ §4, NFR-01/05.
+
+### WP-08 — Оболочка и app-config
+
+- **Status:** TODO. **Parent:** E-03. **Dependencies:** WP-05, WP-06.
+- **Goal:** одна русская оболочка разделов с настройками сервера.
+- **Sources of truth:** TZ §4/12; FE §4 navigation; API §3 AppConfig; Q-004/042/043.
+- **Acceptance criteria:** нет dashboard/лишних функций; старт — пустой поиск; навигация не search/mutations; limits/timezone не зашиты в components; G-2/5.
+- **Verification expectations:** V-C/V-M bootstrap/navigation/config/keyboard.
+- **Leaf tasks:** LT-08.1, LT-08.2. Scope: frontend shell/shared config/UI/tests.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-08.1 | TODO | WP-06 | Доступные разделы без скрытых действий | TZ §3/4, SRCH-18/NFR-01; FE §4 navigation; Q-042 | Поиск/справочники/очередь/карантин/журнал; shell/focus/keyboard; старт поиск, память без URL/storage; переходы не search/mutations; общий reset private state для LT-09.2; accounts UI не нужен | V-C/V-M навигации/focus/network; незавершённые экраны не изображают рабочий продукт |
+| LT-08.2 | TODO | LT-08.1, LT-05.1 | Config и единые форматы | OAS getAppConfig/AppConfig/Count/Instant; API §3; SRCH-16, TZ §12; Q-042 | Config loading/error без фиктивных defaults; N/query/batch/TTL/polls из config; даты ДД.ММ.ГГГГ ЧЧ:ММ в display_timezone, B…TB по 1000 ≤1 знака; целые bytes точны; demo timezone не корпоративное решение | V-C 0/1000/границы единиц/Count/timezone/разные config; V-M форматов |
+
+### WP-09 — Вход и прекращение контекста
+
+- **Status:** TODO. **Parent:** E-03. **Dependencies:** WP-08.
+- **Goal:** auth-flow и прекращение запросов от прежнего пользователя.
+- **Sources of truth:** AUTH-01…05/NFR-05; API §2/3/11; SEM session; Q-001…003/030/042.
+- **Acceptance criteria:** login/session/logout, без self-registration/reset; private context/polls очищаются; batch не отменяется; credentials не сохраняются.
+- **Verification expectations:** V-C/V-M network/storage; реальные hash/cookie/Origin отдельно LT-25.1.
+- **Leaf tasks:** LT-09.1, LT-09.2. Scope: auth/session/shell/tests.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-09.1 | TODO | WP-08 | Login/session bootstrap | OAS login/getSession/Session; API §2/3; AUTH-01/02/04/05; Q-001 | Required login/password, submitting/общая LOGIN_FAILED/error; 401 отличается от недоступности; actor/role серверные, actor_id в мутациях нет; без регистрации/reset/сохранения секретов; успех — пустой поиск | V-C/V-M WORKER/ADMIN/failure/explicit resubmit/network/focus/storage |
+| LT-09.2 | TODO | LT-09.1, LT-05.2 | Logout/expiry/block/reset | OAS logout/getSession; API §2/3; AUTH-03/SRCH-18; SEM idle/absolute/expires_at; Q-002/003/030/042 | Logout/401 очищают search/draft/selection/preview/session/polls; late success не возвращает их; неизвестный logout → session перед повтором; без выдуманного session backend; accepted batch с прежним actor | V-C/V-M logout/401/block/reload/user switch/delayed responses; новые features подключаются к G-5 |
+
+## EPIC E-04 — Иерархический поиск и контекст отклонений
+
+Status: TODO. Scope: FE-03; SRCH-01…25; NFR-01/03/04/06. UI не вычисляет поисковую семантику и не реализует индексатор; real-доказательства в WP-25/30.
+
+### WP-10 — Корень и применение поискового текста
+
+- **Status:** TODO. **Parent:** E-04. **Dependencies:** WP-09, LT-06.2.
+- **Goal:** пользователь задаёт допустимый поиск в одном опубликованном корне.
+- **Sources of truth:** SRCH-01/03/07…11/18; API §4 SearchRequest/IDLE; FE §4 поиск; Q-004/005/007…010.
+- **Acceptance criteria:** без корня нет поиска; root-only IDLE; введённый/применённый текст разделены; quotes/triggers/dedup/reset точны, без fuzzy/ослабления условий.
+- **Verification expectations:** V-C/V-M запросов, triggers, clear/reset и памяти; полная таблица подключается WP-12.
+- **Leaf tasks:** LT-10.1, LT-10.2. Scope: `frontend/src/features/search/`, frontend tests.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-10.1 | TODO | WP-09, LT-06.2 | Выбор одного корня и IDLE | SRCH-01/03/10/11/18; OAS listRoots/searchFiles/SearchResponse; API §3/4; Q-004/005 | Только опубликованные roots; без root disabled с причиной, root-only search возвращает IDLE/первый facet/пустую таблицу/total=null; root switch очищает оба текста/markers/results/sort/open lists; full reset снимает root; память только вкладки | V-C/V-M без корня, empty roots, root-only, switch/reset; network не получает запрос всех файлов или глобальный поиск |
+| LT-10.2 | TODO | LT-10.1 | Точные текстовые triggers | SRCH-07…11; API §4 request_state_id/query_text; FE §4 ввод; Q-007…010 | Пробел завершённого слова, Enter/«Найти» применяют текст; незакрытая кавычка не отправляется, focus и «Закройте кавычку»; max_query_length; отдельные draft/applied text и dedup key; новый ID каждой разрешённой отправки; clear сохраняет root/markers; новый текст сбрасывает manual sort | V-C/V-M пробел внутри цитаты, повтор условий, закрытие цитаты, empty/length limits; слова/фразы передаются серверу без клиентского matcher/нормализации смысла |
+
+### WP-11 — Последовательные уровни и альтернативы
+
+- **Status:** TODO. **Parent:** E-04. **Dependencies:** WP-10.
+- **Goal:** динамический каскад серверных уровней, включая редактирование родителей.
+- **Sources of truth:** SRCH-02…06/10/19/20/25; API §4 searchFiles/getSearchFacet; FE §4 маркеры; Q-005/006/012.
+- **Acceptance criteria:** одно raw-значение на уровень, произвольная глубина схемы, точные counts и порядок сервера; отдельный список не меняет выдачу до выбора; G-4.
+- **Verification expectations:** V-C/V-M вариантов глубины, prefix, независимых запросов dropdown/table.
+- **Leaf tasks:** LT-11.1, LT-11.2. Scope: search/tests.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-11.1 | TODO | WP-10 | Динамический последовательный каскад | SRCH-02/04/05/06/10/19/20; OAS Marker/Facet/SearchResponse; Q-005/006/012 | Выбранные уровни над таблицей, только следующий доступный; цепочка непрерывна, можно остановиться на любом уровне; raw-case не объединяется; text AND markers; серверные nonzero counts/order; смена родителя очищает потомков/manual sort, сохраняет текст; UNRECOGNIZED последний и terminal, без hardcoded глубины | V-C/V-M Atlas/Nova/optional tail, raw-case/zero options/terminal; UI не пересортировывает серверные значения |
+| LT-11.2 | TODO | LT-11.1 | Переоткрытие уровня и prefix | SRCH-06/17/25; API §4 getSearchFacet/FacetRequest/FacetResponse; FE §4 «Не распознано»; Q-005/006/012 | Запрос только с родителями редактируемого уровня и applied text; prefix серверный, включая «Не распознано»; показан контекст counts; только выбор применяет цепочку; отдельный last request ID, late dropdown не меняет table/total/sort/freshness; пустой список возможен при непустой таблице | V-C/V-M keyboard/filter/reopen, задержки двух списков, изменение root; отдельные scope не смешиваются |
+
+### WP-12 — Выдача, порядок и контекст отклонений
+
+- **Status:** TODO. **Parent:** E-04. **Dependencies:** WP-11, LT-08.2.
+- **Goal:** прочитать файл/ветку, копировать путь, увидеть структурную причину.
+- **Sources of truth:** SRCH-12…16/19…22; API §4 SearchItem/SearchSort/StructureIssue; FE §4 выдача; Q-006/012/013/042.
+- **Acceptance criteria:** только файлы, полные поля/пути, точный total/N/limited; нет search pagination; ручной sort отправляется серверу; quality view контекстный, не очередь исправления.
+- **Verification expectations:** V-C/V-M long paths/format/clipboard/sort/zero/limit/quality; G-2/4.
+- **Leaf tasks:** LT-12.1, LT-12.2, LT-12.3. Scope: search/shared formatting/tests.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-12.1 | TODO | WP-11, LT-08.2 | Таблица и копирование display path | SRCH-12/14/15/16; OAS SearchItem/SearchResponse; Q-013/042 | Имя/полный путь/markers/extension/bytes→size/modified/structure; одна строка пути без ellipsis с горизонтальной прокруткой; копируется только display_path с кратким подтверждением, без открытия файла; точный total/первые N/limited с просьбой уточнить; zero сохраняет условия/clear/reset; без страниц/infinite scroll/автодогрузки | V-C/V-M N=10/100 и >N, 0 bytes/no extension/длинные пути, clipboard success/failure без ложного подтверждения; нет download/open/export network calls |
+| LT-12.2 | TODO | LT-12.1 | Серверная сортировка выдачи | SRCH-10/13; API §4 SearchSort/ранжирование; SEM поиск; Q-005/006/011 | Text → RELEVANCE DESC, markers-only → PATH ASC; первый NAME ASC, MODIFIED_AT/SIZE DESC, повтор переключает primary; reset при новом тексте/marker/root; natural/raw path/ID tie-break остаётся серверным; score не вычисляется UI | V-C/V-M request bodies/default/direction/reset; порядок строк ровно ответ API, без локальной пересортировки |
+| LT-12.3 | TODO | LT-12.1 | Контекст «Не распознано» | SRCH-19/20/21; OAS SearchItem/StructureIssue; API §4; FE §4 quality view; Q-012 | Контекст через unrecognized: root/name/path/recognized parents/первый проблемный уровень/понятная причина/дата; UNEXPECTED_DEPTH допускает level_id=null; размер/технический код скрыты в quality view, модель не теряет их; нет глобальной страницы/закрытия/экспорта; исправленный сервером файл исчезает после обновления | V-C/V-M четыре StructureIssue.code, глубина/nullable level, новый response без отклонения; нет клиентского parser/исправления пути |
+
+### WP-13 — Свежесть и устойчивость поискового состояния
+
+- **Status:** TODO. **Parent:** E-04. **Dependencies:** WP-12.
+- **Goal:** ошибки/гонки/обновление схемы не делают выдачу ложной.
+- **Sources of truth:** SRCH-17/18/23…25; API §4/11; SEM поиск; FE §4 freshness; Q-003/005/010/011/042.
+- **Acceptance criteria:** таблица/total/next facet атомарны по response; last-send победитель; прежняя выдача при ошибке помечена stale со временем/старыми условиями; Retry и context errors понятны.
+- **Verification expectations:** V-C/V-M контролируемых задержек/ошибок и памяти; real generation/freshness отдельно WP-25.
+- **Leaf tasks:** LT-13.1, LT-13.2. Scope: search/tests.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-13.1 | TODO | WP-12 | Атомарная актуальность и stale/retry | SRCH-17/25; OAS SearchResponse/SearchFreshness; API §4 request scopes; Q-003/005/010/011 | Items/total/next facet одного ответа применяются вместе; поздний table response игнорируется; CURRENT/UPDATING/STALE отображаются без блокировки завершённого поколения; ошибка сохраняет предыдущий успех со временем и явной связью с прежними условиями; без него error panel; Retry текущих условий обходит dedup и получает новый ID | V-C/V-M A→B с ответами B→A, ошибка после успеха/без успеха, explicit Retry; ошибка не превращается в zero |
+| LT-13.2 | TODO | LT-13.1, LT-09.2 | Смена схемы/корня и память поиска | API §4/11 SCHEMA_VERSION_CHANGED/ROOT_NOT_READY/INVALID_MARKER_SELECTION; SEM поиск; SRCH-18/19; Q-005/042 | Перечитываются roots/значения, несовместимые markers очищаются с уведомлением; текст можно сохранить для того же root; снятый root не выдаётся за доступный; навигация сохраняет search только в памяти и сама не ищет; reload/logout/user switch очищают, старые responses не возвращают данные | V-C/V-M три context errors, уход/возврат раздела без search call, reload/storage/network и session reset |
+
+## EPIC E-05 — Справочники компании
+
+Status: TODO. Scope: FE-04; DICT-01…12, FILE-08, NFR-01/05. Никакого выбора правил, конфликтов или итоговых целей вместо backend.
+
+### WP-14 — Список и создание справочников
+
+- **Status:** TODO. **Parent:** E-05. **Dependencies:** WP-09, LT-07.1.
+- **Goal:** выбрать компанию, увидеть её независимые справочники, создать пустой общий draft.
+- **Sources of truth:** DICT-01/02; API §3/6; OAS listCompanies/listDictionaries/createDictionary/getDictionary; Q-003/015/016.
+- **Acceptance criteria:** стабильные IDs/active version/draft/history metadata; company-scoped список; создание с уникальным именем, без silent retry/ложного успеха; нет delete/deactivate endpoint.
+- **Verification expectations:** V-C/V-M loading/empty/error/conflict/lost-response; G-2/3/5.
+- **Leaf tasks:** LT-14.1, LT-14.2. Scope: `frontend/src/features/dictionaries/`, tests.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-14.1 | TODO | WP-09, LT-07.1 | Компания и список справочников | DICT-01/02; API §3/6 Dictionary; OAS listCompanies/listDictionaries/getDictionary; Q-015/016 | Несколько справочников одной компании, draft revision/active version/updated actor/time; общий рабочий доступ, не exclusive editor; при смене компании старые responses не подставляются; правила не управляют поисковыми маркерами | V-C/V-M две компании, empty/failed lists, nullable active_version, navigation |
+| LT-14.2 | TODO | LT-14.1, LT-05.2 | Создать справочник без дубликата при сбое | DICT-01; OAS createDictionary/CreateDictionaryRequest; API §2 retry/§6; Q-003/016 | Name 1–128, description 0–1000; DICTIONARY_NAME_CONFLICT понятен, trim+casefold уникальность решает сервер; успех — returned Dictionary с revision=0; lost response → перечитать список по уникальному имени, не auto POST; локальный ввод до сверки сохранён | V-C/V-M boundary/409/lost response, отсутствие фиктивного Idempotency-Key/повторной записи |
+
+### WP-15 — Таблица правил и безопасное сохранение draft
+
+- **Status:** TODO. **Parent:** E-05. **Dependencies:** WP-14, LT-08.2.
+- **Goal:** редактировать типизированные правила и цель, не перезаписав коллегу.
+- **Sources of truth:** DICT-03…08; API §5/6; OAS Rule/TargetReference/DictionaryDraft/replaceDictionaryDraft; Q-003/015/016/044.
+- **Acceptance criteria:** resolver/list целей, fixed stem/простая маска, атомарное сохранение с expected revision; conflicts/lost response сохраняют локальный текст; нет auto-merge/создания каталогов.
+- **Verification expectations:** V-C/V-M typed round-trip и конкуренции; серверные matcher/FS проверки WP-26/28.
+- **Leaf tasks:** LT-15.1, LT-15.2, LT-15.3. Scope: dictionaries/target picker/tests.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-15.1 | TODO | WP-14 | Выбор и ручной resolver цели | DICT-07/FILE-08; API §5; OAS listTargetDirectories/resolveTargetDirectory/TargetDirectory; Q-015/044 | Выбор существующего каталога из разрешённого списка с cursor; ручной полный synthetic display_path через resolver; Rule получает root_id+relative_directory, не display_path как полномочие; INVALID_TARGET/PATH_OUTSIDE_ROOT/validation не обходятся; ни произвольного FS, ни mkdir | V-C/V-M valid/manual/invalid/cursor/late response; prefix/логические значения в запросах |
+| LT-15.2 | TODO | LT-15.1 | Typed rule editor | DICT-03…06; API §6 Rule; SEM fixed stem/extension; OAS Rule; Q-015 | Add/edit/remove rule в локальном draft, уникальные rule_id, priority 1–1000, BASENAME/RELATIVE_PATH, mask 1–512 без `**`, target, target_stem 1–200; whole-field `*`/`?`/slash и fixed stem объяснены, без regex/OR/DSL; показан явно иллюстративный пример имени с исходным последним суффиксом, точки основы не обрезаются; реальные планы — только серверные | V-C/V-M typed round-trip/boundaries/пустой rules; примеры README/name./archive.tar.gz/скрытый dotfile/регистр suffix, без локального matcher/проверки занятости |
+| LT-15.3 | TODO | LT-15.2, LT-05.2 | Revision-aware save и reconciliation | DICT-08; OAS replaceDictionaryDraft/ReplaceDictionaryDraftRequest; API §2/6; Q-003/016 | Имя/описание/полный rules + expected_draft_revision одним PUT; DRAFT_VERSION_CONFLICT предлагает перечитать, сохраняя локальный текст для сравнения; нет auto-merge/overwrite; name conflict/field errors отображены; lost response → GET Dictionary/revision, не auto PUT; cleanup по session | V-C/V-M два drafts одной ревизии, conflict/500/timeout-after-save, отсутствие ложного «сохранено»/потери ввода |
+
+### WP-16 — Тест draft и публикация
+
+- **Status:** TODO. **Parent:** E-05. **Dependencies:** WP-15.
+- **Goal:** безопасный цикл server simulation → осознанная публикация.
+- **Sources of truth:** DICT-02/09/10/12; API §6 PlanRow/Simulation/publish; OAS createDictionarySimulation/getSimulation/publishDictionary; Q-017…020/029.
+- **Acceptance criteria:** тест всех READY независимо от фильтров, полный RuleSet; total/counts не из страницы; conflicts блокируют, NO_SCENARIO подтверждается по simulation_id, EMPTY_READY_SET warning; stale не публикуется, комментарий обязателен.
+- **Verification expectations:** V-C/V-M paging/empty/stale/ack/conflict/lost publish response; реальные правила WP-26.
+- **Leaf tasks:** LT-16.1, LT-16.2, LT-16.3. Scope: dictionaries/shared plan presentation/tests.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-16.1 | TODO | WP-15 | Читаемый server plan | API §6 PlanRow/PlanCounts/RuleReference/FileMetadata; OAS Simulation/PlanRow; DICT-09; Q-017/018 | Таблица показывает source name/path/company, references с version_id=null для draft, target/prediction/reason; null не выдумывает цель; server totals и четыре основных counts отдельно от rule_conflicts/no_scenario; next_cursor не меняет totals; явно прогноз, не выполненная операция | V-C/V-M всех Prediction/null/page/error состояний на fixtures; без пересчёта правил/счётчиков |
+| LT-16.2 | TODO | LT-16.1, LT-15.3 | Запуск/чтение simulation и свежесть | DICT-09/10/12; OAS createDictionarySimulation/getSimulation/Simulation; API §6; Q-017/018 | Отправляется saved expected revision, не UI filter/selection; показан полный base RuleSet/READY scope/TTL; все READY, EMPTY_READY_SET предупреждает об отсутствии доказанного покрытия; изменение draft/зависимостей или STALE_SIMULATION требует явного нового теста; потерянный simulation ID не auto retry | V-C/V-M zero READY/невидимые rows/revision/expiry/lost response; никакой файловой mutation |
+| LT-16.3 | TODO | LT-16.2, LT-05.2 | Публикация конкретного свежего теста | DICT-10/11/12; OAS publishDictionary/PublishDictionaryRequest; API §2/6; Q-018…020/029 | Rule conflicts блокируют; NO_SCENARIO требует явный ack именно simulation_id, смена теста его снимает; comment 1–500; occupied targets сами не блокируют; пустые rules публикуются через те же проверки; stale/revision/ack errors не обходятся; idempotent retry старого тела/ключа, success обновляет dictionary/version/RuleSet без запуска сортировки | V-C/V-M 0/1/500/501 comment, conflict/ack/stale/empty/occupied, потеря publish response; сохранённый batch не перепланируется |
+
+### WP-17 — История и откат версии справочника
+
+- **Status:** TODO. **Parent:** E-05. **Dependencies:** WP-16.
+- **Goal:** читать неизменяемую историю и восстановить старую версию новым циклом публикации.
+- **Sources of truth:** DICT-01/11/12; API §6 versions/restore; OAS listDictionaryVersions/getDictionaryVersion/restoreDictionaryDraft; Q-020/021.
+- **Acceptance criteria:** версии с actor/time/comment/provenance read-only; restore меняет draft, требует нового теста/публикации, не возвращает файлы.
+- **Verification expectations:** V-C/V-M history paging/restore/conflict/lost response/manual edit provenance; реальные гарантии WP-26.
+- **Leaf tasks:** LT-17.1, LT-17.2. Scope: dictionaries/tests.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-17.1 | TODO | WP-16 | Неизменяемые версии | DICT-01/11; OAS listDictionaryVersions/getDictionaryVersion/DictionaryVersion; Q-020 | Cursor history, номер/ID/author/time/comment/restored_from_version_id/правила; active version отличима от draft; нет редактирования исторической записи; 404/empty/error понятны | V-C/V-M multiple versions/paging/null provenance, после правки draft прежняя версия отображается неизменной |
+| LT-17.2 | TODO | LT-17.1, LT-15.3, LT-16.3 | Restore → новый test → новая publish | DICT-11/12; API §2/6; OAS restoreDictionaryDraft; Q-003/021 | version_id+expected revision, нет direct activation; conflict/lost response сохраняют local input и перечитывают объект без auto POST; только новый simulation/publish создаёт версию с provenance; ручная правка снимает based_on_version_id по серверному ответу; без файлового undo | V-C/V-M restore/редактирование/конфликт/потеря ответа; history/accepted batch неизменны |
+
+## EPIC E-06 — Очередь, снимки, ручные партии
+
+Status: TODO. Scope: FE-04; QUEUE-01…10, FILE-01…09 UI projection, NFR-07. Физическую безопасность реализует backend и доказывает real-контур, не этот UI epic.
+
+### WP-18 — Чтение очереди одной компании
+
+- **Status:** TODO. **Parent:** E-06. **Dependencies:** WP-09, LT-07.2, LT-08.2.
+- **Goal:** видеть входящие файлы, серверные состояния и счётчики компании.
+- **Sources of truth:** QUEUE-01/02/10; API §7 QueueResponse/QueueFilters; OAS querySortingQueue; Q-022.
+- **Acceptance criteria:** без компании нет общей очереди; counts из одного server generation; один фильтр статуса, отдельная очередь pagination; G-2/4.
+- **Verification expectations:** V-C/V-M counters/statuses/paging/context races, без client-readiness.
+- **Leaf tasks:** LT-18.1, LT-18.2. Scope: `frontend/src/features/sorting/`, tests.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-18.1 | TODO | WP-09, LT-07.2, LT-08.2 | Компания, очередь и counts | QUEUE-01/02; OAS listCompanies/querySortingQueue/QueueResponse/QueueItem; API §7; Q-022 | Company required; source_name вместо физических путей, metadata/status/reason/selectable; ready/processing/attention/status_counts серверные по всей компании, matching/eligible по фильтру; DISCOVERED/WAITING_READY не READY, RECOVERY не обычный retry; generation согласован | V-C/V-M все QueueState/counters/empty/error, server selectable; браузер не решает готовность файла |
+| LT-18.2 | TODO | LT-18.1 | Фильтр и cursor очереди | QUEUE-02/10; OAS QueueFilters/QueueQueryRequest; API §7; Q-022/024/025 | Один подробный статус в UI (передаётся массивом по OAS), default active без MISSING, MISSING явный; query_text — подстрока, не search grammar; cursor pages ≤100, смена фильтра начинает новый query context; company switch очищает selection/preview и stale responses, не отменяет batch | V-C/V-M filter/query/paging/late responses, totals не из страницы, cleanup hooks для WP-19/20 |
+
+### WP-19 — Серверный снимок выбора
+
+- **Status:** TODO. **Parent:** E-06. **Dependencies:** WP-18.
+- **Goal:** закрепить один/несколько/все подходящие файлы в server snapshot.
+- **Sources of truth:** QUEUE-03/09/10; API §7 SelectionRequest/SelectionSnapshot; OAS createSortingSelection; Q-023…026.
+- **Acceptance criteria:** EXPLICIT IDs/revisions, ALL_MATCHING все страницы с expected count; immutable server selection и TTL, без silent truncation/пересборки по новому фильтру.
+- **Verification expectations:** V-C/V-M zero/limit/120 items/changed/late arrivals; real membership WP-27.
+- **Leaf tasks:** LT-19.1, LT-19.2. Scope: sorting selection/tests.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-19.1 | TODO | WP-18 | EXPLICIT snapshot | QUEUE-03; OAS ExplicitSelectionRequest/SelectionSnapshot; API §7; Q-023 | Выбор одного/нескольких только selectable; точные уникальные IDs/item_revision одной компании, лимит из config; server selected_count/selection_id/expiry отображаются; пустое/over limit не усекается; lost response требует нового явного snapshot, не auto mutation | V-C/V-M одного/нескольких/disabled/stale revision/EMPTY_SELECTION/BATCH_LIMIT_EXCEEDED; очистка по company/session |
+| LT-19.2 | TODO | LT-19.1 | ALL_MATCHING, не текущая страница | QUEUE-03/10; OAS AllMatchingSelectionRequest; API §7; Q-024/025/026 | Отправляются filters+expected_eligible_count, не IDs загруженной страницы; server 120 при видимых ≤100 сохраняется; SELECTION_CHANGED требует refresh/явного выбора; поздние поступления и новый UI filter не меняют созданный snapshot; expired требует новый выбор; лимит 1000 не обходится | V-C/V-M 0/120/1001, count change до создания, arrival/filter после, TTL/owner 403; не вычислять membership |
+
+### WP-20 — Необязательный preview и коллизии
+
+- **Status:** TODO. **Parent:** E-06. **Dependencies:** WP-19, LT-16.1.
+- **Goal:** видеть прогноз серверного плана и сравнить занятое назначение без перемещения.
+- **Sources of truth:** QUEUE-04…06/10, FILE-02/03/05; API §6/7; OAS createSortingPreview/getSortingPreview/Preview/CollisionDetails; Q-023/026/031/032/035.
+- **Acceptance criteria:** preview привязан к selection/RuleSet/TTL; полные per-file predictions/reasons, metadata comparison; stale только через явный пересчёт; отсутствие preview не запрещает DIRECT.
+- **Verification expectations:** V-C/V-M plan/paging/collision/expiry/lost response, отсутствие run при просмотре.
+- **Leaf tasks:** LT-20.1, LT-20.2. Scope: sorting/plan presentation/tests.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-20.1 | TODO | WP-19, LT-16.1 | «Проверить» и сравнение коллизии | QUEUE-04/05; API §6/7 Preview/CollisionDetails; OAS createSortingPreview/getSortingPreview; Q-023/031/032/035 | По selection_id создаётся server preview; source/company/dictionary/version/rule/target/prediction/reason, full RuleSet, totals/cursor; comparison source/existing metadata только по collision; DUPLICATE_PLAN_TARGET с conflicting IDs и nullable existing; MANUAL_REVIEW_NAME отличим; нет выбора одного справочника/замены/движения | V-C/V-M все collision kinds/null/paging, predictions не outcomes; network без batch POST |
+| LT-20.2 | TODO | LT-20.1 | Stale preview и явный пересчёт | QUEUE-06/10, DICT-12; API §7/8/11; OAS Preview/expires_at/PreviewConflict/BatchConflict; Q-026/027 | Показывается expiry, чтение не продлевает selection; изменённый источник/правила/цель/TTL → stale, старый PREVIEWED не обходится; SELECTION_EXPIRED/CHANGED требуют обновить выбор; lost preview ID → явный новый расчёт; company/session очищают preview; DIRECT остаётся отдельным явным режимом, не авто-fallback от stale | V-C/V-M controlled clocks/409/публикация новой версии/смена компании; server error решающий даже до client timer |
+
+### WP-21 — Ручной запуск и независимый результат партии
+
+- **Status:** TODO. **Parent:** E-06. **Dependencies:** WP-20, LT-05.2.
+- **Goal:** принять запуск один раз, наблюдать progress/outcomes и найти его после reload.
+- **Sources of truth:** QUEUE-04/07…10, AUTH-03, FILE-01…09, NFR-07; API §8; OAS batch operations; Q-027…040.
+- **Acceptance criteria:** DIRECT/PREVIEWED только кнопкой, 202 ≠ завершение; idempotent retry без двойного запуска, server progress/все outcomes, polling/backoff, history; нет cancel/replace/undo/автоматического повтора файла.
+- **Verification expectations:** V-C/V-M lifecycle/lost response/partial/recovery/reload; физический результат и concurrency только WP-28.
+- **Leaf tasks:** LT-21.1, LT-21.2, LT-21.3, LT-21.4. Scope: sorting batch/transport consumers/tests.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-21.1 | TODO | WP-20, LT-05.2 | Явный DIRECT/PREVIEWED submit | QUEUE-04/06/09; OAS createSortingBatch/BatchCreateRequest; API §2/8; Q-027/029 | DIRECT без preview_id, PREVIEWED с текущим preview; только «Рассортировать», без selector RuleSet; 202 показывает batch ID/actor/time/принятие; повтор неопределённого ответа с исходным ключом/телом, double click не новый batch; новые условия/ручная попытка — новый ключ; 409/403/404 до принятия не ложный успех | V-C/V-M double submit/lost 202/expiry/changed source/IDEMPOTENCY_KEY_REUSED; нет auto DIRECT fallback |
+| LT-21.2 | TODO | LT-21.1 | Все фактические исходы файла | FILE-01…09, QUEUE-07/10; OAS Batch/Outcome/OutcomeCounts; API §8 матрица; Q-028/031…039 | PENDING/PROCESSING/SORTED/MANUAL_REVIEW/REQUIRES_DECISION/QUARANTINED/SKIPPED/RECOVERY_REQUIRED и все OutcomeReasonCode различимы по-русски; source/planned/actual не смешаны, unknown actual=null; counts серверные, recovery не завершён; одинаковая цель не даёт UI-победителя; нет replace/undo/cancel/manual-review workflow/слепого retry | V-C/V-M всех state/reason сочетаний, mixed outcomes, nullable location/rule/time; per-file issue при HTTP 200 не общая ошибка партии |
+| LT-21.3 | TODO | LT-21.2 | Polling прогресса без зависания UI | QUEUE-08/10, NFR-07; OAS getSortingBatch/BatchState; API §8, TZ §12; Q-030/039 | Интервал из config (demo 1с), без одинаковых параллельных polls, backoff/Retry-After; counts/selected/completed с сервера, cursor outcomes не полный результат; error не стирает batch; terminal отличим от RECOVERY_REQUIRED с finished_at=null; polls прекращаются при session cleanup, old responses игнорируются | V-C/V-M fake timers/slow response/429/503/recovery/terminal/unmount-session cleanup; UI остаётся интерактивным |
+| LT-21.4 | TODO | LT-21.3 | История и восстановление просмотра batch | QUEUE-08/10, AUTH-03; OAS listSortingBatches/getSortingBatch/BatchSummary; API §8; Q-030/040 | Общий company-scoped список по created_at DESC/batch_id DESC, cursor; после reload/login найти принятую партию без browser persistence/повторного POST; actor первоначальный, новый viewer не автор; смена компании/selection не отменяет batch | V-C/V-M reload/different user/history pages/company switch; G-5, никаких отмен/новых операций при просмотре |
+
+## EPIC E-07 — Карантин и ручной возврат
+
+Status: TODO. Scope: FE-04; FILE-06/07/09, QUEUE-01, AUD-01/02. Не UI операторского разрешения RECOVERY_REQUIRED.
+
+### WP-22 — Подтверждённый карантин и безопасный возврат
+
+- **Status:** TODO. **Parent:** E-07. **Dependencies:** WP-09, LT-07.3, LT-08.2, LT-05.2.
+- **Goal:** увидеть подтверждённую ошибку и явно вернуть файл во входящие.
+- **Sources of truth:** FILE-06/07/09; API §9/11; OAS listQuarantineItems/returnQuarantineItem; Q-036…038/029.
+- **Acceptance criteria:** только confirmed quarantine, причина/original/current paths/return availability; комментарий/revision/idempotency, success WAITING_READY без сортировки; recovery не ложный успех.
+- **Verification expectations:** V-C/V-M всех return outcomes и потерянного ответа; real FS return WP-29.
+- **Leaf tasks:** LT-22.1, LT-22.2. Scope: `frontend/src/features/quarantine/`, tests.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-22.1 | TODO | WP-09, LT-07.3, LT-08.2 | Список подтверждённого карантина | FILE-06/07; API §9 QuarantineItem; OAS listQuarantineItems; Q-036/037 | Компания обязательна, cursor ≤100; filename/current/original location/reason/time/source_attempt_id; can_return=false и recovery_operation_id объясняют недоступность; MANUAL_REVIEW и unknown location не выдаются за quarantine; нет удаления | V-C/V-M empty/error/paging/company races/can_return/recovery; реальные гарантии списка не доказываются mock |
+| LT-22.2 | TODO | LT-22.1, LT-05.2 | Возврат с revision/comment/idempotency | FILE-07/09, QUEUE-01; OAS returnQuarantineItem/QuarantineReturnRequest/QuarantineReturnResponse; API §9/11; Q-029/038 | Явное подтверждение, comment 1–500, expected_revision и ключ; успех показывает WAITING_READY/return_operation_id, без batch POST; ORIGINAL_PATH_OCCUPIED/QUARANTINE_VERSION_CONFLICT/NOT_FOUND/INVALID_STATE/RECOVERY_REQUIRED различимы; error.operation_id при RECOVERY_REQUIRED сохранён и can_return перечитан; повтор потерянного ответа с прежним ключом, не второе перемещение | V-C/V-M boundary/revision/occupied/returned/new key/ambiguous/lost response; нет recovery endpoint или auto-sort |
+
+## EPIC E-08 — Общий журнал
+
+Status: TODO. Scope: FE-04; AUD-01…05; NFR-01/05. Запись/неизменяемость audit принадлежат серверу.
+
+### WP-23 — Фильтруемая лента журнала
+
+- **Status:** TODO. **Parent:** E-08. **Dependencies:** WP-09, LT-07.3, LT-08.2.
+- **Goal:** читать доступные события по дате/автору/типу/результату/имени/пути.
+- **Sources of truth:** AUD-01/02/04/05; API §10; OAS queryAuditEvents/listAuditActors; Q-041/042/043.
+- **Acceptance criteria:** текущий день в config timezone → UTC [from,to), WORKER BUSINESS/ADMIN SYSTEM тоже; exact server order/cursor, allowed actors; нет экспорта/infinite scroll.
+- **Verification expectations:** V-C/V-M timezone/filters/roles/null/paging, G-2/4/5.
+- **Leaf tasks:** LT-23.1, LT-23.2. Scope: `frontend/src/features/audit/`, tests.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-23.1 | TODO | WP-09, LT-07.3, LT-08.2 | Лента, даты и «Показать ещё» | AUD-04/05; OAS queryAuditEvents/AuditQueryRequest/Response/Event; API §10; Q-041 | Default текущий день display_timezone, UTC [from,to); сохраняется server occurred_at DESC/event_id DESC; cursor≤100 с фиксированной верхней границей, «Показать ещё», без infinite scroll/export; null actor допустим для SYSTEM, не выдумывается пользователь; BUSINESS/SYSTEM определяет server role access | V-C/V-M UTC boundary/day/timezone/empty/null/roles/cursor/no duplicates; late pages не смешиваются с новым query |
+| LT-23.2 | TODO | LT-23.1 | Фильтры и допустимые авторы | AUD-04; OAS listAuditActors/queryAuditEvents/AuditAction/AuditResult; API §10; Q-041 | Период/actor/action/result/name-path и company_id в query body; ключ company_id обязателен, null означает отсутствие ограничения; actor prefix/cursor с сервера, включая заблокированных с событиями, не каталог аккаунтов; actor_id фильтра не автор мутации; новый фильтр сбрасывает cursor, условия не URL/storage/log | V-C/V-M всех фильтров/combination, invalid interval/field errors, actor pages/blocked actor, network bodies |
+
+### WP-24 — Новые события и детали связанной операции
+
+- **Status:** TODO. **Parent:** E-08. **Dependencies:** WP-23, LT-21.4, WP-17, WP-22.
+- **Goal:** замечать новые события без сдвига ленты и понимать связь с batch/version/return.
+- **Sources of truth:** AUD-01…05; API §10/11; OAS getAuditUpdates/AuditEvent и операции чтения batch/version; Q-041.
+- **Acceptance criteria:** индикатор новых событий ≤60с, manual refresh сохраняет фильтры; безопасные связи/детали без выдуманных endpoints и BUSINESS-событий чтения.
+- **Verification expectations:** V-C/V-M timers/filter refresh/nullable links; real audit attribution WP-29.
+- **Leaf tasks:** LT-24.1, LT-24.2. Scope: audit/links to existing features/tests.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-24.1 | TODO | WP-23, LT-05.2 | Индикатор новых событий | AUD-05; OAS getAuditUpdates; API §10; TZ §12; Q-041 | Config polling demo 30с, без параллельных polls, с backoff при ошибках; empty journal → after_event_id отсутствует; событие вне фильтра может дать индикатор; новые записи не вставляются сами; «Есть новые события» перечитывает первую порцию с прежними фильтрами; session cleanup | V-C/V-M empty/nonempty, контролируемые 30/60с, outside filter/new pages/error; сеть не содержит query text в updates URL |
+| LT-24.2 | TODO | LT-24.1, LT-21.4, WP-17, WP-22 | Детали события и переходы к существующим данным | AUD-01/02/03; OAS AuditEvent/getSortingBatch/getDictionaryVersion; API §8–11; Q-041 | Детали показывают применимые actor/time/request/company/dictionary/version/RuleSet/batch/attempt/item/source/target/reason/comment; return operation_id/source_attempt_id связаны; nullable links не ведут к выдуманным объектам; batch/version открываются существующими API, отдельного audit-details/attempt/recovery endpoint нет; просмотры/копирование не мутации | V-C/V-M всех AuditAction и nullable links, NOT_FOUND, G-3; никаких BUSINESS-write calls от чтения |
+
+## EPIC E-09 — Реальная интеграция, регрессия и передача MVP
+
+Status: BLOCKED (X-BE-A/B/C, X-LAB). Scope: FE-05; TZ §14, NFR-01…07; PLAN посрезовая интеграция. Эти WP реализуют ограниченные интеграционные проверки/подключение, **не** повторную реализацию экранов и **не** автоматическое «исправить все найденные дефекты». Ошибка API/FS назначается backend, schema contradiction регистрируется, UI defect получает отдельный bounded repair. Тестовые механизмы не добавляются как новые публичные endpoints.
+
+### WP-25 — Вход и поиск на настоящем API
+
+- **Status:** BLOCKED. **Parent:** E-09. **Dependencies:** WP-13, X-BE-A; LT-25.3 дополнительно X-LAB.
+- **Goal:** первый real vertical slice без ожидания всего FE-04.
+- **Sources of truth:** FE-05 посрезовые зависимости; BE-01/02; API §2–4/11; AUTH/SRCH; Q-001…014/042/043.
+- **Acceptance criteria:** транспорт переключается без переписывания UI, auth/search без mock fallback; exact IDs/order/total/facets по независимому корпусу, freshness/metadata updates подтверждены; серверные гарантии не приписаны frontend.
+- **Verification expectations:** V-E и V-S ответов, версии/seed/generation/среда; нет промежуточной подписи QA.
+- **Leaf tasks:** LT-25.1, LT-25.2, LT-25.3. Scope: frontend transport configuration, `tests/e2e/`, frontend tests/контрактные assertions и handoff; без backend edits.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-25.1 | BLOCKED | WP-09, X-BE-A | Реальный auth/config transport | AUTH-01…05/NFR-05; OAS login/getSession/logout/getAppConfig/listRoots; API §2/3; BE-01; Q-001…003/043 | Настоящие synthetic WORKER/ADMIN; 401/403/CSRF/Origin/no-store/X-Request-ID, HttpOnly/SameSite/Secure по среде; logout/expiry/block/private cleanup; real mode не запускает mock; hash/blocked-user evidence предоставляет BE, без секретов в отчёте | V-E auth/config/roles/network/storage, schema assertions; безопасное серверное evidence AUTH-04/05 отдельно от браузерного PASS |
+| LT-25.2 | BLOCKED | LT-25.1, WP-13, LT-03.1, X-BE-A | Exact search flow на сервере | SRCH-01…20/25; API §4 ranking/facets; BE-02; Q-004…013 | Все параметры root/AND/prefix/token delimiters/quotes/trigger/reset/raw-case/depth/zero/limit/sort/races; exact IDs/order/total/facets совпадают с independent golden, включая числовые ranking примеры и tie-break; нет клиентского ослабления запроса | V-E UI→real API + V-S, N=10/100, >N, два корня/варианты глубины; сохраняются generation/ranking_profile_version |
+| LT-25.3 | BLOCKED | LT-25.2, X-BE-A, X-LAB | Метаданные, публикация поколения и quality updates | SRCH-21…25, NFR-04/06; API §3/4 freshness; BE-02; Q-011/012/014 | Создание/change/rename/move/delete синтетики отражаются ≤5мин; старые пути/content-only не находятся; любые расширения/no extension/нулевой файл, исключение service dirs; quality исчезает после исправления; во время публикации читается завершённое поколение, items/total/facets едины | V-E с контролируемыми backend-изменениями/поколениями и measured delay; публикация root после обхода проверяется также LT-30.3; без UI удаления/индексатора |
+
+### WP-26 — Справочники на настоящем API
+
+- **Status:** BLOCKED. **Parent:** E-09. **Dependencies:** WP-17, LT-25.1, X-BE-B.
+- **Goal:** доказать editing/simulation/publication/version flow, а не только формы на mocks.
+- **Sources of truth:** FE-05; BE-03 и READY BE-04a; DICT-01…12; API §5/6; Q-003/015…021/029/044.
+- **Acceptance criteria:** реальные revisions/targets/rules/RuleSet/READY snapshots, conflict/stale/ack/restore/idempotency; нет UI-domain обходов; физические файлы при simulate/publish не перемещаются.
+- **Verification expectations:** V-E + V-S, independent rule examples, фиксированные versions/RuleSet/seed, safe inventory до/после.
+- **Leaf tasks:** LT-26.1, LT-26.2. Scope: E2E/contract assertions/frontend integration/handoff, без matcher/backend реализации.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-26.1 | BLOCKED | WP-15, LT-25.1, X-BE-B | Реальные targets/rule round-trip/draft conflict | DICT-01/03…08; API §5/6; Q-003/015/016/044; OAS targets/replaceDictionaryDraft | Resolver allowed/nonexistent/outside root, поля/маски/приоритет/суффиксы по эталону, пустые rules; два редактора не перезаписывают ревизию; name collision; lost create/save response → reconciliation, локальный текст сохранён | V-E two sessions и controlled response loss, V-S; backend проверяет filesystem profile, не browser validation вместо сервера |
+| LT-26.2 | BLOCKED | LT-26.1, WP-17, X-BE-B | Реальные simulation/publish/restore | DICT-02/09…12; API §6; Q-017…021/029; OAS simulation/publish/versions/restore | Все READY, включая невидимые, замена только своего member; empty READY warning; equal/different min-priority targets; stale draft/RuleSet/READY/TTL; exact ack/comment; immutable versions/restore provenance и manual edit; lost publish response с прежним ключом — без новой версии; ни simulate, ни publish не сортирует | V-E parameterized scenarios + safe inventory; сверка server RuleSet/versions/ожиданий, V-S; влияние на accepted batch дополнительно LT-28.1 |
+
+### WP-27 — Реальные очередь, снимки и preview
+
+- **Status:** BLOCKED. **Parent:** E-09. **Dependencies:** WP-20, LT-25.1, X-BE-B; controlled inputs X-LAB.
+- **Goal:** подтвердить готовность и точный набор расчёта до физических запусков.
+- **Sources of truth:** FE-05; BE-04a/b; QUEUE-01…06/10; API §7; Q-022…026.
+- **Acceptance criteria:** readiness/counters, EXPLICIT/ALL_MATCHING и late arrivals не зависят от страницы; preview — серверный прогноз без mutation. Stale enforcement при запуске проверяется в WP-28, не приписывается одному GET preview.
+- **Verification expectations:** V-E с controllable incoming и safe inventory до/после, V-S.
+- **Leaf tasks:** LT-27.1, LT-27.2, LT-27.3. Scope: E2E/frontend integration/handoff.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-27.1 | BLOCKED | WP-18, LT-25.1, X-BE-B, X-LAB | Настоящие readiness/counters | QUEUE-01/02; API §7; BE-04a; Q-022 | Незавершённое поступление/два стабильных наблюдения с интервалом demo 5с/изменение/rename; UI использует server selectable; counters/status_counts поколения не завышают ready и не меняют scope при фильтре; без компании нет общей очереди | V-E controlled incoming, generation/counters/точные ожидания; backend проверяет readiness, UI только отражает |
+| LT-27.2 | BLOCKED | LT-27.1, WP-19, X-BE-B, X-LAB | Реальное snapshot membership | QUEUE-03; API §7 selections; Q-024/025/026 | 120 eligible при странице ≤100; 0/1001 без усечения/мутаций; count change до snapshot → SELECTION_CHANGED; late arrivals/filter change после не меняют IDs; EXPLICIT сохраняет revisions; scope другого user запрещён, той же user допустим | V-E с серверным evidence состава снимка/selected_count и контролем arrivals; eventual batch composition дополнительно LT-28.1 |
+| LT-27.3 | BLOCKED | LT-27.2, WP-20, X-BE-B | Реальный preview без движения | QUEUE-04/05/06, DICT-02; API §6/7; Q-023/026 | Plan source/target/references/full RuleSet/counts/коллизии из real API, все страницы; preview не продлевает snapshot TTL; UI expiry/clear company корректны; inventory до/после неизменен; отсутствие preview не объявлено запретом DIRECT | V-E + V-S plan/inventory/cursor/expiry; enforcement STALE_PREVIEW до batch отдельно LT-28.1 |
+
+### WP-28 — Запуски, файловые исходы, гонки и восстановление
+
+- **Status:** BLOCKED. **Parent:** E-09. **Dependencies:** WP-21, WP-26, WP-27, X-BE-C, X-LAB.
+- **Goal:** доказать безопасное взаимодействие UI с реальными ручными операциями, без присвоения FE серверной логики.
+- **Sources of truth:** FE-05; BE-05/06; QUEUE-04…10, FILE-01…09, NFR-06/07; API §8; Q-027…040.
+- **Acceptance criteria:** no-replace/partial outcomes/фиксированные версии/идемпотентность/overlap/restart; UI+API+audit+inventory согласованы; доказательство гонки действительно содержит временное перекрытие; recovery не мнимый quarantine.
+- **Verification expectations:** V-E с точками отказа/барьерами backend, независимым инвентарём/контрольными суммами, без физических путей в пользовательском evidence.
+- **Leaf tasks:** LT-28.1, LT-28.4, LT-28.5, LT-28.6, LT-28.7, LT-28.2, LT-28.3 — порядок выполнения указан по зависимостям, исходные IDs сохранены. Scope: `tests/e2e/`, frontend integration/handoff; backend executor/FS hooks меняет только backend. WP объединяет готовые проверочные срезы реальных ручных запусков, не реализацию executor.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-28.1 | BLOCKED | WP-21, WP-26, WP-27, X-BE-C, X-LAB | Граница принятия и фиксированный план | QUEUE-03/04/06/08, DICT-12; API §8 строки 219–236; Q-020/024/025/026/027 | DIRECT берёт свежий RuleSet/цели, изменённый или исчезнувший источник до принятия → SELECTION_CHANGED; PREVIEWED при изменении source/rules/target/TTL → STALE_PREVIEW; expired selection → SELECTION_EXPIRED; чужой claim отдельный per-file исход. DIRECT occupied target не общий stale reject, а TARGET_OCCUPIED. После принятия SOURCE_CHANGED без mutation, принятый RuleSet неизменен; 120 snapshot items дают полный paged outcome набор | V-E с controlled clocks/source changes/publication и inventory до принятия; исключены коллизии/manual-review/recovery проверки, вынесенные в отдельные leaf |
+| LT-28.4 | BLOCKED | LT-28.1, X-LAB | No-replace и коллизии назначения | FILE-01/02/03, QUEUE-10; API §8 outcome matrix; Q-031/032/033 | Свободная разрешённая цель → один SORTED с rename и сохранным содержимым; occupied до запуска и после preflight → source/target нетронуты; несколько выбранных на одну цель — все остаются, без победителя, независимо от порядка IDs; отдельный safe item проходит; no copy/delete fallback | V-E + BE atomicity evidence; hook создаёт target перед write; independent hashes/locations/audit, нет UI replace/cancel/undo; post-move search сверяется LT-25.3 |
+| LT-28.5 | BLOCKED | LT-28.1, X-LAB | Передача в ручной разбор и занятое имя | FILE-04/05; API §8 matrix; Q-034/035 | NO_SCENARIO/RULE_CONFLICT отдельно дают MANUAL_REVIEW в плоской папке компании с исходным basename целиком; при занятом имени source и existing target сохранны, REQUIRES_DECISION/MANUAL_REVIEW_NAME_OCCUPIED; без suffix/rename/subfolder/quarantine/overwrite | V-E двух причин при свободном/занятом имени, safe hashes/inventory/audit; нет UI дальнейшего ручного разбора |
+| LT-28.6 | BLOCKED | LT-28.4, LT-28.5, X-LAB | Подтверждённый карантин и смешанный batch | FILE-06, QUEUE-10; API §8; Q-036/039 | Known technical failure при доказанном доступном source и quarantine → подтверждённый QUARANTINED/TECHNICAL_ERROR; mixed batch safe/occupied/no-scenario/technical выдаёт четыре независимых фактических исхода и точные counts/progress; ошибка не отменяет safe move | V-E controlled known-error hook, source/quarantine inventory/hashes/actor/audit, всё содержимое сохранно; ambiguous outcome отдельно LT-28.3 |
+| LT-28.7 | BLOCKED | LT-28.1, X-LAB | Публичная граница IDs/путей и source identity | FILE-08, DICT-07, AUTH-02; API §2/5/8/11; Q-044 | Unknown ID → NOT_FOUND; чужая company/selection pair → INVALID_STATE, чужой user snapshot → FORBIDDEN; invalid relative path → VALIDATION_ERROR, invalid target/outside → INVALID_TARGET/PATH_OUTSIDE_ROOT по причине; ссылки/source substitution между проверками отклоняются; вне sandbox нет чтения/записи; общий доступ WORKER к roots/companies не считается нарушением | V-S/V-E negative requests, controlled BE symlink/identity hook и безопасный access/inventory report; без OS/FS обходов из frontend и без нового endpoint |
+| LT-28.2 | BLOCKED | LT-28.4, X-LAB | Overlap, idempotency и потерянный ответ batch | QUEUE-07/09, AUTH-03, NFR-07; API §2/8; Q-028/029/030 | Два актора с пересечением: один claim, проигравший SKIPPED/ALREADY_PROCESSING, safe remainder продолжается; повтор старого ключа/тела после lost response и TTL возвращает batch, другое тело → IDEMPOTENCY_KEY_REUSED; новый ручной запуск — новая попытка; logout/reload/new viewer не меняют author | V-E синхронизированных запросов, доказанное overlap, safe hashes/attempt/audit; отдельно polling/backoff, без fake sequential race |
+| LT-28.3 | BLOCKED | LT-28.6, X-BE-C, X-LAB | Restart и неопределённый физический исход | FILE-06/09, NFR-06; API §8, SEM recovery; Q-037/040 | Restart до mutation/после доказанной фиксации/при неопределённости: сохранены batch/results/history; доказанный исход без второго move; неизвестное размещение или недоступный quarantine → RECOVERY_REQUIRED, не успех; UI не предлагает слепой запуск; old key возвращает зарегистрированный исход | V-E controlled restart/fault points, persisted intent/phase evidence от BE, API/UI/audit/inventory; X-RECOVERY процедура отдельно к LT-30.4 |
+
+### WP-29 — Реальные возврат и сквозной журнал
+
+- **Status:** BLOCKED. **Parent:** E-09. **Dependencies:** WP-22, WP-24, WP-28, X-BE-C, X-LAB.
+- **Goal:** связать подтверждённый return и действия пользователей с неизменяемым общим журналом.
+- **Sources of truth:** FILE-07, AUD-01…05, AUTH-02; API §9–11; Q-029/038/041/043/044; BE-01/05.
+- **Acceptance criteria:** return безопасен/идемпотентен, WAITING_READY без auto-sort; actor/correlation/return links и cursor/update/roles подтверждены real API, чтение не пишет BUSINESS.
+- **Verification expectations:** V-E всех return outcomes и audit scenarios, inventory/links/period/updates; V-S.
+- **Leaf tasks:** LT-29.1, LT-29.2. Scope: E2E/frontend integration/handoff.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-29.1 | BLOCKED | WP-22, LT-28.6, X-BE-C, X-LAB | Реальный quarantine return | FILE-07/09, QUEUE-01; API §9; Q-029/038; OAS returnQuarantineItem | Valid comment/revision/free original → WAITING_READY/operation ID, inventory подтверждён; invalid length/revision/occupied/already returned/new key/ambiguous дают точные ошибки без повторной mutation; lost response+same key восстанавливает return; can_return=false при recovery, журнал содержит link; нет auto-sort | V-E 0/1/500/501 comment и параметров Q-038, safe hashes, return_operation_id/error.operation_id; неоднозначность воспроизводит backend hook |
+| LT-29.2 | BLOCKED | LT-29.1, WP-24, WP-26, WP-28, X-BE-C | Настоящий сквозной audit | AUD-01…05; API §10; Q-041/043/044; OAS audit operations | Dictionary/create/save/simulate/publish/restore, batch принятие и попытки, return связаны с actor/request/company/version/batch/item по применимости; нет duplicate phase событий; return operation_id/source_attempt_id точны; WORKER BUSINESS/ADMIN SYSTEM, blocked actors в фильтре; поиск/копирование/просмотр без BUSINESS; день/фильтры/cursor≤100/new indicator≤60с корректны | V-E двух акторов/UTC boundaries/новых событий/paging/отсутствия лишнего audit; безопасное серверное evidence no logs bodies/paths, без экспорта |
+
+### WP-30 — Нефункциональная регрессия и пакет передачи MVP
+
+- **Status:** BLOCKED. **Parent:** E-09. **Dependencies:** WP-25…29, X-BE-C, X-LAB; для передачи X-RECOVERY.
+- **Goal:** воспроизводимый кандидат обеих функций с честным комплектом проверок для финальной приёмки человеком.
+- **Sources of truth:** TZ §12/14, NFR-01…07; FE-05/§7; QA §5/8; PLAN §7/8; Q-042…045.
+- **Acceptance criteria:** все 45 строк учтены по уровням, нет скрытых NOT_RUN/FAIL/BLOCKED; accessibility/privacy/performance/чистый запуск проверены; критические дефекты блокируют сдачу. Решение QA принимает человек, не leaf-исполнитель.
+- **Verification expectations:** V-C/V-E/V-H, реальные версии среды/схемы/seed, инструкции frontend в составе общей BE-06 сборки; никаких фиктивных command PASS или подписей.
+- **Leaf tasks:** LT-30.1, LT-30.2, LT-30.3, LT-30.4. Scope: frontend/E2E checks и docs/handoff; infra/migrations/backup implementation — backend.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-30.1 | TODO | WP-13/17/21/22/24 | Общая browser accessibility/state регрессия | NFR-01, TZ §4, SRCH-15/16; FE §4; Q-042 | На шести экранах keyboard/labels/focus/ошибка не только цветом/loading/empty/error/disabled reason; пути целиком одной строкой, horizontal scroll, clipboard/format; 1280×720 и меньшая ширина; список выявленных дефектов, не «fix everything» | V-C/V-M browser checks и визуальный ручной review доказательств; V-E smoke на кандидатной сборке в LT-30.4 |
+| LT-30.2 | TODO | WP-13/17/21/22/24 | Privacy/network regression всех features | AUTH-03/04, SRCH-18, AUD-03, NFR-05; FE §4; API §2/11; Q-001…003/042/043 | Ни условий/paths/ответов/CSRF в URL/history/storage/app cache, ни тел/секретов в frontend logs; logout/401/reload/user switch/late response не восстанавливают state; отсутствуют неожиданные мутации от навигации/просмотра/копирования; prohibited actions не появляются | V-C/V-M instrumented network/storage tests, без публикации credentials в traces; real headers/серверные логи дополняются V-E LT-25.1/29.2 |
+| LT-30.3 | BLOCKED | WP-25, X-BE-C, X-LAB | Демонстрационные performance/index guarantees | SRCH-23, NFR-02/03/04/06; BE-02/06; TZ §12; Q-014/045 | Объявлены dataset size/cardinalities/resources/выборка; p95 типового поиска ≤2с, широкой ветки ≤5с; metadata freshness ≤5мин; первичный обход/checkpoint/restart/progress/ETA после замера, root опубликован только после сверки/явной техкоманды. Нет нового UI индексации или обещания SLA реального архива | V-E measured search/freshness + серверное S/A evidence обхода от BE; команды/среда/выборка/лимиты сохранены, mocks не performance evidence |
+| LT-30.4 | BLOCKED | WP-25…29, LT-30.1/30.2/30.3, X-BE-C, X-RECOVERY | Чистый запуск и финальный handoff | TZ §14/NFR-02; FE §7; QA §5/QA-05; PLAN §8; Q-045 | Новый участник запускает кандидат по README на свежей разрешённой среде: login/search/draft/test/publish/run/quarantine/audit; dependencies/lock/generation/seed/схема/реальные команды, frontend test reports и links BE migrations/backup/transfer инструкции присутствуют; 45 Q статусов отдельно S/M/A/E с дефектами; UI critical debt закрыт evidence; технический recovery порядок документирован; готово к решению человека, не самоприсвоенный QA PASS | V-C/V-E/V-H clean install/build/run без создания агентом чужого worktree; regression/protocol безопасны; только человек ставит итоговую приёмку/DONE |
+
+## EPIC E-10 — Условная помощь и следующий внутренний этап
+
+Status: BLOCKED (X-HELP/X-INTERNAL). Scope: FE-06, TZ §13. Не расширяет внешний MVP и не содержит выдуманной реализации без API/критериев.
+
+### WP-31 — Подготовка одного назначенного FE-06 handoff
+
+- **Status:** BLOCKED. **Parent:** E-10. **Dependencies:** X-HELP; принятое человеком доступное UI, отсутствие критичного UI-долга, назначение backend. WP-30 целиком не техническая предпосылка FE-06; но D-03 не позволяет выдумать раннюю QA-приёмку.
+- **Goal:** использовать свободную frontend-ёмкость только на конкретный ограниченный вспомогательный результат.
+- **Sources of truth:** FE-06; PLAN FE-06/§5; D-03; RULES frontend responsibility.
+- **Acceptance criteria:** оформлен один bounded brief с точными путями/AC/verification и владельцем backend; реализации auth/FS/recovery/production infra не назначены frontend; помощь не отнимает доступность для FE-05.
+- **Verification expectations:** V-H handoff и явного решения владельца. Неназначенные работы не оцениваются и не объявляются готовыми.
+- **Leaf tasks:** LT-31.1. Scope: документация назначения; будущий разрешённый код только в FE-06 каталогах после отдельной декомпозиции.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-31.1 | BLOCKED | X-HELP | Подготовить проверяемое назначение помощи | FE-06, FE §7; PLAN §5; D-03 | Для одного выбранного backend результата (synthetic test data, adapter contract test, integration check либо docs) записаны goal/allowed files/AC/commands/owner; пути только fixtures/synthetic, tests/contract, tests/e2e, docs/team; неизвестную работу не выдавать за готовый implementation leaf; при назначении добавить отдельные bounded implementation leaf | V-H полный brief и явное принятие назначения человеком/backend; без product implementation в этой planning-карточке |
+
+### WP-32 — Уточнение frontend scope внутреннего пилота
+
+- **Status:** BLOCKED. **Parent:** E-10. **Dependencies:** X-INTERNAL, отдельное решение начать внутреннее проектирование после внешней демо.
+- **Goal:** сохранить известные будущие требования без добавления запрещённых функций в demo.
+- **Sources of truth:** TZ §2/13, FILE-02 и границы демо; FE §2; SEM профиль/открытые решения.
+- **Acceptance criteria:** ограничения/открытые вопросы и будущие пользовательские процессы связаны с источниками; новые поля/API/права/политики не придуманы; перед реализацией потребуется новая утверждённая декомпозиция.
+- **Verification expectations:** V-H реестра решений с человеком/BE/владельцами внутренней среды; ни mock/real PASS, ни обещаний production SLA.
+- **Leaf tasks:** LT-32.1. Scope: документация уточнения, не backend/production настройки.
+
+| Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
+|---|---|---|---|---|---|---|
+| LT-32.1 | BLOCKED | X-INTERNAL | Реестр требований/входов внутреннего этапа | TZ §2/13; FE §2; SEM последний раздел | Учтены корпоративные accounts/timezone/схема, real storage/rights/ID/case/Unicode semantics; confirmed replacement с reserve, обычная компенсация и полный rollback замены с проверкой путей/comment/audit, deletion/cleanup только по политике и правам; до решения нет автоудаления журнала/резерва; UI менять только после согласованного API; масштаб/ресурсы/окна/восстановление — внешние измерения, не frontend обещание | V-H таблицы вопросов/owner/недостающих решений; нет домыслов об endpoints/кнопках/ролях/сроках хранения |
+
+## 5. Порядок реализации и reviewable границы
+
+1. **WP-01 → WP-02 → WP-03:** исправить два query parameters и inconsistent examples, получить настоящий runner и независимые сценарные эталоны. OAS не переписывается с нуля; совместное согласование уже подтверждено.
+2. **WP-04 → WP-05:** закрепить toolchain/генерацию/транспорт. Анализ вариантов toolchain допустим параллельно WP-01/02; техническое решение X-STACK orchestrator принимает и фиксирует в LT-04.1 без человеческого gate. WP-04 имеет статус TODO и выполняется при удовлетворённой WP-02; generated client только после исправленного проверяемого OAS.
+3. **WP-06 → WP-08/09 → WP-10…13:** auth/search mock slice. WP-07 B/C можно готовить параллельно A-UI: он не зависит от готового поиска.
+4. **WP-25 начинается по готовности BE-01/02**, не ждёт dictionaries/sorting. Подпись QA в середине не требуется, exact tests требуются.
+5. **WP-14 → WP-15 → WP-16 → WP-17:** компания/draft → targets/rules/revisions → simulation/publish → history/restore. Каждый WP имеет отдельный читаемый пользовательский результат; нет одного огромного «FE-04» worker run.
+6. **WP-18 → WP-19 → WP-20 → WP-21:** read queue → immutable selection → необязательный preview → ручные durable batches. WP-18/19 можно делать независимо от полного dictionaries UI. WP-20 использует проверенную plan presentation LT-16.1. Четыре leaf WP-21 отделяют submit/outcomes/polling/history в пределах одного WP.
+7. **WP-22 и WP-23** независимы от готовой физической сортировки. WP-24 добавляет существующие links к batch/version/return после появления их экранов; LT-24.1 polling может выполняться раньше LT-24.2.
+8. **WP-26/27/28/29 — real integration по backend-срезам.** BE-04a и matcher/simulation не создают цикл. Файловые операции только после безопасного BE-05 sandbox и воспроизводимых test hooks, не через mock fallback.
+9. **WP-30:** сквозная регрессия, измерения/чистый запуск, комплект evidence, финальная человеческая приёмка обеих функций. LT-30.1/30.2 могут выполняться на полном UI раньше real-сервера; результат M не переносится в E.
+10. **WP-31/32 условные:** FE-06 только по конкретному назначению/принятому UI; внутренний этап после отдельного решения. Они не входят в dependency chain внешнего MVP.
+
+Dependencies на WP означают завершение его применимых leaf на заявленном уровне с условиями VERIFIED из §3; dependencies на LT допускают ранний независимый срез внутри WP. Ссылки с диапазоном включают каждый ID диапазона. Внешние блокирующие X-* снимаются конкретным артефактом/средой, не изменением статуса в плане; X-STACK — исключение по типу записи: неблокирующее техническое решение LT-04.1, не внешний вход. Branch/worktree выбранного Execution Unit создаёт launcher/человек до сессии; checkpoint commit/push текущей ветки выполняет orchestrator по §3. Внутренние WP и leaf не создают отдельные branch/worktree/session/PR; порядок выше описывает зависимости всего backlog, а автономное выполнение ограничено выбранным Execution Unit.
+
+## 6. Трассировка всего frontend-ТЗ и общих требований
+
+### 6.1. Исходные FE-пакеты
+
+| Исходное требование | Новая декомпозиция | Что не выдано за готовность |
+|---|---|---|
+| FE-01 | WP-01/02, LT-03.1, контрактный handoff G-6 | OAS A существует, но schema/fixture tests не исполнялись |
+| FE-02 | WP-01/02/03/04/05/06/07 | B/C схемы существуют; generated client/mocks отсутствуют |
+| FE-03 | WP-08…13, A mocks WP-06; real WP-25 | Ни shell/auth, ни поиск не реализованы |
+| FE-04 | WP-14…24, B/C mocks WP-07 | DICT/QUEUE/FILE/AUD UI не реализован |
+| FE-05 | WP-25…30, локальные проверки в каждом feature leaf | Backend/среда отсутствуют, real-pass BLOCKED |
+| FE-06 | WP-31 + новый bounded leaf после назначения | Нет выдуманного backend задания/промежуточного QA PASS |
+
+### 6.2. Requirements TZ (все 73 numbered requirements)
+
+| IDs | Frontend leaf/WP | Серверная/внешняя граница и real evidence |
+|---|---|---|
+| AUTH-01/02/04/05 | WP-05/06/09; LT-25.1 | Сессия/автор/хеши/cookie/создание двух workers+admin/блокировка — BE-01; UI не создаёт auth backend |
+| AUTH-03 | LT-09.2, LT-13.2, LT-21.3/21.4; G-5 | Принятый batch не теряется, actor стабилен — LT-28.2/28.3 |
+| SRCH-01/03/09/10/11 | WP-10, LT-11.1, LT-12.2 | Запрос/IDLE/default/reset — LT-25.2 |
+| SRCH-02/04/05/06 | WP-11; LT-13.1 | Exact counts/order/AND/raw values — BE-02 и LT-25.2, не browser counting |
+| SRCH-07/08 | LT-03.1, LT-10.2, LT-25.2 | Tokenization/AND/phrases/ranking выполняет BE-02; UI управляет только вводом/отправкой |
+| SRCH-12/13/14/15/16 | LT-12.1/12.2, LT-08.2; LT-30.1 | Limited response/порядок с сервера; no search pagination |
+| SRCH-17/18 | WP-13, LT-09.2, LT-30.2 | Memory-only, last-request scope, stale/retry; real WP-25 |
+| SRCH-19/20/21 | WP-11, LT-12.3/13.2; LT-25.2/25.3 | Схему и parser задаёт сервер; контекст качества, не очередь исправления |
+| SRCH-22/24/25 | LT-12.1/13.1/25.3 | Metadata-only/index exclusions/change detection/поколения — BE-02 |
+| SRCH-23 | LT-10.1/25.3/30.3 | Progress/checkpoint/ETA/техническая публикация корня — BE-02/06, не новый пользовательский экран |
+| DICT-01/02 | WP-14/17; LT-16.1/16.2; WP-26 | Уникальность, общий draft/active versions/RuleSet — BE-03 |
+| DICT-03/04/05/06/07 | LT-15.1/15.2, LT-16.1, LT-26.1/26.2 | Matcher/приоритеты/суффиксы/target resolution — BE-03; frontend не вычисляет реальный план |
+| DICT-08 | LT-15.3/17.2/26.1 | Server revision проверяется атомарно, UI сохраняет local input |
+| DICT-09/10 | WP-16; LT-26.2 | All READY и full RuleSet freshness — BE-03+BE-04a |
+| DICT-11 | WP-17; LT-26.2 | Restore → новая immutable версия, не файловый undo |
+| DICT-12 | LT-16.2/16.3/20.2/21.2/28.1 | Старый preview stale, accepted RuleSet/plan неизменны — BE-03/05 |
+| QUEUE-01/02 | WP-18; LT-27.1; WP-22 | Recursive discovery/readiness/counters — BE-04a; returned item WAITING_READY |
+| QUEUE-03 | WP-19; LT-27.2/28.1 | Immutable membership/revisions/all pages — BE-04b |
+| QUEUE-04/05/06 | WP-20, LT-21.1; LT-27.3/28.1 | Server calculation/preflight/stale enforcement, preview не обязателен |
+| QUEUE-07/09 | LT-05.2/21.1/21.2/28.2 | Atomic claim и durable idempotency — BE-05 |
+| QUEUE-08/10 | LT-18.2/21.2/21.3/21.4; LT-28.1/28.2 | History/partial outcomes/polling, company switch не отмена |
+| FILE-01/02/03/04/05 | LT-20.1/21.2/28.4/28.5 | No-replace/две коллизии/manual review/basename/FS atomicity — BE-05 и inventory/hashes |
+| FILE-06/07 | WP-22; LT-21.2/28.6/28.3/29.1 | Confirmed quarantine, ambiguous recovery, safe return — BE-05; UI не перемещает |
+| FILE-08/09 | LT-15.1/21.2/22.2/26.1/28.7/28.3/29.1 | Boundary/type/link/source identity/intent/recovery — BE-05; real tests, не клиентская security validation |
+| AUD-01/02/03 | WP-24; LT-29.2/30.2 | Append-only events/attribution/system category/no sensitive logging — BE-01/05 |
+| AUD-04/05 | WP-23/24; LT-29.2 | Shared journal/filterable actors/cursor/new events/timezone |
+| NFR-01 | G-2; WP-08/12; LT-30.1 | Keyboard/focus/Russian/long paths/desktop browser |
+| NFR-02 | WP-02/03/04; LT-30.4 | Общая сборка/migrations/sandbox generator/backup/transfer — BE-06; frontend build/docs/tests — FE |
+| NFR-03/04 | LT-25.3/30.3 | Измерения на объявленном стенде, p95 2/5с и freshness≤5мин; не гарантия на реальном архиве |
+| NFR-05 | WP-05/09; LT-25.1/29.2/30.2 | Cookie/Origin/CSRF/no-store/HTTPS — server+transport, не только UI |
+| NFR-06/07 | LT-13.1/21.3/25.3/28.2/28.3/30.3 | Consistent generations/durable state/concurrency/progress — BE+FE real evidence |
+
+### 6.3. Все 45 сценариев MATRIX
+
+В таблице указаны основные владельцы проверки; локальные UI tests входят и в предыдущие feature leaf. Ни один статус PASS здесь не присвоен. Все параметры соответствующей строки MATRIX обязательны; S/M/A/E учитываются раздельно, backend-only assertions предоставляет backend.
+
+| Q-ID | Основные leaf проверки |
+|---|---|
+| Q-001 | LT-09.1, LT-25.1, LT-30.2 |
+| Q-002 | LT-09.2, LT-25.1, LT-28.2 |
+| Q-003 | LT-13.1, LT-14.2, LT-15.3, LT-17.2, LT-25.1, LT-26.1 |
+| Q-004 | LT-10.1, LT-25.2 |
+| Q-005 | LT-10.1/10.2, LT-11.1/11.2, LT-13.1, LT-25.2 |
+| Q-006 | LT-11.2, LT-12.2, LT-25.2 |
+| Q-007/008/009 | LT-03.1, LT-06.2, LT-10.2, LT-25.2 |
+| Q-010 | LT-10.2, LT-13.1, LT-25.2 |
+| Q-011 | LT-02.2, LT-03.1, LT-13.1, LT-25.2/25.3 |
+| Q-012 | LT-11.1, LT-12.3, LT-25.2/25.3 |
+| Q-013 | LT-12.1, LT-25.2 |
+| Q-014 | LT-25.3, LT-30.3 |
+| Q-015 | LT-15.1/15.2, LT-26.1/26.2 |
+| Q-016 | LT-14.2, LT-15.3, LT-26.1 |
+| Q-017/018 | LT-16.1/16.2/16.3, LT-26.2 |
+| Q-019 | LT-16.3, LT-26.2 |
+| Q-020/021 | LT-17.1/17.2, LT-26.2, LT-28.1 |
+| Q-022 | LT-18.1/18.2, LT-27.1 |
+| Q-023 | LT-19.1, LT-20.1, LT-27.3 |
+| Q-024/025 | LT-19.2, LT-27.2, LT-28.1 |
+| Q-026 | LT-20.2, LT-27.2/27.3, LT-28.1 |
+| Q-027 | LT-21.1, LT-28.1 |
+| Q-028 | LT-21.2, LT-28.2 |
+| Q-029 | LT-05.2, LT-16.3, LT-21.1, LT-22.2, LT-26.2/28.2/29.1 |
+| Q-030 | LT-21.3/21.4, LT-28.2 |
+| Q-031/032 | LT-20.1, LT-21.2, LT-28.4 |
+| Q-033 | LT-21.2, LT-28.4; индекс после move — LT-25.3 |
+| Q-034/035 | LT-21.2, LT-28.5 |
+| Q-036 | LT-21.2, LT-28.6 |
+| Q-037 | LT-21.2, LT-28.3 |
+| Q-038 | LT-22.2, LT-29.1 |
+| Q-039 | LT-21.2/21.3, LT-28.6 |
+| Q-040 | LT-21.4, LT-28.3 |
+| Q-041 | WP-23/24, LT-29.2 |
+| Q-042 | LT-08.1/08.2, LT-12.1/13.2, LT-30.1/30.2 |
+| Q-043 | WP-02/04/05/06/07, LT-25.1/29.2/30.2 |
+| Q-044 | LT-15.1, LT-26.1, LT-28.7; server-owned scope/link/identity assertions |
+| Q-045 | LT-30.3/30.4 |
+
+### 6.4. API surface: ни одного выдуманного endpoint
+
+| Операции OAS | Основные consumers |
+|---|---|
+| getHealth, login, getSession, logout, getAppConfig, listRoots, listCompanies | WP-05/06/08/09/10/14/18/22; getHealth технический smoke, не отдельный экран |
+| searchFiles, getSearchFacet | WP-10…13 |
+| listTargetDirectories, resolveTargetDirectory | LT-15.1 |
+| listDictionaries, createDictionary, getDictionary, replaceDictionaryDraft | WP-14/15 |
+| listDictionaryVersions, getDictionaryVersion, restoreDictionaryDraft | WP-17; version links LT-24.2 |
+| createDictionarySimulation, getSimulation, publishDictionary | WP-16 |
+| querySortingQueue, createSortingSelection | WP-18/19 |
+| createSortingPreview, getSortingPreview | WP-20 |
+| createSortingBatch, getSortingBatch, listSortingBatches | WP-21, batch links LT-24.2 |
+| listQuarantineItems, returnQuarantineItem | WP-22 |
+| queryAuditEvents, getAuditUpdates, listAuditActors | WP-23/24 |
+
+### 6.5. Исключённые функции и будущие входы
+
+По TZ §2/13, FE §4 и SEM в demo **не добавляются**: карта/геопоиск, content/OCR/ИИ, upload/open/download/edit файла, saved queries/export, global search по всем дискам, расписание сортировки, regex/сложный DSL, создание целей, замена/резерв/удаление/cleanup, cancel batch и файловый undo, отдельный manual-review workflow. Account CRUD screen необязателен и здесь не запланирован: synthetic users/блокировка — серверные команды. Это не удаление обязательного scope, а сохранение явных границ ТЗ.
+
+Внутренние оценки TZ §13 (93 ТБ физически/195 ТБ логически, аудитория 30–40 и тест до 50 одновременно, рабочие окна, восстановление ≤4 рабочих часов и потеря служебных данных ≤1 часа) — входы будущего обследования/нагрузки/инфраструктуры, не demo frontend AC. Корпоративные схема/SMB/OS/права/case/Unicode/ID/change channel/metadata throughput/timezone/accounts/backup/dependency transfer уточняются в WP-32. Demo не подтверждает совместимость с ними.
+
+## 7. Самопроверка декомпозиции и ведение evidence
+
+Перед передачей backlog проверяется целиком: все FE-01…06 и numbered TZ requirements имеют ссылки в §6; все Q-001…045 и 33 операции имеют consumers/проверки; серверные гарантии отделены от UI; conditional/internal scope не замаскирован под готовый leaf реализации.
+
+Каждый leaf имеет один наблюдаемый результат, status/dependencies/goal/точный source/AC/verification; это не действие уровня файла/import. Mock handlers разделены по предметным группам, поиск по input/cascade/table/quality/freshness, правила по targets/editor/revisions/test/publish/history, партии по submit/outcomes/polls/history. Real-check leaf добавляют конечные проверяемые сценарии, а не поручают «исправить весь продукт». Если фактический объём конкретного run окажется шире, дальнейшая декомпозиция делается до назначения worker, без потери AC.
+
+Порядок зависимостей ацикличен: platform → mock/auth → feature slices → real slices → release; ссылки на готовый prerequisite leaf допускают параллельность пакетов. При уточнении декомпозиции IDs сохраняются, поэтому порядок исполнения определяется dependencies, не арифметикой ID (см. WP-28). Финальная QA-приёмка не является зависимостью intermediate UI/real разработки. Условная помощь FE-06 не включена в критический путь MVP.
+
+Документарные/структурные проверки backlog не заменяют product build, V-S runner или M/A/E сценарии. После исполнения к каждой карточке добавляются реальные commands/results/versions/evidence и статус по §3; этот план сам по себе ничего не переводит в VERIFIED, READY_FOR_HUMAN_REVIEW или DONE.
+
+### Сохранённые результаты структурной проверки
+
+- При исходном planning-review перегруженные LT-03.2 и LT-28.1 разделены до leaf; исходные IDs и AC сохранены, условия DIRECT/PREVIEWED уточнены без изменения OAS. Независимый полный review содержательных критериев декомпозиции дал PASS. Это исторический результат проверки плана, не PASS будущей реализации или последующих изменений.
+- Исходный read-only структурный анализ reviewer через `python -B -` подтвердил **10 EPIC / 32 WP / 80 leaf**, уникальность IDs, корректность полей/родителей/leaf lists, отсутствие неизвестных dependencies и циклов; **73/73 TZ requirements, 45/45 Q-сценариев, 33/33 operationId** трассированы. Нормализация workflow сохраняет эту декомпозицию и трассировку; удаление X-STACK из blocking dependencies не добавляет рёбер графа.
+- После перевода WP-04 и LT-04.1 из BLOCKED в TODO распределение плановых статусов: leaf — **59 TODO / 21 BLOCKED**; WP — **24 TODO / 8 BLOCKED**. Это состояние плана после нормализации, не evidence исполнения продукта; при выполнении задач статусы и сводка актуализируются.
+- При последующих изменениях повторно проверяются counts/IDs/parents/leaf lists, ссылки и ацикличность dependencies (включая диапазоны и ранние LT-срезы), полнота §6, точный diff и whitespace. Evidence документарной проверки хранится отдельно от результатов product tests/builds и OpenAPI runner.

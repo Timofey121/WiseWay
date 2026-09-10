@@ -1,10 +1,10 @@
-# Контракт Frontend ↔ Backend
+﻿# Контракт Frontend ↔ Backend
 
 Редакция документа 2.0 от 09.09.2026. Владелец: Frontend. Основание: `01_PROJECT_TZ.md`. Статус: подробное основание для первой согласованной версии OpenAPI; сервер и OpenAPI по этому документу ещё не реализованы.
 
 ## 1. Правила совместной работы
 
-Frontend в FE-01/02 переносит этот контракт в `contracts/openapi/memoza-demo-v1.yaml`, добавляет схемы всех DTO, ответов, параметров, ошибок и примеры. Backend проверяет реализуемость, QA — соответствие наблюдаемому поведению. После проверки версионированный YAML становится единственным источником структуры API, а это описание — источником семантики. Расхождения исправляются совместно.
+Frontend в FE-01/02 переносит этот контракт в `contracts/openapi/wiseway-v1.yaml`, добавляет схемы всех DTO, ответов, параметров, ошибок и примеры. Backend проверяет реализуемость, QA — соответствие наблюдаемому поведению. После проверки версионированный YAML становится единственным источником структуры API, а это описание — источником семантики. Расхождения исправляются совместно.
 
 Публичный префикс `/api/v1`, JSON, UTF-8. Имитация API и настоящий сервер используют одни методы, пути, статусы, тела и ошибки. Смена режима клиента не изменяет компоненты UI. Первые согласования: A — auth/config/roots/search, B — dictionaries/targets/sorting, C — batches/quarantine/audit. Backend начинает каждый раздел сразу после его согласования.
 
@@ -32,9 +32,9 @@ Frontend в FE-01/02 переносит этот контракт в `contracts/
 
 ### Сессия
 
-`POST /auth/login` принимает `login` и `password`, устанавливает HttpOnly cookie `memoza_session`. Сервер хранит сессию и хеш пароля. Cookie — SameSite=Lax, Path=/, без Domain, Secure при HTTPS. Для loopback HTTP демо флаг Secure отключается настройкой. Тело ответа не содержит session ID.
+`POST /auth/login` принимает `login` и `password`, устанавливает HttpOnly cookie `wiseway_session`. Сервер хранит сессию и хеш пароля. Cookie — SameSite=Lax, Path=/, без Domain, Secure при HTTPS. Для loopback HTTP демо флаг Secure отключается настройкой. Тело ответа не содержит session ID.
 
-В OpenAPI: `cookieAuth` типа `apiKey`, in=`cookie`, name=`memoza_session`; по умолчанию требуется для операций. Только `/health` и `/auth/login` имеют `security: []`.
+В OpenAPI: `cookieAuth` типа `apiKey`, in=`cookie`, name=`wiseway_session`; по умолчанию требуется для операций. Только `/health` и `/auth/login` имеют `security: []`.
 
 Сессия возвращает CSRF-токен для заголовка `X-CSRF-Token` всех запросов, изменяющих состояние, после входа. Токен хранится только в памяти вкладки и меняется при новом входе. Сервер проверяет token и Origin; login также проверяет разрешённый Origin. Search и audit/query не изменяют состояние. Структура `Session`: `{actor: Actor, expires_at: Instant, csrf_token: string}`. Отсутствующая/истёкшая сессия — 401, а не успешный ответ с пустым пользователем.
 

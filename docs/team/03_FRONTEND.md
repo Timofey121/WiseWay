@@ -1,4 +1,4 @@
-# Frontend: инструкция разработчику и его Codex
+﻿# Frontend: инструкция разработчику и его Codex
 
 Версия: 2.0. Дата: 09.09.2026. Область: внешняя Demo-MVP на полностью синтетических данных.
 
@@ -21,7 +21,7 @@ Frontend начинает первым: фиксирует публичный AP
 
 ## 2. Владение и границы ответственности
 
-- Frontend — владелец `contracts/openapi/memoza-demo-v1.yaml`, сгенерированного TypeScript-клиента, schema-valid fixtures/mocks и пользовательского интерфейса.
+- Frontend — владелец `contracts/openapi/wiseway-v1.yaml`, сгенерированного TypeScript-клиента, schema-valid fixtures/mocks и пользовательского интерфейса.
 - Backend проверяет реализуемость контракта: авторизацию, ошибки, согласованность выдачи, версии, конкуренцию и файловую безопасность.
 - QA проверяет пользовательский смысл, ожидаемые результаты и полноту положительных/отрицательных сценариев.
 - Контракт меняет frontend после согласования с backend и QA; изменение фиксируется вместе с затронутыми тестами и потребителями.
@@ -44,7 +44,7 @@ Frontend начинает первым: фиксирует публичный AP
 8. При блокере описать фактическое несоответствие, воспроизведение, затронутое требование и нужное решение; продолжать независимую безопасную работу.
 
 Единая структура после согласованного старта: `frontend/src/features/{auth,search,dictionaries,sorting,quarantine,audit}`, `frontend/src/api/generated`, `frontend/src/mocks`, `frontend/tests`.
-Общий контракт: `contracts/openapi/memoza-demo-v1.yaml`; примеры: `contracts/examples`; данные: `fixtures/synthetic`; проверки: `tests/contract`, `tests/e2e`; командные записи: `docs/team`.
+Общий контракт: `contracts/openapi/wiseway-v1.yaml`; примеры: `contracts/examples`; данные: `fixtures/synthetic`; проверки: `tests/contract`, `tests/e2e`; командные записи: `docs/team`.
 Это одна обязательная карта monorepo, без альтернативных приложений и дублирующих пакетов клиента. Перенос существующих файлов согласовать в стартовом обновлении, не создавать вторую реализацию.
 
 ## 4. Обязательное поведение интерфейса
@@ -120,7 +120,7 @@ Frontend начинает первым: фиксирует публичный AP
 
 - Цель: открыть frontend и backend независимую работу на одном проверяемом контракте.
 - Зависимости: согласованный старт, `AUTH-01…05`, `SRCH-01…25`, `NFR-01…07`, `02_API_CONTRACT.md`; совместная проверка frontend/backend/QA в дни 1–3.
-- Каталоги: `contracts/openapi/memoza-demo-v1.yaml`, `contracts/examples`, `tests/contract`, `fixtures/synthetic`.
+- Каталоги: `contracts/openapi/wiseway-v1.yaml`, `contracts/examples`, `tests/contract`, `fixtures/synthetic`.
 - Действия: оформить session/config/roots/search, типы ошибок, bootstrap facet, состояния выдачи и версии строго по `02_API_CONTRACT.md`; добавить нормальные и отрицательные примеры.
 - Готово: схема валидируется, примеры проверяются против неё, backend подтвердил реализуемость, QA сопоставил примеры с ожидаемым поведением; решения и открытые вопросы записаны.
 
@@ -128,7 +128,7 @@ Frontend начинает первым: фиксирует публичный AP
 
 - Цель: закрыть API surface Demo и предоставить воспроизводимый mock-контур.
 - Зависимости: FE-01; `DICT-01…12`, `QUEUE-01…10`, `FILE-01…09`, `AUD-01…05`; договорённости с backend/QA по разрешённым операциям.
-- Каталоги: `contracts/openapi/memoza-demo-v1.yaml`, `contracts/examples`, `frontend/src/api/generated`, `frontend/src/mocks`, `fixtures/synthetic`, `tests/contract`.
+- Каталоги: `contracts/openapi/wiseway-v1.yaml`, `contracts/examples`, `frontend/src/api/generated`, `frontend/src/mocks`, `fixtures/synthetic`, `tests/contract`.
 - Действия: дополнить схемы, сгенерировать TS-клиент, сделать schema-valid fixtures/mocks для успехов, conflicts, stale, запрета доступа и безопасных ошибок.
 - Готово: весь Demo contract покрыт примерами; чистая генерация воспроизводима; mocks не принимают недопустимые payload; команда может подключить клиент без ручных дублирующих типов.
 
@@ -185,7 +185,7 @@ Frontend начинает первым: фиксирует публичный AP
 > Ты отвечаешь за frontend Demo-MVP и публичный OpenAPI-контракт. Сначала прочитай этот файл и четыре документа пакета из раздела 1.
 > Работай по FE-01…FE-06 и только в разрешённых каталогах/области текущей задачи. Не начинай product code, пока действующие ограничения старта не согласованы командой.
 > Начни с проверки рабочего дерева, существующих инструкций и входных зависимостей. Сохраняй чужие изменения; не выполняй destructive git-команды.
-> Источник полей и семантики — 02_API_CONTRACT.md; executable schema — contracts/openapi/memoza-demo-v1.yaml. Ты её владелец, backend проверяет реализуемость, QA — ожидаемое поведение.
+> Источник полей и семантики — 02_API_CONTRACT.md; executable schema — contracts/openapi/wiseway-v1.yaml. Ты её владелец, backend проверяет реализуемость, QA — ожидаемое поведение.
 > Сначала contract и contracts/examples, затем frontend/src/api/generated, frontend/src/mocks и UI в frontend/src/features. Данные — fixtures/synthetic, handoff — docs/team. Не создавай альтернативную структуру и не меняй generated code вручную.
 > Используй только вымышленные данные и логические identifiers/display paths. Не читай реальные корпоративные файлы и не обращайся к произвольной файловой системе из UI.
 > Для значимой логики добавляй проверку до реализации; визуальные состояния проверяй в браузере. Не пропускай ошибки, concurrency, session expiry и защиту от устаревших ответов.
