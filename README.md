@@ -123,3 +123,52 @@ counts, ID и совпадение сгенерированных публичн
 `contracts/examples/errors/` и привязаны в `manifest.json` к каноническим
 схемам. Списки natural/русской сортировки в `search_inputs` остаются
 неупорядоченными кандидатными входами; точный порядок задают сценарии.
+
+## Эталоны правил и целей (WP-03, LT-03.2a)
+
+`fixtures/synthetic/rule_expectations.json` — конечный независимый эталон
+правил, справочников и целей поверх корпуса LT-03.1a:
+
+- `dictionaries`/`versions`/`rule_sets` — два опубликованных справочника Atlas
+  (два словаря) и один Nova с неизменяемыми версиями, полными определениями
+  правил и полным активным `RuleSet` компании (members отсортированы по
+  `dictionary_id`); отдельные сценарные варианты имеют собственные version и
+  rule_set ID. Каждая версия помечена `role`: `published` — живая история
+  словаря, `scenario` — изолированный тестовый универсум для будущих
+  simulation fixtures. Публичный `Dictionary.versions_count` считает только
+  `published`; сценарные версии в основную историю не входят;
+- `target_directories` — разрешённые целевые каталоги компаний;
+- `sources` — идентичность/относительный вход каждого сценария (часть
+  привязана к реальным `SearchItem` корпуса);
+- `rule_scenarios` — литеральные `matched_rule_refs`, `selected_rule`,
+  `target`, `target_basename`, `predicted_state` и `reason_code` для
+  BASENAME/RELATIVE_PATH, whole-field/`*`/`?`, нуля/множества `*` и перехода
+  через слеш (`Archive*Reports/*` матчит полный путь, включая basename;
+  trailing-only `Archive*Reports` — отдельный отрицательный контроль),
+  нормализации слешей и casefold без NFC, приоритетов 1/1000, равного
+  приоритета с одинаковой и разной целью, суффиксов
+  `archive.tar.gz`/`.env`/`README`/`name.`/`.TXT` и точечной основы;
+- `target_scenarios` — резолвер цели: разрешённые каталоги и отклонения
+  422 `INVALID_TARGET`/`PATH_OUTSIDE_ROOT`/`VALIDATION_ERROR`, привязанные к
+  response-схеме `resolveTargetDirectory`;
+- `invalid_rule_cases` — недопустимые `**`/regex/скрытый OR/escape,
+  приоритеты и длины основы; схемно-невалидные случаи помечены
+  `schema_rejected=true` и проверяются на отклонение схемой `Rule`, остальные
+  доменные случаи положительно не проверяются;
+- `coverage` — Q-015/Q-018/Q-044 привязаны к конечным scenario_id.
+
+`tests/contract/contractlib/rule_expectations.py` — материализатор: он
+собирает `Rule`/`Dictionary`/`DictionaryVersion`/`RuleSet`/`TargetDirectory`/
+`PlanRow`/`ErrorResponse` **только по литеральным ID**, не выполняя matcher,
+выбор приоритета, разрешение конфликта или построение итогового имени.
+Проверки `FIX-RULE-001/002` валидируют схемы, конечные инварианты и совпадение
+сгенерированных публичных примеров с закоммиченными. Документированная команда
+подготовки публичных примеров:
+
+```powershell
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\rule_expectations.py --write-examples
+```
+
+Сгенерированные примеры лежат в `contracts/examples/dictionaries/`,
+`contracts/examples/targets/` и `contracts/examples/errors/` и привязаны в
+`manifest.json` к каноническим схемам.

@@ -3,7 +3,7 @@
   "version": "1.2.0",
   "seed": "wiseway-demo-seed-2031",
   "contract_version": "1.0.0",
-  "generated_by": "corpus: tests/contract/contractlib/synthetic.py (deterministic; no randomness); search/error examples: tests/contract/contractlib/search_expectations.py --write-examples (from literal expectations)",
+  "generated_by": "corpus: tests/contract/contractlib/synthetic.py (deterministic; no randomness); search/error examples: tests/contract/contractlib/search_expectations.py --write-examples (from literal expectations); rule/target examples: tests/contract/contractlib/rule_expectations.py --write-examples (from literal expectations)",
   "checksum": {
     "algorithm": "sha256",
     "canonicalization": "json.dumps(parse(content), sort_keys=True, separators=(',', ':'), ensure_ascii=False)",
@@ -41,11 +41,29 @@
       "error-root-not-ready": "7aa7580156915a260903608ddc1b0589aa1b33d8190d21528e6b33692dd2e371",
       "error-csrf-failed": "6db531040e0a23de9b17ad78fe3d61dd4ddbf8379fed630d4fd6138595689473",
       "error-forbidden": "ba1ad2bb2caf3f4fe56c17e8d4db35d822c71083e2df9b7cf266a382a1293781",
-      "error-rate-limited": "cbd5a13963a9d6f334fdf83941778c6ff6e5ce7ff1cf30cf2347c9aea75e564b"
+      "error-rate-limited": "cbd5a13963a9d6f334fdf83941778c6ff6e5ce7ff1cf30cf2347c9aea75e564b",
+      "target-atlas-reports": "49f0e5162dd03f338724428293f5cec088589066552fe92c780ec3e9c972c300",
+      "target-atlas-invoices": "de64e5b35b829736fe15c69ecd7756908d23331bee648eaafabcd2d9af8f42c3",
+      "target-nova-north-reports": "531371055bf43e86301dd3dd942586eebb213d7968a3c54801dc31dfd6657e2f",
+      "dictionary-atlas-general": "9df22c3a9102b5a5de29ea9499f0866b8aebcb35b7f23c982eb04baf77cd520b",
+      "dictionary-atlas-invoices": "4c31c18a2c4cd907fc82b3e0a4fd0ab172b9ce78e3ed2d1cf773dabab2c913fe",
+      "dictionary-nova-general": "546a60512f7a63413d488e9e96067f53f5159fea57bcc87e52007e875db4ed82",
+      "version-atlas-general-v1": "cb83428e81ae3a9baca5b863fd30fd984a41b9488343674a61c5dab1847a2d35",
+      "version-atlas-invoices-v1": "e2dff2247186f0025744074d10eebcf7136c6ba7f51f6e4745a0c6f57c510233",
+      "version-nova-general-v1": "f809498e03ea5d5bf8bb24f6dda036f3f1f6fba42e147c696852cceddae346ad",
+      "rule-set-atlas-published": "f0a6cad3fdf9a1d3856db47bfec6ae472f534f179a9294f88e5a7a6326a07aeb",
+      "rule-set-nova-published": "a2178a9d3bc7d4d2f9242b6f96267844a105fc5a857cd6dca8cfea2b11e115dc",
+      "plan-row-atlas-archive": "453716fc0154832e69b734b5bde8cd1f1a10276e65cdbc14373ee81ca5057a21",
+      "plan-row-atlas-upper-txt": "8bd3379fe7976f3c0fee904d8e7eb66afcbf2b2541dd2c0f319cbf32ac36bf40",
+      "plan-row-atlas-conflict": "904283a5cbf6334d59bb32bf47c32dc5f543cd2bc4887c5cb364cac67a09e7bb",
+      "plan-row-atlas-no-scenario": "3055189b17527a9188569339ba1f589714720a891c070c57a8657135d2e93fc7",
+      "error-invalid-target": "8b27b28be27c9dbc1de1cdcba0d736fabe2d0b7e35c19c34deef4ab6fee0b3a4",
+      "error-path-outside-root": "4386282cd698de3039471ba4be0c9617f324a68ff1aecf22d0c353e475462fe4"
     },
-    "combined": "7bc8406c0a7e823ee49bbd4b3354da0cec6290bd0fb7228c099d766de4135795",
+    "combined": "4ae0479ce20f784d963c4dca70b83bdb3fef9e917a617fb66b823a2801ef6937",
     "fixtures": {
-      "search-expectations": "0910c9bbeb54eaba159105e4d060cd2ca06c7d71f0459946f220886f22751c1b"
+      "search-expectations": "0910c9bbeb54eaba159105e4d060cd2ca06c7d71f0459946f220886f22751c1b",
+      "rule-expectations": "c3577511741d2611c4e951b0e49f5a3a458642d9df17b627f1f60107d2bf74ac"
     }
   },
   "corpus": {
@@ -59,6 +77,12 @@
       "file": "fixtures/synthetic/search_expectations.json",
       "schema": null,
       "description": "LT-03.1b literal search/facet/auth/error/race/lifecycle/format expectations over the corpus; materialized by contractlib.search_expectations without computing membership."
+    },
+    {
+      "id": "rule-expectations",
+      "file": "fixtures/synthetic/rule_expectations.json",
+      "schema": null,
+      "description": "LT-03.2a literal rule-input => target/name/reason and target resolver expectations with complete immutable version/rule-set definitions; materialized by contractlib.rule_expectations without a matcher."
     }
   ],
   "examples": [
@@ -259,6 +283,108 @@
       "schema": "#/components/schemas/ErrorResponse",
       "file": "contracts/examples/errors/error-rate-limited.json",
       "description": "429 RATE_LIMITED, retryable=true; the client honors Retry-After."
+    },
+    {
+      "id": "target-atlas-reports",
+      "schema": "#/components/schemas/TargetDirectory",
+      "file": "contracts/examples/targets/target-atlas-reports.json",
+      "description": "Allowlisted Atlas Reports target directory."
+    },
+    {
+      "id": "target-atlas-invoices",
+      "schema": "#/components/schemas/TargetDirectory",
+      "file": "contracts/examples/targets/target-atlas-invoices.json",
+      "description": "Allowlisted Atlas Invoices target directory."
+    },
+    {
+      "id": "target-nova-north-reports",
+      "schema": "#/components/schemas/TargetDirectory",
+      "file": "contracts/examples/targets/target-nova-north-reports.json",
+      "description": "Allowlisted Nova North/Reports target directory."
+    },
+    {
+      "id": "dictionary-atlas-general",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-atlas-general.json",
+      "description": "Atlas general dictionary with its full published rule set."
+    },
+    {
+      "id": "dictionary-atlas-invoices",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-atlas-invoices.json",
+      "description": "Atlas invoices dictionary with its full published rule set."
+    },
+    {
+      "id": "dictionary-nova-general",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-nova-general.json",
+      "description": "Nova general dictionary with its full published rule set."
+    },
+    {
+      "id": "version-atlas-general-v1",
+      "schema": "#/components/schemas/DictionaryVersion",
+      "file": "contracts/examples/dictionaries/version-atlas-general-v1.json",
+      "description": "Immutable first Atlas general version."
+    },
+    {
+      "id": "version-atlas-invoices-v1",
+      "schema": "#/components/schemas/DictionaryVersion",
+      "file": "contracts/examples/dictionaries/version-atlas-invoices-v1.json",
+      "description": "Immutable first Atlas invoices version."
+    },
+    {
+      "id": "version-nova-general-v1",
+      "schema": "#/components/schemas/DictionaryVersion",
+      "file": "contracts/examples/dictionaries/version-nova-general-v1.json",
+      "description": "Immutable first Nova general version."
+    },
+    {
+      "id": "rule-set-atlas-published",
+      "schema": "#/components/schemas/RuleSet",
+      "file": "contracts/examples/dictionaries/rule-set-atlas-published.json",
+      "description": "Full active Atlas RuleSet (all dictionaries, sorted by dictionary_id)."
+    },
+    {
+      "id": "rule-set-nova-published",
+      "schema": "#/components/schemas/RuleSet",
+      "file": "contracts/examples/dictionaries/rule-set-nova-published.json",
+      "description": "Full active Nova RuleSet (all dictionaries, sorted by dictionary_id)."
+    },
+    {
+      "id": "plan-row-atlas-archive",
+      "schema": "#/components/schemas/PlanRow",
+      "file": "contracts/examples/dictionaries/plan-row-atlas-archive.json",
+      "description": "PlanRow for archive.tar.gz: fixed stem Archive plus the last suffix .gz."
+    },
+    {
+      "id": "plan-row-atlas-upper-txt",
+      "schema": "#/components/schemas/PlanRow",
+      "file": "contracts/examples/dictionaries/plan-row-atlas-upper-txt.json",
+      "description": "PlanRow where priority 10 wins over 100 and .TXT keeps its original case."
+    },
+    {
+      "id": "plan-row-atlas-conflict",
+      "schema": "#/components/schemas/PlanRow",
+      "file": "contracts/examples/dictionaries/plan-row-atlas-conflict.json",
+      "description": "PlanRow for an equal-priority conflict with different final targets."
+    },
+    {
+      "id": "plan-row-atlas-no-scenario",
+      "schema": "#/components/schemas/PlanRow",
+      "file": "contracts/examples/dictionaries/plan-row-atlas-no-scenario.json",
+      "description": "PlanRow for a file with no matching published rule (NO_SCENARIO)."
+    },
+    {
+      "id": "error-invalid-target",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-invalid-target.json",
+      "description": "422 INVALID_TARGET for a missing or disallowed target directory."
+    },
+    {
+      "id": "error-path-outside-root",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-path-outside-root.json",
+      "description": "422 PATH_OUTSIDE_ROOT for a path escaping the allowed root."
     }
   ]
 }

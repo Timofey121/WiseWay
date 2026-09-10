@@ -16,7 +16,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from . import search_expectations, synthetic
+from . import rule_expectations, search_expectations, synthetic
 from .semantic import validate_fixture
 
 
@@ -116,6 +116,7 @@ def run_fixture_checks(report, registry, root: Optional[Path] = None) -> None:
 
     _check_checksums(checksum_check, manifest, base)
     _run_search_expectations(report, registry, base)
+    _run_rule_expectations(report, registry, base)
 
 
 def _run_search_expectations(report, registry, base: Path) -> None:
@@ -179,6 +180,74 @@ def _run_search_expectations(report, registry, base: Path) -> None:
 
     try:
         generated = search_expectations.generated_examples(expectations, context)
+    except Exception as exc:  # noqa: BLE001
+        examples_check.add(f"cannot regenerate examples: {type(exc).__name__}: {exc}")
+        return
+    for relative, payload in generated.items():
+        target = base / relative
+        if not target.is_file():
+            examples_check.add(f"generated example is missing: {relative}")
+            continue
+        try:
+            committed = synthetic.load_json(target)
+        except Exception as exc:  # noqa: BLE001
+            examples_check.add(f"cannot parse {relative}: {type(exc).__name__}: {exc}")
+            continue
+        if committed != payload:
+            examples_check.add(f"committed example differs from regeneration: {relative}")
+
+
+def _run_rule_expectations(report, registry, base: Path) -> None:
+    """LT-03.2a: literal rule/target oracle and generated examples."""
+    rule_check = report.check(
+        "FIX-RULE-001",
+        "Rule/target expectations materialize to schema-valid literal payloads "
+        "and satisfy the finite rule invariants",
+    )
+    examples_check = report.check(
+        "FIX-RULE-002",
+        "Generated public rule/target examples match the committed files",
+    )
+    try:
+        expectations = rule_expectations.load_expectations(base)
+        context = rule_expectations.build_context(base, expectations)
+    except Exception as exc:  # noqa: BLE001 - report unreadable expectations
+        rule_check.add(f"cannot load rule expectations: {type(exc).__name__}: {exc}")
+        return
+
+    for message in rule_expectations.expectation_errors(expectations, context):
+        rule_check.add(message)
+    for message in rule_expectations.schema_rejection_errors(expectations, registry):
+        rule_check.add(message)
+
+    for target in expectations.get("target_directories", []):
+        payload = rule_expectations.materialize_target_directory(target, context)
+        schema_errors, semantic = validate_fixture(
+            registry, rule_expectations.TARGET_DIRECTORY_SCHEMA, payload
+        )
+        for message in schema_errors + semantic:
+            rule_check.add(message, target["target_id"])
+    for version in expectations.get("versions", []):
+        payload = rule_expectations.materialize_version(version, context)
+        schema_errors, semantic = validate_fixture(
+            registry, rule_expectations.DICTIONARY_VERSION_SCHEMA, payload
+        )
+        for message in schema_errors + semantic:
+            rule_check.add(message, version["version_id"])
+    for scenario in expectations.get("rule_scenarios", []):
+        payload = rule_expectations.materialize_plan_row(scenario, context)
+        schema_errors, semantic = validate_fixture(
+            registry, rule_expectations.PLAN_ROW_SCHEMA, payload
+        )
+        for message in schema_errors + semantic:
+            rule_check.add(message, scenario["scenario_id"])
+
+    report.rule_scenarios = len(expectations.get("rule_scenarios", []))
+    report.target_scenarios = len(expectations.get("target_scenarios", []))
+    report.invalid_rule_cases = len(expectations.get("invalid_rule_cases", []))
+
+    try:
+        generated = rule_expectations.generated_examples(expectations, context)
     except Exception as exc:  # noqa: BLE001
         examples_check.add(f"cannot regenerate examples: {type(exc).__name__}: {exc}")
         return

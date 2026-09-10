@@ -356,3 +356,159 @@ git diff --check
 - **Следующий владелец:** reviewer LT-03.1b — независимая сверка конечных ID,
   порядка, counts и фасетов по `reason` и корпусу, а также негативных мутаций.
 - **Блокирующая зависимость:** нет.
+
+# LT-03.2a — эталоны правил, целей и резолвера
+
+Дополнение фиксирует результат leaf LT-03.2a (parent LT-03.2, WP-03, Epic
+E-01). **Status:** IN_PROGRESS (публикация отложена D-06).
+
+## Задача и основание
+
+- **Цель:** конечный независимый эталон `rule-input => target/name/reason` и
+  оракулы резолвера целей для будущих simulation/sorting fixtures (LT-03.2b+);
+  matcher не реализуется.
+- **Основание:** AGENTS; FRONTEND_BACKLOG LT-03.2/LT-03.2a; D-03/D-06; TZ
+  DICT-01…07; API §5/6; QA §4; MATRIX Q-015/Q-018/Q-044; OAS
+  `Rule`/`TargetDirectory`/`TargetReference`/`Dictionary`/`DictionaryDraft`/
+  `DictionaryVersion`/`RuleSet`/`RuleReference`/`PlanRow`/`ReplaceDictionaryDraft`
+  и response-схемы `resolveTargetDirectory`/`replaceDictionaryDraft`.
+
+## Изменённые файлы
+
+| Файл | Характер |
+|---|---|
+| `fixtures/synthetic/rule_expectations.json` | новый эталон: 2 компании, 3 словаря (2 Atlas + 1 Nova), 16 версий (3 published + 13 сценарных), 13 rule set, 9 целей, 24 источника, 26 rule, 8 target, 17 invalid-rule сценариев, coverage Q-015/018/044 |
+| `contracts/examples/targets/*.json` | 3 публичных `TargetDirectory` |
+| `contracts/examples/dictionaries/*.json` | 3 `Dictionary`, 3 `DictionaryVersion`, 2 `RuleSet`, 4 `PlanRow` |
+| `contracts/examples/errors/error-invalid-target.json`, `error-path-outside-root.json` | 2 публичных `ErrorResponse` |
+| `tests/contract/contractlib/rule_expectations.py` | загрузчик/материализатор/валидатор + `--write-examples` |
+| `tests/contract/contractlib/fixture_checks.py` | FIX-RULE-001/002 |
+| `tests/contract/contractlib/report.py`, `__init__.py`, `verify_contract.py` | счётчики/экспорт/строка отчёта |
+| `tests/contract/test_rule_expectations.py` | 36 тестов: структура, покрытие, role/история, негативные мутации |
+| `tests/contract/test_synthetic_corpus.py` | 32→49 публичных примеров и FIX-RULE-счётчики |
+| `fixtures/synthetic/manifest.json` | fixture `rule-expectations`, 17 привязанных examples, пересчитанные канонические checksums; version корпуса **1.2.0 без изменения** |
+| `README.md` | раздел LT-03.2a и команда генерации |
+
+OAS, `contracts/semantics.md`, control plane, backlog, backend/UI **не
+изменялись**.
+
+## Что именно зафиксировано
+
+- **Компании/акторы:** `company-demo-atlas`/`company-demo-nova` с
+  `incoming_source_ids`, сверенными с корпусом; точные акторы auth fixtures
+  `user-demo-worker-1`, `user-demo-worker-2`, `user-demo-admin-1`.
+- **Справочники/полный RuleSet:** Atlas — `dictionary-atlas-general` +
+  `dictionary-atlas-invoices` (два словаря одной компании), Nova —
+  `dictionary-nova-general`; опубликованные rule set содержат все активные
+  версии компании, members отсортированы по `dictionary_id`; каждая ссылка
+  правила разрешается в полное определение (нет undefined refs).
+- **role/history:** каждая версия помечена `role`. `published` — живая история
+  словаря, единственная, что считает публичный `Dictionary.versions_count`;
+  `scenario` — изолированный тестовый универсум для будущих simulation
+  fixtures, на который ссылаются только сценарные rule set. Опубликованный
+  rule set не может ссылаться на сценарную версию; сценарные версии не входят
+  в основную timeline.
+- **Суффиксы:** `archive.tar.gz` → `Archive.gz`; `.env` → `EnvFile`; `README` →
+  `Readme`; `name.` → `Named`; `invoice.TXT` → `Invoice.TXT` (регистр сохранён);
+  `report.v2.pdf` + точечная основа → `Final.Report.pdf` (только последний
+  суффикс).
+- **BASENAME/RELATIVE_PATH:** правило BASENAME не подставляет путь; при
+  `*orion*` матчится только RELATIVE_PATH.
+- **Whole-field/маски:** `invoice` совпадает только с целым полем, подстроке
+  нужны `*`; `*` — ноль/много и пересекает слеш; `?` — ровно один.
+  Cross-slash положительный: `Archive*Reports/*` матчит полный относительный
+  путь `Archive/Atlas/Orion_2031/Reports/summary.pdf`, т.к. маска применяется
+  ко всему полю включая basename; trailing-only `Archive*Reports` — отдельный
+  отрицательный контроль (`NO_SCENARIO`).
+- **Слеши/регистр:** маска с `\` совпадает с каноническим `/`; casefold
+  регистронезависим, но без NFC/NFKC (decomposed `e`+U+0301 не совпадает).
+- **Приоритет:** 1 и 1000; меньший выигрывает; больший не перебивает меньший.
+- **Одинаковый приоритет:** одинаковая цель не конфликтует, атрибуция
+  стабильна по `dictionary_id` → `rule_id`; разные цели дают `RULE_CONFLICT`
+  без выбранного правила и без цели.
+- **Резолвер:** разрешённые цели Atlas/Nova; `NoSuchDir` → 422
+  `INVALID_TARGET`; `DEMO:/OtherSandbox/...` → 422 `PATH_OUTSIDE_ROOT`;
+  пустой сегмент → 422 `VALIDATION_ERROR`; `C:/Windows/System32` → 422
+  `INVALID_TARGET`; чужой компании → 422 `INVALID_TARGET`.
+- **Invalid rules:** `**`, пустая/длинная маска, приоритет 0/1001, пустая/
+  длинная/слэш/бэкслэш/control основа, неизвестный `match_field`, отсутствие
+  `target` — схемно отклоняются (`schema_rejected=true`); regex/скрытый OR/
+  escape/недопустимая или чужая цель — доменные отклонения
+  (`schema_rejected=false`), привязанные к response-схеме
+  `replaceDictionaryDraft`.
+- **Roundtrip:** каждый `Rule` материализуется с 6 полями и nested `target`,
+  валидируется схемой и сохраняется при JSON dump/load.
+
+## V-S: точные команды и фактические результаты
+
+```powershell
+.\.venv-contract\Scripts\python.exe tests\contract\verify_contract.py
+.\.venv-contract\Scripts\python.exe -m unittest discover -s tests\contract -p "test_*.py"
+.\.venv-contract\Scripts\python.exe -m pip check
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\rule_expectations.py --write-examples
+git diff --check
+```
+
+- `verify_contract.py` → `RESULT: PASS (30 checks, 0 failures)`, `Fixtures: 49`,
+  `Rule expectations: 26 rule, 8 target, 17 invalid-rule`; FIX-RULE-001/002 —
+  PASS.
+- `unittest discover` → `Ran 195 tests ... OK` (было 191; добавлено 4: role/history,
+  cross-slash negative, incoming_source_ids, scenario-in-published-rule-set).
+- `--write-examples` идемпотентно; повторная генерация совпадает с
+  закоммиченными файлами (FIX-RULE-002).
+- Негативные self-тесты: undefined rule ref, ссылка вне rule set, selected не
+  из matched, конфликт с одним совпадением, равный приоритет с разными целями,
+  несовпадение stem+suffix/basename, цель вне allowlist, код не из response
+  схемы операции, пустой reason, дубликат `rule_id`, пропавшее покрытие,
+  неверная классификация `schema_rejected`, сценарная версия в published
+  rule set, неизвестный `role`, расхождение `incoming_source_ids` — отклоняются
+  `expectation_errors`/`schema_rejection_errors`.
+
+## Repair cycle 1 (устранённые блокирующие замечания)
+
+1. **Неверная finite-пара cross-slash.** Маска `Archive*Reports` не могла
+   матчить полный путь `Archive/Atlas/Orion_2031/Reports/summary.pdf`, т.к.
+   поле — весь относительный путь включая basename. Исправлено на
+   `Archive*Reports/*` в `version-atlas-star-cross-slash-v1`; обновлены
+   `parameters`/`reason`, сгенерированные примеры и checksums. Добавлен
+   отдельный отрицательный контроль `RULE-Q015-STAR-CROSS-SLASH-TRAILING-NO-MATCH`
+   (`version-atlas-star-cross-slash-neg-v1`, `rule-set-atlas-star-cross-slash-neg`)
+   для старой trailing-only маски. Matcher не реализован: значения остаются
+   литеральными.
+2. **История словаря и сценарный универсум.** Публичный
+   `Dictionary.versions_count` теперь считает только `role="published"`;
+   сценарные версии сохранены для simulation fixtures, но исключены из живой
+   timeline и не могут входить в опубликованный rule set. Добавлен
+   `published_versions(...)` и тест соответствия публичной истории экспорту.
+3. **Метаданные компаний.** `incoming_source_id` заменён на
+   `incoming_source_ids`, сверенный с корпусом; добавлена проверка и
+   негативный тест.
+
+## Ограничения и явно не выполненное
+
+- Это **S**-уровень: схемы/статические проверки и литеральный эталон.
+  **M (mock/UI), A (реальный API/ФС), E (E2E) — NOT_RUN.** Файловая
+  безопасность, персистентность и гонки не проверялись.
+- Жизненный цикл (simulation/publish/revision/ack/TTL/restore) — LT-03.2b; здесь
+  только неизменяемые определения и оракулы.
+- Backend/UI/control plane/backlog не затрагивались. Staging/commit/push worker
+  не выполняет (D-06).
+
+## ID-модель для следующего leaf (LT-03.2b)
+
+- Компании: `company-demo-atlas`, `company-demo-nova`.
+- Словари: `dictionary-atlas-general`, `dictionary-atlas-invoices`,
+  `dictionary-nova-general`; версии `version-<dict>-vN`; rule set
+  `rule-set-atlas-published`, `rule-set-nova-published` (+ сценарные).
+- Правила: `rule-<dict>-<case>`; цели `target-<company>-<dir>`; источники
+  `src-...`; сценарии `RULE-Q0xx-...`, `TARGET-Q044-...`,
+  `RULE-INVALID-...`.
+- Каждый независимый вариант обязан иметь собственный version/rule_set ID и
+  ссылаться на полные определения.
+
+## Статус и следующий владелец
+
+- **Следующий владелец:** reviewer LT-03.2a (независимая сверка литеральных
+  ожиданий/целей/суффиксов, полного RuleSet, классификации invalid rules и
+  негативных мутаций), затем LT-03.2b (simulation/publish lifecycle).
+- **Блокирующая зависимость:** нет.

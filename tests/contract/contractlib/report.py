@@ -55,6 +55,9 @@ class Report:
     error_scenarios: int = 0
     race_scenarios: int = 0
     format_samples: int = 0
+    rule_scenarios: int = 0
+    target_scenarios: int = 0
+    invalid_rule_cases: int = 0
 
     def check(self, check_id: str, description: str) -> CheckResult:
         result = CheckResult(check_id=check_id, description=description)
