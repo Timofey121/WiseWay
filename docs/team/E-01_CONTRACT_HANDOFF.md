@@ -409,3 +409,172 @@ enum; оба варианта `SelectionRequest`/`BatchCreateRequest` и их з
 - **Блокирующая зависимость:** нет.
 - **Следующий владелец:** reviewer LT-02.1; затем LT-02.2 (семантические инварианты)
   поверх переиспользуемых helpers `contractlib`.
+
+## LT-02.2 — семантические инварианты встроенных examples и конечные фикстуры
+
+### Задача и покрытые требования
+
+- **Leaf:** LT-02.2 (WP-02, Epic E-01). **Status на момент handoff:** IN_PROGRESS.
+- **Цель:** поверх канонической schema-validation LT-02.1 применить к каждому
+  релевантному встроенному example явные проверки согласованности, которые схема
+  выразить не может, и подтвердить их конечными positive/negative-фикстурами без
+  реализации matcher/ranking/домена.
+- **Основание/требования:** D-06; API §4/6–11; SEM поиск/правила/очередь/повторы;
+  MATRIX Q-011/017/024/029/038/043 S; OAS SearchResponse/PlanCounts/Simulation/
+  Preview/Batch/OutcomeCounts/Outcome/RuleSet/ErrorDetails/AuditEvent/QuarantineItem.
+- **Дефект B-03:** уже устранён в LT-01.2; LT-02.2 добавляет исполняемую регрессию
+  этих согласований.
+
+### Изменённые файлы
+
+| Файл | Характер |
+|---|---|
+| `tests/contract/contractlib/semantic.py` | новый модуль: переиспользуемые семантические валидаторы, конечные явные связи, интеграция в отчёт |
+| `tests/contract/contractlib/examples.py` | публичный `resolve_example_value`; удалён лишний пустой EOF |
+| `tests/contract/contractlib/verify.py` | `run_checks` вызывает `run_semantic_checks` |
+| `tests/contract/contractlib/report.py` | поле `semantics_checked` |
+| `tests/contract/contractlib/__init__.py` | экспорт semantic API |
+| `tests/contract/verify_contract.py` | строка `Semantics: N example(s) checked` |
+| `tests/contract/fixtures/semantic_fixtures.py`, `tests/contract/fixtures/__init__.py` | конечные positive/negative-фикстуры |
+| `tests/contract/test_semantics.py` | тесты фикстур, покрытия и мутаций |
+| `README.md` | описание семантического слоя и переиспользования в WP-03 |
+| `docs/team/E-01_CONTRACT_HANDOFF.md` | этот раздел |
+
+OAS `contracts/openapi/wiseway-v1.yaml` **не изменялся**: новых дефектов примеров
+сверх устранённых WP-01/B-03 не обнаружено, коррекция OAS не потребовалась.
+
+### Версия контракта
+
+`openapi: 3.1.1`, `info.version: 1.0.0`, 33 operationId, 127 examples — без изменений.
+
+### Что проверяет семантический слой
+
+`contractlib.semantic` сначала прогоняет канонический `validate_value`, а затем
+применяет к каждому примеру проверки (check `OAS-SEM-001`):
+
+- `filename` = basename `location.relative_path`/`source.relative_path`, включая
+  вложенные `FileMetadata` в `CollisionDetails` (рекурсивно);
+- `SearchResponse`: IDLE ⇒ `total=null`, пустые `items`, `returned_count=0`,
+  `limited=false` и непустой первый `next_facet`; RESULTS ⇒
+  `returned_count=items.length=min(total,result_limit)`, `limited=(total>result_limit)`,
+  `items.length≤result_limit`;
+- `PlanCounts`: сумма первых четырёх счётчиков = `total`; `rule_conflicts`/`no_scenario`
+  — дополнительные и не прибавляются повторно; страница `rows` не превышает `total`
+  (`null`-cursor не трактуется как полнота набора);
+- `RuleSet`: члены отсортированы и уникальны по `dictionary_id`, `version_id` непуст;
+- глобально один `rule_set_id` всегда обозначает одну компанию и один состав
+  (`OAS-SEM-003`; helper `rule_set_consistency_errors` для WP-03);
+- rule references: `version_id=null` только для тестируемого черновика Simulation;
+  published-ссылки Preview/Simulation/Batch входят в охватывающий `RuleSet`;
+  `selected_rule` ∈ `matched_rules`; `company_id` строк согласован с набором/ответом;
+- `Batch`/`BatchSummary`: `completed_count` = сумма первых пяти `OutcomeCounts`
+  (recovery исключён), `completed_count≤selected_count`,
+  `completed_count+recovery_required≤selected_count`, терминальный статус ⇒
+  `completed_count=selected_count`, ACCEPTED ⇒ 0 завершённых, `recovery_required>0` ⇒
+  статус `RECOVERY_REQUIRED`, страница `outcomes` не превышает объявленные counts;
+- `Batch.outcomes[].matched_rule`: опубликованная ссылка (`version_id≠null`) обязана
+  входить в `batch.rule_set.members`; null-версия вне Simulation отклоняется;
+- `Outcome`: SORTED/MANUAL_REVIEW/QUARANTINED имеют подтверждённый `actual_location`;
+  `actual_location=null` означает «размещение не установлено» и **не** запрещает известное
+  размещение; SKIPPED и REQUIRES_DECISION не перемещают файл, поэтому известное
+  `actual_location` обязано совпадать с `source` (null также допустим). Для
+  PENDING/PROCESSING никакого запрета не вводится (нет нормативного основания);
+- `QuarantineItem`: `can_return=false` ⇔ непустой `recovery_operation_id`;
+- `ErrorDetails`: `operation_id=null` до регистрации операции; `RECOVERY_REQUIRED`
+  имеет непустой `operation_id` и `retryable=false`;
+- `QueueResponse`: `counters` согласованы с `status_counts` (attention =
+  REQUIRES_DECISION+RECOVERY_REQUIRED); `selectable=true` только для
+  READY/REQUIRES_DECISION без активного claim.
+
+Check `OAS-SEM-002` проверяет конечные явные связи между примерами (только там, где
+совпадают конкретные ID; независимые сценарии намеренно не связываются):
+request↔response `/search` и `/search/facet` (`request_state_id`/`root_id`/
+`schema_set_version`); selection↔preview↔batch (`selection_id`, `company_id`,
+`selected_count`=`total`=`selected_count`, `preview_id`, `rule_set_id`); повторный GET
+preview/simulation = POST-ответ; quarantine list↔return (`item_id`, `company_id`,
+`filename`, `original_location`=`source`, `revision`↔`expected_revision` — сравнение
+несуществующего `QueueItem.source_attempt_id` удалено); audit `BATCH_ACCEPTED`↔batch
+(`batch_id`, `company_id`, `rule_set_id`). Отсутствующий endpoint или поле объявленной
+связи теперь **ошибка** (`link_errors`), а не молчаливый skip; независимые примеры
+просто не входят в реестр связей.
+
+Корреляция audit `QUARANTINE_RETURNED` (`operation_id`=`return_operation_id`,
+`source_attempt_id` связывает с исходной попыткой сортировки) в канонических examples
+общих ID не имеет — это **осознанная standalone-граница**. Она доказана явной конечной
+linked-парой фикстур (`return-audit-positive`/`return-audit-negative`, helper
+`link_errors`) для переиспользования в WP-03.
+
+`validate_fixture(registry, schema_pointer, value)` — точка переиспользования для
+WP-03: возвращает `(schema_errors, semantic_errors)`, семантика выполняется только
+для schema-valid payload. `link_errors(source, target, fields, name)` проверяет
+linked-пару и падает на отсутствующем поле; `rule_set_consistency_errors(rule_sets)`
+проверяет единый состав одного `rule_set_id`.
+
+### Конечные фикстуры
+
+`tests/contract/fixtures/semantic_fixtures.py` — 48 schema-valid payloads,
+сгруппированных в 14 инвариантов (filename-basename, search-idle, search-results,
+plan-counts, plan-page, ruleset-members, rule-references, batch-completion,
+batch-rule-references, outcome-placement, quarantine-can-return, error-operation-id,
+error-recovery, queue-consistency). Каждый инвариант имеет ≥1 positive и ≥1 negative;
+negative остаётся schema-valid и нарушает ровно одну семантическую проверку с
+проверяемым подстроковым маркером. Дополнительно — 2 конечные linked-пары
+`return-audit-positive`/`return-audit-negative` для корреляции
+quarantine-return↔audit `QUARANTINE_RETURNED`.
+
+### V-S: точные команды и фактические результаты
+
+Windows (PowerShell), Python 3.14.7, `.venv-contract`:
+
+```powershell
+.\.venv-contract\Scripts\python.exe tests\contract\verify_contract.py
+.\.venv-contract\Scripts\python.exe -m unittest discover -s tests\contract -p "test_*.py"
+.\.venv-contract\Scripts\python.exe -m pip check
+git diff --check
+```
+
+- `verify_contract.py` → exit 0, `RESULT: PASS (22 checks, 0 failures)`,
+  `Examples: 127 ...`, `Semantics: 127 example(s) checked` (OAS-SEM-001/002/003).
+- `unittest discover` → `Ran 72 tests ... OK` (45 LT-02.1 + 27 LT-02.2).
+- `pip check` → `No broken requirements found.`
+- `git diff --check` → exit 0.
+
+### Negative regression (доказательство, что проверки не пусты)
+
+`test_semantics.py` мутирует один факт канонического документа и подтверждает
+падение конкретной проверки: IDLE без `next_facet`; неверный `returned_count`;
+`total`≠сумма первых четырёх PlanCounts; `completed_count`≠сумма первых пяти;
+`Batch.outcomes[].matched_rule` вне `rule_set.members`; SKIPPED с подтверждённым
+перемещением (`actual_location`≠`source`); `can_return=false` без
+`recovery_operation_id`; `RECOVERY_REQUIRED` без `operation_id`; несовпадение
+`selection_id`/`rule_set_id` (`OAS-SEM-002`); несовместимый состав одного
+`rule_set_id` (`OAS-SEM-003`).
+
+Кроме точечных мутаций, **каждая** объявленная связь `finite_links()` покрыта
+параметризованно: несовпадение значения, исчезновение endpoint и исчезновение
+обязательного поля — все три обязаны дать `OAS-SEM-002`. Фикстурные тесты
+дополнительно проверяют, что shape-дефект ловится канонической schema, а не
+семантикой, и что null-версия `Batch.outcomes[].matched_rule` отклоняется
+семантически (schema сужает её отдельно).
+
+### Ограничения и явно не выполненное
+
+- Реализованы только проверки согласованности примеров; matcher/ranking/readiness/
+  totals/FS/snapshot membership не реализуются и не заявляются.
+- Конечные явные связи не являются выводом о независимых сценариях; standalone
+  примеры (runningPartial/recoveryRequired/mixed/`selection-allmatching-120` и др.)
+  намеренно не связаны. Audit-пример `BATCH_ACCEPTED` связан с batch; канонического
+  audit `QUARANTINE_RETURNED` с общими `return_operation_id`/`source_attempt_id` нет,
+  поэтому корреляция возврата доказана linked-парой фикстур, а не выдуманной связью.
+- Backend/UI/control plane/backlog не затрагивались; staging/commit/push worker не
+  выполняет (D-06). Mock/real/QA-прогоны не выполнялись.
+- WP-03 ещё не начат: семантический API подготовлен к переиспользованию, но внешние
+  `contracts/examples/`/`fixtures/synthetic/` не создавались.
+
+### Статус и следующий владелец
+
+- **Mock/API/QA статус:** не применимо; это статическая проверка контракта.
+- **Оставшиеся дефекты:** новых дефектов examples не найдено; B-03 покрыт регрессией.
+- **Блокирующая зависимость:** нет.
+- **Следующий владелец:** reviewer LT-02.2 (независимая проверка семантики, фикстур,
+  мутаций и отсутствия OAS-правок); затем WP-03 поверх `contractlib.semantic`.

@@ -221,7 +221,8 @@ def iter_example_sites(document: Dict[str, Any]) -> Iterator[ExampleSite]:
                     yield site
 
 
-def _resolve_example_value(document: Dict[str, Any], site: ExampleSite) -> Tuple[Any, Optional[str]]:
+def resolve_example_value(document: Dict[str, Any], site: ExampleSite) -> Tuple[Any, Optional[str]]:
+    """Resolve a site's value, following an example ``$ref`` when present."""
     if site.ref is not None:
         try:
             resolved = resolve_pointer(document, site.ref)
@@ -284,7 +285,7 @@ def run_example_checks(document: Dict[str, Any], report: Report, registry) -> No
         if site.external:
             integrity.add("externalValue is not allowed", site.pointer)
             continue
-        value, error = _resolve_example_value(document, site)
+        value, error = resolve_example_value(document, site)
         if error is not None:
             integrity.add(error, site.pointer)
             continue
@@ -302,4 +303,3 @@ def run_example_checks(document: Dict[str, Any], report: Report, registry) -> No
     report.examples_validated = count
     if count == 0:
         validation.add("no embedded examples were found")
-

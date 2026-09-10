@@ -56,6 +56,7 @@ def main(argv=None) -> int:
     print(f"Contract: {os.path.relpath(contract_path, HERE.parents[1]) if contract_path.is_absolute() else contract_path}")
     print(f"OpenAPI:  {document.get('openapi')}  info.version: {(document.get('info') or {}).get('version')}")
     print(f"Examples: {report.examples_validated} schema-bound example(s) validated")
+    print(f"Semantics: {report.semantics_checked} example(s) checked for semantic invariants")
     print("")
     print(report.format())
     return 0 if report.ok else 1

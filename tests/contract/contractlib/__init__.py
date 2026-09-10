@@ -7,7 +7,7 @@ Public entry points for other leaves (LT-02.2, WP-03 fixtures):
 - ``iter_example_sites`` / ``run_checks``
 """
 
-from .examples import ExampleSite, iter_example_sites, run_example_checks
+from .examples import ExampleSite, iter_example_sites, resolve_example_value, run_example_checks
 from .loading import (
     CONTRACT_URI,
     RefError,
@@ -21,6 +21,15 @@ from .loading import (
 )
 from .report import CheckResult, Failure, Report
 from .schemas import format_error, iter_errors, make_validator, validate_value
+from .semantic import (
+    finite_links,
+    link_errors,
+    media_example_pointer,
+    rule_set_consistency_errors,
+    run_semantic_checks,
+    semantic_errors,
+    validate_fixture,
+)
 from .verify import run_checks
 
 __all__ = [
@@ -32,16 +41,24 @@ __all__ = [
     "Report",
     "build_registry",
     "deref",
+    "finite_links",
     "format_error",
     "iter_errors",
     "iter_example_sites",
     "iter_refs",
+    "link_errors",
     "load_contract",
     "make_validator",
+    "media_example_pointer",
     "parse_pointer",
     "pointer",
+    "resolve_example_value",
     "resolve_pointer",
+    "rule_set_consistency_errors",
     "run_checks",
     "run_example_checks",
+    "run_semantic_checks",
+    "semantic_errors",
+    "validate_fixture",
     "validate_value",
 ]

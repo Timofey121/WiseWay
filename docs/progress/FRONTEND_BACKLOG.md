@@ -155,6 +155,8 @@ WP-01 local package completion: commits `7b0843b`, `d64dfdb`; полный WORK_
 
 LT-02.1 local completion: полный LEAF re-review после repair 1 — PASS (устранены пропуск company_id, анонимная security-альтернатива и network fetch внешнего ref до guard). Orchestrator фактически выполнил `.venv-contract/Scripts/python.exe tests/contract/verify_contract.py` — 19 checks, 127 examples, PASS; `-m unittest discover -s tests/contract -p "test_*.py"` — 45 OK; `-m pip check` — no broken requirements; `git diff --check` PASS. Python 3.14.7, зависимости pinned в `tests/contract/requirements.txt`. B-02 устранён, README runner воспроизводим. IN_PROGRESS только из-за отложенной публикации D-06; техническая зависимость LT-02.2 удовлетворена.
 
+LT-02.2 local completion: полный LEAF re-review после repair 1 — PASS. Orchestrator: `.venv-contract/Scripts/python.exe tests/contract/verify_contract.py` — 22 checks / 127 schema+semantic examples PASS; `-m unittest discover -s tests/contract -p "test_*.py"` — 72 OK; `-m pip check` и `git diff --check` PASS. 48 конечных payloads / 14 инвариантов плюс 2 linked cases; schema-only, не backend evidence. Исправлены vacuous return link, batch references, глобальная RuleSet consistency, overflow completed+recovery; полный handoff в `docs/team/E-01_CONTRACT_HANDOFF.md`. Локальный checkpoint; публикация отложена D-06.
+
 ### WP-03 — Независимые синтетические эталоны
 
 - **Status:** TODO. **Parent:** E-01. **Dependencies:** WP-02, D-03.

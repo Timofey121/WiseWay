@@ -33,6 +33,14 @@ python3 -m venv .venv-contract
 `tests/contract/requirements.in` перечисляет прямые зависимости. Runner проверяет
 OpenAPI 3.1.1 поддерживаемым валидатором, локальные ссылки, 33 operationId и
 соответствие путей, security/CSRF/idempotency, заголовки и связи ошибок с HTTP,
-а также валидирует все встроенные examples против канонических схем. Негативные
-self-тесты подтверждают, что runner обнаруживает испорченный контракт/payload.
-Исполнение поиска, файловые гарантии и E2E требуют будущего приложения.
+валидирует все встроенные examples против канонических схем и проверяет
+семантические инварианты примеров (filename↔location, IDLE/RESULTS counts,
+PlanCounts и страницы, RuleSet и rule references, batch/outcome counts и
+размещение, quarantine `can_return`, `error.operation_id` и конечные явные
+связи selection↔preview↔batch↔audit↔quarantine). Негативные self-тесты
+подтверждают, что runner обнаруживает испорченный контракт/payload и что каждый
+семантический инвариант срабатывает на своей фикстуре
+(`tests/contract/fixtures/semantic_fixtures.py`; для WP-03 переиспользуются
+`contractlib.semantic.validate_fixture`, `link_errors` и
+`rule_set_consistency_errors`). Исполнение поиска, файловые гарантии
+и E2E требуют будущего приложения.
