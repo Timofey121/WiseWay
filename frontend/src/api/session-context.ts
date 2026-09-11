@@ -11,9 +11,11 @@
 //
 // Единая session-scope очистка включает и in-memory состояние идемпотентности:
 // `clearSession()` освобождает ожидающие `Idempotency-Key` (publish/batch/
-// return), чтобы logout/401/смена пользователя не оставляли чужой контекст.
+// return), а также коалесцинг poll-запросов, чтобы logout/401/смена
+// пользователя не оставляли чужой контекст.
 
 import { defaultIdempotencyStore } from './idempotency'
+import { defaultPollRegistry } from './retry'
 
 let csrfToken: string | null = null
 
@@ -30,13 +32,14 @@ export function setCsrfToken(token: string): void {
 }
 
 /**
- * Очищает клиентское состояние сессии (CSRF-токен и ожидающие
- * `Idempotency-Key`). Используется при logout, истечении сессии и смене
- * пользователя.
+ * Очищает клиентское состояние сессии (CSRF-токен, ожидающие
+ * `Idempotency-Key` и single-flight poll-реестр). Используется при logout,
+ * истечении сессии и смене пользователя.
  */
 export function clearSession(): void {
   csrfToken = null
   defaultIdempotencyStore.clear()
+  defaultPollRegistry.clear()
 }
 
 /**

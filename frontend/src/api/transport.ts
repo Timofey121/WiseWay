@@ -21,6 +21,11 @@
 //   исход сохраняет его (`retain`). Остальные операции фиктивного ключа не
 //   получают;
 // - CSRF и ключ идут только в заголовках, не в теле запроса;
+// - retry/backoff (`./retry`) применяется поверх base-fetch: повторяются
+//   только безопасные чтения (GET/читающие POST) и три идемпотентные
+//   операции, причём тот же `Request` (то же тело и `Idempotency-Key`).
+//   Неидемпотентные мутации не повторяются даже при сетевом сбое. Metadata
+//   операции для retry-решения хранится в `WeakMap`, а не в заголовках;
 // - `X-Request-ID` ответа передаётся в `onRequestId`;
 // - ответ 401 очищает клиентскую сессию и уведомляет подписчиков
 //   `session-context` только для `UNAUTHENTICATED`; `LOGIN_FAILED` остаётся
@@ -41,6 +46,13 @@ import {
   defaultIdempotencyStore,
   type IdempotencyStore,
 } from './idempotency'
+import {
+  createRetryFetch,
+  setRequestOperationMeta,
+  type NowFn,
+  type RetryConfig,
+  type SleepFn,
+} from './retry'
 import { emitUnauthorized, getCsrfToken } from './session-context'
 import { toTransportError } from './transport-error'
 
@@ -90,9 +102,10 @@ export interface CreateApiClientOptions {
   baseUrl?: string
   /**
    * Реализация `fetch`. В real-режиме — глобальный/пользовательский fetch,
-   * в mock-режиме — обязательный перехватчик (WP-06/WP-07).
+   * в mock-режиме — обязательный перехватчик (WP-06/WP-07). Обёртывается
+   * retry-политикой (`retry`/`sleep`/`now`).
    */
-  fetch?: (input: Request) => Promise<Response>
+  fetch?: (input: Request, init?: RequestInit) => Promise<Response>
   /** Провайдер CSRF-токена; при отсутствии используется `session-context`. */
   csrfTokenProvider?: CsrfTokenProvider
   /**
@@ -109,6 +122,12 @@ export interface CreateApiClientOptions {
   idempotencyKeyProvider?: IdempotencyKeyProvider
   /** Получатель безопасного `X-Request-ID` ответа. */
   onRequestId?: RequestIdHandler
+  /** Частичное переопределение retry/backoff policy (`defaultRetryConfig`). */
+  retry?: Partial<RetryConfig>
+  /** Инъекция ожидания между повторами; по умолчанию реальный `setTimeout`. */
+  sleep?: SleepFn
+  /** Инъекция часов для retry-наблюдаемости; по умолчанию `Date.now`. */
+  now?: NowFn
 }
 
 /** Типизированный клиент всех операций WiseWay API. */
@@ -185,6 +204,15 @@ export function createApiClient(options: CreateApiClientOptions): WiseWayApiClie
     throw new Error('fetch недоступен: передайте реализацию fetch')
   }
 
+  // Политика повторов применяется поверх base-fetch: повторяется тот же
+  // `Request` (тело/заголовки/Idempotency-Key) и только для разрешённых
+  // операций. Сетевые сбои/429/503 неидемпотентных мутаций не повторяются.
+  const retryFetch = createRetryFetch(fetchImpl, {
+    config: options.retry,
+    sleep: options.sleep,
+    now: options.now,
+  })
+
   // Приоритет: явный store → явный provider → session-scoped store. Явный
   // provider не управляет жизненным циклом ключа и потому не смешивается с
   // автоматическим store.
@@ -192,7 +220,7 @@ export function createApiClient(options: CreateApiClientOptions): WiseWayApiClie
     options.idempotencyStore ??
     (options.idempotencyKeyProvider ? undefined : defaultIdempotencyStore)
 
-  const client = createClient<paths>({ baseUrl, fetch: fetchImpl })
+  const client = createClient<paths>({ baseUrl, fetch: retryFetch })
 
   const securityMiddleware: Middleware = {
     async onRequest({ request, schemaPath, params }) {
@@ -243,7 +271,13 @@ export function createApiClient(options: CreateApiClientOptions): WiseWayApiClie
       if (mode === 'real') {
         init.credentials = 'include'
       }
-      return new Request(request, init)
+      const finalRequest = new Request(request, init)
+      if (meta) {
+        // Служебная metadata операции для retry-политики живёт в WeakMap и
+        // никогда не уходит в заголовках на сервер.
+        setRequestOperationMeta(finalRequest, { ...meta, method })
+      }
+      return finalRequest
     },
     async onResponse({ request, response, schemaPath, params }) {
       const requestId = response.headers.get('X-Request-ID')

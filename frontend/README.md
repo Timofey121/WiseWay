@@ -110,6 +110,11 @@ setCsrfToken(data.csrf_token) // CSRF-токен живёт только в па
   сохраняет ключ, изменённое тело получает новый. Остальным операциям
   фиктивный ключ не подставляется;
 - CSRF и ключ идут только в заголовках, не в теле;
+- retry/backoff (`src/api/retry.ts`) применяется поверх base-fetch: при
+  сетевом сбое/`429`/`503` повторяются только безопасные чтения (GET и
+  читающие POST) и три идемпотентные операции. Неидемпотентные мутации и
+  `login`/`logout` не повторяются автоматически. Повтор отправляет тот же
+  `Request` (то же тело и тот же `Idempotency-Key`);
 - `X-Request-ID` ответа передаётся в `onRequestId`;
 - ответ `401` с кодом `UNAUTHENTICATED` очищает `session-context` и уведомляет
   подписчиков `onUnauthorized`; `401` с кодом `LOGIN_FAILED` остаётся ошибкой
@@ -157,6 +162,47 @@ const api = createApiClient({
   idempotencyStore: createIdempotencyStore(), // необязательно: по умолчанию session-scoped store
 })
 ```
+
+### Retry/backoff и single-flight polls
+
+`src/api/retry.ts` — общая политика безопасного повтора (API §2/§11, SEM
+«Повторы», TZ §12). Транспорт использует её автоматически; настраивается через
+`retry`/`sleep`/`now` фабрики `createApiClient`:
+
+```ts
+const api = createApiClient({
+  mode: 'real',
+  retry: { maxAttempts: 3, baseDelayMs: 500, maxDelayMs: 8000, jitter: true },
+  sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)), // можно подменить в тестах
+  now: () => Date.now(),
+})
+```
+
+- `shouldRetry(error, operationMeta)` разрешает повтор только для безопасных
+  чтений (`GET`/читающие POST) и трёх идемпотентных операций. Все прочие
+  мутации (`createDictionary`, `replaceDictionaryDraft`,
+  `restoreDictionaryDraft`, `createDictionarySimulation`,
+  `createSortingSelection`, `createSortingPreview`, `logout`) и `login` не
+  повторяются никогда; окончательные не-retryable ошибки тоже.
+- `computeRetryDelay(error, attempt, config)`: `Retry-After` (delta-seconds) из
+  `TransportError.retryAfterSeconds` имеет приоритет и ограничивается сверху
+  `maxDelayMs`; иначе — экспоненциальный backoff с тем же cap и опциональным
+  jitter.
+- `createRetryFetch(baseFetch, options)` повторяет тот же `Request` (тело и
+  `Idempotency-Key`), используя `request.clone()`. Metadata операции для
+  решения о повторе транспортируется через module-level `WeakMap`, а не через
+  заголовки. После исчерпания попыток сетевая ошибка пробрасывается, а
+  HTTP-ответ возвращается без изменений.
+- `createPollRegistry()` — single-flight коалесцинг: пока poll-запрос по ключу
+  в полёте, повторный `run(key, fn)` получает тот же promise и не создаёт
+  второй запрос; после завершения новый вызов запускает новый. Состояние
+  только в памяти; `clear()`/session cleanup его сбрасывают.
+
+`defaultRetryConfig` — 3 попытки, базовая задержка 500 мс, cap 8 с, jitter.
+Poll-интервалы (1 с для batch, 30 с для журнала) берутся из app-config на
+feature-уровне: этот модуль даёт только примитив, без хардкода интервалов.
+Session-scoped `defaultPollRegistry` очищается `clearSession()`/
+`emitUnauthorized()` вместе с CSRF и `Idempotency-Key`.
 
 ### Единая безопасная модель ошибок
 
@@ -226,14 +272,16 @@ frontend/
                         operation-meta.ts) и client.ts
       session-context.ts  in-memory CSRF/401-состояние и session-scope очистка
       idempotency.ts      in-memory Idempotency-Key для publish/batch/return
+      retry.ts            retry/backoff policy и single-flight poll registry
       transport-error.ts  TransportError и безопасный разбор ошибок
-      transport.ts        createApiClient: credentials/no-store/CSRF/idempotency
+      transport.ts        createApiClient: credentials/no-store/CSRF/idempotency/retry
     mocks/              placeholder для schema-valid mocks (WP-06/WP-07)
   tests/
     App.test.tsx        component smoke-тест
     api/client.test.ts  runtime-проверки запросов клиента A/B/C
     api/transport.test.ts  состав Request, CSRF/Idempotency/401/403/request_id
     api/idempotency.test.ts  key/body lifecycle, retry/complete, session cleanup
+    api/retry.test.ts   shouldRetry/backoff, same-Request retry, no-parallel-poll
     api/transport-error.test.ts  HTTP/network-ошибки и отсутствие утечек
     api/generated-types.test.ts  type-level проверки generated-схемы
     fixture-imports.test.ts  проверка alias-импорта JSON вне frontend/

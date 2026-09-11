@@ -99,6 +99,10 @@ function setup(options: SetupOptions = {}): {
     mode: 'real',
     baseUrl: 'http://localhost/api/v1',
     fetch: fetchStub,
+    // Этот suite проверяет жизненный цикл Idempotency-Key, а не retry-policy:
+    // повторы отключены, чтобы 429/503/сеть проверяли именно retain/complete.
+    retry: { maxAttempts: 1 },
+    sleep: async () => {},
   }
   if (!options.defaultStore) {
     clientOptions.idempotencyStore = store

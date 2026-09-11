@@ -129,6 +129,14 @@
   сетевом/`429`/`503` исходе — `retain`; `clearSession()`/`emitUnauthorized()`
   очищают store. Решение §5 не меняется: новых DTO нет, контракт не
   изменяется, состояние ограничено памятью вкладки.
+- LT-05.2b (WP-05) добавляет рукописный `src/api/retry.ts` — общую
+  retry/backoff policy (`shouldRetry`, `computeRetryDelay`, `createRetryFetch`)
+  и single-flight `createPollRegistry`. Решение §5 не меняется: модуль
+  ссылается на generated `operation-meta.ts` и `TransportError`, новых DTO и
+  правок контракта нет; metadata операции для решения о повторе хранится в
+  `WeakMap` (не в заголовках), состояние ограничено памятью вкладки.
+  `Retry-After` берётся из уже реализованного `TransportError.retryAfterSeconds`
+  (LT-05.1b), poll-интервалы остаются на feature-уровне (app-config).
 
 ## 6. Совместимость с OpenAPI 3.1.1
 

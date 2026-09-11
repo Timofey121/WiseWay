@@ -92,6 +92,10 @@ function setup(
     mode: 'real',
     baseUrl: 'http://localhost/api/v1',
     fetch: fetchStub,
+    // Этот suite проверяет модель ошибок, а не retry-policy: повторы отключены,
+    // чтобы 429/503/сеть не порождали лишних попыток и задержек.
+    retry: { maxAttempts: 1 },
+    sleep: async () => {},
   })
   return { api, requests }
 }
