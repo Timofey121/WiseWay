@@ -1,9 +1,10 @@
-// Реестр mock-handlers bootstrap/session/config, поиска и targets/dictionaries:
-// `METHOD path` → handler.
+// Реестр mock-handlers bootstrap/session/config, поиска, targets/dictionaries и
+// симуляции: `METHOD path` → handler.
 //
 // Набор ограничен операциями LT-06.1 (bootstrap/session/config), LT-06.2a-ii
-// (`searchFiles`/`getSearchFacet`) и LT-07.1a (targets/dictionaries). Пути с
-// `{param}` (company_id/dictionary_id) сопоставляются router'ом. Неизвестный
+// (`searchFiles`/`getSearchFacet`), LT-07.1a (targets/dictionaries) и LT-07.1b
+// (`createDictionarySimulation`/`getSimulation`). Пути с `{param}`
+// (company_id/dictionary_id/simulation_id) сопоставляются router'ом. Неизвестный
 // маршрут в router даёт безопасную 404, а не правдоподобный успех.
 
 import type { MockHandler } from '../types'
@@ -18,6 +19,10 @@ import {
 } from './dictionaries'
 import { healthHandler } from './health'
 import { searchFacetHandler, searchHandler } from './search'
+import {
+  createDictionarySimulationHandler,
+  getSimulationHandler,
+} from './simulations'
 import {
   listTargetDirectoriesHandler,
   resolveTargetDirectoryHandler,
@@ -40,4 +45,7 @@ export const handlersByKey: Record<string, MockHandler> = {
   'POST /companies/{company_id}/dictionaries': createDictionaryHandler,
   'GET /dictionaries/{dictionary_id}': getDictionaryHandler,
   'PUT /dictionaries/{dictionary_id}/draft': replaceDictionaryDraftHandler,
+  'POST /dictionaries/{dictionary_id}/simulate':
+    createDictionarySimulationHandler,
+  'GET /simulations/{simulation_id}': getSimulationHandler,
 }

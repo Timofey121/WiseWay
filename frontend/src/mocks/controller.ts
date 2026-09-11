@@ -16,7 +16,13 @@
 import type { SearchFreshness, Session } from './types'
 import type { SearchErrorCode } from './search/errors'
 import type { MockDictionaryErrorCode } from './dictionaries/errors'
+import type {
+  CreateDictionarySimulationErrorCode,
+  GetSimulationErrorCode,
+  MockSimulationErrorCode,
+} from './simulations/errors'
 import { DictionaryStore } from './dictionaries/store'
+import { SimulationStore, type SimulationScenario } from './simulations/store'
 
 export type ConfigProfile = 'n100' | 'n10'
 
@@ -46,11 +52,34 @@ export type MockDictionaryOperation =
   | 'getDictionary'
   | 'replaceDictionaryDraft'
 
+/**
+ * Операции симуляции, для которых включается управляемая ошибка (LT-07.1b).
+ */
+export type MockSimulationOperation =
+  | 'createDictionarySimulation'
+  | 'getSimulation'
+
 /** Возвращает `true` для операции поиска (иначе — targets/dictionaries). */
 function isSearchOperation(
-  operation: MockSearchOperation | MockDictionaryOperation,
+  operation:
+    | MockSearchOperation
+    | MockDictionaryOperation
+    | MockSimulationOperation,
 ): operation is MockSearchOperation {
   return operation === 'searchFiles' || operation === 'getSearchFacet'
+}
+
+/** Возвращает `true` для операции симуляции. */
+function isSimulationOperation(
+  operation:
+    | MockSearchOperation
+    | MockDictionaryOperation
+    | MockSimulationOperation,
+): operation is MockSimulationOperation {
+  return (
+    operation === 'createDictionarySimulation' ||
+    operation === 'getSimulation'
+  )
 }
 
 export interface MockControllerOptions {
@@ -90,6 +119,16 @@ export class MockController {
   private readonly nextDictionaryErrors = new Map<
     MockDictionaryOperation,
     MockDictionaryErrorCode[]
+  >()
+  private simulationScenario: SimulationScenario = 'full'
+  private readonly simulationStore = new SimulationStore()
+  private readonly persistentSimulationErrors = new Map<
+    MockSimulationOperation,
+    MockSimulationErrorCode
+  >()
+  private readonly nextSimulationErrors = new Map<
+    MockSimulationOperation,
+    MockSimulationErrorCode[]
   >()
   private readonly sleep: (ms: number) => Promise<void>
 
@@ -198,11 +237,24 @@ export class MockController {
   setError(operation: MockSearchOperation, code: SearchErrorCode): void
   setError(operation: MockDictionaryOperation, code: MockDictionaryErrorCode): void
   setError(
-    operation: MockSearchOperation | MockDictionaryOperation,
-    code: SearchErrorCode | MockDictionaryErrorCode,
+    operation: 'createDictionarySimulation',
+    code: CreateDictionarySimulationErrorCode,
+  ): void
+  setError(operation: 'getSimulation', code: GetSimulationErrorCode): void
+  setError(
+    operation:
+      | MockSearchOperation
+      | MockDictionaryOperation
+      | MockSimulationOperation,
+    code: SearchErrorCode | MockDictionaryErrorCode | MockSimulationErrorCode,
   ): void {
     if (isSearchOperation(operation)) {
       this.persistentErrors.set(operation, code as SearchErrorCode)
+    } else if (isSimulationOperation(operation)) {
+      this.persistentSimulationErrors.set(
+        operation,
+        code as MockSimulationErrorCode,
+      )
     } else {
       this.persistentDictionaryErrors.set(
         operation,
@@ -219,8 +271,16 @@ export class MockController {
   failNext(operation: MockSearchOperation, code: SearchErrorCode): void
   failNext(operation: MockDictionaryOperation, code: MockDictionaryErrorCode): void
   failNext(
-    operation: MockSearchOperation | MockDictionaryOperation,
-    code: SearchErrorCode | MockDictionaryErrorCode,
+    operation: 'createDictionarySimulation',
+    code: CreateDictionarySimulationErrorCode,
+  ): void
+  failNext(operation: 'getSimulation', code: GetSimulationErrorCode): void
+  failNext(
+    operation:
+      | MockSearchOperation
+      | MockDictionaryOperation
+      | MockSimulationOperation,
+    code: SearchErrorCode | MockDictionaryErrorCode | MockSimulationErrorCode,
   ): void {
     if (isSearchOperation(operation)) {
       const queue = this.nextErrors.get(operation)
@@ -228,6 +288,17 @@ export class MockController {
         queue.push(code as SearchErrorCode)
       } else {
         this.nextErrors.set(operation, [code as SearchErrorCode])
+      }
+      return
+    }
+    if (isSimulationOperation(operation)) {
+      const queue = this.nextSimulationErrors.get(operation)
+      if (queue) {
+        queue.push(code as MockSimulationErrorCode)
+      } else {
+        this.nextSimulationErrors.set(operation, [
+          code as MockSimulationErrorCode,
+        ])
       }
       return
     }
@@ -242,12 +313,21 @@ export class MockController {
   /** Снимает и постоянную, и одноразовые ошибки операции. */
   clearError(operation: MockSearchOperation): void
   clearError(operation: MockDictionaryOperation): void
+  clearError(operation: MockSimulationOperation): void
   clearError(
-    operation: MockSearchOperation | MockDictionaryOperation,
+    operation:
+      | MockSearchOperation
+      | MockDictionaryOperation
+      | MockSimulationOperation,
   ): void {
     if (isSearchOperation(operation)) {
       this.persistentErrors.delete(operation)
       this.nextErrors.delete(operation)
+      return
+    }
+    if (isSimulationOperation(operation)) {
+      this.persistentSimulationErrors.delete(operation)
+      this.nextSimulationErrors.delete(operation)
       return
     }
     this.persistentDictionaryErrors.delete(operation)
@@ -280,9 +360,38 @@ export class MockController {
     return this.persistentDictionaryErrors.get(operation)
   }
 
+  /**
+   * Возвращает объявленную ошибку симуляции для текущей отправки и расходует
+   * одноразовую (LT-07.1b).
+   */
+  consumeSimulationError(
+    operation: MockSimulationOperation,
+  ): MockSimulationErrorCode | undefined {
+    const queue = this.nextSimulationErrors.get(operation)
+    if (queue && queue.length > 0) {
+      return queue.shift()
+    }
+    return this.persistentSimulationErrors.get(operation)
+  }
+
   /** In-memory store справочников (seed, reset и мутации). */
   getDictionaryStore(): DictionaryStore {
     return this.dictionaryStore
+  }
+
+  /** In-memory store симуляций (seed, reset и созданные результаты). */
+  getSimulationStore(): SimulationStore {
+    return this.simulationStore
+  }
+
+  /** Текущий выбранный сценарий симуляции (по умолчанию `full`). */
+  getSimulationScenario(): SimulationScenario {
+    return this.simulationScenario
+  }
+
+  /** Выбирает canned-сценарий `createDictionarySimulation`. */
+  setSimulationScenario(scenario: SimulationScenario): void {
+    this.simulationScenario = scenario
   }
 
   /** Текущий профиль app-config. */
@@ -331,8 +440,9 @@ export class MockController {
 
   /**
    * Сбрасывает сессию, задержку, профиль, freshness, empty-переопределения,
-   * scope-задержки, per-send очереди, управляемые ошибки поиска и
-   * targets/dictionaries, а также восстанавливает seed справочников.
+   * scope-задержки, per-send очереди, управляемые ошибки поиска,
+   * targets/dictionaries и симуляции, а также восстанавливает seed справочников
+   * и симуляций и сценарий `full`.
    */
   reset(): void {
     this.session = null
@@ -350,6 +460,10 @@ export class MockController {
     this.nextErrors.clear()
     this.persistentDictionaryErrors.clear()
     this.nextDictionaryErrors.clear()
+    this.persistentSimulationErrors.clear()
+    this.nextSimulationErrors.clear()
+    this.simulationScenario = 'full'
     this.dictionaryStore.reset()
+    this.simulationStore.reset()
   }
 }

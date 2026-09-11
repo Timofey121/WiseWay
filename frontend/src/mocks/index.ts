@@ -30,6 +30,7 @@ export type {
   MockDictionaryOperation,
   MockSearchOperation,
   MockSearchScope,
+  MockSimulationOperation,
   SearchFreshnessProfile,
 } from './controller'
 export { MOCK_MODE, MOCK_MARKER_HEADER } from './responses'
@@ -47,12 +48,33 @@ export type {
   MockDictionaryErrorCode,
 } from './dictionaries/errors'
 export {
+  declaredSimulationErrors,
+  isSimulationErrorCode,
+} from './simulations/errors'
+export type {
+  CreateDictionarySimulationErrorCode,
+  DeclaredSimulationError,
+  GetSimulationErrorCode,
+  MockSimulationErrorCode,
+} from './simulations/errors'
+export {
   isAllowedTarget,
   listCompanyTargets,
   resolveTargetDisplayPath,
 } from './dictionaries/targets'
 export type { ResolveTargetResult } from './dictionaries/targets'
 export { DictionaryStore } from './dictionaries/store'
+export {
+  parseSimulationLimit,
+  resolveSimulationPage,
+  SIMULATION_SCENARIOS,
+  SimulationStore,
+} from './simulations/store'
+export type {
+  SimulationPageQuery,
+  SimulationScenario,
+  StoredSimulation,
+} from './simulations/store'
 export type {
   MockHandler,
   MockRequestContext,

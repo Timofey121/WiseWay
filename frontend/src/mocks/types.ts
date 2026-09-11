@@ -32,6 +32,13 @@ export type CreateDictionaryRequest =
   components['schemas']['CreateDictionaryRequest']
 export type ReplaceDictionaryDraftRequest =
   components['schemas']['ReplaceDictionaryDraftRequest']
+export type CreateSimulationRequest =
+  components['schemas']['CreateSimulationRequest']
+export type Simulation = components['schemas']['Simulation']
+export type PlanRow = components['schemas']['PlanRow']
+export type PlanCounts = components['schemas']['PlanCounts']
+export type RuleSet = components['schemas']['RuleSet']
+export type RuleReference = components['schemas']['RuleReference']
 export type Actor = components['schemas']['Actor']
 export type ErrorResponse = components['schemas']['ErrorResponse']
 export type ErrorDetails = components['schemas']['ErrorDetails']

@@ -4,8 +4,8 @@
 каталоге находятся конфигурация инструментов, точка входа, smoke-тесты,
 generated API-артефакты из единственного публичного OAS, базовый
 request/session security transport (WP-05) и контрактные mocks
-bootstrap/session/config, golden-поиска (WP-06) и targets/dictionaries
-(WP-07, LT-07.1a). Продуктовые экраны и навигация появятся в следующих
+bootstrap/session/config, golden-поиска (WP-06) и targets/dictionaries/симуляции
+(WP-07, LT-07.1a/LT-07.1b). Продуктовые экраны и навигация появятся в следующих
 leaf-задачах (EPIC E-02, WP-07).
 
 Выбранный toolchain, точные версии и политика lock-файла закреплены в
@@ -480,6 +480,66 @@ valid/invalid/outside, company-scope и пагинация, list/get/create/repl
 dictionaries, name- и revision-conflict, границы `Rule` и `CreateDictionary`,
 401/403/404/422, управляемые ошибки и `reset()`.
 
+## Mock simulations (LT-07.1b)
+
+`src/mocks/handlers/simulations.ts` подключает к mock-fetch две операции WP-07
+без backend, matcher и файловых действий:
+
+| Метод и путь | Ответ | Особенности |
+|---|---|---|
+| `POST /dictionaries/{dictionary_id}/simulate` | 201 `Simulation` | canned-сценарий, первая страница; CSRF обязателен |
+| `GET /simulations/{simulation_id}` | 200 `Simulation` | очередная страница `rows`; `cursor`/`limit` |
+
+- Данные берутся из публичных примеров
+  `contracts/examples/simulations/*.json`
+  (`simulation-atlas-full-page1/page2`, `empty`, `conflict`, `same-target`,
+  `v3-restored`) через `src/mocks/simulations/store.ts`. План, matcher,
+  ranking, RuleSet и READY-набор не вычисляются: store лишь хранит literal
+  canned-сценарии и отдаёт объявленные страницы.
+- Сценарий выбирает `MockController.setSimulationScenario('full' | 'empty' |
+  'conflict' | 'same-target' | 'no-scenario')` (по умолчанию `full`). Каждый
+  сценарий — изолированный универсум со своей `draft_revision`,
+  `base_rule_set` и `ready_snapshot_id`. `no-scenario` использует пример
+  `simulation-atlas-v3-restored` (наибольший `counts.no_scenario`).
+- `createDictionarySimulation` требует сессию и корректный `X-CSRF-Token`
+  (общий guard `requireSessionAndCsrf`), валидирует `CreateSimulationRequest`
+  по схеме OAS, проверяет существование справочника (иначе 404) и
+  `expected_draft_revision` против ТЕКУЩЕЙ ревизии `DictionaryStore` (той же,
+  что возвращает `GET /dictionary`); несовпадение → 409
+  `DRAFT_VERSION_CONFLICT` (OAS `DraftVersionConflict`, literal-фикстура
+  `simulate-stale-draft`). Успех — 201 `Simulation` первой страницы: plan
+  rows/counts/rule_set/base_rule_set literal из примера, а `draft_revision`
+  равна провалидированной текущей ревизии, поэтому `GET /dictionary` и
+  `POST .../simulate` согласованы.
+- `getSimulation` — чтение: требует только активную mock-сессию, отдаёт
+  сохранённую страницу по непрозрачному курсору (`page1 → page2`) и finite
+  `limit` (1..100). Неизвестный `simulation_id` → 404 `NOT_FOUND`,
+  недействительный `cursor`/`limit` → 422 `VALIDATION_ERROR`. Операция
+  объявляет только 200/401/403/404/422/429/500/503: 409 здесь **не**
+  возвращается, и последующее изменение черновика не меняет сохранённый
+  результат (staleness — предмет publish, LT-07.1c).
+- `counts` не двойного счёта: `total = will_move + will_manual_review +
+  requires_decision + not_ready`; `rule_conflicts`/`no_scenario` — дополнительные
+  причины. `base_rule_set` полный, а не-draft references входят в его
+  `members`; `version_id=null` встречается только у ссылок тестируемого
+  черновика. `ready_snapshot_id` соответствует сценарию.
+- `MockController` управляет объявленными ошибками симуляции:
+  `setError(operation, code)` / `failNext(operation, code)` / `clearError` /
+  `consumeSimulationError` для `createDictionarySimulation`/`getSimulation`.
+  Коды ограничены объявленными для каждой операции (`declaredSimulationErrors`
+  из `@/mocks`): для `createDictionarySimulation` — `DRAFT_VERSION_CONFLICT`,
+  `VALIDATION_ERROR`; для `getSimulation` — только `VALIDATION_ERROR`.
+  `STALE_SIMULATION` объявлен лишь для `publishDictionary` и в набор симуляции
+  не входит; тело/статус берутся из `contracts/examples/errors/*.json`.
+  `reset()` восстанавливает seed симуляций, сценарий `full` и очищает
+  управляемые ошибки.
+
+Проверки: `tests/mocks/simulations.test.ts` — literal canned-ответы
+full/empty/conflict/same-target/no-scenario, counts/`base_rule_set` references,
+согласованная revision-семантика (`GET /dictionary` ↔ create), paging
+page1→page2 без 409, 401/403/404/422, управляемые ошибки по объявленным кодам и
+`reset()`.
+
 ## Структура
 
 ```text
@@ -501,18 +561,20 @@ frontend/
       transport-error.ts  TransportError и безопасный разбор ошибок
       transport.ts        createApiClient: credentials/no-store/CSRF/idempotency/retry
     mocks/              schema-valid mocks bootstrap/session/config, поиска
-                        (WP-06) и targets/dictionaries (WP-07)
+                        (WP-06), targets/dictionaries и симуляции (WP-07)
       index.ts          createMockFetch, MockController, MOCK_MODE
       router.ts         разбор Request, статические и `{param}` маршруты
       validate.ts       ajv-валидация запросов по generated openapi.json
       data.ts           загрузка contracts/examples через @examples + manifest
       guards.ts         общий session+CSRF guard mutation-операций
       controller.ts     delay/profile/freshness/empty/session + search
-                        scope-delay/error/queue + dictionary store/errors/reset
+                        scope-delay/error/queue + dictionary store/errors +
+                        simulation scenario/store/errors/reset
       responses.ts      контрактные заголовки и ErrorResponse
       handlers/         health, login, getSession, logout, appConfig, roots,
                         companies, search (searchFiles/getSearchFacet),
-                        targets/dictionaries (LT-07.1a)
+                        targets/dictionaries (LT-07.1a),
+                        simulations (LT-07.1b)
       search/           golden search/facet foundation (LT-06.2a-i)
         corpus.ts       materializer corpus.json → SearchItem/Marker
         expectations.ts literal-resolver search_expectations.json
@@ -521,6 +583,9 @@ frontend/
         targets.ts      allowlist целей из rule_expectations.json + resolver
         store.ts        in-memory seed/store справочников, trim+casefold
         errors.ts       объявленные ошибки targets/dictionaries
+      simulations/      simulation foundation (LT-07.1b)
+        store.ts        literal seed/store сценариев и страниц симуляции
+        errors.ts       объявленные ошибки симуляции
   tests/
     App.test.tsx        component smoke-тест
     api/client.test.ts  runtime-проверки запросов клиента A/B/C
@@ -534,6 +599,7 @@ frontend/
     mocks/search-handlers.test.ts  HTTP-handlers searchFiles/getSearchFacet
     mocks/search-error-race.test.ts  delay/error/race управление поиском
     mocks/dictionaries-draft.test.ts  targets/dictionaries lifecycle mocks
+    mocks/simulations.test.ts  simulation create/get, paging/stale/counts mocks
     fixture-imports.test.ts  проверка alias-импорта JSON вне frontend/
     support/            технические модули scaffold
     browser/            Playwright smoke-тест
