@@ -57,6 +57,15 @@ import type { PreviewScenario } from './sorting/preview'
 import { PreviewStore } from './sorting/preview'
 import type { QueueScenario } from './sorting/queue'
 import { SelectionStore } from './sorting/selection'
+import {
+  isQuarantineErrorDeclaredForOperation,
+  type MockQuarantineErrorCode,
+  type MockQuarantineOperation,
+} from './quarantine/errors'
+import {
+  QuarantineStore,
+  type QuarantineScenario,
+} from './quarantine/store'
 import { DictionaryStore } from './dictionaries/store'
 import { SimulationStore, type SimulationScenario } from './simulations/store'
 import {
@@ -118,6 +127,12 @@ export type BatchGate =
   | 'STALE_PREVIEW'
   | 'BATCH_LIMIT_EXCEEDED'
 
+/**
+ * Управляемый gate возврата из карантина (LT-07.3a): исходный входящий путь
+ * занят другим объектом.
+ */
+export type QuarantineGate = 'ORIGINAL_PATH_OCCUPIED'
+
 /** Любая операция, для которой контроллер умеет управлять ошибкой. */
 type MockOperation =
   | MockSearchOperation
@@ -126,6 +141,7 @@ type MockOperation =
   | MockPublishingOperation
   | MockSortingOperation
   | MockBatchOperation
+  | MockQuarantineOperation
 
 /** Возвращает `true` для операции поиска (иначе — targets/dictionaries). */
 function isSearchOperation(
@@ -176,6 +192,16 @@ function isBatchOperation(
     operation === 'createSortingBatch' ||
     operation === 'getSortingBatch' ||
     operation === 'listSortingBatches'
+  )
+}
+
+/** Возвращает `true` для операции карантина (LT-07.3a). */
+function isQuarantineOperation(
+  operation: MockOperation,
+): operation is MockQuarantineOperation {
+  return (
+    operation === 'listQuarantineItems' ||
+    operation === 'returnQuarantineItem'
   )
 }
 
@@ -264,6 +290,17 @@ export class MockController {
   private readonly nextBatchErrors = new Map<
     MockBatchOperation,
     MockBatchErrorCode[]
+  >()
+  private quarantineScenario: QuarantineScenario = 'technical'
+  private quarantineGate: QuarantineGate | null = null
+  private readonly quarantineStore = new QuarantineStore()
+  private readonly persistentQuarantineErrors = new Map<
+    MockQuarantineOperation,
+    MockQuarantineErrorCode
+  >()
+  private readonly nextQuarantineErrors = new Map<
+    MockQuarantineOperation,
+    MockQuarantineErrorCode[]
   >()
   private readonly sleep: (ms: number) => Promise<void>
 
@@ -409,6 +446,7 @@ export class MockController {
     code: GetSortingPreviewErrorCode,
   ): void
   setError(operation: MockBatchOperation, code: MockBatchErrorCode): void
+  setError(operation: MockQuarantineOperation, code: MockQuarantineErrorCode): void
   setError(
     operation: MockOperation,
     code:
@@ -417,7 +455,8 @@ export class MockController {
       | MockSimulationErrorCode
       | MockPublishingErrorCode
       | MockSortingErrorCode
-      | MockBatchErrorCode,
+      | MockBatchErrorCode
+      | MockQuarantineErrorCode,
   ): void {
     if (isSearchOperation(operation)) {
       this.persistentErrors.set(operation, code as SearchErrorCode)
@@ -439,6 +478,16 @@ export class MockController {
         return
       }
       this.persistentBatchErrors.set(operation, batchCode)
+    } else if (isQuarantineOperation(operation)) {
+      const quarantineCode = code as MockQuarantineErrorCode
+      // Runtime-guard: код, не объявленный для операции, игнорируется, чтобы
+      // mock не мог отдать undeclared HTTP-статус.
+      if (
+        !isQuarantineErrorDeclaredForOperation(operation, quarantineCode)
+      ) {
+        return
+      }
+      this.persistentQuarantineErrors.set(operation, quarantineCode)
     } else if (isSortingOperation(operation)) {
       const sortingCode = code as MockSortingErrorCode
       // Runtime-guard: код, не объявленный для операции, игнорируется, чтобы
@@ -501,6 +550,10 @@ export class MockController {
   ): void
   failNext(operation: MockBatchOperation, code: MockBatchErrorCode): void
   failNext(
+    operation: MockQuarantineOperation,
+    code: MockQuarantineErrorCode,
+  ): void
+  failNext(
     operation: MockOperation,
     code:
       | SearchErrorCode
@@ -508,7 +561,8 @@ export class MockController {
       | MockSimulationErrorCode
       | MockPublishingErrorCode
       | MockSortingErrorCode
-      | MockBatchErrorCode,
+      | MockBatchErrorCode
+      | MockQuarantineErrorCode,
   ): void {
     if (isSearchOperation(operation)) {
       const queue = this.nextErrors.get(operation)
@@ -555,6 +609,22 @@ export class MockController {
       }
       return
     }
+    if (isQuarantineOperation(operation)) {
+      const quarantineCode = code as MockQuarantineErrorCode
+      // Runtime-guard: необъявленный для операции код не ставится в очередь.
+      if (
+        !isQuarantineErrorDeclaredForOperation(operation, quarantineCode)
+      ) {
+        return
+      }
+      const queue = this.nextQuarantineErrors.get(operation)
+      if (queue) {
+        queue.push(quarantineCode)
+      } else {
+        this.nextQuarantineErrors.set(operation, [quarantineCode])
+      }
+      return
+    }
     if (isSortingOperation(operation)) {
       const sortingCode = code as MockSortingErrorCode
       // Runtime-guard: необъявленный для операции код не ставится в очередь.
@@ -584,6 +654,7 @@ export class MockController {
   clearError(operation: MockPublishingOperation): void
   clearError(operation: MockSortingOperation): void
   clearError(operation: MockBatchOperation): void
+  clearError(operation: MockQuarantineOperation): void
   clearError(operation: MockOperation): void {
     if (isSearchOperation(operation)) {
       this.persistentErrors.delete(operation)
@@ -603,6 +674,11 @@ export class MockController {
     if (isBatchOperation(operation)) {
       this.persistentBatchErrors.delete(operation)
       this.nextBatchErrors.delete(operation)
+      return
+    }
+    if (isQuarantineOperation(operation)) {
+      this.persistentQuarantineErrors.delete(operation)
+      this.nextQuarantineErrors.delete(operation)
       return
     }
     if (isSortingOperation(operation)) {
@@ -730,6 +806,34 @@ export class MockController {
     if (
       persistent !== undefined &&
       isBatchErrorDeclaredForOperation(operation, persistent)
+    ) {
+      return persistent
+    }
+    return undefined
+  }
+
+  /**
+   * Возвращает объявленную ошибку карантина для текущей отправки и расходует
+   * одноразовую (LT-07.3a). Код, не объявленный для операции, никогда не
+   * возвращается (защита от undeclared статуса).
+   */
+  consumeQuarantineError(
+    operation: MockQuarantineOperation,
+  ): MockQuarantineErrorCode | undefined {
+    const queue = this.nextQuarantineErrors.get(operation)
+    if (queue && queue.length > 0) {
+      const code = queue.shift()
+      if (
+        code !== undefined &&
+        isQuarantineErrorDeclaredForOperation(operation, code)
+      ) {
+        return code
+      }
+    }
+    const persistent = this.persistentQuarantineErrors.get(operation)
+    if (
+      persistent !== undefined &&
+      isQuarantineErrorDeclaredForOperation(operation, persistent)
     ) {
       return persistent
     }
@@ -910,6 +1014,56 @@ export class MockController {
     this.batchStore.seedHistory()
   }
 
+  /** Текущее управляемое состояние записи карантина (по умолчанию `technical`). */
+  getQuarantineScenario(): QuarantineScenario {
+    return this.quarantineScenario
+  }
+
+  /** Выбирает состояние записи карантина (`technical`/`ambiguous`/`returned`). */
+  setQuarantineScenario(scenario: QuarantineScenario): void {
+    this.quarantineScenario = scenario
+    this.quarantineStore.setScenario(scenario)
+  }
+
+  /**
+   * Текущий флаг стабильности возврата (`can_return`) выбранной записи:
+   * `true` только для `technical`, иначе `false` (с зарегистрированной
+   * recovery-операцией или после возврата).
+   */
+  getQuarantineCanReturn(): boolean {
+    return this.quarantineStore.canReturn()
+  }
+
+  /**
+   * Управляет `can_return` через выбор состояния записи: `true` — возвратимая
+   * `technical`, `false` — `ambiguous` (can_return=false с recovery), `null` —
+   * без изменений.
+   */
+  setQuarantineCanReturn(value: boolean | null): void {
+    if (value === null) {
+      return
+    }
+    this.setQuarantineScenario(value ? 'technical' : 'ambiguous')
+  }
+
+  /**
+   * Управляемый gate возврата или `null` (по умолчанию): занятый исходный
+   * входящий путь (`ORIGINAL_PATH_OCCUPIED`).
+   */
+  getQuarantineGate(): QuarantineGate | null {
+    return this.quarantineGate
+  }
+
+  /** Задаёт управляемый gate возврата или снимает его (`null`). */
+  setQuarantineGate(gate: QuarantineGate | null): void {
+    this.quarantineGate = gate
+  }
+
+  /** In-memory store записей карантина и идемпотентных операций (LT-07.3a). */
+  getQuarantineStore(): QuarantineStore {
+    return this.quarantineStore
+  }
+
   /** Текущий выбранный сценарий симуляции (по умолчанию `full`). */
   getSimulationScenario(): SimulationScenario {
     return this.simulationScenario
@@ -967,11 +1121,11 @@ export class MockController {
   /**
    * Сбрасывает сессию, задержку, профиль, freshness, empty-переопределения,
    * scope-задержки, per-send очереди, управляемые ошибки поиска,
-   * targets/dictionaries, симуляции, публикации, очереди/выбора, preview и
-   * партий, а также восстанавливает seed справочников/симуляций/публикаций,
-   * сценарии `full`/`v2`/`ready-120`, снимает TTL-время publish/selection/
-   * preview, batch-сценарий/фазу/gate и очищает созданные снимки выбора,
-   * preview и партии.
+   * targets/dictionaries, симуляции, публикации, очереди/выбора, preview,
+   * партий и карантина, а также восстанавливает seed справочников/симуляций/
+   * публикаций, сценарии `full`/`v2`/`ready-120`, снимает TTL-время publish/
+   * selection/preview, batch-сценарий/фазу/gate, quarantine-сценарий/gate и
+   * очищает созданные снимки выбора, preview и партии.
    */
   reset(): void {
     this.session = null
@@ -997,6 +1151,8 @@ export class MockController {
     this.nextSortingErrors.clear()
     this.persistentBatchErrors.clear()
     this.nextBatchErrors.clear()
+    this.persistentQuarantineErrors.clear()
+    this.nextQuarantineErrors.clear()
     this.simulationScenario = 'full'
     this.publishingScenario = 'v2'
     this.publishingNow = null
@@ -1008,11 +1164,14 @@ export class MockController {
     this.batchScenario = null
     this.batchPhase = null
     this.batchGate = null
+    this.quarantineScenario = 'technical'
+    this.quarantineGate = null
     this.dictionaryStore.reset()
     this.simulationStore.reset()
     this.publishingStore.reset()
     this.selectionStore.reset()
     this.previewStore.reset()
     this.batchStore.reset()
+    this.quarantineStore.reset()
   }
 }

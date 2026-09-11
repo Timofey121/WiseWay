@@ -33,6 +33,7 @@ export type {
   MockSearchOperation,
   MockSearchScope,
   MockSimulationOperation,
+  QuarantineGate,
   SearchFreshnessProfile,
 } from './controller'
 export { MOCK_MODE, MOCK_MARKER_HEADER } from './responses'
@@ -136,6 +137,38 @@ export type {
   MockBatchErrorCode,
   MockBatchOperation,
 } from './sorting/batch-errors'
+export {
+  declaredQuarantineErrors,
+  isQuarantineErrorCode,
+  isQuarantineErrorDeclaredForOperation,
+  quarantineErrorCodesByOperation,
+  quarantineErrorResponse,
+  recoveryRequiredResponse,
+} from './quarantine/errors'
+export type {
+  DeclaredQuarantineError,
+  ListQuarantineItemsErrorCode,
+  MockQuarantineErrorCode,
+  MockQuarantineOperation,
+  QuarantineErrorOptions,
+  ReturnQuarantineItemErrorCode,
+} from './quarantine/errors'
+export {
+  QUARANTINE_COMPANY_ID,
+  QUARANTINE_ID,
+  QUARANTINE_RECOVERY_OPERATION_ID,
+  QUARANTINE_SCENARIOS,
+  QuarantineStore,
+  parseQuarantineLimit,
+  resolveQuarantinePage,
+} from './quarantine/store'
+export type {
+  QuarantineOperationLookup,
+  QuarantineOperationOutcome,
+  QuarantinePageQuery,
+  QuarantineRecord,
+  QuarantineScenario,
+} from './quarantine/store'
 export {
   PREVIEW_SCENARIOS,
   PreviewStore,

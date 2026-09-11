@@ -6,7 +6,8 @@ generated API-артефакты из единственного публичн�
 request/session security transport (WP-05) и контрактные mocks
 bootstrap/session/config, golden-поиска (WP-06) и
 targets/dictionaries/симуляции/публикации/очереди/выбора/preview/партий (WP-07,
-LT-07.1a/LT-07.1b/LT-07.1c/LT-07.2a/LT-07.2b/LT-07.2c).
+LT-07.1a/LT-07.1b/LT-07.1c/LT-07.2a/LT-07.2b/LT-07.2c) и карантина/возврата
+(LT-07.3a).
 Продуктовые экраны и навигация появятся в следующих leaf-задачах (EPIC E-02,
 WP-07).
 
@@ -840,6 +841,88 @@ selection), reuse/новый key/user-scope, gates 404/403/409
 согласованность counts, company-scoped list и порядок/cursor, 401/403/422,
 управляемые ошибки по объявленным кодам, per-operation ограничение и `reset()`.
 
+## Mock quarantine/return (LT-07.3a)
+
+`src/mocks/handlers/quarantine.ts` подключает к mock-fetch две операции WP-07
+без реального возврата, recovery, перемещения файлов, автосортировки и журнала:
+
+| Метод и путь | Ответ | Особенности |
+|---|---|---|
+| `GET /quarantine` | 200 `QuarantinePage` | literal подтверждённых записей компании; `cursor`/`limit`; чтение без CSRF |
+| `POST /quarantine/{quarantine_id}/return` | 200 `QuarantineReturnResponse` | `expected_revision`/`comment`, gates, `Idempotency-Key`; CSRF обязателен |
+
+- Данные берутся из публичных примеров `contracts/examples/quarantine/*.json`
+  через `src/mocks/quarantine/store.ts`:
+  `quarantine-item-atlas-technical`, `quarantine-item-atlas-ambiguous`,
+  `quarantine-list-atlas`, `quarantine-return-response`. Возврат, recovery,
+  matcher, перемещение и автосортировка не выполняются: store лишь хранит
+  literal-записи и отдаёт объявленные состояния/конфликты.
+- Состояние записи выбирает `MockController.setQuarantineScenario('technical' |
+  'ambiguous' | 'returned')` (по умолчанию `technical`):
+  `technical` — возвратимая запись (`can_return=true`, revision=1);
+  `ambiguous` — `can_return=false` с зарегистрированным
+  `recovery_operation_id` (revision=3);
+  `returned` — уже возвращённая запись (повтор с новым ключом → 409
+  `INVALID_STATE`). `setQuarantineCanReturn(true|false)` — sugar над выбором
+  состояния, `getQuarantineCanReturn()` возвращает текущий флаг стабильности.
+  `setQuarantineGate('ORIGINAL_PATH_OCCUPIED')` воспроизводит занятый исходный
+  путь. `can_return` — серверный флаг стабильности из OAS, не право/роль:
+  `false` всегда сопровождается зарегистрированной recovery-операцией.
+- `listQuarantineItems` — чтение (`csrf: false`): требует активную
+  mock-сессию, `company_id` обязателен, `limit` 1..100, `cursor` — конечный
+  `quarantine-offset-<n>`. Список company-scoped и содержит только
+  подтверждённые записи карантина (RECOVERY_REQUIRED-исходы партии не входят);
+  неизвестная компания даёт пустую страницу. Невалидный `cursor`/`limit` и
+  отсутствие `company_id` → 422 `VALIDATION_ERROR`.
+- `returnQuarantineItem` — объявленная мутация (`csrf: true`,
+  `idempotencyKey: true`): требует сессию, корректный `X-CSRF-Token` (общий
+  guard `requireSessionAndCsrf`) и непустой `Idempotency-Key`, валидирует
+  `QuarantineReturnRequest` (`expected_revision`, `comment` 1..500). Gates
+  воспроизводимы объявленными кодами: неизвестный `quarantine_id` → 404
+  `NOT_FOUND`; уже возвращённая запись → 409 `INVALID_STATE`; неоднозначный
+  возврат → 409 `RECOVERY_REQUIRED` с `error.operation_id` = зарегистрированной
+  операции; устаревшая `expected_revision` → 409
+  `QUARANTINE_VERSION_CONFLICT`; занятый исходный путь → 409
+  `ORIGINAL_PATH_OCCUPIED` без мутаций; comment вне 1..500 → 422
+  `VALIDATION_ERROR` (`error-quarantine-comment-validation`). Успех — 200
+  literal `QuarantineReturnResponse` (`item.status=WAITING_READY`,
+  `selectable=false`, без `active_attempt_id`), без batch POST и автосортировки.
+- Идемпотентность scoped по actor+ключу: повтор того же ключа/тела возвращает
+  прежний исход (успех или зарегистрированный recovery) **до**
+  staleness/state-проверок (API §2, потерянный ответ); другое тело с тем же
+  ключом → 409 `IDEMPOTENCY_KEY_REUSED`; тот же ключ у другого пользователя —
+  отдельный scope, а не глобальный конфликт. После успешного возврата запись
+  помечается возвращённой, поэтому `GET /quarantine` отражает обновлённое
+  (пустое) состояние, а новый ключ даёт 409 `INVALID_STATE`.
+- `MockController` управляет карантином: `setQuarantineScenario`/
+  `getQuarantineScenario`, `setQuarantineCanReturn`/`getQuarantineCanReturn`,
+  `setQuarantineGate`/`getQuarantineGate`, `getQuarantineStore`, а также
+  объявленные ошибки операций через `setError(operation, code)` /
+  `failNext(operation, code)` / `clearError` / `consumeQuarantineError`. Наборы
+  строго разделены по операциям (`quarantineErrorCodesByOperation`,
+  `isQuarantineErrorDeclaredForOperation` из `@/mocks`): `listQuarantineItems` —
+  `UNAUTHENTICATED`/`FORBIDDEN`/`VALIDATION_ERROR`/`RATE_LIMITED`/
+  `INTERNAL_ERROR`/`SERVICE_UNAVAILABLE`; `returnQuarantineItem` — те же плюс
+  `CSRF_FAILED`/`NOT_FOUND`/`IDEMPOTENCY_KEY_REUSED`/
+  `QUARANTINE_VERSION_CONFLICT`/`ORIGINAL_PATH_OCCUPIED`/`INVALID_STATE`/
+  `RECOVERY_REQUIRED`. Overload'ы и runtime-guard не допускают undeclared
+  HTTP-статус. Тело/статус берутся из `contracts/examples/errors/*.json`;
+  `SERVICE_UNAVAILABLE` синтезируется по inline-примеру OAS. Recovery endpoint
+  не добавляется. `reset()` возвращает сценарий `technical`, снимает gate,
+  очищает store и управляемые ошибки.
+- Файловых операций нет: mock не выполняет возврат и не является
+  доказательством файловой безопасности. Mock-прохождение не является
+  real-backend evidence.
+
+Проверки: `tests/mocks/quarantine.test.ts` — маршрутизация двух операций,
+literal подтверждённый список/company-scope/paging/cursor, can_return/recovery,
+успешный возврат WAITING_READY без batch/автосортировки, границы comment
+0/1/500/501, конфликты 404/409 (`INVALID_STATE`/`QUARANTINE_VERSION_CONFLICT`/
+`ORIGINAL_PATH_OCCUPIED`/`RECOVERY_REQUIRED` с `operation_id`/
+`IDEMPOTENCY_KEY_REUSED`), идемпотентный replay success/recovery и user-scope,
+новый ключ, 401/403/404/422, управляемые ошибки по объявленным кодам,
+per-operation ограничение, позднее состояние списка и `reset()`.
+
 ## Структура
 
 ```text
@@ -862,7 +945,7 @@ frontend/
       transport.ts        createApiClient: credentials/no-store/CSRF/idempotency/retry
     mocks/              schema-valid mocks bootstrap/session/config, поиска
                         (WP-06), targets/dictionaries, симуляции, публикации,
-                        очереди/выбора, preview и партий (WP-07)
+                        очереди/выбора, preview, партий и карантина (WP-07)
       index.ts          createMockFetch, MockController, MOCK_MODE
       router.ts         разбор Request, статические и `{param}` маршруты
       validate.ts       ajv-валидация запросов по generated openapi.json
@@ -873,7 +956,8 @@ frontend/
                         simulation scenario/store/errors + publishing
                         scenario/store/errors + sorting queue scenario/
                         selection store/errors + preview scenario/store/
-                        errors + batch scenario/phase/gate/store/errors/reset
+                        errors + batch scenario/phase/gate/store/errors +
+                        quarantine scenario/gate/store/errors/reset
       responses.ts      контрактные заголовки и ErrorResponse
       handlers/         health, login, getSession, logout, appConfig, roots,
                         companies, search (searchFiles/getSearchFacet),
@@ -882,7 +966,8 @@ frontend/
                         publishing (publish/versions/restore, LT-07.1c),
                         sorting (queue/selection, LT-07.2a),
                         previews (preview create/get, LT-07.2b),
-                        batches (batch create/get/list, LT-07.2c)
+                        batches (batch create/get/list, LT-07.2c),
+                        quarantine (list/return, LT-07.3a)
       search/           golden search/facet foundation (LT-06.2a-i)
         corpus.ts       materializer corpus.json → SearchItem/Marker
         expectations.ts literal-resolver search_expectations.json
@@ -905,6 +990,10 @@ frontend/
         errors.ts       объявленные ошибки очереди/выбора/preview и
                         использования снимка
         batch-errors.ts объявленные ошибки партий (LT-07.2c)
+      quarantine/       карантин/возврат foundation (LT-07.3a)
+        store.ts        literal записи/состояния карантина, QuarantineStore,
+                        идемпотентные операции, paging
+        errors.ts       объявленные ошибки list/return
   tests/
     App.test.tsx        component smoke-тест
     api/client.test.ts  runtime-проверки запросов клиента A/B/C
@@ -923,6 +1012,7 @@ frontend/
     mocks/sorting-queue-selection.test.ts  queue/selection canned, owner/expiry mocks
     mocks/sorting-preview.test.ts  preview create/get, predictions/collisions/expiry mocks
     mocks/sorting-batch.test.ts  batch create/get/list, progress/outcomes/gates mocks
+    mocks/quarantine.test.ts  quarantine list/return, can_return/recovery/conflicts mocks
     fixture-imports.test.ts  проверка alias-импорта JSON вне frontend/
     support/            технические модули scaffold
     browser/            Playwright smoke-тест

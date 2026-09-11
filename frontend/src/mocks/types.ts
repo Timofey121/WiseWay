@@ -78,6 +78,12 @@ export type OutcomeState = components['schemas']['OutcomeState']
 export type Outcome = components['schemas']['Outcome']
 export type OutcomeCounts = components['schemas']['OutcomeCounts']
 export type FileMetadata = components['schemas']['FileMetadata']
+export type QuarantineItem = components['schemas']['QuarantineItem']
+export type QuarantinePage = components['schemas']['QuarantinePage']
+export type QuarantineReturnRequest =
+  components['schemas']['QuarantineReturnRequest']
+export type QuarantineReturnResponse =
+  components['schemas']['QuarantineReturnResponse']
 export type ErrorResponse = components['schemas']['ErrorResponse']
 export type ErrorDetails = components['schemas']['ErrorDetails']
 export type FieldError = components['schemas']['FieldError']
