@@ -5,14 +5,20 @@
 // (`searchFiles`/`getSearchFacet`), LT-07.1a (targets/dictionaries) и LT-07.1b
 // (`createDictionarySimulation`/`getSimulation`), LT-07.1c
 // (publish/versions/restore), LT-07.2a (`querySortingQueue`/
-// `createSortingSelection`) и LT-07.2b (`createSortingPreview`/
-// `getSortingPreview`). Пути с `{param}`
-// (company_id/dictionary_id/version_id/simulation_id/preview_id)
+// `createSortingSelection`), LT-07.2b (`createSortingPreview`/
+// `getSortingPreview`) и LT-07.2c (`createSortingBatch`/`getSortingBatch`/
+// `listSortingBatches`). Пути с `{param}`
+// (company_id/dictionary_id/version_id/simulation_id/preview_id/batch_id)
 // сопоставляются router'ом.
 // Неизвестный маршрут в router даёт безопасную 404, а не правдоподобный успех.
 
 import type { MockHandler } from '../types'
 import { loginHandler, logoutHandler, sessionHandler } from './auth'
+import {
+  createSortingBatchHandler,
+  getSortingBatchHandler,
+  listSortingBatchesHandler,
+} from './batches'
 import { companiesHandler, rootsHandler } from './catalog'
 import { appConfigHandler } from './config'
 import {
@@ -76,4 +82,7 @@ export const handlersByKey: Record<string, MockHandler> = {
   'POST /sorting/selections': createSortingSelectionHandler,
   'POST /sorting/previews': createSortingPreviewHandler,
   'GET /sorting/previews/{preview_id}': getSortingPreviewHandler,
+  'POST /sorting/batches': createSortingBatchHandler,
+  'GET /sorting/batches': listSortingBatchesHandler,
+  'GET /sorting/batches/{batch_id}': getSortingBatchHandler,
 }

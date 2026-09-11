@@ -65,6 +65,18 @@ export type PreviewCreateRequest =
   components['schemas']['PreviewCreateRequest']
 export type Preview = components['schemas']['Preview']
 export type CollisionDetails = components['schemas']['CollisionDetails']
+export type BatchCreateRequest = components['schemas']['BatchCreateRequest']
+export type DirectBatchCreateRequest =
+  components['schemas']['DirectBatchCreateRequest']
+export type PreviewedBatchCreateRequest =
+  components['schemas']['PreviewedBatchCreateRequest']
+export type Batch = components['schemas']['Batch']
+export type BatchSummary = components['schemas']['BatchSummary']
+export type BatchPage = components['schemas']['BatchPage']
+export type BatchState = components['schemas']['BatchState']
+export type OutcomeState = components['schemas']['OutcomeState']
+export type Outcome = components['schemas']['Outcome']
+export type OutcomeCounts = components['schemas']['OutcomeCounts']
 export type FileMetadata = components['schemas']['FileMetadata']
 export type ErrorResponse = components['schemas']['ErrorResponse']
 export type ErrorDetails = components['schemas']['ErrorDetails']

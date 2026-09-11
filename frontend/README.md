@@ -5,8 +5,8 @@
 generated API-артефакты из единственного публичного OAS, базовый
 request/session security transport (WP-05) и контрактные mocks
 bootstrap/session/config, golden-поиска (WP-06) и
-targets/dictionaries/симуляции/публикации/очереди/выбора/preview (WP-07,
-LT-07.1a/LT-07.1b/LT-07.1c/LT-07.2a/LT-07.2b).
+targets/dictionaries/симуляции/публикации/очереди/выбора/preview/партий (WP-07,
+LT-07.1a/LT-07.1b/LT-07.1c/LT-07.2a/LT-07.2b/LT-07.2c).
 Продуктовые экраны и навигация появятся в следующих leaf-задачах (EPIC E-02,
 WP-07).
 
@@ -755,6 +755,91 @@ owner/expiry/unknown снимка (403/409/404), `get` page1/cursor/limit/unknow
 непродление TTL, 401/403/422, управляемые ошибки по объявленным кодам,
 per-operation ограничение и `reset()`.
 
+## Mock batches (LT-07.2c)
+
+`src/mocks/handlers/batches.ts` подключает к mock-fetch три операции WP-07 без
+claim, executor, matcher, перемещения файлов и подсчёта progress:
+
+| Метод и путь | Ответ | Особенности |
+|---|---|---|
+| `POST /sorting/batches` | 202 `Batch` | DIRECT/PREVIEWED, gates, `Idempotency-Key`; CSRF обязателен; 202 ≠ завершение |
+| `GET /sorting/batches/{batch_id}` | 200 `Batch` | текущий прогресс и страница outcomes; `cursor`/`limit` |
+| `GET /sorting/batches` | 200 `BatchPage` | `BatchSummary` компании, `created_at DESC`/`batch_id DESC`; `cursor`/`limit` |
+
+- Данные берутся из публичных примеров
+  `contracts/examples/sorting/batch-*.json` через `src/mocks/sorting/batch.ts`:
+  `batch-atlas-direct-fresh-page1/page2`,
+  `batch-atlas-previewed-fresh-page1/page2`, `batch-atlas-sorted`,
+  `batch-atlas-conflict`, `batch-atlas-hetero`, `batch-atlas-technical`,
+  `batch-atlas-same-user-session` и история `batch-history-atlas-page1`.
+  Статусы, counts, outcomes, причины и timestamps не пересчитываются — это
+  literal данные примера. Matcher, claim, executor и recovery отсутствуют.
+- Сценарий выбирает `MockController.setBatchScenario('direct-fresh' |
+  'previewed-fresh' | 'sorted' | 'conflict' | 'hetero' | 'technical' |
+  'same-user-session' | null)`. При `null` `createSortingBatch` выводит его из
+  `execution_mode` (DIRECT → `direct-fresh`, PREVIEWED → `previewed-fresh`).
+  `setBatchPhase('ACCEPTED' | 'RUNNING' | 'COMPLETED' | 'COMPLETED_WITH_ISSUES' |
+  'RECOVERY_REQUIRED')` переключает фазу прогресса: `getSortingBatch` отдаёт
+  соответствующую canned-страницу (`PHASE_SCENARIO`) без реальных таймеров.
+  `seedBatchHistory()` заполняет store literal-историей для list/get.
+- `createSortingBatch` требует сессию, корректный `X-CSRF-Token` (общий guard
+  `requireSessionAndCsrf`) и непустой `Idempotency-Key`, валидирует
+  `BatchCreateRequest` (oneOf DIRECT/PREVIEWED; PREVIEWED требует
+  `preview_id`, DIRECT — нет). Gates воспроизводимы объявленными кодами:
+  неизвестный selection/preview → 404 `NOT_FOUND`; другой owner → 403
+  `FORBIDDEN`; истёкший selection (инъекция `setSelectionNow`) → 409
+  `SELECTION_EXPIRED`; preview другой пары/компании → 409 `INVALID_STATE`;
+  DIRECT с изменённым источником (`setBatchGate('SELECTION_CHANGED')`) → 409
+  `SELECTION_CHANGED`; PREVIEWED с устаревшим preview (gate или
+  `setPreviewNow`) → 409 `STALE_PREVIEW`; превышение предела
+  (`setBatchGate('BATCH_LIMIT_EXCEEDED')`) → 422 `VALIDATION_ERROR`. Успех —
+  202 literal `Batch` (page1 сценария). 202 означает принятие, а не завершение.
+- Идемпотентность scoped по actor+ключу: повтор того же ключа/тела возвращает
+  прежнюю партию **до** staleness-проверок (API §2, потерянный ответ), другое
+  тело с тем же ключом → 409 `IDEMPOTENCY_KEY_REUSED`; новый ключ создаёт
+  новую партию с уникальным `batch_id`; тот же ключ у другого пользователя —
+  своя партия. `bindBatchPage` привязывает identity принятой партии
+  (`batch_id`/`company_id`/`selection_id`/`preview_id`/`actor`/`rule_set`/
+  `created_at`) к canned-странице фазы, поэтому GET по созданному id
+  самосогласован.
+- `getSortingBatch` — чтение: только активная mock-сессия, literal-страница
+  текущей фазы (page1/page2 через непрозрачный `cursor`), неизвестный
+  `batch_id` → 404 `NOT_FOUND`, невалидный `cursor`/`limit` → 422. 409 у
+  чтения не объявлен. Партия `RECOVERY_REQUIRED` остаётся незавершённой
+  (`finished_at=null`, `recovery_required>0`).
+- `listSortingBatches` — чтение: `company_id` обязателен, `BatchSummary`
+  компании в порядке `created_at DESC`, `batch_id DESC`; `cursor` — конечный
+  `batches-offset-<n>`, `limit` 1..100; невалидные → 422. Другая компания даёт
+  пустую страницу. Созданные партии появляются в списке.
+- `MockController` управляет партиями: `setBatchScenario`/`getBatchScenario`,
+  `setBatchPhase`/`getBatchPhase`, `setBatchGate`/`getBatchGate`,
+  `getBatchStore`, `seedBatchHistory`, а также объявленные ошибки операций
+  через `setError(operation, code)` / `failNext(operation, code)` /
+  `clearError` / `consumeBatchError`. Наборы строго разделены по операциям
+  (`batchErrorCodesByOperation`, `isBatchErrorDeclaredForOperation` из
+  `@/mocks`): `createSortingBatch` — `UNAUTHENTICATED`/`FORBIDDEN`/
+  `CSRF_FAILED`/`NOT_FOUND`/`IDEMPOTENCY_KEY_REUSED`/`INVALID_STATE`/
+  `SELECTION_EXPIRED`/`SELECTION_CHANGED`/`STALE_PREVIEW`/`VALIDATION_ERROR`/
+  `RATE_LIMITED`/`INTERNAL_ERROR`/`SERVICE_UNAVAILABLE`; `getSortingBatch` — те
+  же без 409; `listSortingBatches` — без 404/409. `BATCH_LIMIT_EXCEEDED`
+  объявлен только для `createSortingSelection` и в набор партий не входит;
+  422 партии использует только `VALIDATION_ERROR` (OAS `ValidationError`).
+  Тело/статус берутся из `contracts/examples/errors/*.json`;
+  `SERVICE_UNAVAILABLE` синтезируется по inline-примеру OAS. `reset()`
+  очищает сценарий/фазу/gate, store, ошибки и созданные снимки/preview.
+- Movement не выполняется: создание партии не запускает executor, не меняет
+  снимок выбора и не делает файловых операций. Mock-прохождение не является
+  доказательством файловой безопасности или реальной concurrency.
+
+Проверки: `tests/mocks/sorting-batch.test.ts` — маршрутизация трёх операций,
+literal submit DIRECT/PREVIEWED, lost response/replay (в т.ч. при устаревшем
+selection), reuse/новый key/user-scope, gates 404/403/409
+`INVALID_STATE`/`SELECTION_EXPIRED`/`SELECTION_CHANGED`/`STALE_PREVIEW`/422
+`VALIDATION_ERROR`, paging page1/page2, прогресс по фазам, все
+`BatchState`/`OutcomeState`/reason_code, recovery (`finished_at=null`),
+согласованность counts, company-scoped list и порядок/cursor, 401/403/422,
+управляемые ошибки по объявленным кодам, per-operation ограничение и `reset()`.
+
 ## Структура
 
 ```text
@@ -777,7 +862,7 @@ frontend/
       transport.ts        createApiClient: credentials/no-store/CSRF/idempotency/retry
     mocks/              schema-valid mocks bootstrap/session/config, поиска
                         (WP-06), targets/dictionaries, симуляции, публикации,
-                        очереди/выбора и preview (WP-07)
+                        очереди/выбора, preview и партий (WP-07)
       index.ts          createMockFetch, MockController, MOCK_MODE
       router.ts         разбор Request, статические и `{param}` маршруты
       validate.ts       ajv-валидация запросов по generated openapi.json
@@ -788,7 +873,7 @@ frontend/
                         simulation scenario/store/errors + publishing
                         scenario/store/errors + sorting queue scenario/
                         selection store/errors + preview scenario/store/
-                        errors/reset
+                        errors + batch scenario/phase/gate/store/errors/reset
       responses.ts      контрактные заголовки и ErrorResponse
       handlers/         health, login, getSession, logout, appConfig, roots,
                         companies, search (searchFiles/getSearchFacet),
@@ -796,7 +881,8 @@ frontend/
                         simulations (LT-07.1b),
                         publishing (publish/versions/restore, LT-07.1c),
                         sorting (queue/selection, LT-07.2a),
-                        previews (preview create/get, LT-07.2b)
+                        previews (preview create/get, LT-07.2b),
+                        batches (batch create/get/list, LT-07.2c)
       search/           golden search/facet foundation (LT-06.2a-i)
         corpus.ts       materializer corpus.json → SearchItem/Marker
         expectations.ts literal-resolver search_expectations.json
@@ -811,12 +897,14 @@ frontend/
       publishing/       publishing/versions/restore foundation (LT-07.1c)
         store.ts        seed версий, canned publish/restore, идемпотентность
         errors.ts       объявленные ошибки публикации/версий/restore
-      sorting/          queue/selection/preview foundation (LT-07.2a/07.2b)
+      sorting/          queue/selection/preview/batch foundation (LT-07.2a/07.2b/07.2c)
         queue.ts        canned queue-сценарии и фильтры
         selection.ts    SelectionStore, creation/resolution снимков
         preview.ts      canned preview-сценарии, PreviewStore, paging
+        batch.ts        canned batch-сценарии/фазы, BatchStore, paging
         errors.ts       объявленные ошибки очереди/выбора/preview и
                         использования снимка
+        batch-errors.ts объявленные ошибки партий (LT-07.2c)
   tests/
     App.test.tsx        component smoke-тест
     api/client.test.ts  runtime-проверки запросов клиента A/B/C
@@ -834,6 +922,7 @@ frontend/
     mocks/publishing.test.ts  publish/versions/restore, gates/idempotency mocks
     mocks/sorting-queue-selection.test.ts  queue/selection canned, owner/expiry mocks
     mocks/sorting-preview.test.ts  preview create/get, predictions/collisions/expiry mocks
+    mocks/sorting-batch.test.ts  batch create/get/list, progress/outcomes/gates mocks
     fixture-imports.test.ts  проверка alias-импорта JSON вне frontend/
     support/            технические модули scaffold
     browser/            Playwright smoke-тест

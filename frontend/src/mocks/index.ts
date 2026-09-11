@@ -25,6 +25,7 @@ import { routeMockRequest } from './router'
 
 export { MockController }
 export type {
+  BatchGate,
   ConfigProfile,
   MockControllerOptions,
   MockDictionaryOperation,
@@ -96,6 +97,45 @@ export type {
 } from './sorting/errors'
 export { QUEUE_SCENARIOS, getCannedQueueResponse } from './sorting/queue'
 export type { QueueScenario } from './sorting/queue'
+export {
+  BATCH_PHASES,
+  BATCH_SCENARIOS,
+  BatchStore,
+  PHASE_SCENARIO,
+  bindBatchPage,
+  canonicalPhase,
+  getCannedBatchPage1,
+  getCannedBatchPages,
+  identityFromBatch,
+  parseBatchLimit,
+  resolveBatchHistoryPage,
+  resolveCannedBatchPage,
+  toBatchSummary,
+} from './sorting/batch'
+export type {
+  BatchHistoryQuery,
+  BatchIdentity,
+  BatchOperationLookup,
+  BatchPhase,
+  BatchScenario,
+  StoredBatch,
+  StoredBatchOperation,
+} from './sorting/batch'
+export {
+  batchErrorCodesByOperation,
+  batchErrorResponse,
+  declaredBatchErrors,
+  isBatchErrorCode,
+  isBatchErrorDeclaredForOperation,
+} from './sorting/batch-errors'
+export type {
+  CreateSortingBatchErrorCode,
+  DeclaredBatchError,
+  GetSortingBatchErrorCode,
+  ListSortingBatchesErrorCode,
+  MockBatchErrorCode,
+  MockBatchOperation,
+} from './sorting/batch-errors'
 export {
   PREVIEW_SCENARIOS,
   PreviewStore,

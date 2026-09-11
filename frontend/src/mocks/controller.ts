@@ -32,6 +32,16 @@ import type {
   RestoreDictionaryDraftErrorCode,
 } from './publishing/errors'
 import {
+  isBatchErrorDeclaredForOperation,
+  type MockBatchErrorCode,
+  type MockBatchOperation,
+} from './sorting/batch-errors'
+import {
+  BatchStore,
+  type BatchPhase,
+  type BatchScenario,
+} from './sorting/batch'
+import {
   isPreviewErrorCode,
   isSortingErrorDeclaredForOperation,
   type CreateSortingPreviewErrorCode,
@@ -99,6 +109,15 @@ export type MockPublishingOperation =
   | 'getDictionaryVersion'
   | 'restoreDictionaryDraft'
 
+/**
+ * Gate создания партии, воспроизводимый управляемо (LT-07.2c): изменённый
+ * источник DIRECT, устаревший preview PREVIEWED и превышение предела партии.
+ */
+export type BatchGate =
+  | 'SELECTION_CHANGED'
+  | 'STALE_PREVIEW'
+  | 'BATCH_LIMIT_EXCEEDED'
+
 /** Любая операция, для которой контроллер умеет управлять ошибкой. */
 type MockOperation =
   | MockSearchOperation
@@ -106,6 +125,7 @@ type MockOperation =
   | MockSimulationOperation
   | MockPublishingOperation
   | MockSortingOperation
+  | MockBatchOperation
 
 /** Возвращает `true` для операции поиска (иначе — targets/dictionaries). */
 function isSearchOperation(
@@ -145,6 +165,17 @@ function isSortingOperation(
     operation === 'createSortingSelection' ||
     operation === 'createSortingPreview' ||
     operation === 'getSortingPreview'
+  )
+}
+
+/** Возвращает `true` для операции партий (LT-07.2c). */
+function isBatchOperation(
+  operation: MockOperation,
+): operation is MockBatchOperation {
+  return (
+    operation === 'createSortingBatch' ||
+    operation === 'getSortingBatch' ||
+    operation === 'listSortingBatches'
   )
 }
 
@@ -221,6 +252,18 @@ export class MockController {
   private readonly nextSortingErrors = new Map<
     MockSortingOperation,
     MockSortingErrorCode[]
+  >()
+  private batchScenario: BatchScenario | null = null
+  private batchPhase: BatchPhase | null = null
+  private batchGate: BatchGate | null = null
+  private readonly batchStore = new BatchStore()
+  private readonly persistentBatchErrors = new Map<
+    MockBatchOperation,
+    MockBatchErrorCode
+  >()
+  private readonly nextBatchErrors = new Map<
+    MockBatchOperation,
+    MockBatchErrorCode[]
   >()
   private readonly sleep: (ms: number) => Promise<void>
 
@@ -365,6 +408,7 @@ export class MockController {
     operation: 'getSortingPreview',
     code: GetSortingPreviewErrorCode,
   ): void
+  setError(operation: MockBatchOperation, code: MockBatchErrorCode): void
   setError(
     operation: MockOperation,
     code:
@@ -372,7 +416,8 @@ export class MockController {
       | MockDictionaryErrorCode
       | MockSimulationErrorCode
       | MockPublishingErrorCode
-      | MockSortingErrorCode,
+      | MockSortingErrorCode
+      | MockBatchErrorCode,
   ): void {
     if (isSearchOperation(operation)) {
       this.persistentErrors.set(operation, code as SearchErrorCode)
@@ -386,6 +431,14 @@ export class MockController {
         operation,
         code as MockPublishingErrorCode,
       )
+    } else if (isBatchOperation(operation)) {
+      const batchCode = code as MockBatchErrorCode
+      // Runtime-guard: код, не объявленный для операции, игнорируется, чтобы
+      // mock не мог отдать undeclared HTTP-статус.
+      if (!isBatchErrorDeclaredForOperation(operation, batchCode)) {
+        return
+      }
+      this.persistentBatchErrors.set(operation, batchCode)
     } else if (isSortingOperation(operation)) {
       const sortingCode = code as MockSortingErrorCode
       // Runtime-guard: код, не объявленный для операции, игнорируется, чтобы
@@ -446,6 +499,7 @@ export class MockController {
     operation: 'getSortingPreview',
     code: GetSortingPreviewErrorCode,
   ): void
+  failNext(operation: MockBatchOperation, code: MockBatchErrorCode): void
   failNext(
     operation: MockOperation,
     code:
@@ -453,7 +507,8 @@ export class MockController {
       | MockDictionaryErrorCode
       | MockSimulationErrorCode
       | MockPublishingErrorCode
-      | MockSortingErrorCode,
+      | MockSortingErrorCode
+      | MockBatchErrorCode,
   ): void {
     if (isSearchOperation(operation)) {
       const queue = this.nextErrors.get(operation)
@@ -486,6 +541,20 @@ export class MockController {
       }
       return
     }
+    if (isBatchOperation(operation)) {
+      const batchCode = code as MockBatchErrorCode
+      // Runtime-guard: необъявленный для операции код не ставится в очередь.
+      if (!isBatchErrorDeclaredForOperation(operation, batchCode)) {
+        return
+      }
+      const queue = this.nextBatchErrors.get(operation)
+      if (queue) {
+        queue.push(batchCode)
+      } else {
+        this.nextBatchErrors.set(operation, [batchCode])
+      }
+      return
+    }
     if (isSortingOperation(operation)) {
       const sortingCode = code as MockSortingErrorCode
       // Runtime-guard: необъявленный для операции код не ставится в очередь.
@@ -514,6 +583,7 @@ export class MockController {
   clearError(operation: MockSimulationOperation): void
   clearError(operation: MockPublishingOperation): void
   clearError(operation: MockSortingOperation): void
+  clearError(operation: MockBatchOperation): void
   clearError(operation: MockOperation): void {
     if (isSearchOperation(operation)) {
       this.persistentErrors.delete(operation)
@@ -528,6 +598,11 @@ export class MockController {
     if (isPublishingOperation(operation)) {
       this.persistentPublishingErrors.delete(operation)
       this.nextPublishingErrors.delete(operation)
+      return
+    }
+    if (isBatchOperation(operation)) {
+      this.persistentBatchErrors.delete(operation)
+      this.nextBatchErrors.delete(operation)
       return
     }
     if (isSortingOperation(operation)) {
@@ -631,6 +706,34 @@ export class MockController {
   ): MockPreviewErrorCode | undefined {
     const code = this.consumeSortingError(operation)
     return code !== undefined && isPreviewErrorCode(code) ? code : undefined
+  }
+
+  /**
+   * Возвращает объявленную ошибку партии для текущей отправки и расходует
+   * одноразовую (LT-07.2c). Код, не объявленный для операции, никогда не
+   * возвращается (защита от undeclared статуса).
+   */
+  consumeBatchError(
+    operation: MockBatchOperation,
+  ): MockBatchErrorCode | undefined {
+    const queue = this.nextBatchErrors.get(operation)
+    if (queue && queue.length > 0) {
+      const code = queue.shift()
+      if (
+        code !== undefined &&
+        isBatchErrorDeclaredForOperation(operation, code)
+      ) {
+        return code
+      }
+    }
+    const persistent = this.persistentBatchErrors.get(operation)
+    if (
+      persistent !== undefined &&
+      isBatchErrorDeclaredForOperation(operation, persistent)
+    ) {
+      return persistent
+    }
+    return undefined
   }
 
   /** In-memory store справочников (seed, reset и мутации). */
@@ -751,6 +854,62 @@ export class MockController {
     return this.previewStore
   }
 
+  /**
+   * Явно выбранный batch-сценарий или `null` (по умолчанию). `null` означает,
+   * что `createSortingBatch` выводит сценарий из `execution_mode`
+   * (DIRECT/PREVIEWED), а `getSortingBatch` — из фазы прогресса или
+   * канонического сценария сохранённой партии.
+   */
+  getBatchScenario(): BatchScenario | null {
+    return this.batchScenario
+  }
+
+  /** Выбирает canned batch-сценарий или снимает override (`null`). */
+  setBatchScenario(scenario: BatchScenario | null): void {
+    this.batchScenario = scenario
+  }
+
+  /**
+   * Фаза прогресса партии для `getSortingBatch` или `null` (по умолчанию).
+   * Позволяет переключать `ACCEPTED`→`RUNNING`→`COMPLETED`/… и отдавать
+   * прогрессирующие canned-страницы без реальных таймеров.
+   */
+  getBatchPhase(): BatchPhase | null {
+    return this.batchPhase
+  }
+
+  /** Задаёт фазу прогресса или снимает override (`null`). */
+  setBatchPhase(phase: BatchPhase | null): void {
+    this.batchPhase = phase
+  }
+
+  /**
+   * Управляемый gate создания партии или `null` (по умолчанию): изменённый
+   * источник DIRECT (`SELECTION_CHANGED`), устаревший preview PREVIEWED
+   * (`STALE_PREVIEW`) или превышение предела партии (`BATCH_LIMIT_EXCEEDED`).
+   */
+  getBatchGate(): BatchGate | null {
+    return this.batchGate
+  }
+
+  /** Задаёт управляемый gate создания партии или снимает его (`null`). */
+  setBatchGate(gate: BatchGate | null): void {
+    this.batchGate = gate
+  }
+
+  /** In-memory store принятых партий и идемпотентных операций (LT-07.2c). */
+  getBatchStore(): BatchStore {
+    return this.batchStore
+  }
+
+  /**
+   * Заполняет store literal-историей `batch-history-atlas-page1` для
+   * `listSortingBatches`/`getSortingBatch` без предварительного создания.
+   */
+  seedBatchHistory(): void {
+    this.batchStore.seedHistory()
+  }
+
   /** Текущий выбранный сценарий симуляции (по умолчанию `full`). */
   getSimulationScenario(): SimulationScenario {
     return this.simulationScenario
@@ -808,10 +967,11 @@ export class MockController {
   /**
    * Сбрасывает сессию, задержку, профиль, freshness, empty-переопределения,
    * scope-задержки, per-send очереди, управляемые ошибки поиска,
-   * targets/dictionaries, симуляции, публикации, очереди/выбора и preview, а
-   * также восстанавливает seed справочников/симуляций/публикаций, сценарии
-   * `full`/`v2`/`ready-120`, снимает TTL-время publish/selection/preview и
-   * очищает созданные снимки выбора и preview.
+   * targets/dictionaries, симуляции, публикации, очереди/выбора, preview и
+   * партий, а также восстанавливает seed справочников/симуляций/публикаций,
+   * сценарии `full`/`v2`/`ready-120`, снимает TTL-время publish/selection/
+   * preview, batch-сценарий/фазу/gate и очищает созданные снимки выбора,
+   * preview и партии.
    */
   reset(): void {
     this.session = null
@@ -835,6 +995,8 @@ export class MockController {
     this.nextPublishingErrors.clear()
     this.persistentSortingErrors.clear()
     this.nextSortingErrors.clear()
+    this.persistentBatchErrors.clear()
+    this.nextBatchErrors.clear()
     this.simulationScenario = 'full'
     this.publishingScenario = 'v2'
     this.publishingNow = null
@@ -843,10 +1005,14 @@ export class MockController {
     this.selectionNow = null
     this.previewScenario = null
     this.previewNow = null
+    this.batchScenario = null
+    this.batchPhase = null
+    this.batchGate = null
     this.dictionaryStore.reset()
     this.simulationStore.reset()
     this.publishingStore.reset()
     this.selectionStore.reset()
     this.previewStore.reset()
+    this.batchStore.reset()
   }
 }
