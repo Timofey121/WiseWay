@@ -13,9 +13,13 @@
 //   (включая читающие POST `search`/`facet`/`queue/query`/`audit/query`) CSRF
 //   не ставится;
 // - `Idempotency-Key` добавляется только операциям с
-//   `#/components/parameters/IdempotencyKey` и только если ключ предоставлен
-//   провайдером (in-memory хранилище — LT-05.2a). Иначе фиктивная
-//   идемпотентность не появляется;
+//   `#/components/parameters/IdempotencyKey` (`publishDictionary`,
+//   `createSortingBatch`, `returnQuarantineItem`). Ключ выдаёт in-memory
+//   `idempotencyStore` и связывает его с телом запроса: повтор того же тела
+//   сохраняет ключ, изменённое тело получает новый. Успех/окончательный
+//   не-retryable отказ освобождают действие (`complete`), сетевой/429/503
+//   исход сохраняет его (`retain`). Остальные операции фиктивного ключа не
+//   получают;
 // - CSRF и ключ идут только в заголовках, не в теле запроса;
 // - `X-Request-ID` ответа передаётся в `onRequestId`;
 // - ответ 401 очищает клиентскую сессию и уведомляет подписчиков
@@ -33,7 +37,12 @@ import createClient, { type Client, type Middleware } from 'openapi-fetch'
 
 import { operationMeta, type OperationMeta } from './generated/operation-meta'
 import type { paths } from './generated/schema'
+import {
+  defaultIdempotencyStore,
+  type IdempotencyStore,
+} from './idempotency'
 import { emitUnauthorized, getCsrfToken } from './session-context'
+import { toTransportError } from './transport-error'
 
 export {
   TransportError,
@@ -86,7 +95,17 @@ export interface CreateApiClientOptions {
   fetch?: (input: Request) => Promise<Response>
   /** Провайдер CSRF-токена; при отсутствии используется `session-context`. */
   csrfTokenProvider?: CsrfTokenProvider
-  /** Провайдер Idempotency-Key для объявленных идемпотентных операций. */
+  /**
+   * In-memory хранилище идемпотентности. При наличии управляет ключом и его
+   * жизненным циклом; при отсутствии используется session-scoped
+   * `defaultIdempotencyStore` (если не задан `idempotencyKeyProvider`).
+   */
+  idempotencyStore?: IdempotencyStore
+  /**
+   * Провайдер Idempotency-Key для объявленных идемпотентных операций. Более
+   * низкий приоритет, чем `idempotencyStore`, и не управляет жизненным циклом
+   * ключа; оставлен для явного переопределения/тестов.
+   */
   idempotencyKeyProvider?: IdempotencyKeyProvider
   /** Получатель безопасного `X-Request-ID` ответа. */
   onRequestId?: RequestIdHandler
@@ -106,26 +125,45 @@ export function findOperationMeta(
 }
 
 /**
- * Читает `error.code` из тела ответа через `Response.clone()`, не расходуя
- * оригинальное тело, которое далее читает `openapi-fetch`. Возвращает `null`,
- * если тела нет, оно не JSON или код отсутствует.
+ * Стабильный action-scope операции из path-параметров (например
+ * `dictionary_id`/`quarantine_id`). Позволяет держать независимые ожидающие
+ * ключи для разных ресурсов одной операции.
  */
-async function readErrorCode(response: Response): Promise<string | null> {
-  try {
-    const body: unknown = await response.clone().json()
-    if (body && typeof body === 'object') {
-      const error = (body as { error?: unknown }).error
-      if (error && typeof error === 'object') {
-        const code = (error as { code?: unknown }).code
-        if (typeof code === 'string') {
-          return code
-        }
-      }
-    }
-  } catch {
-    // Тело отсутствует или не является JSON — код определить нельзя.
+function actionScope(params: { path?: Record<string, unknown> }): string {
+  const path = params.path
+  if (!path) {
+    return ''
   }
-  return null
+  return Object.keys(path)
+    .sort()
+    .map((name) => `${name}=${String(path[name])}`)
+    .join('&')
+}
+
+/**
+ * Читает тело ответа через `Response.clone()`, не расходуя оригинал, который
+ * далее читает `openapi-fetch`. Возвращает `undefined`, если тела нет или оно
+ * не JSON.
+ */
+async function readResponseBody(response: Response): Promise<unknown> {
+  try {
+    return await response.clone().json()
+  } catch {
+    return undefined
+  }
+}
+
+/** Извлекает `error.code` из разобранного тела ответа. */
+function extractErrorCode(body: unknown): string | null {
+  if (!body || typeof body !== 'object') {
+    return null
+  }
+  const error = (body as { error?: unknown }).error
+  if (!error || typeof error !== 'object') {
+    return null
+  }
+  const code = (error as { code?: unknown }).code
+  return typeof code === 'string' ? code : null
 }
 
 /**
@@ -147,10 +185,17 @@ export function createApiClient(options: CreateApiClientOptions): WiseWayApiClie
     throw new Error('fetch недоступен: передайте реализацию fetch')
   }
 
+  // Приоритет: явный store → явный provider → session-scoped store. Явный
+  // provider не управляет жизненным циклом ключа и потому не смешивается с
+  // автоматическим store.
+  const idempotencyStore: IdempotencyStore | undefined =
+    options.idempotencyStore ??
+    (options.idempotencyKeyProvider ? undefined : defaultIdempotencyStore)
+
   const client = createClient<paths>({ baseUrl, fetch: fetchImpl })
 
   const securityMiddleware: Middleware = {
-    onRequest({ request, schemaPath }) {
+    async onRequest({ request, schemaPath, params }) {
       const method = request.method.toUpperCase()
       const meta = findOperationMeta(method, schemaPath)
       const headers = new Headers(request.headers)
@@ -172,9 +217,21 @@ export function createApiClient(options: CreateApiClientOptions): WiseWayApiClie
           headers.delete('X-CSRF-Token')
         }
 
-        const idempotencyKey = meta.idempotencyKey
-          ? options.idempotencyKeyProvider?.(context)
-          : null
+        let idempotencyKey: string | null | undefined = null
+        if (meta.idempotencyKey) {
+          if (idempotencyStore) {
+            // Ключ связывается ровно с телом отправляемого запроса: то же
+            // тело → тот же ключ, изменённое тело → новый ключ.
+            const body = await request.clone().text()
+            idempotencyKey = idempotencyStore.begin(
+              meta.operationId,
+              body,
+              actionScope(params),
+            )
+          } else {
+            idempotencyKey = options.idempotencyKeyProvider?.(context)
+          }
+        }
         if (idempotencyKey) {
           headers.set('Idempotency-Key', idempotencyKey)
         } else {
@@ -188,24 +245,58 @@ export function createApiClient(options: CreateApiClientOptions): WiseWayApiClie
       }
       return new Request(request, init)
     },
-    async onResponse({ response }) {
+    async onResponse({ request, response, schemaPath, params }) {
       const requestId = response.headers.get('X-Request-ID')
       if (requestId) {
         options.onRequestId?.(requestId)
       }
+
+      const meta = findOperationMeta(request.method.toUpperCase(), schemaPath)
+      const tracksIdempotency = Boolean(meta?.idempotencyKey && idempotencyStore)
+
+      // Тело ошибки читаем из клона только когда оно нужно: для различения
+      // 401 `UNAUTHENTICATED` и для решения complete/retain.
+      const errorBody =
+        !response.ok && (response.status === 401 || tracksIdempotency)
+          ? await readResponseBody(response)
+          : undefined
+
       if (response.status === 401) {
         // Различаем недействительную сессию (`UNAUTHENTICATED`) и неверные
-        // учётные данные формы входа (`LOGIN_FAILED`). Тело читаем из клона,
-        // поэтому оригинал остаётся доступен `openapi-fetch`. При нечитаемом
-        // теле код не подтверждён и очистка не выполняется: ложный logout
-        // хуже, чем пропущенный сигнал, который UI всё равно увидит как ошибку.
-        const code = await readErrorCode(response)
-        if (code === 'UNAUTHENTICATED') {
+        // учётные данные формы входа (`LOGIN_FAILED`). При нечитаемом теле код
+        // не подтверждён и очистка не выполняется: ложный logout хуже, чем
+        // пропущенный сигнал, который UI всё равно увидит как ошибку.
+        if (extractErrorCode(errorBody) === 'UNAUTHENTICATED') {
           emitUnauthorized()
         }
       }
+
+      if (meta?.idempotencyKey && idempotencyStore) {
+        const scope = actionScope(params)
+        if (response.ok) {
+          idempotencyStore.complete(meta.operationId, scope)
+        } else {
+          const error = toTransportError({ response, error: errorBody })
+          if (error.retryable) {
+            idempotencyStore.retain(meta.operationId, scope)
+          } else {
+            idempotencyStore.complete(meta.operationId, scope)
+          }
+        }
+      }
+
       // 403 и прочие ошибки не повторяются: возвращаем ответ без изменений,
       // чтобы failure не превратился в success.
+      return undefined
+    },
+    onError({ request, schemaPath, params }) {
+      // Сетевой сбой не проходит через onResponse: ожидающий ключ нужно явно
+      // сохранить, чтобы повтор отправил тот же ключ и тело.
+      const meta = findOperationMeta(request.method.toUpperCase(), schemaPath)
+      if (meta?.idempotencyKey && idempotencyStore) {
+        idempotencyStore.retain(meta.operationId, actionScope(params))
+      }
+      // Возврат `undefined` оставляет исходную ошибку сети проброшенной.
       return undefined
     },
   }

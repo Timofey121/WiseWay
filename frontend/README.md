@@ -104,8 +104,11 @@ setCsrfToken(data.csrf_token) // CSRF-токен живёт только в па
   `#/components/parameters/XCSRFToken`, и только при наличии токена
   (провайдер `csrfTokenProvider` или in-memory `session-context`);
 - `Idempotency-Key` ставится только 3 операциям с
-  `#/components/parameters/IdempotencyKey` и только если ключ предоставлен
-  `idempotencyKeyProvider`; фиктивный ключ не подставляется;
+  `#/components/parameters/IdempotencyKey` (`publishDictionary`,
+  `createSortingBatch`, `returnQuarantineItem`). Ключ выдаёт in-memory
+  `idempotencyStore` и связывает его с телом запроса: повтор того же тела
+  сохраняет ключ, изменённое тело получает новый. Остальным операциям
+  фиктивный ключ не подставляется;
 - CSRF и ключ идут только в заголовках, не в теле;
 - `X-Request-ID` ответа передаётся в `onRequestId`;
 - ответ `401` с кодом `UNAUTHENTICATED` очищает `session-context` и уведомляет
@@ -115,6 +118,45 @@ setCsrfToken(data.csrf_token) // CSRF-токен живёт только в па
 `src/api/session-context.ts` — in-memory держатель CSRF-токена: без
 `localStorage`, `sessionStorage`, cookie и URL; токен меняется при новом входе
 и очищается при logout/`UNAUTHENTICATED`. Секреты и тела запросов не логируются.
+
+### Идемпотентность publish/batch/return
+
+`src/api/idempotency.ts` хранит in-memory состояние идемпотентности трёх
+операций, объявленных в OAS с `Idempotency-Key` (набор берётся из generated
+`operation-meta.ts`, список не хардкодится). Для каждой операции/ресурса
+(стабильный `scope`, например `dictionary_id`) держится одна ожидающая запись
+`{ key, bodyFingerprint }`:
+
+- `begin(operationId, body, scope?)` возвращает прежний UUID, если тело не
+  изменилось (retry/lost response/double submit), и новый — если тело
+  изменилось (новое явное действие) или записи нет. Ключ никогда не уходит с
+  другим телом;
+- `complete(operationId, scope?)` вызывается транспортом на `2xx` и на
+  окончательном не-retryable отказе: следующее действие получит новый ключ;
+- `retain(operationId, scope?)` вызывается на сетевом сбое и `429`/`503`:
+  ожидающая запись сохраняется, повтор отправляет тот же ключ и тело;
+- `clear()` очищает всё состояние. `clearSession()`/`emitUnauthorized()`
+  (`session-context`) вызывают её — logout/401/смена пользователя не оставляют
+  чужой контекст.
+
+Хранятся только UUID и детерминированный отпечаток тела (`fingerprintBody`,
+FNV-1a 64 над стабильной сериализацией); сами тела и секреты не сохраняются и не
+логируются. Состояние ограничено сессией вкладки: без `localStorage`,
+`sessionStorage`, cookie и URL. Транспорт использует session-scoped
+`defaultIdempotencyStore`, если не передан собственный `idempotencyStore`;
+`createIdempotencyStore()` создаёт изолированный экземпляр для тестов. Явный
+`idempotencyKeyProvider` имеет приоритет над store и не управляет жизненным
+циклом ключа.
+
+```ts
+import { createApiClient } from '@/api/transport'
+import { createIdempotencyStore } from '@/api/idempotency'
+
+const api = createApiClient({
+  mode: 'real',
+  idempotencyStore: createIdempotencyStore(), // необязательно: по умолчанию session-scoped store
+})
+```
 
 ### Единая безопасная модель ошибок
 
@@ -182,7 +224,8 @@ frontend/
     api/
       generated/        generated-артефакты (schema.ts, openapi.json,
                         operation-meta.ts) и client.ts
-      session-context.ts  in-memory CSRF/401-состояние
+      session-context.ts  in-memory CSRF/401-состояние и session-scope очистка
+      idempotency.ts      in-memory Idempotency-Key для publish/batch/return
       transport-error.ts  TransportError и безопасный разбор ошибок
       transport.ts        createApiClient: credentials/no-store/CSRF/idempotency
     mocks/              placeholder для schema-valid mocks (WP-06/WP-07)
@@ -190,6 +233,7 @@ frontend/
     App.test.tsx        component smoke-тест
     api/client.test.ts  runtime-проверки запросов клиента A/B/C
     api/transport.test.ts  состав Request, CSRF/Idempotency/401/403/request_id
+    api/idempotency.test.ts  key/body lifecycle, retry/complete, session cleanup
     api/transport-error.test.ts  HTTP/network-ошибки и отсутствие утечек
     api/generated-types.test.ts  type-level проверки generated-схемы
     fixture-imports.test.ts  проверка alias-импорта JSON вне frontend/

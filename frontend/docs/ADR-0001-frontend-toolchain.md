@@ -120,6 +120,15 @@
   generated-типы `components['schemas']['FieldError']`/`ErrorCode`. Транспорт
   различает `401 UNAUTHENTICATED` (очистка сессии) и `401 LOGIN_FAILED`
   (ошибка формы без очистки), читая тело через `Response.clone()`.
+- LT-05.2a (WP-05) добавляет рукописный `src/api/idempotency.ts` —
+  in-memory/session-scoped `IdempotencyStore`, который выдаёт UUID для трёх
+  операций с `#/components/parameters/IdempotencyKey` и связывает ключ с
+  отпечатком тела (`fingerprintBody`, FNV-1a 64 над стабильной сериализацией).
+  Транспорт берёт набор операций из generated `operation-meta.ts` (без
+  хардкода), на `2xx`/не-retryable отказе вызывает `complete`, на
+  сетевом/`429`/`503` исходе — `retain`; `clearSession()`/`emitUnauthorized()`
+  очищают store. Решение §5 не меняется: новых DTO нет, контракт не
+  изменяется, состояние ограничено памятью вкладки.
 
 ## 6. Совместимость с OpenAPI 3.1.1
 

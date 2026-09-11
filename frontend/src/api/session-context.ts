@@ -8,6 +8,12 @@
 // Модуль намеренно не персистит токен: перезагрузка вкладки или новый вход
 // начинают с чистого состояния, а `emitUnauthorized()` сигнализирует слоям
 // приложения об очистке приватного состояния.
+//
+// Единая session-scope очистка включает и in-memory состояние идемпотентности:
+// `clearSession()` освобождает ожидающие `Idempotency-Key` (publish/batch/
+// return), чтобы logout/401/смена пользователя не оставляли чужой контекст.
+
+import { defaultIdempotencyStore } from './idempotency'
 
 let csrfToken: string | null = null
 
@@ -24,11 +30,13 @@ export function setCsrfToken(token: string): void {
 }
 
 /**
- * Очищает клиентское состояние сессии (CSRF-токен). Используется при logout,
- * истечении сессии и смене пользователя.
+ * Очищает клиентское состояние сессии (CSRF-токен и ожидающие
+ * `Idempotency-Key`). Используется при logout, истечении сессии и смене
+ * пользователя.
  */
 export function clearSession(): void {
   csrfToken = null
+  defaultIdempotencyStore.clear()
 }
 
 /**

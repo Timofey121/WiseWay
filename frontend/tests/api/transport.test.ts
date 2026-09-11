@@ -460,12 +460,14 @@ describe('Idempotency-Key: только предоставленный и тол
     })
   }
 
-  it('без провайдера Idempotency-Key отсутствует', async () => {
+  it('без провайдера ключ берётся из session-scoped store', async () => {
     const { api, requests } = setup()
 
     await callCreateSortingBatch(api)
 
-    expect(lastRequest(requests).headers.get('Idempotency-Key')).toBeNull()
+    expect(lastRequest(requests).headers.get('Idempotency-Key')).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    )
   })
 
   it('неидемпотентная мутация не получает Idempotency-Key', async () => {
