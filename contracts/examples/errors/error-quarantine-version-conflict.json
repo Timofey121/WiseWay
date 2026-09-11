@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "QUARANTINE_VERSION_CONFLICT",
+    "message": "Запись карантина изменена. Перечитайте её и повторите возврат.",
+    "request_id": "request-quarantine-demo-1",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

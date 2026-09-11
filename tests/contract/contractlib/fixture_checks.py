@@ -16,7 +16,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from . import batch_outcomes, batch_scenarios, dictionary_lifecycle, preview_preflight, queue_selections, rule_expectations, search_expectations, synthetic
+from . import batch_outcomes, batch_scenarios, dictionary_lifecycle, preview_preflight, quarantine_returns, queue_selections, rule_expectations, search_expectations, synthetic
 from .semantic import validate_fixture
 
 
@@ -122,6 +122,7 @@ def run_fixture_checks(report, registry, root: Optional[Path] = None) -> None:
     _run_preview_preflight(report, registry, base)
     _run_batch_outcomes(report, registry, base)
     _run_batch_scenarios(report, registry, base)
+    _run_quarantine_returns(report, registry, base)
 
 
 def _run_search_expectations(report, registry, base: Path) -> None:
@@ -625,6 +626,68 @@ def _run_batch_scenarios(report, registry, base: Path) -> None:
 
     try:
         generated = batch_scenarios.generated_examples(expectations, context)
+    except Exception as exc:  # noqa: BLE001
+        examples_check.add(f"cannot regenerate examples: {type(exc).__name__}: {exc}")
+        return
+    for relative, payload in generated.items():
+        target = base / relative
+        if not target.is_file():
+            examples_check.add(f"generated example is missing: {relative}")
+            continue
+        try:
+            committed = synthetic.load_json(target)
+        except Exception as exc:  # noqa: BLE001
+            examples_check.add(f"cannot parse {relative}: {type(exc).__name__}: {exc}")
+            continue
+        if committed != payload:
+            examples_check.add(f"committed example differs from regeneration: {relative}")
+
+
+def _run_quarantine_returns(report, registry, base: Path) -> None:
+    """LT-03.5a: literal quarantine/return lifecycle oracle and generated examples."""
+    oracle_check = report.check(
+        "FIX-QR-001",
+        "Quarantine/return expectations materialize to schema-valid literal "
+        "payloads and satisfy the finite confirmed-record/return/conflict invariants",
+    )
+    request_check = report.check(
+        "FIX-QR-002",
+        "Return requests are schema-classified and declared negative mutations are "
+        "rejected by the consistency validators",
+    )
+    examples_check = report.check(
+        "FIX-QR-003",
+        "Generated public quarantine/return examples match the committed files",
+    )
+    try:
+        expectations = quarantine_returns.load_expectations(base)
+        context = quarantine_returns.build_context(base, expectations)
+    except Exception as exc:  # noqa: BLE001 - report unreadable expectations
+        oracle_check.add(
+            f"cannot load quarantine/return expectations: {type(exc).__name__}: {exc}"
+        )
+        return
+
+    for message in quarantine_returns.expectation_errors(expectations, context):
+        oracle_check.add(message)
+    for message in quarantine_returns.payload_errors(expectations, context, registry):
+        oracle_check.add(message)
+    for message in quarantine_returns.link_errors(expectations, context):
+        oracle_check.add(message)
+    for message in quarantine_returns.schema_rejection_errors(expectations, registry):
+        request_check.add(message)
+    for message in quarantine_returns.mutation_errors(expectations, context, registry):
+        request_check.add(message)
+
+    report.quarantine_records = len(expectations["quarantine_states"])
+    report.quarantine_scenarios = len(expectations["scenarios"])
+    report.quarantine_replays = len(expectations["replays"])
+    report.quarantine_audit = len(expectations["audit_expectations"])
+    report.quarantine_mutations = len(expectations["mutations"])
+    report.quarantine_links = len(expectations["links"])
+
+    try:
+        generated = quarantine_returns.generated_examples(expectations, context)
     except Exception as exc:  # noqa: BLE001
         examples_check.add(f"cannot regenerate examples: {type(exc).__name__}: {exc}")
         return

@@ -88,6 +88,12 @@ class Report:
     scenario_audit: int = 0
     scenario_mutations: int = 0
     scenario_links: int = 0
+    quarantine_records: int = 0
+    quarantine_scenarios: int = 0
+    quarantine_replays: int = 0
+    quarantine_audit: int = 0
+    quarantine_mutations: int = 0
+    quarantine_links: int = 0
 
     def check(self, check_id: str, description: str) -> CheckResult:
         result = CheckResult(check_id=check_id, description=description)

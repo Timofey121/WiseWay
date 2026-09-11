@@ -1059,7 +1059,7 @@
   ],
   "inventory": {
     "kind": "logical-inventory-expectation",
-    "note": "No file is written or read by this fixture. Content tags are deterministic logical labels derived from the fixture seed, company and item id; they are not measured filesystem hashes and must not be presented as proof. The inventory records only describe what a conforming backend must preserve or leave untouched.",
+    "note": "No file is written or read by this fixture. Content tags are deterministic logical labels derived only from the declared tag prefix and the item id; they are not measured filesystem hashes and must not be presented as proof. The inventory records only describe what a conforming backend must preserve or leave untouched.",
     "no_file_writes": true,
     "content_recipe": {
       "algorithm": "logical-content-tag",

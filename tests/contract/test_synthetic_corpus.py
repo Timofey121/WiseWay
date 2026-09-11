@@ -541,7 +541,10 @@ class NegativeFixtureTests(CorpusFixtureMixin, unittest.TestCase):
         self.assertIn("FIX-SCN-001", passed)
         self.assertIn("FIX-SCN-002", passed)
         self.assertIn("FIX-SCN-003", passed)
-        self.assertEqual(122, report.fixtures_validated)
+        self.assertIn("FIX-QR-001", passed)
+        self.assertIn("FIX-QR-002", passed)
+        self.assertIn("FIX-QR-003", passed)
+        self.assertEqual(134, report.fixtures_validated)
         self.assertEqual(164, report.corpus_files)
         self.assertEqual(8, report.lifecycle_fixtures)
         self.assertEqual(51, report.search_scenarios)
@@ -582,6 +585,12 @@ class NegativeFixtureTests(CorpusFixtureMixin, unittest.TestCase):
         self.assertEqual(18, report.scenario_audit)
         self.assertEqual(23, report.scenario_mutations)
         self.assertEqual(41, report.scenario_links)
+        self.assertEqual(2, report.quarantine_records)
+        self.assertEqual(11, report.quarantine_scenarios)
+        self.assertEqual(2, report.quarantine_replays)
+        self.assertEqual(2, report.quarantine_audit)
+        self.assertEqual(22, report.quarantine_mutations)
+        self.assertEqual(21, report.quarantine_links)
 
 
 if __name__ == "__main__":

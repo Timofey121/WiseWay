@@ -1243,3 +1243,146 @@ git diff --check
   restart intent, containment-кодов и audit-связей), затем LT-03.5a (quarantine/
   return) и LT-03.5b (audit) на основе audit-ожиданий этого leaf.
 - **Блокирующая зависимость:** нет.
+
+# LT-03.5a — эталон карантина и возврата
+
+Дополнение фиксирует результат leaf LT-03.5a (parent LT-03.5, WP-03, Epic E-01).
+**Status:** IN_PROGRESS (публикация отложена D-06). Это документарное дополнение
+закрывает единственное BLOCKING-замечание FE §7 handoff; код/данные не менялись,
+полный прогон не повторялся.
+
+## Задача и основание
+
+- **Цель:** конечный, внутренне связанный эталон подтверждённого карантина и
+  ручного возврата поверх фактического исхода LT-03.4a, пригодный для LT-03.5b
+  (audit) и финального аудита.
+- **Основание:** AGENTS; FRONTEND_BACKLOG LT-03.5/LT-03.5a; D-03/D-06; API
+  §2/9/10/11; TZ FILE-07/QUEUE-01/AUD-01/02; QA §4/8; MATRIX Q-029 (return)/Q-038/
+  Q-043; OAS `QuarantineItem`/`QuarantinePage`/`QuarantineReturnRequest`/
+  `QuarantineReturnResponse`/`QueueItem`/`ErrorResponse`/`AuditEvent`;
+  `fixtures/synthetic/batch_outcomes.json`.
+
+## Версия, seed и контрольная сумма
+
+- OAS `info.version = 1.0.0`; `contract_version = 1.0.0`.
+- `fixture_set = wiseway-quarantine-returns`, `version = 1.0.0`,
+  `seed = wiseway-demo-seed-2031`, `corpus_version = 1.2.0` (корпус не менялся).
+- `content_hash(quarantine_returns.json) = 301486835a04079e33520a182087092a61c6f358beea5b47093652d9ec5dbccf`
+  (совпадает с `manifest.checksum.fixtures["quarantine-returns"]`).
+
+## Изменённые/добавленные файлы
+
+| Файл | Характер |
+|---|---|
+| `fixtures/synthetic/quarantine_returns.json` | новый эталон: 2 записи карантина, 11 сценариев, 2 replay, 7 error, 2 audit-дескриптора, 21 link, 22 мутации, логический `return_inventory`, coverage Q-029/038/043 |
+| `contracts/examples/quarantine/*.json` | 5 публичных `QuarantineItem`/`QuarantinePage`/`QuarantineReturnRequest`/`QuarantineReturnResponse` |
+| `contracts/examples/errors/error-quarantine-*.json`, `error-original-path-occupied.json` | 7 публичных `ErrorResponse` |
+| `tests/contract/contractlib/quarantine_returns.py` | загрузчик/материализатор/валидатор + `--write-examples` |
+| `tests/contract/test_quarantine_returns.py` | 52 теста |
+| `fixtures/synthetic/batch_outcomes.json` | одобренная точечная правка `inventory.note` |
+| `fixtures/synthetic/manifest.json` | fixture `quarantine-returns`, 12 examples, checksums |
+| `tests/contract/contractlib/fixture_checks.py` | FIX-QR-001/002/003 |
+| `tests/contract/contractlib/report.py`, `__init__.py`, `verify_contract.py` | счётчики/экспорт/строка отчёта |
+| `tests/contract/test_synthetic_corpus.py` | 122→134 examples, FIX-QR и счётчики |
+| `README.md` | раздел LT-03.5a и команда подготовки |
+
+OAS, `contracts/semantics.md`, control plane, backlog и backend/UI **не
+изменялись**.
+
+## Что именно зафиксировано
+
+- **Подтверждённая запись** `quarantine-atlas-batch-tech-quarantine` выводится из
+  фактического LT-03.4a `batch-atlas-technical`/`batch-tech-quarantine`
+  `QUARANTINED`/`TECHNICAL_ERROR`: item, `source_attempt_id`
+  `attempt-batch-atlas-technical-batch-tech-quarantine`, подтверждённый
+  `location` (`_quarantine/atlas/<attempt_id>/…`), `original_location` и
+  `filename`. `RECOVERY_REQUIRED`-исходы той же партии
+  (`batch-tech-recovery-unknown/known`) в подтверждённый список не входят.
+- **Две записи с одним `quarantine_id` — альтернативные наблюдения** одного
+  предмета: revision 1 (`can_return=true`, `recovery_operation_id=null`) и
+  revision 3 (`can_return=false`, зарегистрированный
+  `recovery_operation_id=return-atlas-batch-tech-quarantine-recovery`). Это
+  разные состояния/сценарии, а не две одновременные записи в одном списке.
+- **Успех** `QR-RETURN-SUCCESS`: 200, `return_operation_id`
+  `return-atlas-batch-tech-quarantine`, `QueueItem` `WAITING_READY`,
+  `selectable=false`, `active_attempt_id=null`, `reason_code=null`, без
+  автосортировки/нового batch/attempt, `source` — исходный путь, `filename` —
+  basename. `source_attempt_id` и `operation_id` согласованы для audit.
+- **Конфликты:** comment 0/501 → 422 `VALIDATION_ERROR` (схемно невалидно);
+  устаревшая revision → 409 `QUARANTINE_VERSION_CONFLICT`; занятый исходный путь
+  → 409 `ORIGINAL_PATH_OCCUPIED` (объекты сохранны, переноса нет); неизвестный ID
+  → 404 `NOT_FOUND`; уже возвращённая запись с новым ключом → 409 `INVALID_STATE`;
+  неоднозначный возврат → 409 `RECOVERY_REQUIRED` с непустым
+  `error.operation_id`, `can_return=false` с тем же `recovery_operation_id`, без
+  выдуманного успешного размещения (`actual_placement=null`).
+- **Идемпотентность:** повтор того же ключа/пользователя/тела возвращает прежний
+  успех или зарегистрированный recovery без второго перемещения, несмотря на
+  изменившуюся revision; другое тело → 409 `IDEMPOTENCY_KEY_REUSED`; та же строка
+  ключа у другого пользователя — отдельный scope (409 `INVALID_STATE` по текущему
+  состоянию, не глобальный конфликт ключа).
+- **`can_return`** — серверный флаг стабильности OAS, не изобретённое право/роль;
+  `false` только вместе с зарегистрированной recovery-операцией.
+- **Audit-дескрипторы** `AUD-QR-RETURNED-SUCCESS`/`AUD-QR-RETURN-RECOVERY` с
+  `evidence=false`: ожидаемые ID для LT-03.5b, не записанное audit evidence.
+- **`return_inventory`** — логическое ожидание (без записи/чтения файлов):
+  успешный возврат убирает файл из карантина и восстанавливает исходный путь с
+  сохранением содержимого; неоднозначный возврат не заявляет ни одну сторону;
+  prior batch неизменён.
+- **Возврат в исходный `Archive/...` путь** — только изолированная синтетическая
+  логическая конфигурация этого эталона, а не описание продуктовых настроек или
+  реального sandbox.
+
+## V-S: ранее выполненные команды и фактические результаты
+
+Приведённые ниже прогоны были выполнены при реализации leaf **до** данного
+документарного дополнения; для правки только документации они **не
+повторялись**. Windows, Python 3.14.7, `.venv-contract`:
+
+```powershell
+.\.venv-contract\Scripts\python.exe tests\contract\verify_contract.py
+.\.venv-contract\Scripts\python.exe -m unittest tests.contract.test_quarantine_returns
+.\.venv-contract\Scripts\python.exe -m unittest discover -s tests\contract -p "test_*.py"
+.\.venv-contract\Scripts\python.exe -m pip check
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\quarantine_returns.py --write-examples
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\synthetic.py --update-checksums
+git diff --check
+```
+
+- `verify_contract.py` → `RESULT: PASS (48 checks, 0 failures)`, `Examples: 127`,
+  `Fixtures: 134 public example(s), 164 corpus file(s) and 8 lifecycle payload(s)`,
+  `Quarantine/return expectations: 2 record(s), 11 scenario(s), 2 replay(s),
+  2 audit descriptor(s), 22 mutation(s)`; FIX-QR-001/002/003 — PASS.
+- `-m unittest tests.contract.test_quarantine_returns` → `Ran 52 tests ... OK`.
+- `-m unittest discover -s tests\contract` → `Ran 500 tests ... OK` (636.156 s).
+- `-m pip check` → `No broken requirements found.`
+- `--write-examples` и `--update-checksums` идемпотентны; повторный запуск не
+  меняет рабочее дерево.
+- `git diff --check` → только предупреждения LF/CRLF, пробельных ошибок нет.
+
+## Repair: документарное закрытие FE §7
+
+Reviewer подтвердил все code/data AC и прогоны (runner 48 / full 500 / targeted
+52) и оставил единственное BLOCKING-замечание — отсутствие этого раздела
+handoff. Repair **docs-only**: код, fixture, examples, manifest/checksums и тесты
+не менялись; полный прогон для правки только документации не повторялся, что
+соответствует V-H (проверка полноты/ссылок/границ handoff). `git diff --check`
+для документарной правки достаточно.
+
+## Ограничения и явно не выполненное
+
+- Это **S**-уровень: схемы/статические проверки и литеральный эталон.
+  **M (mock/UI), A (реальный API/ФС), E (E2E) — NOT_RUN.**
+- Реальный возврат, файловая безопасность, карантин, checksums, TTL-часы, гонки,
+  idempotency-store и recovery не выполнялись и не заявляются; `return_inventory`
+  — логический контракт, физическая ФС не создавалась и не читалась.
+- Audit-дескрипторы — ожидания, а не записанные события; `evidence=false`.
+- Backend/UI/control plane/backlog не затрагивались. Staging/commit/push worker не
+  выполняет (D-06).
+
+## Статус и следующий владелец
+
+- **Следующий владелец:** LT-03.5b — связанный audit по dictionary/batch/attempt/
+  return событиям, BUSINESS/SYSTEM/nullable actor/заблокированные авторы,
+  фильтры/UTC день/cursor/new events, безопасные request/operation/
+  source_attempt IDs; использует audit-ожидания LT-03.4b и LT-03.5a.
+- **Блокирующая зависимость:** нет.

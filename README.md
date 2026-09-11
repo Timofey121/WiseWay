@@ -427,3 +427,59 @@ attempt IDs, порядок, counts, логический инвентарь и 
 `1.2.0` не меняется. Fault-точки, барьеры и durable intent — логические
 требования, а не live evidence; реальные гонки, FS и перезапуск проверяет
 backend/QA.
+
+## Эталон карантина и возврата (WP-03, LT-03.5a)
+
+`fixtures/synthetic/quarantine_returns.json` — конечный, внутренне связанный
+эталон ручного возврата из карантина поверх фактического исхода LT-03.4a:
+
+- **Подтверждённая запись** выводится из реального
+  `batch-atlas-technical`/`batch-tech-quarantine` `QUARANTINED`/`TECHNICAL_ERROR`:
+  `item_id`, `source_attempt_id`, подтверждённое `location` (каталог
+  `_quarantine/atlas/<attempt_id>/`), исходный `original_location` и `filename`
+  совпадают с LT-03.4a; `can_return=true`, `recovery_operation_id=null`.
+  `RECOVERY_REQUIRED`-исходы той же партии (`batch-tech-recovery-unknown`,
+  `batch-tech-recovery-known`) в подтверждённый список карантина **не входят**;
+- **успешный возврат** (Q-038): актуальная `expected_revision`, комментарий
+  1…500 и UUID `Idempotency-Key`; ответ 200 с `return_operation_id` и
+  `QueueItem` `WAITING_READY`, `selectable=false`, без `active_attempt_id`,
+  без автосортировки, без нового batch/attempt; `source` — исходный входящий
+  путь, `filename` — basename источника;
+- **безопасные конфликты** (Q-038): пустой/501-символьный комментарий — схемно
+  невалидный запрос → 422 `VALIDATION_ERROR`; устаревшая revision → 409
+  `QUARANTINE_VERSION_CONFLICT`; занятый исходный путь → 409
+  `ORIGINAL_PATH_OCCUPIED` без перемещения и с сохранением объектов; неизвестный
+  ID → 404 `NOT_FOUND`; уже возвращённая запись с новым ключом → 409
+  `INVALID_STATE`; неоднозначный возврат → 409 `RECOVERY_REQUIRED` с непустым
+  `error.operation_id`, `can_return=false` с тем же `recovery_operation_id` и без
+  выдуманного успешного размещения;
+- **идемпотентность** (Q-029): повтор того же ключа/пользователя/тела после
+  смены revision возвращает прежний успех или зарегистрированный recovery без
+  второго перемещения; другое тело при том же ключе → 409
+  `IDEMPOTENCY_KEY_REUSED`; та же строка ключа у другого пользователя — отдельный
+  scope без глобального конфликта ключа;
+- **`can_return`** — серверный флаг стабильности из OAS, а не изобретённое
+  право/роль; `false` появляется только вместе с зарегистрированной recovery
+  операцией;
+- **audit-дескрипторы** для LT-03.5b: `QUARANTINE_RETURNED`/`RECOVERY_REQUIRED` с
+  `operation_id` (`return_operation_id` / зарегистрированная операция) и
+  `source_attempt_id`, связанным с исходной попыткой сортировки; это ожидаемые
+  ID, а не записанное audit evidence.
+
+`tests/contract/contractlib/quarantine_returns.py` — материализатор по
+литеральным ID без return-executor, recovery-движка, файловых операций и
+хранилища ключей. Проверки `FIX-QR-001/002/003` валидируют схемы, confirmed
+link к LT-03.4a, исключение recovery-исходов, crosslinks, классификацию
+запросов и отклоняют 22 негативные мутации. Документированная команда
+подготовки:
+
+```powershell
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\quarantine_returns.py --write-examples
+```
+
+Сгенерированные примеры (2 `QuarantineItem`, `QuarantinePage`,
+`QuarantineReturnRequest`, `QuarantineReturnResponse` и 7 `ErrorResponse`) лежат
+в `contracts/examples/quarantine/` и `contracts/examples/errors/` и привязаны в
+`manifest.json`. Версия корпуса `1.2.0` не меняется. Реальный возврат,
+файловая безопасность, recovery и идемпотентность на сервере здесь не
+выполняются и не заявляются; это S-уровень.

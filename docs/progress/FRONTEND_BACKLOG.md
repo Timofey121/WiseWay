@@ -191,7 +191,7 @@ WP-02 local package completion: `a2095d1`, `7c2b5e5`; полный WORK_PACKAGE 
 | LT-03.4a | LT-03.4 | IN_PROGRESS | LT-03.3b | Конечные Batch всех состояний и Outcome/reasons, exact counts/attempts/placements, partial/known+unknown recovery, collisions/manual review/quarantine; expected inventory/hash evidence contract без FS исполнения | V-S/V-H Q-031…037/039; каждый enum/reason, selection links |
 | LT-03.4b | LT-03.4 | IN_PROGRESS | LT-03.4a | Сценарии accepted lost response/idempotency, claim overlap двух акторов, source change, logout/reload continuation, поздняя коллизия/перестановка IDs, restart в трёх точках/containment; finite expected attempts/events/placements | V-S/V-H Q-028…030/032/040/044; не concurrency/FS evidence |
 | LT-03.5a | LT-03.5 | IN_PROGRESS | LT-03.2b, LT-03.4b | Confirmed quarantine/can_return/recovery, возврат WAITING_READY, все return conflicts/comment/revision/key retry, exact source_attempt/return_operation/error.operation связи | V-S/V-H Q-029 return/038, без auto sorting |
-| LT-03.5b | LT-03.5 | TODO | LT-03.5a | Связанный audit: все dictionary/batch/attempt/return events, BUSINESS/SYSTEM/nullable actor/blocked actor list, фильтры/UTC день/cursor/new events, безопасные request/operation/source_attempt IDs, отсутствие business read событий | V-S/V-H Q-041/043, сквозная сверка статических fixtures |
+| LT-03.5b | LT-03.5 | IN_PROGRESS | LT-03.5a | Связанный audit: все dictionary/batch/attempt/return events, BUSINESS/SYSTEM/nullable actor/blocked actor list, фильтры/UTC день/cursor/new events, безопасные request/operation/source_attempt IDs, отсутствие business read событий | V-S/V-H Q-041/043, сквозная сверка статических fixtures |
 
 LT-03.1a local completion: полный reviewer PASS после repair 2; исправлены CRLF hash portability, root/parent-scoped marker IDs, lifecycle validation и path/raw-case consistency. Orchestrator: runner 26 checks PASS, 127 embedded + 15 public examples, 162 corpus files, 8 lifecycle payloads; unittest 114 OK, pip check PASS. Fixture version 1.1.1, seed `wiseway-demo-seed-2031`; handoff `docs/team/WP-03_SYNTHETIC_HANDOFF.md`. M/A/E NOT_RUN. Только локальный checkpoint, формальная публикация D-06 отложена.
 
@@ -208,6 +208,8 @@ LT-03.3b local completion: LEAF reviewer PASS без repair; независим�
 LT-03.4a local completion: LEAF reviewer PASS; orchestrator runner42 PASS/targeted50 OK; reviewer full392 OK (341.657s).7 batches/9 pages/260 outcomes/7 summaries/23mutations,120 public examples; все5 BatchState/8OutcomeState/9reasons. Inventory — только логические ожидания, не измеренные hash/FS evidence. Полная CLI остаётся exhaustive; оптимизированы только OAS-corruption unit runs. Локальный checkpoint D-06.
 
 LT-03.4b local completion: LEAF reviewer PASS; orchestrator runner45 PASS/targeted56 OK; reviewer full448 OK (497.789s).12 scenarios/4 replays/9 containment cases/18 audit expectations/23mutations,122 public examples. Родитель LT-03.4 технически завершён. Нет live FS/claim/restart evidence; M/A/E NOT_RUN. Локальный checkpoint D-06.
+
+LT-03.5a local completion: LEAF re-review PASS после docs-only repair1 (добавлен обязательный FE§7 handoff). Orchestrator runner48 PASS/targeted52 OK; reviewer full500 OK (636.846s) до неизменяющего code/data handoff.2 quarantine records/11scenarios/2replays/2audit descriptors/22mutations,134 public examples. Source Archive — отдельная synthetic world configuration; не факт настроенного сервера. Только local checkpoint D-06, M/A/E NOT_RUN.
 
 ## EPIC E-02 — Toolchain, generated client, транспорт и mocks
 

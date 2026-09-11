@@ -3,7 +3,7 @@
   "version": "1.2.0",
   "seed": "wiseway-demo-seed-2031",
   "contract_version": "1.0.0",
-  "generated_by": "corpus: tests/contract/contractlib/synthetic.py (deterministic; no randomness); search/error examples: tests/contract/contractlib/search_expectations.py --write-examples (from literal expectations); rule/target examples: tests/contract/contractlib/rule_expectations.py --write-examples (from literal expectations); dictionary lifecycle examples: tests/contract/contractlib/dictionary_lifecycle.py --write-examples (from literal expectations); queue/selection examples: tests/contract/contractlib/queue_selections.py --write-examples (from literal expectations); preview/preflight examples: tests/contract/contractlib/preview_preflight.py --write-examples (from literal expectations); batch/outcome examples: tests/contract/contractlib/batch_outcomes.py --write-examples (from literal expectations); operational scenario examples: tests/contract/contractlib/batch_scenarios.py --write-examples (from literal expectations)",
+  "generated_by": "corpus: tests/contract/contractlib/synthetic.py (deterministic; no randomness); search/error examples: tests/contract/contractlib/search_expectations.py --write-examples (from literal expectations); rule/target examples: tests/contract/contractlib/rule_expectations.py --write-examples (from literal expectations); dictionary lifecycle examples: tests/contract/contractlib/dictionary_lifecycle.py --write-examples (from literal expectations); queue/selection examples: tests/contract/contractlib/queue_selections.py --write-examples (from literal expectations); preview/preflight examples: tests/contract/contractlib/preview_preflight.py --write-examples (from literal expectations); batch/outcome examples: tests/contract/contractlib/batch_outcomes.py --write-examples (from literal expectations); operational scenario examples: tests/contract/contractlib/batch_scenarios.py --write-examples (from literal expectations); quarantine/return examples: tests/contract/contractlib/quarantine_returns.py --write-examples (from literal expectations)",
   "checksum": {
     "algorithm": "sha256",
     "canonicalization": "json.dumps(parse(content), sort_keys=True, separators=(',', ':'), ensure_ascii=False)",
@@ -131,17 +131,30 @@
       "batch-atlas-technical": "f490e3e54dedcf84597b1b4249ba06089f91ba550f7961b5defe1c3dd682bd00",
       "batch-history-atlas-page1": "13b37708c3eb4ee196e2a9f8914136557cc7fc9cf685ec97496311f91241796d",
       "batch-overlap-winner": "cd47d939d71f29e050dcc1e80ba5d7331c75e25cb46b37e2f6f67b286eaa72d7",
-      "batch-overlap-loser": "2d71492a60b0b003155df64d5b7736a6ec2338746c1e8cae0ad4a23de00cd5b0"
+      "batch-overlap-loser": "2d71492a60b0b003155df64d5b7736a6ec2338746c1e8cae0ad4a23de00cd5b0",
+      "quarantine-item-atlas-technical": "063281f516341d01ed5ebbf77eac8b18a0bbe2421e7a8c19e88654515f2a88c7",
+      "quarantine-item-atlas-ambiguous": "c3d0c65a49277017920c50aab65943d271a2da1f20ea354c9e065cd79b4a99b7",
+      "quarantine-list-atlas": "1c0fe57a1d4d04264c4056d4fa7189eefa2cf87cf49e1f6672b9133b43c2e41c",
+      "quarantine-return-request": "c39663e859df00b6c8f3197944e9ffa1097eb06a4a8188fccaf8eec0850063c4",
+      "quarantine-return-response": "615c233a1f5ef780e7c762f4c30428ec06c02cf92083b30dd414368a19eb24ec",
+      "error-quarantine-comment-validation": "025fee1fcd796a9a7d0c886f20a9fde6d15d8f46101556ee35b283a32fec0848",
+      "error-quarantine-version-conflict": "f5a1022e554e6abb3668ca175ec7d7a43be92f61f1829170f87777edeec44508",
+      "error-original-path-occupied": "52281e8b201c9dac95ab84fc0b2099826e3f4094c1366af16d87928606284e57",
+      "error-quarantine-not-found": "6c072b5ed5a3c6c207b5e9388f7829e42ecb44a2aceb168308377ed6215a4ce1",
+      "error-quarantine-invalid-state": "73e6c53a4115e6fcdf0eec28c38f1631b5610e0451f1dc74d41e42e8ff1a1f48",
+      "error-quarantine-recovery-required": "36dec67a4ad97ccaf79e711bd90e6bb3280467c580f15f5680e16cfc8c397222",
+      "error-quarantine-idempotency-key-reused": "57b674ec4a379ad27a9faf551abd2c5eced95597d4167700cc1b50b56549ce1c"
     },
-    "combined": "d260c45954d07e21a52ab47bee29f3e9f752049a45127b1009e97fada383d43c",
+    "combined": "6245e8c757111762e76ca6931e7dde1baf0d246a86629bc6fd43f4e875c19f50",
     "fixtures": {
       "search-expectations": "0910c9bbeb54eaba159105e4d060cd2ca06c7d71f0459946f220886f22751c1b",
       "rule-expectations": "c3577511741d2611c4e951b0e49f5a3a458642d9df17b627f1f60107d2bf74ac",
       "dictionary-lifecycle": "d6bf6fa32cd183a033d65790afd95d7e7d5a4d0d1244156f0051275fce489e9c",
       "queue-selections": "328b828fbc429ca924619157c9f73cb5a7f5f836a4a9f86f149d3173039b8e90",
       "preview-preflight": "4fac930e3441e1bb3e2bf37e6f81f66564f3fccfe241c08154642350b8050883",
-      "batch-outcomes": "c8dc34e594c37ee95ce915de2e08c9e377e6292015c105931f7938296edee0da",
-      "batch-scenarios": "91a827e56da9e5ea41bdd478b647c08df46941237076b2ab5e9785d353793538"
+      "batch-outcomes": "1d25047fd0d13dca8a57c8a3094f50a69bf57ce1cd06c054bc5f3d17c1aecfcb",
+      "batch-scenarios": "91a827e56da9e5ea41bdd478b647c08df46941237076b2ab5e9785d353793538",
+      "quarantine-returns": "301486835a04079e33520a182087092a61c6f358beea5b47093652d9ec5dbccf"
     }
   },
   "corpus": {
@@ -191,6 +204,12 @@
       "file": "fixtures/synthetic/batch_scenarios.json",
       "schema": null,
       "description": "LT-03.4b literal operational retry/overlap/restart scenario oracle: idempotent replay after lost response and after dependency expiry, modified-body 409, per-user key scope, new-key manual retry, two-actor claim overlap, source change before/after acceptance, logout/reload continuation, late target, reversed duplicate target, three restart points and Q-044 containment, with expected batch/attempt IDs, outcomes, placements and audit phase/action IDs; materialized by contractlib.batch_scenarios without a matcher, executor, recovery engine or concurrency primitive."
+    },
+    {
+      "id": "quarantine-returns",
+      "file": "fixtures/synthetic/quarantine_returns.json",
+      "schema": null,
+      "description": "LT-03.5a literal quarantine/return lifecycle oracle: the confirmed LT-03.4a QUARANTINED outcome and its frozen source attempt/location, the return success as WAITING_READY/selectable=false/no active attempt/no autosort with the original source, every safe conflict (comment length 422, stale revision 409 QUARANTINE_VERSION_CONFLICT, occupied original path 409 ORIGINAL_PATH_OCCUPIED, unknown id 404 NOT_FOUND, already returned 409 INVALID_STATE, ambiguous 409 RECOVERY_REQUIRED with a registered operation_id), idempotent key/body/user replays without a second move, the per-user key scope and the OAS can_return stability semantics, plus audit descriptors for LT-03.5b; materialized by contractlib.quarantine_returns without a return executor, recovery engine, filesystem writer or idempotency store."
     }
   ],
   "examples": [
@@ -931,6 +950,78 @@
       "schema": "#/components/schemas/Batch",
       "file": "contracts/examples/sorting/batch-overlap-loser.json",
       "description": "LT-03.4b: overlap loser batch with SKIPPED/ALREADY_PROCESSING for the claimed shared item and a sorted independent safe item."
+    },
+    {
+      "id": "quarantine-item-atlas-technical",
+      "schema": "#/components/schemas/QuarantineItem",
+      "file": "contracts/examples/quarantine/quarantine-item-atlas-technical.json",
+      "description": "LT-03.5a: confirmed quarantine record derived from the LT-03.4a QUARANTINED outcome."
+    },
+    {
+      "id": "quarantine-item-atlas-ambiguous",
+      "schema": "#/components/schemas/QuarantineItem",
+      "file": "contracts/examples/quarantine/quarantine-item-atlas-ambiguous.json",
+      "description": "LT-03.5a: ambiguous return record with can_return=false and a registered recovery_operation_id."
+    },
+    {
+      "id": "quarantine-list-atlas",
+      "schema": "#/components/schemas/QuarantinePage",
+      "file": "contracts/examples/quarantine/quarantine-list-atlas.json",
+      "description": "LT-03.5a: confirmed quarantine list containing only the QUARANTINED outcome."
+    },
+    {
+      "id": "quarantine-return-request",
+      "schema": "#/components/schemas/QuarantineReturnRequest",
+      "file": "contracts/examples/quarantine/quarantine-return-request.json",
+      "description": "LT-03.5a: valid return request with the current revision and a 1..500 comment."
+    },
+    {
+      "id": "quarantine-return-response",
+      "schema": "#/components/schemas/QuarantineReturnResponse",
+      "file": "contracts/examples/quarantine/quarantine-return-response.json",
+      "description": "LT-03.5a: successful return response with a WAITING_READY, non-selectable QueueItem and the original source."
+    },
+    {
+      "id": "error-quarantine-comment-validation",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-quarantine-comment-validation.json",
+      "description": "LT-03.5a: 422 VALIDATION_ERROR for an out-of-range return comment."
+    },
+    {
+      "id": "error-quarantine-version-conflict",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-quarantine-version-conflict.json",
+      "description": "LT-03.5a: 409 QUARANTINE_VERSION_CONFLICT for a stale expected_revision."
+    },
+    {
+      "id": "error-original-path-occupied",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-original-path-occupied.json",
+      "description": "LT-03.5a: 409 ORIGINAL_PATH_OCCUPIED without moving anything."
+    },
+    {
+      "id": "error-quarantine-not-found",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-quarantine-not-found.json",
+      "description": "LT-03.5a: 404 NOT_FOUND for an unknown quarantine id."
+    },
+    {
+      "id": "error-quarantine-invalid-state",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-quarantine-invalid-state.json",
+      "description": "LT-03.5a: 409 INVALID_STATE for an already returned record with a new key."
+    },
+    {
+      "id": "error-quarantine-recovery-required",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-quarantine-recovery-required.json",
+      "description": "LT-03.5a: 409 RECOVERY_REQUIRED with the registered operation_id."
+    },
+    {
+      "id": "error-quarantine-idempotency-key-reused",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-quarantine-idempotency-key-reused.json",
+      "description": "LT-03.5a: 409 IDEMPOTENCY_KEY_REUSED for the same key with a different body."
     }
   ]
 }
