@@ -5,8 +5,8 @@
 generated API-артефакты из единственного публичного OAS, базовый
 request/session security transport (WP-05) и контрактные mocks
 bootstrap/session/config, golden-поиска (WP-06) и
-targets/dictionaries/симуляции/публикации/очереди/выбора (WP-07,
-LT-07.1a/LT-07.1b/LT-07.1c/LT-07.2a).
+targets/dictionaries/симуляции/публикации/очереди/выбора/preview (WP-07,
+LT-07.1a/LT-07.1b/LT-07.1c/LT-07.2a/LT-07.2b).
 Продуктовые экраны и навигация появятся в следующих leaf-задачах (EPIC E-02,
 WP-07).
 
@@ -691,6 +691,70 @@ owner/expiry/unknown снимка, 503 = `SERVICE_UNAVAILABLE` (никогда
 `SEARCH_UNAVAILABLE`), per-operation ограничение managed-кодов, 401/403/404/422,
 управляемые ошибки и `reset()`.
 
+## Mock preview (LT-07.2b)
+
+`src/mocks/handlers/previews.ts` подключает к mock-fetch две операции WP-07 без
+matcher, ranking, расчёта плана/целей и файловых действий:
+
+| Метод и путь | Ответ | Особенности |
+|---|---|---|
+| `POST /sorting/previews` | 201 `Preview` | canned-сценарий, первая страница; CSRF обязателен; preview ничего не перемещает |
+| `GET /sorting/previews/{preview_id}` | 200 `Preview` | сохранённая страница `rows`; `cursor`/`limit`; чтение не продлевает срок |
+
+- Данные берутся из публичных примеров `contracts/examples/sorting/preview-*.json`
+  через `src/mocks/sorting/preview.ts`: `preview-atlas-explicit-one`,
+  `preview-atlas-explicit-multiple`, `preview-atlas-allmatching-120-page1`,
+  `preview-atlas-hetero`, `preview-atlas-conflict`. Rows/counts/targets/
+  collisions/`rule_set` не пересчитываются — это literal прогноз. Matcher,
+  ranking, readiness-детектор и движение файлов отсутствуют.
+- `createSortingPreview` — объявленная мутация (`csrf: true`): требует сессию и
+  корректный `X-CSRF-Token` (общий guard `requireSessionAndCsrf`), валидирует
+  `PreviewCreateRequest` (`selection_id`; лишнее/отсутствующее поле, битый JSON →
+  422 `VALIDATION_ERROR`). Снимок разрешается через
+  `SelectionStore.resolve(selection_id, { actorId, now })` строго объявленными
+  кодами: неизвестный id → 404 `NOT_FOUND`, другой `user_id` → 403 `FORBIDDEN`,
+  истёкший `expires_at` (инъекция `setSelectionNow`) → 409 `SELECTION_EXPIRED`.
+- Сценарий выбирает `MockController.setPreviewScenario('explicit-one' |
+  'explicit-multiple' | 'allmatching-120' | 'hetero' | 'conflict' | null)`. При
+  `null` сценарий выводится из разрешённого снимка: ALL_MATCHING →
+  `allmatching-120`; EXPLICIT с одним элементом → `explicit-one`, с несколькими →
+  `explicit-multiple`. `hetero` и `conflict` выбираются явно: первый покрывает
+  все `Prediction` (`WILL_MOVE`/`WILL_MANUAL_REVIEW`/`REQUIRES_DECISION`/
+  `NOT_READY`) и все `CollisionDetails.kind` (`EXISTING_TARGET`/
+  `DUPLICATE_PLAN_TARGET`/`MANUAL_REVIEW_NAME`) с nullable `target`/
+  `existing_target_metadata`; второй — `RULE_CONFLICT` с `selected_rule=null`.
+  `selection_id`/`company_id` ответа привязываются к разрешённому снимку.
+- Объявлена только первая страница (у `allmatching-120` непустой `next_cursor`);
+  второй страницы в примерах нет, поэтому `GET` с непустым `cursor` → 422
+  `VALIDATION_ERROR`, а mock не синтезирует страницу. `limit` валидируется
+  (1..100), неизвестный `preview_id` → 404 `NOT_FOUND`. `GET` не объявляет 409:
+  чтение отдаёт сохранённый `expires_at` без продления (`PreviewStore.isExpired`
+  доступен batch-листу LT-07.2c, где `STALE_PREVIEW` объявлен для
+  `createSortingBatch`). Preview не создаёт batch и не выполняет movement.
+- `MockController` управляет preview: `setPreviewScenario`/`getPreviewScenario`,
+  `setPreviewNow`/`getPreviewNow`, `getPreviewStore`, а также объявленные ошибки
+  операций через `setError(operation, code)` / `failNext(operation, code)` /
+  `clearError` / `consumePreviewError`. Наборы строго разделены по операциям
+  (`sortingErrorCodesByOperation`): `createSortingPreview` —
+  `UNAUTHENTICATED`/`FORBIDDEN`/`NOT_FOUND`/`SELECTION_EXPIRED`/
+  `SELECTION_CHANGED`/`INVALID_STATE`/`VALIDATION_ERROR`/`RATE_LIMITED`/
+  `INTERNAL_ERROR`/`SERVICE_UNAVAILABLE`; `getSortingPreview` — те же без 409
+  (`SELECTION_EXPIRED`/`SELECTION_CHANGED`/`INVALID_STATE`). `STALE_PREVIEW`
+  объявлен только для `createSortingBatch` (LT-07.2c) и через
+  `declaredSelectionUseErrors`/`selectionUseErrorResponse` доступен
+  инфраструктуре, но preview-операции его не возвращают. Overload'ы и
+  runtime-guard не допускают undeclared HTTP-статус. Тело/статус берутся из
+  `contracts/examples/errors/*.json`; `SERVICE_UNAVAILABLE` синтезируется по
+  inline-примеру OAS. `reset()` снимает сценарий/`now` и очищает store и ошибки.
+
+Проверки: `tests/mocks/sorting-preview.test.ts` — маршрутизация двух операций,
+literal EXPLICIT one/multiple и ALL_MATCHING page1 (100 rows, непустой cursor),
+hetero (все Prediction/CollisionDetails kinds, nullable target/metadata),
+conflict (`RULE_CONFLICT`), вывод сценария из снимка, отсутствие batch/movement,
+owner/expiry/unknown снимка (403/409/404), `get` page1/cursor/limit/unknown,
+непродление TTL, 401/403/422, управляемые ошибки по объявленным кодам,
+per-operation ограничение и `reset()`.
+
 ## Структура
 
 ```text
@@ -712,8 +776,8 @@ frontend/
       transport-error.ts  TransportError и безопасный разбор ошибок
       transport.ts        createApiClient: credentials/no-store/CSRF/idempotency/retry
     mocks/              schema-valid mocks bootstrap/session/config, поиска
-                        (WP-06), targets/dictionaries, симуляции, публикации
-                        и очереди/выбора (WP-07)
+                        (WP-06), targets/dictionaries, симуляции, публикации,
+                        очереди/выбора и preview (WP-07)
       index.ts          createMockFetch, MockController, MOCK_MODE
       router.ts         разбор Request, статические и `{param}` маршруты
       validate.ts       ajv-валидация запросов по generated openapi.json
@@ -723,14 +787,16 @@ frontend/
                         scope-delay/error/queue + dictionary store/errors +
                         simulation scenario/store/errors + publishing
                         scenario/store/errors + sorting queue scenario/
-                        selection store/errors/reset
+                        selection store/errors + preview scenario/store/
+                        errors/reset
       responses.ts      контрактные заголовки и ErrorResponse
       handlers/         health, login, getSession, logout, appConfig, roots,
                         companies, search (searchFiles/getSearchFacet),
                         targets/dictionaries (LT-07.1a),
                         simulations (LT-07.1b),
                         publishing (publish/versions/restore, LT-07.1c),
-                        sorting (queue/selection, LT-07.2a)
+                        sorting (queue/selection, LT-07.2a),
+                        previews (preview create/get, LT-07.2b)
       search/           golden search/facet foundation (LT-06.2a-i)
         corpus.ts       materializer corpus.json → SearchItem/Marker
         expectations.ts literal-resolver search_expectations.json
@@ -745,10 +811,12 @@ frontend/
       publishing/       publishing/versions/restore foundation (LT-07.1c)
         store.ts        seed версий, canned publish/restore, идемпотентность
         errors.ts       объявленные ошибки публикации/версий/restore
-      sorting/          queue/selection foundation (LT-07.2a)
+      sorting/          queue/selection/preview foundation (LT-07.2a/07.2b)
         queue.ts        canned queue-сценарии и фильтры
         selection.ts    SelectionStore, creation/resolution снимков
-        errors.ts       объявленные ошибки очереди/выбора и использования снимка
+        preview.ts      canned preview-сценарии, PreviewStore, paging
+        errors.ts       объявленные ошибки очереди/выбора/preview и
+                        использования снимка
   tests/
     App.test.tsx        component smoke-тест
     api/client.test.ts  runtime-проверки запросов клиента A/B/C
@@ -765,6 +833,7 @@ frontend/
     mocks/simulations.test.ts  simulation create/get, paging/stale/counts mocks
     mocks/publishing.test.ts  publish/versions/restore, gates/idempotency mocks
     mocks/sorting-queue-selection.test.ts  queue/selection canned, owner/expiry mocks
+    mocks/sorting-preview.test.ts  preview create/get, predictions/collisions/expiry mocks
     fixture-imports.test.ts  проверка alias-импорта JSON вне frontend/
     support/            технические модули scaffold
     browser/            Playwright smoke-тест

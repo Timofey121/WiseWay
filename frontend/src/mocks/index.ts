@@ -71,17 +71,24 @@ export type {
   RestoreDictionaryDraftErrorCode,
 } from './publishing/errors'
 export {
+  declaredPreviewErrors,
   declaredSelectionUseErrors,
   declaredSortingErrors,
+  isPreviewErrorCode,
   isSortingErrorCode,
   isSortingErrorDeclaredForOperation,
+  previewErrorResponse,
   selectionUseErrorResponse,
   sortingErrorCodesByOperation,
 } from './sorting/errors'
 export type {
+  CreateSortingPreviewErrorCode,
   CreateSortingSelectionErrorCode,
   DeclaredSelectionUseError,
   DeclaredSortingError,
+  GetSortingPreviewErrorCode,
+  MockPreviewErrorCode,
+  MockPreviewOperation,
   MockSortingErrorCode,
   MockSortingOperation,
   QuerySortingQueueErrorCode,
@@ -89,6 +96,19 @@ export type {
 } from './sorting/errors'
 export { QUEUE_SCENARIOS, getCannedQueueResponse } from './sorting/queue'
 export type { QueueScenario } from './sorting/queue'
+export {
+  PREVIEW_SCENARIOS,
+  PreviewStore,
+  derivePreviewScenario,
+  getCannedPreview,
+  parsePreviewLimit,
+  resolvePreviewPage,
+} from './sorting/preview'
+export type {
+  PreviewPageQuery,
+  PreviewScenario,
+  StoredPreview,
+} from './sorting/preview'
 export {
   MAX_BATCH_ITEMS,
   SelectionStore,

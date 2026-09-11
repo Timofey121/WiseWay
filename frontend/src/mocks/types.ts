@@ -61,6 +61,11 @@ export type AllMatchingSelectionRequest =
   components['schemas']['AllMatchingSelectionRequest']
 export type SelectionRequest = components['schemas']['SelectionRequest']
 export type SelectionSnapshot = components['schemas']['SelectionSnapshot']
+export type PreviewCreateRequest =
+  components['schemas']['PreviewCreateRequest']
+export type Preview = components['schemas']['Preview']
+export type CollisionDetails = components['schemas']['CollisionDetails']
+export type FileMetadata = components['schemas']['FileMetadata']
 export type ErrorResponse = components['schemas']['ErrorResponse']
 export type ErrorDetails = components['schemas']['ErrorDetails']
 export type FieldError = components['schemas']['FieldError']

@@ -657,7 +657,7 @@ describe('mock queue/selection: 401/403/404/422', () => {
   it('неизвестный маршрут → 404 NOT_FOUND', async () => {
     const { mockFetch } = setup()
     const response = await mockFetch(
-      request('/sorting/previews', {
+      request('/sorting/does-not-exist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ selection_id: 'selection-unknown' }),

@@ -6,7 +6,10 @@
 // (CURRENT/UPDATING/STALE). Дополнительно (LT-06.2b) контроллер управляет
 // отдельными scope поиска — `search` (таблица) и `facet` (выпадающий список
 // уровня): базовой задержкой scope, очередью per-send задержек для
-// детерминированного порядка ответов и объявленной ошибкой операции. Никаких
+// детерминированного порядка ответов и объявленной ошибкой операции.
+// Контроллер также управляет canned-сценариями и TTL-временем сортировки:
+// queue/selection (LT-07.2a) и preview (LT-07.2b, `setPreviewScenario`/
+// `setPreviewNow`). Никаких
 // реальных учётных данных, файлов или сетевых подключений здесь нет: mock не
 // является защищённым auth backend.
 //
@@ -29,12 +32,19 @@ import type {
   RestoreDictionaryDraftErrorCode,
 } from './publishing/errors'
 import {
+  isPreviewErrorCode,
   isSortingErrorDeclaredForOperation,
+  type CreateSortingPreviewErrorCode,
   type CreateSortingSelectionErrorCode,
+  type GetSortingPreviewErrorCode,
+  type MockPreviewErrorCode,
+  type MockPreviewOperation,
   type MockSortingErrorCode,
   type MockSortingOperation,
   type QuerySortingQueueErrorCode,
 } from './sorting/errors'
+import type { PreviewScenario } from './sorting/preview'
+import { PreviewStore } from './sorting/preview'
 import type { QueueScenario } from './sorting/queue'
 import { SelectionStore } from './sorting/selection'
 import { DictionaryStore } from './dictionaries/store'
@@ -126,13 +136,15 @@ function isPublishingOperation(
   )
 }
 
-/** Возвращает `true` для операции очереди/выбора (LT-07.2a). */
+/** Возвращает `true` для операции очереди/выбора/preview (LT-07.2a/07.2b). */
 function isSortingOperation(
   operation: MockOperation,
 ): operation is MockSortingOperation {
   return (
     operation === 'querySortingQueue' ||
-    operation === 'createSortingSelection'
+    operation === 'createSortingSelection' ||
+    operation === 'createSortingPreview' ||
+    operation === 'getSortingPreview'
   )
 }
 
@@ -199,6 +211,9 @@ export class MockController {
   private eligibleCountOverride: number | null = null
   private selectionNow: string | null = null
   private readonly selectionStore = new SelectionStore()
+  private previewScenario: PreviewScenario | null = null
+  private previewNow: string | null = null
+  private readonly previewStore = new PreviewStore()
   private readonly persistentSortingErrors = new Map<
     MockSortingOperation,
     MockSortingErrorCode
@@ -343,6 +358,14 @@ export class MockController {
     code: CreateSortingSelectionErrorCode,
   ): void
   setError(
+    operation: 'createSortingPreview',
+    code: CreateSortingPreviewErrorCode,
+  ): void
+  setError(
+    operation: 'getSortingPreview',
+    code: GetSortingPreviewErrorCode,
+  ): void
+  setError(
     operation: MockOperation,
     code:
       | SearchErrorCode
@@ -414,6 +437,14 @@ export class MockController {
   failNext(
     operation: 'createSortingSelection',
     code: CreateSortingSelectionErrorCode,
+  ): void
+  failNext(
+    operation: 'createSortingPreview',
+    code: CreateSortingPreviewErrorCode,
+  ): void
+  failNext(
+    operation: 'getSortingPreview',
+    code: GetSortingPreviewErrorCode,
   ): void
   failNext(
     operation: MockOperation,
@@ -590,6 +621,18 @@ export class MockController {
     return undefined
   }
 
+  /**
+   * Возвращает объявленную ошибку preview для текущей отправки (LT-07.2b).
+   * Набор кода ограничен per-operation списком preview-операции, поэтому
+   * undeclared код (например `STALE_PREVIEW`) не возвращается.
+   */
+  consumePreviewError(
+    operation: MockPreviewOperation,
+  ): MockPreviewErrorCode | undefined {
+    const code = this.consumeSortingError(operation)
+    return code !== undefined && isPreviewErrorCode(code) ? code : undefined
+  }
+
   /** In-memory store справочников (seed, reset и мутации). */
   getDictionaryStore(): DictionaryStore {
     return this.dictionaryStore
@@ -673,6 +716,41 @@ export class MockController {
     return this.selectionStore
   }
 
+  /**
+   * Явно выбранный preview-сценарий или `null` (по умолчанию). `null` означает,
+   * что `createSortingPreview` выводит сценарий из разрешённого снимка:
+   * EXPLICIT one/multiple, ALL_MATCHING 120. `hetero`/`conflict` выбираются
+   * явно.
+   */
+  getPreviewScenario(): PreviewScenario | null {
+    return this.previewScenario
+  }
+
+  /** Выбирает canned preview-сценарий или снимает override (`null`). */
+  setPreviewScenario(scenario: PreviewScenario | null): void {
+    this.previewScenario = scenario
+  }
+
+  /**
+   * Инъектированное «текущее время» (Instant) для проверки TTL preview.
+   * `null` (по умолчанию) отключает TTL-проверку. Preview create/get его не
+   * применяют: `create` проверяет срок снимка (`setSelectionNow`), `get` 409 не
+   * объявляет и срок не продлевает.
+   */
+  getPreviewNow(): string | null {
+    return this.previewNow
+  }
+
+  /** Задаёт «текущее время» (Instant) для TTL preview или `null`. */
+  setPreviewNow(instant: string | null): void {
+    this.previewNow = instant
+  }
+
+  /** In-memory store созданных preview (LT-07.2b). */
+  getPreviewStore(): PreviewStore {
+    return this.previewStore
+  }
+
   /** Текущий выбранный сценарий симуляции (по умолчанию `full`). */
   getSimulationScenario(): SimulationScenario {
     return this.simulationScenario
@@ -730,10 +808,10 @@ export class MockController {
   /**
    * Сбрасывает сессию, задержку, профиль, freshness, empty-переопределения,
    * scope-задержки, per-send очереди, управляемые ошибки поиска,
-   * targets/dictionaries, симуляции, публикации и очереди/выбора, а также
-   * восстанавливает seed справочников/симуляций/публикаций, сценарии
-   * `full`/`v2`/`ready-120`, снимает TTL-время publish/selection и очищает
-   * созданные снимки выбора.
+   * targets/dictionaries, симуляции, публикации, очереди/выбора и preview, а
+   * также восстанавливает seed справочников/симуляций/публикаций, сценарии
+   * `full`/`v2`/`ready-120`, снимает TTL-время publish/selection/preview и
+   * очищает созданные снимки выбора и preview.
    */
   reset(): void {
     this.session = null
@@ -763,9 +841,12 @@ export class MockController {
     this.queueScenario = 'ready-120'
     this.eligibleCountOverride = null
     this.selectionNow = null
+    this.previewScenario = null
+    this.previewNow = null
     this.dictionaryStore.reset()
     this.simulationStore.reset()
     this.publishingStore.reset()
     this.selectionStore.reset()
+    this.previewStore.reset()
   }
 }

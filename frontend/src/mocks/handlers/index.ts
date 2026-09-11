@@ -5,8 +5,10 @@
 // (`searchFiles`/`getSearchFacet`), LT-07.1a (targets/dictionaries) и LT-07.1b
 // (`createDictionarySimulation`/`getSimulation`), LT-07.1c
 // (publish/versions/restore), LT-07.2a (`querySortingQueue`/
-// `createSortingSelection`). Пути с `{param}`
-// (company_id/dictionary_id/version_id/simulation_id) сопоставляются router'ом.
+// `createSortingSelection`) и LT-07.2b (`createSortingPreview`/
+// `getSortingPreview`). Пути с `{param}`
+// (company_id/dictionary_id/version_id/simulation_id/preview_id)
+// сопоставляются router'ом.
 // Неизвестный маршрут в router даёт безопасную 404, а не правдоподобный успех.
 
 import type { MockHandler } from '../types'
@@ -26,6 +28,10 @@ import {
   publishDictionaryHandler,
   restoreDictionaryDraftHandler,
 } from './publishing'
+import {
+  createSortingPreviewHandler,
+  getSortingPreviewHandler,
+} from './previews'
 import { searchFacetHandler, searchHandler } from './search'
 import {
   createDictionarySimulationHandler,
@@ -68,4 +74,6 @@ export const handlersByKey: Record<string, MockHandler> = {
   'GET /simulations/{simulation_id}': getSimulationHandler,
   'POST /sorting/queue/query': querySortingQueueHandler,
   'POST /sorting/selections': createSortingSelectionHandler,
+  'POST /sorting/previews': createSortingPreviewHandler,
+  'GET /sorting/previews/{preview_id}': getSortingPreviewHandler,
 }
