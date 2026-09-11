@@ -94,6 +94,12 @@ class Report:
     quarantine_audit: int = 0
     quarantine_mutations: int = 0
     quarantine_links: int = 0
+    audit_events: int = 0
+    audit_queries: int = 0
+    audit_actor_pages: int = 0
+    audit_updates: int = 0
+    audit_mutations: int = 0
+    audit_links: int = 0
 
     def check(self, check_id: str, description: str) -> CheckResult:
         result = CheckResult(check_id=check_id, description=description)

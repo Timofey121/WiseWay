@@ -1,0 +1,29 @@
+{
+  "items": [
+    {
+      "user_id": "user-demo-worker-1",
+      "login": "worker.one",
+      "display_name": "Иван Рабочий",
+      "role": "WORKER"
+    },
+    {
+      "user_id": "user-demo-worker-2",
+      "login": "worker.two",
+      "display_name": "Пётр Сменов",
+      "role": "WORKER"
+    },
+    {
+      "user_id": "user-demo-admin-1",
+      "login": "admin.one",
+      "display_name": "Администратор Демо",
+      "role": "ADMIN"
+    },
+    {
+      "user_id": "user-demo-worker-blocked",
+      "login": "blocked.one",
+      "display_name": "Заблокированный Сотрудник",
+      "role": "WORKER"
+    }
+  ],
+  "next_cursor": null
+}

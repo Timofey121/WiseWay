@@ -2,7 +2,7 @@
 
 Дата обследования: 10.09.2026. Область: внешняя синтетическая Demo-MVP.
 
-Это execution backlog: план декомпозиции и учёт подтверждённого прогресса, не доказательство готовой реализации сам по себе. Иерархия: **EPIC → EXECUTION UNIT → WORK PACKAGE → LEAF TASK**. В документе **10 EPIC, 32 WORK PACKAGE, 80 исходных leaf IDs**; пять родителей WP-03 рекурсивно разделены на 10 дочерних leaf (85 исполняемых конечных leaf). WP-31/32 и их два leaf — условное планирование, не обязательные функции внешней MVP.
+Это execution backlog: план декомпозиции и учёт подтверждённого прогресса, не доказательство готовой реализации сам по себе. Иерархия: **EPIC → EXECUTION UNIT → WORK PACKAGE → LEAF TASK**. В документе **10 EPIC, 32 WORK PACKAGE, 80 исходных leaf IDs**. Пять родителей WP-03 рекурсивно разделены на 10 дочерних leaf; дополнительно 33 слишком широких родителя E-02…E-09 заранее разделены на 71 исполняемый дочерний leaf. Исходные IDs сохранены как traceability-parent; всего получается **123 исполняемых конечных leaf**. WP-31/32 и их два leaf — условное планирование, не обязательные функции внешней MVP.
 
 ## 1. Источники истины и решения пользователя
 
@@ -61,9 +61,9 @@
 - **READY_FOR_HUMAN_REVIEW:** все обязательные работы выбранного Execution Unit завершены: leaf — VERIFIED, внутренние WP — VERIFIED, если применимо; выполнена полная verification, независимый финальный review всего Execution Unit дал PASS, итоговое состояние feature branch committed и pushed. Это финальный агентный статус выбранного Execution Unit (Epic или отдельно выбранного WP) до человеческой интеграции, а не каждого внутреннего WP.
 - **DONE:** результат интегрирован в `main` либо человек явно подтвердил эквивалентное состояние интеграции. Завершение feature branch само по себе не DONE; DONE mock-пакета не означает готовую MVP.
 
-Execution Unit — единица автономного выполнения от постановки человеком до финального человеческого review: одна feature branch, один worktree, одна OpenCode-сессия и один eventual PR. По умолчанию выбирается целый Epic `E-XX`; его WP выполняются последовательно и автономно по готовности dependencies в одной ветке, без остановки для подтверждения человеком между пакетами. В исключительном случае отдельный `WP-XX` выбирается как Execution Unit, если Epic слишком велик, внешне блокирован или иначе не подходит для одной branch/PR. Launcher или человек создаёт branch/worktree выбранного Execution Unit **до старта OpenCode**. Переход между WP или leaf внутри него не создаёт отдельную branch/worktree/session/PR. За пределы выбранного Execution Unit orchestrator автоматически не переходит; при блокировке одного пути продолжает другую допустимую работу внутри него, если это возможно.
+Execution Unit — единица автономного выполнения от постановки человеком до финального человеческого review: одна feature branch, один worktree, один eventual PR и одна или несколько orchestrator-сессий по мере необходимости. По умолчанию выбирается целый Epic `E-XX`; его WP выполняются последовательно и автономно по готовности dependencies в одной ветке, без остановки для подтверждения человеком между пакетами. В исключительном случае отдельный `WP-XX` выбирается как Execution Unit, если Epic слишком велик, внешне блокирован или иначе не подходит для одной branch/PR. Launcher или человек создаёт branch/worktree выбранного Execution Unit **до старта OpenCode**. Переход между WP или leaf внутри него не создаёт отдельную branch/worktree/session/PR. За пределы выбранного Execution Unit orchestrator автоматически не переходит; при блокировке одного пути продолжает другую допустимую работу внутри него, если это возможно.
 
-WP — связный внутренний implementation/review checkpoint в Execution Unit; несколько последовательных worker/reviewer runs допустимы. Leaf целиком передаётся одному worker и целиком проверяется reviewer; код, тесты и handoff входят в тот же leaf. Родитель `LT-XX.Y` — `WP-XX`, заданный заголовком. Перед исполнением составляется brief с точными ALLOWED/FORBIDDEN PATHS по фактическому дереву. Backlog не разрешает менять защищённые пути или backend. Слишком широкий обнаруженный repair оформляется отдельным ограниченным результатом, не задачей «исправить всё».
+WP — связный внутренний implementation/review checkpoint в Execution Unit; несколько последовательных worker/reviewer runs допустимы. Leaf целиком передаётся одному worker и целиком проверяется reviewer; код, тесты и handoff входят в тот же leaf. Родитель `LT-XX.Y` — `WP-XX`, заданный заголовком. Если для исходного leaf в разделе «Плановая рекурсивная декомпозиция» перечислены дочерние IDs, исходный ID становится traceability-parent и **не делегируется worker напрямую**: исполняются дочерние leaf, а parent считается технически завершённым после завершения всех обязательных детей. Ссылки Q/TZ/FE на parent наследуются его применимыми детьми. Перед исполнением составляется brief с точными ALLOWED/FORBIDDEN PATHS по фактическому дереву. Backlog не разрешает менять защищённые пути или backend. Слишком широкий обнаруженный repair оформляется отдельным ограниченным результатом, не задачей «исправить всё».
 
 Git lifecycle внутри выбранного Execution Unit по RULES:
 
@@ -210,6 +210,8 @@ LT-03.4a local completion: LEAF reviewer PASS; orchestrator runner42 PASS/target
 LT-03.4b local completion: LEAF reviewer PASS; orchestrator runner45 PASS/targeted56 OK; reviewer full448 OK (497.789s).12 scenarios/4 replays/9 containment cases/18 audit expectations/23mutations,122 public examples. Родитель LT-03.4 технически завершён. Нет live FS/claim/restart evidence; M/A/E NOT_RUN. Локальный checkpoint D-06.
 
 LT-03.5a local completion: LEAF re-review PASS после docs-only repair1 (добавлен обязательный FE§7 handoff). Orchestrator runner48 PASS/targeted52 OK; reviewer full500 OK (636.846s) до неизменяющего code/data handoff.2 quarantine records/11scenarios/2replays/2audit descriptors/22mutations,134 public examples. Source Archive — отдельная synthetic world configuration; не факт настроенного сервера. Только local checkpoint D-06, M/A/E NOT_RUN.
+
+LT-03.5b local completion: первый независимый LEAF review — FAIL (dictionary-события хранили собственные литеральные `occurred_at` 07:00–08:12Z, не совпадавшие с авторитетной timeline `dictionary_lifecycle.json` 09:20–09:53Z; README ошибочно утверждал совпадение). После repair 1 полный свежий re-review — PASS: время всех 16 dictionary-событий выводится из lifecycle (`simulations[].created_at` для SIMULATED, `versions[].published_at` для PUBLISHED, иначе `states[after_state].updated_at`), литеральные дубли удалены, tautological-проверка заменена независимым чтением lifecycle, пересчитаны затронутые literal query/update ожидания. Orchestrator: runner 51 checks PASS, targeted 79 OK, regenerate/checksums idempotent, pip check и `git diff --check` PASS; reviewer независимо подтвердил 16/16 привязок времени, day-query и cursor-page2, 42 OK `test_synthetic_corpus`. 323 события/17 queries/4 actor pages/4 updates/24 mutations,142 public examples, корпус 1.2.0. Родитель LT-03.5 технически завершён; M/A/E NOT_RUN; публикация отложена D-06.
 
 ## EPIC E-02 — Toolchain, generated client, транспорт и mocks
 
@@ -666,6 +668,154 @@ Status: BLOCKED (X-HELP/X-INTERNAL). Scope: FE-06, TZ §13. Не расширя�
 |---|---|---|---|---|---|---|
 | LT-32.1 | BLOCKED | X-INTERNAL | Реестр требований/входов внутреннего этапа | TZ §2/13; FE §2; SEM последний раздел | Учтены корпоративные accounts/timezone/схема, real storage/rights/ID/case/Unicode semantics; confirmed replacement с reserve, обычная компенсация и полный rollback замены с проверкой путей/comment/audit, deletion/cleanup только по политике и правам; до решения нет автоудаления журнала/резерва; UI менять только после согласованного API; масштаб/ресурсы/окна/восстановление — внешние измерения, не frontend обещание | V-H таблицы вопросов/owner/недостающих решений; нет домыслов об endpoints/кнопках/ролях/сроках хранения |
 
+## 4A. Плановая рекурсивная декомпозиция E-02…E-09
+
+Эта декомпозиция подготовлена до будущих worker-run на основе фактической стоимости E-01: отдельные fresh worker-сессии работали корректно, но несколько семантически широких leaf давали длинные tool/model trajectories и десятки миллионов cache-read tokens. Поэтому здесь разрезаны только родители, у которых есть естественная граница между независимо реализуемыми и независимо проверяемыми результатами.
+
+Число тестовых сценариев или размер diff сами по себе не являются причиной разреза. Если parent перечислен ниже, worker получает **только один дочерний leaf за вызов**. Все sources of truth, G-критерии и нераспределённые ограничения parent наследуются его детьми; вместе дети обязаны полностью покрыть исходные AC. Parents, не перечисленные ниже, остаются исполняемыми leaf как есть.
+
+### E-02 / WP-04 — toolchain
+
+| Leaf ID | Parent | Status | Dependencies | Наблюдаемый результат и AC | Verification |
+|---|---|---|---|---|---|
+| LT-04.1a | LT-04.1 | TODO | — | Выбран и зафиксирован обычный frontend toolchain: runtime, package manager, OpenAPI generator, unit/component/browser runners; ADR объясняет решение, версии и lock policy. X-STACK закрывается инженерным решением без человеческого gate | Clean tool versions/install resolution; V-H ADR и pinned choices |
+| LT-04.1b | LT-04.1 | TODO | LT-04.1a | Создан минимальный scaffold `features/api/generated/mocks/tests` и реально работающие scripts для typecheck/lint/component/browser/build; без лишних экранов/design system | Clean install по lock, smoke каждого script, production build |
+
+### E-02 / WP-05 — transport
+
+| Leaf ID | Parent | Status | Dependencies | Наблюдаемый результат и AC | Verification |
+|---|---|---|---|---|---|
+| LT-05.1a | LT-05.1 | TODO | WP-04 | Базовый request/session security transport: browser cookie credentials, CSRF только для объявленных мутаций, no-store и request headers; читающие POST не получают mutation semantics | Request composition tests для read/mutation, CSRF lifecycle и no-store |
+| LT-05.1b | LT-05.1 | TODO | LT-05.1a | Единая безопасная модель transport errors: 401/403/404/409/422/429/500/503/network, `request_id`/`operation_id`/`field_errors` доступны UI без утечки тел/секретов и без ложного success | Табличные HTTP/network tests всех кодов и безопасных metadata |
+| LT-05.2a | LT-05.2 | TODO | LT-05.1 | In-memory idempotency state для publish/batch/return: UUID связан с исходным телом, потерянный ответ повторяет тот же key/body, новое явное действие получает новый key; прочие мутации не получают фиктивную идемпотентность | Lost-response/body-key tests, reused-body mismatch и explicit new action |
+| LT-05.2b | LT-05.2 | TODO | LT-05.2a | Общая retry/backoff policy: Retry-After/backoff только там, где разрешено; нет blind retry неидемпотентных mutation и одинаковых параллельных polls; состояние ограничено session | Controlled clocks, 429/503/network, no-parallel-poll и cleanup tests |
+
+### E-02 / WP-06 — search mocks
+
+| Leaf ID | Parent | Status | Dependencies | Наблюдаемый результат и AC | Verification |
+|---|---|---|---|---|---|
+| LT-06.2a | LT-06.2 | TODO | LT-06.1, LT-03.1 | Canned schema-valid search/facet ответы из golden: IDLE/zero/limited/unrecognized/freshness, literal totals/order/facets; mock не вычисляет matcher/ranking | V-S/V-C handlers и literal golden assertions |
+| LT-06.2b | LT-06.2 | TODO | LT-06.2a | Управляемые delay/error/race сценарии search и facet: отдельные request scopes, 503/schema errors, порядок table/dropdown responses и конкретный `request_state_id` | Deterministic delay/error/race tests; invalid request не даёт правдоподобный success |
+
+### E-02 / WP-07 — B/C mocks
+
+| Leaf ID | Parent | Status | Dependencies | Наблюдаемый результат и AC | Verification |
+|---|---|---|---|---|---|
+| LT-07.1a | LT-07.1 | TODO | LT-03.2, WP-05, LT-06.1 | Target + dictionary draft finite handlers: allowed/invalid targets, create/save/revision/name conflict/lost-response reconciliation; без FS/rule алгоритмов | V-S/V-C target/draft handlers, errors, reset |
+| LT-07.1b | LT-07.1 | TODO | LT-07.1a | Simulation finite handlers: READY/empty/stale/conflict/no-scenario, paging и full RuleSet references; canned expectations, не matcher | V-S/V-C simulation pages/errors/references |
+| LT-07.1c | LT-07.1 | TODO | LT-07.1b | Publish/version/restore finite handlers: ack/comment/TTL, idempotent retry, history/provenance/restore и lost responses | V-S/V-C publish/history/restore/idempotency cases |
+| LT-07.2a | LT-07.2 | TODO | LT-03.3, WP-05, LT-06.1 | Queue/readiness/selection scripted scenarios: 0/120/1001, filters, EXPLICIT/ALL_MATCHING, late arrivals, count change, expiry/owner scope | V-S/V-C queue/selection variants and request bodies |
+| LT-07.2b | LT-07.2 | TODO | LT-07.2a | Preview scripted scenarios: DIRECT/PREVIEWED inputs, stale/expiry, predictions/collisions, paging; preview не выполняет movement | V-S/V-C preview lifecycle/errors/collision kinds |
+| LT-07.2c | LT-07.2 | TODO | LT-07.2b, LT-03.4 | Batch scripted scenarios: submit/lost response/retry, progress/polling, все BatchState/Outcome/reasons/cursor/recovery; без claim/executor алгоритмов | V-S/V-C batch lifecycle, timers, outcomes, retries |
+| LT-07.3a | LT-07.3 | TODO | LT-03.5, WP-05, LT-06.1 | Quarantine/return finite handlers: confirmed items, `can_return`, recovery, return conflicts/idempotency и late responses | V-S/V-C quarantine/list/return/error/reset |
+| LT-07.3b | LT-07.3 | TODO | LT-07.3a | Audit finite handlers: BUSINESS/SYSTEM/null actor, allowed/blocked actors, filters/cursor/new events и linked request/operation/source-attempt IDs | V-S/V-C audit feed/actor/update/link cases |
+
+### E-04 / WP-12–13 — search presentation and state
+
+| Leaf ID | Parent | Status | Dependencies | Наблюдаемый результат и AC | Verification |
+|---|---|---|---|---|---|
+| LT-12.1a | LT-12.1 | TODO | WP-11, LT-08.2 | Search results table/summary: fields, exact total, N/limited/zero, full-path layout and server-provided order; no pagination/autoload | V-C/V-M N=10/100/>N, zero, format/long-path layout |
+| LT-12.1b | LT-12.1 | TODO | LT-12.1a | Clipboard interaction copies only `display_path`, gives truthful success/failure feedback and never opens/downloads/exports a file | Clipboard success/failure and no-prohibited-network checks |
+| LT-13.1a | LT-13.1 | TODO | WP-12 | Atomic response scope: items/total/next facet from one response apply together; latest sent request wins and late table response cannot mutate current state | Deterministic A→B / B→A race tests |
+| LT-13.1b | LT-13.1 | TODO | LT-13.1a | Freshness/error/retry UX: CURRENT/UPDATING/STALE, previous successful result remains explicitly stale on failure, no-success error panel, explicit Retry bypasses dedup with new request ID | Error-after-success/no-success/retry/freshness tests |
+| LT-13.2a | LT-13.2 | TODO | LT-13.1, LT-09.2 | Recovery from SCHEMA_VERSION_CHANGED/ROOT_NOT_READY/INVALID_MARKER_SELECTION: reread server context, clear incompatible markers, preserve text only where valid, removed root not shown as available | V-C/V-M three context errors and resulting requests/state |
+| LT-13.2b | LT-13.2 | TODO | LT-13.2a, LT-09.2 | Memory-only search lifecycle across navigation/reload/logout/user switch: navigation itself performs no search; old responses cannot restore cleared private state | Storage/network/session-reset and delayed-response tests |
+
+### E-05 / WP-16–17 — publish and restore lifecycle
+
+| Leaf ID | Parent | Status | Dependencies | Наблюдаемый результат и AC | Verification |
+|---|---|---|---|---|---|
+| LT-16.3a | LT-16.3 | TODO | LT-16.2, LT-05.2 | Publication eligibility UI/state: rule conflicts block, NO_SCENARIO ack bound to current simulation, comment boundaries, stale/revision/ack errors, empty rules and occupied-target semantics | V-C/V-M gates/ack/comment/stale/occupied/empty |
+| LT-16.3b | LT-16.3 | TODO | LT-16.3a | Publish submit/reconciliation: idempotent key/body reuse on lost response; success refreshes Dictionary/version/RuleSet and never starts sorting | Lost-response/idempotency/version-refresh tests |
+| LT-17.2a | LT-17.2 | TODO | LT-17.1, LT-15.3 | Restore request safely replaces draft from historical version with expected revision; conflict/lost response preserve local input and reconcile object; no direct activation/file undo | Restore/revision/lost-response/provenance tests |
+| LT-17.2b | LT-17.2 | TODO | LT-17.2a, LT-16.3 | Post-restore lifecycle requires a new simulation then publish; provenance/new immutable version is correct, manual edit clears `based_on_version_id` according to server response, prior history/accepted batch unchanged | New-test/new-publish/manual-edit/history assertions |
+
+### E-06 / WP-20–21 — preview and batch projection
+
+| Leaf ID | Parent | Status | Dependencies | Наблюдаемый результат и AC | Verification |
+|---|---|---|---|---|---|
+| LT-20.1a | LT-20.1 | TODO | WP-19, LT-16.1 | Preview create/read plan: source/company/dictionary/version/rule/target/prediction/reason/full RuleSet/totals/cursor; predictions are not outcomes and no batch POST occurs | V-C/V-M preview pages/references/null target/no batch network |
+| LT-20.1b | LT-20.1 | TODO | LT-20.1a | Collision/manual-review presentation: metadata comparison only for collision, DUPLICATE_PLAN_TARGET conflicting IDs/nullable existing, MANUAL_REVIEW_NAME distinct; no winner/replace/movement controls | Collision-kind/null/comparison tests |
+| LT-21.2a | LT-21.2 | TODO | LT-21.1 | Per-file outcome taxonomy/rendering: every OutcomeState/OutcomeReasonCode is distinct in Russian; source/planned/actual are not conflated and unknown actual stays null | State/reason/null/location/rule/time matrix |
+| LT-21.2b | LT-21.2 | TODO | LT-21.2a | Batch summary semantics: server counts, mixed outcomes, recovery not complete, per-file issue under HTTP 200 not global failure; no UI winner/replace/undo/cancel/manual-review workflow/blind retry | Mixed-outcome/count/recovery and prohibited-action tests |
+
+### E-07 / WP-22 — return transaction
+
+| Leaf ID | Parent | Status | Dependencies | Наблюдаемый результат и AC | Verification |
+|---|---|---|---|---|---|
+| LT-22.2a | LT-22.2 | TODO | LT-22.1, LT-05.2 | Explicit return form/submit: comment 1–500, expected revision/key, WAITING_READY success without batch POST; occupied/version/not-found/invalid-state conflicts are distinct | Boundary/conflict/success/no-auto-sort tests |
+| LT-22.2b | LT-22.2 | TODO | LT-22.2a | Lost-response/recovery reconciliation: same key reuses original operation, RECOVERY_REQUIRED preserves `error.operation_id`, refreshes `can_return`, never performs second blind movement | Lost response/new key/ambiguous/recovery tests |
+
+### E-08 / WP-24 — audit details
+
+| Leaf ID | Parent | Status | Dependencies | Наблюдаемый результат и AC | Verification |
+|---|---|---|---|---|---|
+| LT-24.2a | LT-24.2 | TODO | LT-24.1, LT-21.4, WP-17, WP-22 | Event details projection renders only applicable actor/time/request/company/dictionary/version/RuleSet/batch/attempt/item/source/target/reason/comment fields and preserves nullable links | All AuditAction/nullable-field presentation tests |
+| LT-24.2b | LT-24.2 | TODO | LT-24.2a | Existing-data navigation resolves batch/version through existing APIs, handles NOT_FOUND, keeps return/source-attempt links truthful, and introduces no audit-details/attempt/recovery endpoint or BUSINESS write on read/copy | Navigation/404/no-extra-endpoint/no-write network tests |
+
+### E-09 / WP-25 — real auth/search
+
+| Leaf ID | Parent | Status | Dependencies | Наблюдаемый результат и AC | Verification |
+|---|---|---|---|---|---|
+| LT-25.1a | LT-25.1 | BLOCKED | WP-09, X-BE-A | Real transport/login/config smoke with synthetic WORKER/ADMIN; mock fallback is off; cookie/CSRF/Origin/no-store/X-Request-ID and schema behaviour are observed without exposing secrets | V-E network/schema/roles/config; environment/version recorded |
+| LT-25.1b | LT-25.1 | BLOCKED | LT-25.1a | Real logout/expiry/block/private-cleanup lifecycle and safe separation of browser evidence from BE hash/blocked-user evidence | V-E session cleanup/storage/401/403/block plus BE evidence links |
+| LT-25.2a | LT-25.2 | BLOCKED | LT-25.1, WP-13, LT-03.1, X-BE-A | Exact real query semantics and ranking: root/AND/token boundaries/quotes/zero/limit, exact IDs/order/total, numeric examples and tie-break across two roots | V-E + V-S golden comparison, N=10/100/>N, ranking profile recorded |
+| LT-25.2b | LT-25.2 | BLOCKED | LT-25.2a | Real facets/hierarchy/raw-case/depth/sort/reset/race behaviour matches golden and server semantics; frontend does not reorder or weaken request | V-E facet/count/order/depth/sort/race assertions with generation metadata |
+| LT-25.3a | LT-25.3 | BLOCKED | LT-25.2, X-BE-A, X-LAB | Controlled create/change/rename/move/delete metadata lifecycle reaches search within measured freshness; old path/content-only disappear, type/no-extension/zero/service-dir boundaries match expectations | V-E controlled mutations + measured delay and exact search checks |
+| LT-25.3b | LT-25.3 | BLOCKED | LT-25.3a, X-LAB | Generation publication consistency and quality update: reads stay on a completed generation, items/total/facets agree, corrected quality issue disappears; root publication boundary evidence is recorded for LT-30.3 | V-E generation switch/quality/inventory evidence |
+
+### E-09 / WP-26 — real dictionaries
+
+| Leaf ID | Parent | Status | Dependencies | Наблюдаемый результат и AC | Verification |
+|---|---|---|---|---|---|
+| LT-26.1a | LT-26.1 | BLOCKED | WP-15, LT-25.1, X-BE-B | Real target resolution and rule round-trip: allowed/nonexistent/outside targets, masks/priorities/suffixes/empty rules match independent expectations; browser does not replace server FS validation | V-E/V-S target/rule scenarios and safe BE profile evidence |
+| LT-26.1b | LT-26.1 | BLOCKED | LT-26.1a | Real draft concurrency/reconciliation: two editors, revision/name conflicts and lost create/save responses preserve local text and do not silently overwrite | V-E two sessions + controlled response loss/conflict assertions |
+| LT-26.2a | LT-26.2 | BLOCKED | LT-26.1, WP-17, X-BE-B | Real simulation semantics: all READY including unseen rows, empty READY, equal/different min-priority targets, full RuleSet and stale draft/RuleSet/READY/TTL behaviour; no movement | V-E parameterized simulation + safe inventory + V-S |
+| LT-26.2b | LT-26.2 | BLOCKED | LT-26.2a | Real publish gates/idempotency: exact ack/comment, stale rejection, lost publish response with same key creates no duplicate version; publish still performs no sorting | V-E publish/error/idempotency/version assertions + inventory |
+| LT-26.2c | LT-26.2 | BLOCKED | LT-26.2b | Real versions/restore provenance: immutable history, restore then required new simulation/publish, manual edit provenance and accepted-batch independence | V-E restore/history/provenance/new-version flow |
+
+### E-09 / WP-28 — real batch safety
+
+| Leaf ID | Parent | Status | Dependencies | Наблюдаемый результат и AC | Verification |
+|---|---|---|---|---|---|
+| LT-28.1a | LT-28.1 | BLOCKED | WP-21, WP-26, WP-27, X-BE-C, X-LAB | Pre-acceptance boundary: DIRECT uses fresh RuleSet/targets; source/rule/target/TTL changes produce exact SELECTION_CHANGED/STALE_PREVIEW/SELECTION_EXPIRED semantics; occupied target is per-file TARGET_OCCUPIED, not global stale rejection | V-E controlled clocks/source/publication/inventory before acceptance |
+| LT-28.1b | LT-28.1 | BLOCKED | LT-28.1a | Post-acceptance fixed plan: accepted RuleSet remains immutable, later source change becomes per-file SOURCE_CHANGED without mutation, foreign claim is per-file outcome, 120-item snapshot exposes complete paged outcome set | V-E fixed-version/claim/paging/inventory assertions |
+| LT-28.4a | LT-28.4 | BLOCKED | LT-28.1, X-LAB | Free target succeeds exactly once; target occupied before run or injected after preflight never replaces/copies/deletes source/target | V-E atomicity hook + hashes/locations/audit |
+| LT-28.4b | LT-28.4 | BLOCKED | LT-28.4a | Multiple selected items targeting one destination all remain unresolved with no winner independent of ID order; unrelated safe item still succeeds; post-move search linkage retained | V-E duplicate-plan collision + independent safe item + LT-25.3 link |
+| LT-28.6a | LT-28.6 | BLOCKED | LT-28.4, LT-28.5, X-LAB | Known technical failure with available source/quarantine produces confirmed QUARANTINED/TECHNICAL_ERROR with preserved content and audit evidence | V-E controlled failure, source/quarantine hashes/inventory/actor/audit |
+| LT-28.6b | LT-28.6 | BLOCKED | LT-28.6a | Mixed batch independently yields safe/occupied/no-scenario/technical outcomes with exact counts/progress; one error does not cancel safe movement | V-E mixed-batch outcomes/counts/progress/inventory |
+| LT-28.7a | LT-28.7 | BLOCKED | LT-28.1, X-LAB | Public ID/scope boundary: unknown ID, foreign company/selection pair and foreign user snapshot produce exact NOT_FOUND/INVALID_STATE/FORBIDDEN semantics; shared WORKER roots/companies remain allowed | V-S/V-E negative ID/scope requests |
+| LT-28.7b | LT-28.7 | BLOCKED | LT-28.7a | Path/target/source identity boundary rejects invalid relative path, outside target, link/source substitution and controlled symlink/identity changes; no read/write outside sandbox | V-E controlled BE identity hook + safe access/inventory report |
+| LT-28.2a | LT-28.2 | BLOCKED | LT-28.4, X-LAB | Real overlap race between two actors proves temporal overlap: one claim wins, loser gets SKIPPED/ALREADY_PROCESSING and safe remainder continues | V-E synchronized barrier, attempts/audit/hashes; no sequential fake race |
+| LT-28.2b | LT-28.2 | BLOCKED | LT-28.2a | Batch idempotency/recovery of lost response: old key+same body after loss/TTL returns same batch, different body conflicts, new manual run is new attempt; logout/reload/new viewer do not change author | V-E key/body/loss/TTL/viewer/author assertions |
+| LT-28.3a | LT-28.3 | BLOCKED | LT-28.6, X-BE-C, X-LAB | Controlled restart before physical mutation and after proven committed result preserves batch/history and never executes a second move for a proven outcome | V-E restart fault points + persisted phase/inventory/audit |
+| LT-28.3b | LT-28.3 | BLOCKED | LT-28.3a | Ambiguous physical outcome or unavailable quarantine becomes RECOVERY_REQUIRED, never success; UI offers no blind rerun and old key returns registered state | V-E ambiguous fault point + API/UI/audit/inventory + recovery linkage |
+
+### E-09 / WP-29 — real return/audit
+
+| Leaf ID | Parent | Status | Dependencies | Наблюдаемый результат и AC | Verification |
+|---|---|---|---|---|---|
+| LT-29.1a | LT-29.1 | BLOCKED | WP-22, LT-28.6, X-BE-C, X-LAB | Real valid/conflict return transaction: comment/revision/free original → WAITING_READY + operation ID; length/revision/occupied/already-returned/new-key conflicts cause no extra mutation and no auto-sort | V-E boundary/conflict/safe hashes/inventory/operation link |
+| LT-29.1b | LT-29.1 | BLOCKED | LT-29.1a | Lost-response/ambiguous return reconciliation: same key restores one return, RECOVERY_REQUIRED makes `can_return=false`, operation/error links and audit remain consistent | V-E controlled response loss/ambiguity + return/audit links |
+| LT-29.2a | LT-29.2 | BLOCKED | LT-29.1, WP-24, WP-26, WP-28, X-BE-C | Cross-operation audit linkage for dictionary create/save/simulate/publish/restore, batch acceptance/attempts and return: actor/request/company/version/batch/item IDs correlate and duplicate phase events are absent | V-E two actors + exact correlation/link assertions |
+| LT-29.2b | LT-29.2 | BLOCKED | LT-29.2a | Real audit access/query semantics: WORKER BUSINESS vs ADMIN SYSTEM, blocked actors, UTC day/filters/cursor≤100/new indicator≤60s | V-E roles/blocked actors/UTC/filter/paging/update tests |
+| LT-29.2c | LT-29.2 | BLOCKED | LT-29.2b | Negative audit/privacy evidence: search/view/copy do not create BUSINESS events; server evidence does not expose request bodies/secret/path material in unsafe logs/reports | V-E absence assertions + safe log/evidence review |
+
+### E-09 / WP-30 — release regression/handoff
+
+| Leaf ID | Parent | Status | Dependencies | Наблюдаемый результат и AC | Verification |
+|---|---|---|---|---|---|
+| LT-30.1a | LT-30.1 | TODO | WP-13, WP-17, WP-21, WP-22, WP-24 | Cross-screen accessibility/state semantics: keyboard, labels, focus, non-color errors, loading/empty/error/disabled reason on all six screens | V-C/V-M browser accessibility/state checks |
+| LT-30.1b | LT-30.1 | TODO | LT-30.1a | Cross-screen layout/format/clipboard regression: full single-line paths with horizontal scroll, formatting, 1280×720 and narrower width; produce bounded defect inventory, not “fix everything” | Browser/layout/clipboard evidence + visual review |
+| LT-30.2a | LT-30.2 | TODO | WP-13, WP-17, WP-21, WP-22, WP-24 | Storage/private-state regression: no search/path/response/CSRF in URL/history/storage/app cache; logout/401/reload/user-switch/late response cannot restore cleared state | Instrumented storage/history/session tests |
+| LT-30.2b | LT-30.2 | TODO | LT-30.2a | Network/log/side-effect regression: no sensitive frontend logs/traces, navigation/view/copy cause no unexpected mutation and prohibited actions remain absent | Instrumented network/log/mutation assertions |
+| LT-30.3a | LT-30.3 | BLOCKED | WP-25, X-BE-C, X-LAB | Measured demo search performance/freshness with declared dataset/cardinalities/resources/sample: p95 typical ≤2s, broad branch ≤5s, metadata freshness ≤5min | V-E measured samples, commands/environment/limits recorded |
+| LT-30.3b | LT-30.3 | BLOCKED | LT-30.3a | Index bootstrap/operability evidence: first crawl, checkpoint/restart/progress/ETA and root publication only after verification/explicit technical action; no user indexing UI/SLA claim | Backend S/A evidence + reproducible commands and restart/progress records |
+| LT-30.4a | LT-30.4 | BLOCKED | WP-25, WP-26, WP-27, WP-28, WP-29, LT-30.1, LT-30.2, LT-30.3, X-BE-C, X-RECOVERY | Fresh allowed environment can install/build/start candidate strictly from README with pinned dependencies/lock/generation/seed/schema and linked BE setup instructions | V-C/V-E clean install/build/start with exact versions/commands |
+| LT-30.4b | LT-30.4 | BLOCKED | LT-30.4a | Candidate walkthrough on that environment completes login→search→draft→test→publish→run→quarantine→audit using real services and existing regression reports | V-E end-to-end walkthrough; no mock fallback |
+| LT-30.4c | LT-30.4 | BLOCKED | LT-30.4b | Final handoff/evidence package: all 45 Q rows explicitly S/M/A/E with defects/NOT_RUN/BLOCKED, frontend reports + BE migration/backup/transfer/recovery links, critical UI debt evidence; ready for human decision without self-awarded QA PASS | V-H completeness/traceability + safe protocol review |
+
+
 ## 5. Порядок реализации и reviewable границы
 
 1. **WP-01 → WP-02 → WP-03:** исправить два query parameters и inconsistent examples, получить настоящий runner и независимые сценарные эталоны. OAS не переписывается с нуля; совместное согласование уже подтверждено.
@@ -679,7 +829,7 @@ Status: BLOCKED (X-HELP/X-INTERNAL). Scope: FE-06, TZ §13. Не расширя�
 9. **WP-30:** сквозная регрессия, измерения/чистый запуск, комплект evidence, финальная человеческая приёмка обеих функций. LT-30.1/30.2 могут выполняться на полном UI раньше real-сервера; результат M не переносится в E.
 10. **WP-31/32 условные:** FE-06 только по конкретному назначению/принятому UI; внутренний этап после отдельного решения. Они не входят в dependency chain внешнего MVP.
 
-Dependencies на WP означают завершение его применимых leaf на заявленном уровне с условиями VERIFIED из §3; dependencies на LT допускают ранний независимый срез внутри WP. Ссылки с диапазоном включают каждый ID диапазона. Внешние блокирующие X-* снимаются конкретным артефактом/средой, не изменением статуса в плане; X-STACK — исключение по типу записи: неблокирующее техническое решение LT-04.1, не внешний вход. Branch/worktree выбранного Execution Unit создаёт launcher/человек до сессии; checkpoint commit/push текущей ветки выполняет orchestrator по §3. Внутренние WP и leaf не создают отдельные branch/worktree/session/PR; порядок выше описывает зависимости всего backlog, а автономное выполнение ограничено выбранным Execution Unit.
+Если исходный parent leaf имеет детей в §4A, в execution dependency-графе его результат означает объединение обязательных дочерних leaf; сам parent worker'у не назначается. Dependencies на WP означают завершение его применимых исполняемых leaf на заявленном уровне с условиями VERIFIED из §3; dependencies на LT-parent допускают зависимость от полного результата его детей, а dependencies на конкретный child — ранний независимый срез внутри parent/WP. Ссылки с диапазоном включают каждый ID диапазона. Внешние блокирующие X-* снимаются конкретным артефактом/средой, не изменением статуса в плане; X-STACK — исключение по типу записи: неблокирующее техническое решение LT-04.1, не внешний вход. Branch/worktree выбранного Execution Unit создаёт launcher/человек до сессии; checkpoint commit/push текущей ветки выполняет orchestrator по §3. Внутренние WP и leaf не создают отдельные branch/worktree/PR; каждый исполняемый leaf получает fresh worker/reviewer child sessions по RULES, а root orchestrator-сессия может быть заменена/продолжена в том же worktree без смены Execution Unit. Порядок выше описывает зависимости всего backlog, а автономное выполнение ограничено выбранным Execution Unit.
 
 ## 6. Трассировка всего frontend-ТЗ и общих требований
 
@@ -801,7 +951,7 @@ Dependencies на WP означают завершение его примени
 
 Перед передачей backlog проверяется целиком: все FE-01…06 и numbered TZ requirements имеют ссылки в §6; все Q-001…045 и 33 операции имеют consumers/проверки; серверные гарантии отделены от UI; conditional/internal scope не замаскирован под готовый leaf реализации.
 
-Каждый leaf имеет один наблюдаемый результат, status/dependencies/goal/точный source/AC/verification; это не действие уровня файла/import. Mock handlers разделены по предметным группам, поиск по input/cascade/table/quality/freshness, правила по targets/editor/revisions/test/publish/history, партии по submit/outcomes/polls/history. Real-check leaf добавляют конечные проверяемые сценарии, а не поручают «исправить весь продукт». Если фактический объём конкретного run окажется шире, дальнейшая декомпозиция делается до назначения worker, без потери AC.
+Каждый **исполняемый конечный leaf** имеет один наблюдаемый результат, status/dependencies/goal/точный source/AC/verification; исходный ID с дочерними leaf является traceability-parent и worker'у напрямую не назначается. Декомпозиция сохраняет границу по независимому observable outcome, а не по числу файлов/строк/тестов. Mock handlers разделены по предметным группам, UI lifecycle — по независимо проверяемым состояниям/операциям, real-check — по отдельным видам доказательств/гонок/интеграционных срезов. Если фактический объём конкретного run всё ещё окажется шире, дальнейшая декомпозиция делается до назначения worker, без потери AC.
 
 Порядок зависимостей ацикличен: platform → mock/auth → feature slices → real slices → release; ссылки на готовый prerequisite leaf допускают параллельность пакетов. При уточнении декомпозиции IDs сохраняются, поэтому порядок исполнения определяется dependencies, не арифметикой ID (см. WP-28). Финальная QA-приёмка не является зависимостью intermediate UI/real разработки. Условная помощь FE-06 не включена в критический путь MVP.
 
@@ -809,7 +959,7 @@ Dependencies на WP означают завершение его примени
 
 ### Сохранённые результаты структурной проверки
 
-- При исходном planning-review перегруженные LT-03.2 и LT-28.1 разделены до leaf; исходные IDs и AC сохранены, условия DIRECT/PREVIEWED уточнены без изменения OAS. Независимый полный review содержательных критериев декомпозиции дал PASS. Это исторический результат проверки плана, не PASS будущей реализации или последующих изменений.
-- Исходный read-only структурный анализ reviewer через `python -B -` подтвердил **10 EPIC / 32 WP / 80 leaf**, уникальность IDs, корректность полей/родителей/leaf lists, отсутствие неизвестных dependencies и циклов; **73/73 TZ requirements, 45/45 Q-сценариев, 33/33 operationId** трассированы. Нормализация workflow сохраняет эту декомпозицию и трассировку; удаление X-STACK из blocking dependencies не добавляет рёбер графа.
-- После перевода WP-04 и LT-04.1 из BLOCKED в TODO распределение плановых статусов: leaf — **59 TODO / 21 BLOCKED**; WP — **24 TODO / 8 BLOCKED**. Это состояние плана после нормализации, не evidence исполнения продукта; при выполнении задач статусы и сводка актуализируются.
+- Исторический planning-review исходных 80 IDs сохранён как baseline traceability, но не является утверждением, что каждый исходный parent достаточно мал для одного worker-run. Фактический E-01 показал корректные fresh child sessions и одновременно слишком длинные trajectories у нескольких семантически широких задач; поэтому WP-03 и 33 родителей E-02…E-09 имеют явную рекурсивную execution-декомпозицию при сохранённых parent IDs/AC.
+- Текущая структура: **10 EPIC / 32 WP / 80 исходных leaf IDs / 123 исполняемых конечных leaf**. Parent-ссылки в §6 сохраняют исходную трассировку **73 TZ requirements / 45 Q-сценариев / 33 operationId**; применимые children наследуют traceability parent. После изменения декомпозиции structural checker должен повторно валидировать уникальность child IDs, parents/dependencies и отсутствие циклов до начала соответствующего Epic.
+- Фиксированная сводка количества TODO/BLOCKED leaf больше не считается долговременной истиной: runtime-статусы E-01 уже изменяются, а child leaf наследуют стартовый статус parent до фактического execution. Актуальный статус читается из карточек/дочерних таблиц, не из исторического счётчика.
 - При последующих изменениях повторно проверяются counts/IDs/parents/leaf lists, ссылки и ацикличность dependencies (включая диапазоны и ранние LT-срезы), полнота §6, точный diff и whitespace. Evidence документарной проверки хранится отдельно от результатов product tests/builds и OpenAPI runner.

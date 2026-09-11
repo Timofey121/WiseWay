@@ -16,7 +16,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from . import batch_outcomes, batch_scenarios, dictionary_lifecycle, preview_preflight, quarantine_returns, queue_selections, rule_expectations, search_expectations, synthetic
+from . import audit_expectations, batch_outcomes, batch_scenarios, dictionary_lifecycle, preview_preflight, quarantine_returns, queue_selections, rule_expectations, search_expectations, synthetic
 from .semantic import validate_fixture
 
 
@@ -123,6 +123,7 @@ def run_fixture_checks(report, registry, root: Optional[Path] = None) -> None:
     _run_batch_outcomes(report, registry, base)
     _run_batch_scenarios(report, registry, base)
     _run_quarantine_returns(report, registry, base)
+    _run_audit_expectations(report, registry, base)
 
 
 def _run_search_expectations(report, registry, base: Path) -> None:
@@ -688,6 +689,67 @@ def _run_quarantine_returns(report, registry, base: Path) -> None:
 
     try:
         generated = quarantine_returns.generated_examples(expectations, context)
+    except Exception as exc:  # noqa: BLE001
+        examples_check.add(f"cannot regenerate examples: {type(exc).__name__}: {exc}")
+        return
+    for relative, payload in generated.items():
+        target = base / relative
+        if not target.is_file():
+            examples_check.add(f"generated example is missing: {relative}")
+            continue
+        try:
+            committed = synthetic.load_json(target)
+        except Exception as exc:  # noqa: BLE001
+            examples_check.add(f"cannot parse {relative}: {type(exc).__name__}: {exc}")
+            continue
+        if committed != payload:
+            examples_check.add(f"committed example differs from regeneration: {relative}")
+
+
+def _run_audit_expectations(report, registry, base: Path) -> None:
+    """LT-03.5b: canonical audit journal oracle and generated examples."""
+    oracle_check = report.check(
+        "FIX-AUDIT-001",
+        "Audit expectations materialize to schema-valid literal events/queries/"
+        "actors/updates and satisfy the finite action/category/actor/attempt/query invariants",
+    )
+    mutation_check = report.check(
+        "FIX-AUDIT-002",
+        "Declared audit negative mutations are rejected by the consistency validators",
+    )
+    examples_check = report.check(
+        "FIX-AUDIT-003",
+        "Generated public audit examples match the committed files",
+    )
+    try:
+        expectations = audit_expectations.load_expectations(base)
+        context = audit_expectations.build_context(base, expectations)
+    except Exception as exc:  # noqa: BLE001 - report unreadable expectations
+        oracle_check.add(
+            f"cannot load audit expectations: {type(exc).__name__}: {exc}"
+        )
+        return
+
+    for message in audit_expectations.expectation_errors(expectations, context):
+        oracle_check.add(message)
+    for message in audit_expectations.payload_errors(expectations, context, registry):
+        oracle_check.add(message)
+    for message in audit_expectations.error_operation_errors(expectations, context):
+        oracle_check.add(message)
+    for message in audit_expectations.link_errors(expectations, context):
+        oracle_check.add(message)
+    for message in audit_expectations.mutation_errors(expectations, context, registry):
+        mutation_check.add(message)
+
+    report.audit_events = len(context["events"])
+    report.audit_queries = len(expectations.get("queries", []))
+    report.audit_actor_pages = len(expectations.get("actors_pages", []))
+    report.audit_updates = len(expectations.get("updates_scenarios", []))
+    report.audit_mutations = len(expectations.get("mutations", []))
+    report.audit_links = len(expectations.get("links", []))
+
+    try:
+        generated = audit_expectations.generated_examples(expectations, context)
     except Exception as exc:  # noqa: BLE001
         examples_check.add(f"cannot regenerate examples: {type(exc).__name__}: {exc}")
         return

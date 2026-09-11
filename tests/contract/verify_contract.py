@@ -66,6 +66,7 @@ def main(argv=None) -> int:
     print(f"Batch/outcome expectations: {report.batch_scenarios} batch(es), {report.batch_pages} page(s), {report.batch_outcomes} outcome(s), {report.batch_summaries} summary(ies), {report.batch_mutations} mutation(s)")
     print(f"Batch scenario expectations: {report.scenario_scenarios} scenario(s), {report.scenario_replays} replay(s), {report.scenario_containment} containment case(s), {report.scenario_audit} audit event(s), {report.scenario_mutations} mutation(s)")
     print(f"Quarantine/return expectations: {report.quarantine_records} record(s), {report.quarantine_scenarios} scenario(s), {report.quarantine_replays} replay(s), {report.quarantine_audit} audit descriptor(s), {report.quarantine_mutations} mutation(s)")
+    print(f"Audit expectations: {report.audit_events} event(s), {report.audit_queries} query(ies), {report.audit_actor_pages} actor page(s), {report.audit_updates} updates scenario(s), {report.audit_mutations} mutation(s)")
     print("")
     print(report.format())
     return 0 if report.ok else 1

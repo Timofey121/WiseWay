@@ -483,3 +483,62 @@ link к LT-03.4a, исключение recovery-исходов, crosslinks, кл
 `manifest.json`. Версия корпуса `1.2.0` не меняется. Реальный возврат,
 файловая безопасность, recovery и идемпотентность на сервере здесь не
 выполняются и не заявляются; это S-уровень.
+
+## Эталон журнала (WP-03, LT-03.5b)
+
+`fixtures/synthetic/audit_expectations.json` — конечный канонический эталон
+журнала поверх фактических dictionary/batch/attempt/return fixtures:
+
+- **все 14** значений `AuditAction` представлены с точной категорией и
+  result/actor/null-scope: BUSINESS (`DICTIONARY_CREATED`, `DRAFT_SAVED`,
+  `DICTIONARY_SIMULATED`, `DICTIONARY_PUBLISHED`, `DICTIONARY_RESTORED`,
+  `BATCH_ACCEPTED`, `FILE_ATTEMPT_STARTED`, `FILE_ATTEMPT_FINISHED`,
+  `QUARANTINE_RETURNED`, `RECOVERY_REQUIRED`) всегда имеет автора; SYSTEM
+  (`LOGIN_SUCCEEDED`, `LOGIN_FAILED`, `LOGOUT`, `ACCOUNT_BLOCKED`) виден только
+  администратору. `actor=null` смоделирован **только** для неинициированного
+  `LOGIN_FAILED`; принятие партии/публикация/возврат никогда не имеют null-автора;
+- **dictionary** события привязаны к реальной timeline: актор, `dictionary_id`,
+  `version_id`, `rule_set_id`, комментарий публикации и draft-revision совпадают
+  с `dictionary_lifecycle.json`; `occurred_at` в fixture не хранится, а выводится
+  из связанного lifecycle — `simulations[].created_at` для `DICTIONARY_SIMULATED`,
+  `versions[].published_at` для `DICTIONARY_PUBLISHED` (равен
+  `states[].updated_at`) и `states[].updated_at` для остальных действий, поэтому
+  время не может разойтись со связанным эталоном; read-шаги
+  (`getSimulation`/`getDictionaryVersion`/`listDictionaryVersions`)
+  BUSINESS-событий не создают;
+- **batch/attempt**: на каждую принятую партию ровно одно `BATCH_ACCEPTED`; попытки
+  разворачиваются из 260 фактических outcome-строк LT-03.4a декларативным
+  рецептом state→event (literal range recipe) — start и terminal/recovery, без
+  дублей attempt/phase; `PENDING` ещё не начата, `PROCESSING` имеет только start.
+  Изолированные истории (overlap/retry/hetero/conflict/sorted и
+  dictionary-scenario) помечены отдельными `universe` и не смешиваются с primary;
+- **возврат**: `QUARANTINE_RETURNED.operation_id == return_operation_id`,
+  `source_attempt_id` — исходная попытка, неоднозначный recovery-аудит
+  `operation_id == error.operation_id` без выдуманного успеха;
+- **заблокированный автор** остаётся в `/audit/actors` с историческим
+  display-снимком; блокирующая метадата не добавляется в `Actor` DTO;
+- **finite queries** (Q-041/Q-043/Q-029): московский день Europe/Moscow→UTC
+  `[from,to)`, фильтры company/author/action/result/text, литеральные
+  упорядоченные event IDs (`occurred_at DESC`, затем `event_id DESC`), курсор
+  ≤100 и замороженная верхняя граница под новые события, повтор того же фильтра,
+  пустая страница `items=[]`/`newest_event_id=null`, `/audit/updates`
+  `after_event_id` vs известное/отсутствующее;
+- **search/navigation/copy** не создают BUSINESS-событий; ответы безопасны
+  (`Cache-Control: no-store`, `X-Request-ID`).
+
+`tests/contract/contractlib/audit_expectations.py` — материализатор по
+литеральным ID без журнала, фильтр-движка, cursor-store и каталога аккаунтов.
+Проверки `FIX-AUDIT-001/002/003` валидируют схемы и семантику 323 событий,
+finite query/actors/updates, cross-links к dictionary/batch/return и отклоняют
+24 негативные мутации. Документированная команда подготовки:
+
+```powershell
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\audit_expectations.py --write-examples
+```
+
+Сгенерированные примеры (5 `AuditQueryResponse`, `ActorPage`,
+`AuditUpdatesResponse`, `ErrorResponse`) лежат в `contracts/examples/audit/` и
+привязаны в `manifest.json`. Версия корпуса `1.2.0` не меняется. Реальный
+аудит, фильтры, курсоры, заблокированные аккаунты и HTTP-транспорт здесь не
+выполняются и не заявляются; это S-уровень, а audit-ожидания — не записанное
+evidence.

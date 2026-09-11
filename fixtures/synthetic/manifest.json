@@ -143,9 +143,17 @@
       "error-quarantine-not-found": "6c072b5ed5a3c6c207b5e9388f7829e42ecb44a2aceb168308377ed6215a4ce1",
       "error-quarantine-invalid-state": "73e6c53a4115e6fcdf0eec28c38f1631b5610e0451f1dc74d41e42e8ff1a1f48",
       "error-quarantine-recovery-required": "36dec67a4ad97ccaf79e711bd90e6bb3280467c580f15f5680e16cfc8c397222",
-      "error-quarantine-idempotency-key-reused": "57b674ec4a379ad27a9faf551abd2c5eced95597d4167700cc1b50b56549ce1c"
+      "error-quarantine-idempotency-key-reused": "57b674ec4a379ad27a9faf551abd2c5eced95597d4167700cc1b50b56549ce1c",
+      "audit-query-day-atlas": "adbbb1b3adc35622480b870db8757d5004e5f1483d44b8206498e47d79a1cd55",
+      "audit-query-batch-accepted": "5faf47f6eb7f661bd273b89c5677483017264893aac1e571fff1c31bde9528f6",
+      "audit-query-issue": "b1a512d01908fa9c7976c0eb89df70bca4b7ded23911f834960b09e8474aa2ba",
+      "audit-query-cursor-page2": "ae5decc6e6a4ce8f8db41f073c13d4363efd53a1003736197b405ab25007bfa3",
+      "audit-query-empty-window": "acdefaf2753f96c1b45a4ebc43a001a298c1740ec743154148f8d63efa555121",
+      "audit-actors-atlas": "c5ce755946a9f758abd131605ec2d503bcc3f0f8dcf04beee42ddb1576646f01",
+      "audit-updates-after-known": "119ba828eec82a54ba6dd30b785b5881c68b1cd98aabba20b2513740616edf22",
+      "error-audit-validation": "95f408dc8d92576708ea0fe756e5bacbd1955930e4aed3de028fd6dcca17c5ac"
     },
-    "combined": "6245e8c757111762e76ca6931e7dde1baf0d246a86629bc6fd43f4e875c19f50",
+    "combined": "013ef0f97907f79cb2e4f07e1d7ce004ad1130153643f98d36ba8b76457afb8d",
     "fixtures": {
       "search-expectations": "0910c9bbeb54eaba159105e4d060cd2ca06c7d71f0459946f220886f22751c1b",
       "rule-expectations": "c3577511741d2611c4e951b0e49f5a3a458642d9df17b627f1f60107d2bf74ac",
@@ -154,7 +162,8 @@
       "preview-preflight": "4fac930e3441e1bb3e2bf37e6f81f66564f3fccfe241c08154642350b8050883",
       "batch-outcomes": "1d25047fd0d13dca8a57c8a3094f50a69bf57ce1cd06c054bc5f3d17c1aecfcb",
       "batch-scenarios": "91a827e56da9e5ea41bdd478b647c08df46941237076b2ab5e9785d353793538",
-      "quarantine-returns": "301486835a04079e33520a182087092a61c6f358beea5b47093652d9ec5dbccf"
+      "quarantine-returns": "301486835a04079e33520a182087092a61c6f358beea5b47093652d9ec5dbccf",
+      "audit-expectations": "d9996bb68d2289a784182946a37d6a5557f8a58d922c35eda74ea016c979a71a"
     }
   },
   "corpus": {
@@ -210,6 +219,12 @@
       "file": "fixtures/synthetic/quarantine_returns.json",
       "schema": null,
       "description": "LT-03.5a literal quarantine/return lifecycle oracle: the confirmed LT-03.4a QUARANTINED outcome and its frozen source attempt/location, the return success as WAITING_READY/selectable=false/no active attempt/no autosort with the original source, every safe conflict (comment length 422, stale revision 409 QUARANTINE_VERSION_CONFLICT, occupied original path 409 ORIGINAL_PATH_OCCUPIED, unknown id 404 NOT_FOUND, already returned 409 INVALID_STATE, ambiguous 409 RECOVERY_REQUIRED with a registered operation_id), idempotent key/body/user replays without a second move, the per-user key scope and the OAS can_return stability semantics, plus audit descriptors for LT-03.5b; materialized by contractlib.quarantine_returns without a return executor, recovery engine, filesystem writer or idempotency store."
+    },
+    {
+      "id": "audit-expectations",
+      "file": "fixtures/synthetic/audit_expectations.json",
+      "schema": null,
+      "description": "LT-03.5b canonical audit journal oracle: all 14 OAS AuditAction values across the actual dictionary timeline, the LT-03.4a accepted batches and their 260 per-file outcomes, the LT-03.5a manual return and the session events; finite literal query/actors/updates expectations, cursor frozen upper bound, blocked author with historical display snapshot, no BUSINESS event for search/navigation/copy; materialized by contractlib.audit_expectations without a journal, filter engine, cursor store or actor directory."
     }
   ],
   "examples": [
@@ -1022,6 +1037,54 @@
       "schema": "#/components/schemas/ErrorResponse",
       "file": "contracts/examples/errors/error-quarantine-idempotency-key-reused.json",
       "description": "LT-03.5a: 409 IDEMPOTENCY_KEY_REUSED for the same key with a different body."
+    },
+    {
+      "id": "audit-query-day-atlas",
+      "schema": "#/components/schemas/AuditQueryResponse",
+      "file": "contracts/examples/audit/audit-query-day-atlas.json",
+      "description": "LT-03.5b: first Moscow-day page of the shared BUSINESS journal (occurred_at DESC, event_id DESC)."
+    },
+    {
+      "id": "audit-query-batch-accepted",
+      "schema": "#/components/schemas/AuditQueryResponse",
+      "file": "contracts/examples/audit/audit-query-batch-accepted.json",
+      "description": "LT-03.5b: action filter BATCH_ACCEPTED with the literal accepted-event ids."
+    },
+    {
+      "id": "audit-query-issue",
+      "schema": "#/components/schemas/AuditQueryResponse",
+      "file": "contracts/examples/audit/audit-query-issue.json",
+      "description": "LT-03.5b: result filter ISSUE with the literal terminal/recovery event ids."
+    },
+    {
+      "id": "audit-query-cursor-page2",
+      "schema": "#/components/schemas/AuditQueryResponse",
+      "file": "contracts/examples/audit/audit-query-cursor-page2.json",
+      "description": "LT-03.5b: cursor page bounded to the frozen upper bound under new events."
+    },
+    {
+      "id": "audit-query-empty-window",
+      "schema": "#/components/schemas/AuditQueryResponse",
+      "file": "contracts/examples/audit/audit-query-empty-window.json",
+      "description": "LT-03.5b: empty window returns items=[], next_cursor=null and newest_event_id=null."
+    },
+    {
+      "id": "audit-actors-atlas",
+      "schema": "#/components/schemas/ActorPage",
+      "file": "contracts/examples/audit/audit-actors-atlas.json",
+      "description": "LT-03.5b: filterable authors including the blocked author with its current display snapshot."
+    },
+    {
+      "id": "audit-updates-after-known",
+      "schema": "#/components/schemas/AuditUpdatesResponse",
+      "file": "contracts/examples/audit/audit-updates-after-known.json",
+      "description": "LT-03.5b: has_new_events=true for an after_event_id that precedes the newest event."
+    },
+    {
+      "id": "error-audit-validation",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/audit/error-audit-validation.json",
+      "description": "LT-03.5b: 422 VALIDATION_ERROR for an invalid audit query interval."
     }
   ]
 }

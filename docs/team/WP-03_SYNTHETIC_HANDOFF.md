@@ -1386,3 +1386,189 @@ handoff. Repair **docs-only**: код, fixture, examples, manifest/checksums и 
   фильтры/UTC день/cursor/new events, безопасные request/operation/
   source_attempt IDs; использует audit-ожидания LT-03.4b и LT-03.5a.
 - **Блокирующая зависимость:** нет.
+
+# LT-03.5b — канонический эталон журнала
+
+Дополнение фиксирует результат leaf LT-03.5b (parent LT-03.5, WP-03, Epic
+E-01). **Status:** IN_PROGRESS (публикация отложена D-06).
+
+## Задача и основание
+
+- **Цель:** конечный канонический эталон `AuditEvent`/query/actors/updates,
+  связывающий dictionary, batch/attempt и quarantine return fixtures, пригодный
+  для mocks и real-регрессии; реальный журнал/фильтр-движок/курсор не
+  реализуются.
+- **Основание:** AGENTS; FRONTEND_BACKLOG LT-03.5/LT-03.5b; D-03/D-06; API
+  §2/10/11; TZ AUD-01…05; QA §4/8; MATRIX Q-029 (return)/Q-041/Q-043; OAS
+  `AuditEvent`/`AuditCategory`/`AuditAction`/`AuditResult`/`AuditQueryRequest`/
+  `AuditQueryResponse`/`AuditUpdatesResponse`/`Actor`/`ActorPage`/`ErrorResponse`;
+  `fixtures/synthetic/dictionary_lifecycle.json`, `batch_outcomes.json`,
+  `batch_scenarios.json`, `quarantine_returns.json`.
+
+## Версия, seed и контрольная сумма
+
+- OAS `info.version = 1.0.0`; `contract_version = 1.0.0`; корпус `1.2.0`.
+- `fixture_set = wiseway-audit-expectations`, `version = 1.0.0`,
+  `seed = wiseway-demo-seed-2031`.
+- `content_hash(audit_expectations.json) = d9996bb68d2289a784182946a37d6a5557f8a58d922c35eda74ea016c979a71a`
+  (совпадает с `manifest.checksum.fixtures["audit-expectations"]`);
+  `manifest.checksum.combined = 013ef0f97907f79cb2e4f07e1d7ce004ad1130153643f98d36ba8b76457afb8d`.
+- Всего в манифесте 142 public example и 9 fixtures.
+
+## Изменённые/добавленные файлы
+
+| Файл | Характер |
+|---|---|
+| `fixtures/synthetic/audit_expectations.json` | новый эталон: 323 события (16 dictionary + 11 explicit + 2 return + 284 batch/attempt + 10 isolated), 17 query, 4 actor page, 4 updates, 4 read-only, 24 mutation, 17 link, 4 error, coverage Q-029/041/043 |
+| `contracts/examples/audit/*.json` | 8 публичных `AuditQueryResponse`/`ActorPage`/`AuditUpdatesResponse`/`ErrorResponse` |
+| `tests/contract/contractlib/audit_expectations.py` | загрузчик/материализатор/валидатор + `--write-examples`; переиспользует dictionary_lifecycle/batch_outcomes/batch_scenarios/quarantine_returns, не дублирует их |
+| `tests/contract/test_audit_expectations.py` | 79 тестов: структура/схемы/action-category-actor/attempt/universe/dictionary binding/query/actors/updates/read-only/headers/descriptors/негативные мутации |
+| `tests/contract/contractlib/fixture_checks.py` | FIX-AUDIT-001/002/003 |
+| `tests/contract/contractlib/report.py`, `__init__.py`, `verify_contract.py` | счётчики/экспорт/строка отчёта |
+| `tests/contract/test_synthetic_corpus.py` | 134→142 examples, FIX-AUDIT и счётчики |
+| `fixtures/synthetic/manifest.json` | fixture `audit-expectations`, 8 examples, пересчитанные checksums |
+| `README.md` | раздел LT-03.5b и команда подготовки |
+
+OAS, `contracts/semantics.md`, control plane, backlog, backend/UI и
+`corpus.json`/`rule_expectations.json`/`dictionary_lifecycle.json`/
+`queue_selections.json`/`preview_preflight.json`/`batch_outcomes.json`/
+`batch_scenarios.json`/`quarantine_returns.json` **не изменялись**.
+
+## Что именно зафиксировано
+
+- **Все 14 `AuditAction`.** BUSINESS-события всегда с автором; SYSTEM
+  (`LOGIN_SUCCEEDED`/`LOGIN_FAILED`/`LOGOUT`/`ACCOUNT_BLOCKED`) — только
+  SYSTEM-категория; `actor=null` ровно у неинициированного `LOGIN_FAILED`
+  (анонимный вход); `BATCH_ACCEPTED`/`DICTIONARY_PUBLISHED`/
+  `QUARANTINE_RETURNED` никогда не null. Использованы все три `AuditResult`.
+- **Dictionary.** События create/save/sim/publish/restore привязаны к реальной
+  timeline LT-03.2b: актор, `dictionary_id`, draft-revision, `version_id`
+  (active/based_on), `rule_set_id`, комментарий публикации; read-шаги событий не
+  создают. Публикации v2/v3 и invoices v2, restore v1 и manual edit покрыты.
+  `occurred_at` не является вторым литералом: он выводится из связанного
+  `dictionary_lifecycle.json` (`simulations[].created_at` для
+  `DICTIONARY_SIMULATED`, `versions[].published_at` для `DICTIONARY_PUBLISHED`
+  с проверкой равенства `states[].updated_at`, `states[].updated_at` для
+  остальных действий), а дескриптор `dictionary_events` больше не хранит
+  независимого времени. Валидатор `_dictionary_binding_errors` независимо
+  сверяет материализованное время с lifecycle и отвергает любой дескриптор с
+  собственным `occurred_at`.
+- **Batch/attempt.** На каждую из 7 партий LT-03.4a ровно одно `BATCH_ACCEPTED`.
+  Попытки разворачиваются из 260 outcome-строк декларативным рецептом
+  state→event: start и terminal (`SORTED`/`MANUAL_REVIEW`/`REQUIRES_DECISION`/
+  `QUARANTINED`/`SKIPPED`) или recovery (`RECOVERY_REQUIRED`); `PENDING` не
+  начата, `PROCESSING` имеет только start. Уникальность `(universe, attempt,
+  phase)` проверена; accepted actor не меняется при смене зрителя.
+- **Изолированные универсумы.** `primary`, `dictionary-scenario`,
+  `batch-isolated`, `overlap`, `retry`; события alternate history не входят в
+  primary-запросы и не переиспользуют primary event id.
+- **Возврат.** `AUD-QR-RETURNED-SUCCESS.operation_id == return_operation_id`,
+  `source_attempt_id` — исходная попытка; `AUD-QR-RETURN-RECOVERY.operation_id ==
+  error-quarantine-recovery-required.operation_id`, `target=null` (без
+  выдуманного успеха).
+- **Заблокированный автор.** `blocked_worker` остаётся в `/audit/actors`; его
+  event хранит исторический display-снимок, actor page — текущий; `Actor` DTO
+  строго 4 поля без изобретённой блокирующей метадаты.
+- **Queries.** Московский день Europe/Moscow (+03:00) → UTC `[from,to)`; фильтры
+  company/author(`user_id`)/action/result/text; литеральные упорядоченные event
+  IDs (`occurred_at DESC`, затем `event_id DESC`); cursor ≤100 с замороженной
+  верхней границей (новое late-событие не попадает в page2 и не сдвигает её);
+  повтор того же фильтра идентичен; пустое окно `items=[]`,
+  `newest_event_id=null`, `next_cursor=null`.
+- **Updates.** `after_event_id` известного/новейшего события и отсутствие
+  параметра; первичный пустой журнал → `has_new_events=false`.
+- **Read-only.** search/facet/navigation/copy не создают BUSINESS-событий.
+- **Безопасность.** `Cache-Control: no-store` и `X-Request-ID` объявлены
+  соответствующими audit-операциями OAS; `error.request_id` совпадает с
+  заголовком; `error.operation_id` null до регистрации recovery.
+- **Crosslinks.** 17 link-проверок связывают canonical события с
+  return/batch/dictionary/actor/error payloads; 24 негативные мутации
+  отклоняются валидаторами.
+
+## V-S: точные команды и фактические результаты
+
+Windows, Python 3.14.7, `.venv-contract`:
+
+```powershell
+.\.venv-contract\Scripts\python.exe tests\contract\verify_contract.py
+.\.venv-contract\Scripts\python.exe -m unittest tests.contract.test_audit_expectations
+.\.venv-contract\Scripts\python.exe -m unittest discover -s tests\contract -p "test_*.py"
+.\.venv-contract\Scripts\python.exe -m pip check
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\audit_expectations.py --write-examples
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\synthetic.py --update-checksums
+git diff --check
+```
+
+- `verify_contract.py` → `RESULT: PASS (51 checks, 0 failures)`, `Examples: 127`,
+  `Fixtures: 142 public example(s), 164 corpus file(s) and 8 lifecycle payload(s)`,
+  `Audit expectations: 323 event(s), 17 query(ies), 4 actor page(s), 4 updates
+  scenario(s), 24 mutation(s)`; FIX-AUDIT-001/002/003 — PASS.
+- `-m unittest tests.contract.test_audit_expectations` → `Ran 79 tests ... OK`.
+- `--write-examples` и `--update-checksums` идемпотентны; повторный запуск не
+  меняет рабочее дерево.
+- `-m pip check` → `No broken requirements found.`
+- `git diff --check` → только предупреждения LF/CRLF, пробельных ошибок нет.
+- Полный `-m unittest discover -s tests\contract -p "test_*.py"` →
+  `Ran 579 tests ... OK` (647.384 s), 900000 ms timeout; независимая проверка
+  принадлежит reviewer.
+
+Негативные self-тесты: BUSINESS с null-автором, SYSTEM-действие в BUSINESS,
+actorless `LOGOUT`, дубль attempt/phase, неразрешимый query event id, дрейф
+cursor/frozen bound, пропавший заблокированный автор, дрейф updates, изменение
+размера журнала read-операцией, `Cache-Control: public`, дрейф link, descriptor
+без canonical события, дрейф dictionary revision/comment, пропавшее покрытие,
+невалидный `occurred_at`, необъявленный error.code — отклоняются.
+
+## Repair и правка предыдущего замечания
+
+- **Repair LT-03.5b (блокирующее замечание reviewer).** Прежняя версия
+  `audit_expectations.json` хранила `occurred_at` dictionary-событий как второй
+  литерал (2031-05-10T07:00–08:12Z), который не совпадал с фактическими
+  временами `dictionary_lifecycle.json` (09:20–09:53Z); проверка binding была
+  тавтологичной, а README ошибочно заявлял совпадение.
+- **Исправление.** `materialize_dictionary_event` больше не читает
+  `descriptor["occurred_at"]`: время выводится из связанного lifecycle
+  (`dictionary_occurred_at`). Поле `occurred_at` удалено из всех 16
+  `dictionary_events`. `_dictionary_binding_errors` теперь независимо
+  пересчитывает lifecycle-время, требует равенства материализованного значения и
+  отвергает любой дескриптор с собственным `occurred_at`; для
+  `DICTIONARY_PUBLISHED` дополнительно проверяется
+  `states[].updated_at == versions[].published_at`. `_time_errors` проверяет
+  хронологию primary dictionary timeline по выведенному времени. Ожидаемые
+  литеральные значения 6 затронутых query (`AUD-Q-DAY-ATLAS`,
+  `AUD-Q-PRIMARY-PAGE1`, `AUD-Q-ACTOR-WORKER1`, `AUD-Q-ROLE-WORKER`,
+  `AUD-Q-ROLE-ADMIN`, `AUD-Q-PRIMARY-DAY-ALL`) и `update_button` пересчитаны;
+  события, updates и links остались согласованными. Примеры и checksums
+  перегенерированы.
+- **`AUD-LOGOUT-SYSTEM.request_id`.** Оставлен `request-demo-batch-14`
+  намеренно: это SESSION-конверт связанного дескриптора LT-03.4b
+  (`SCN-LOGOUT-RELOAD-CONTINUE` в `batch_scenarios.json`), а не запрос принятой
+  партии. `batch_request_ids` описывает только принятые партии; SYSTEM-событие
+  `LOGOUT` не имеет `batch_id`, поэтому в этой карте отсутствует по построению
+  (проверка `_request_id_errors` применяется только к batch/attempt/isolated).
+- В предыдущем разделе LT-03.4b уточнение не требуется: его 18
+  audit-дескрипторов имеют canonical representative, что является развитием
+  LT-03.5b, а не исправлением ошибочного утверждения. Другие исторические
+  неточности счётчиков исправлены в LT-03.4a и не переоткрывались.
+
+## Ограничения и явно не выполненное
+
+- Это **S**-уровень: схемы/статические проверки и литеральный эталон.
+  **M (mock/UI), A (реальный API/ФС), E (E2E) — NOT_RUN.** Реальный журнал,
+  фильтр-движок, cursor-store, каталог аккаунтов, TTL/гонки и HTTP-транспорт не
+  выполнялись и не заявляются.
+- Физическая ФС/аудит-evidence не создавались и не читались; 323 события —
+  объявленные ожидания, а не записанные события. `evidence=false` сохраняется.
+- Попытки разворачиваются декларативным literal-range-рецептом над
+  фактическими outcome-строками; matcher/executor/recovery/журнал не
+  реализуются. Изолированные сценарии не доказывают поведение backend.
+- Backend/UI/control plane/backlog не затрагивались. Staging/commit/push worker
+  не выполняет (D-06).
+
+## Статус и следующий владелец
+
+- **Следующий владелец:** reviewer LT-03.5b (независимая сверка 14 actions,
+  dictionary binding, 260 attempt-строк и уникальности phase, universe
+  separation, query/actors/updates literals, return/error links и негативных
+  мутаций), затем финальный review WP-03 и E-01 orchestrator-ом.
+- **Блокирующая зависимость:** нет.
