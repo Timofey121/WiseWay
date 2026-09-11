@@ -4,7 +4,8 @@
 // Набор ограничен операциями LT-06.1 (bootstrap/session/config), LT-06.2a-ii
 // (`searchFiles`/`getSearchFacet`), LT-07.1a (targets/dictionaries) и LT-07.1b
 // (`createDictionarySimulation`/`getSimulation`), LT-07.1c
-// (publish/versions/restore). Пути с `{param}`
+// (publish/versions/restore), LT-07.2a (`querySortingQueue`/
+// `createSortingSelection`). Пути с `{param}`
 // (company_id/dictionary_id/version_id/simulation_id) сопоставляются router'ом.
 // Неизвестный маршрут в router даёт безопасную 404, а не правдоподобный успех.
 
@@ -30,6 +31,10 @@ import {
   createDictionarySimulationHandler,
   getSimulationHandler,
 } from './simulations'
+import {
+  createSortingSelectionHandler,
+  querySortingQueueHandler,
+} from './sorting'
 import {
   listTargetDirectoriesHandler,
   resolveTargetDirectoryHandler,
@@ -61,4 +66,6 @@ export const handlersByKey: Record<string, MockHandler> = {
   'POST /dictionaries/{dictionary_id}/simulate':
     createDictionarySimulationHandler,
   'GET /simulations/{simulation_id}': getSimulationHandler,
+  'POST /sorting/queue/query': querySortingQueueHandler,
+  'POST /sorting/selections': createSortingSelectionHandler,
 }

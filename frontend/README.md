@@ -5,7 +5,8 @@
 generated API-артефакты из единственного публичного OAS, базовый
 request/session security transport (WP-05) и контрактные mocks
 bootstrap/session/config, golden-поиска (WP-06) и
-targets/dictionaries/симуляции/публикации (WP-07, LT-07.1a/LT-07.1b/LT-07.1c).
+targets/dictionaries/симуляции/публикации/очереди/выбора (WP-07,
+LT-07.1a/LT-07.1b/LT-07.1c/LT-07.2a).
 Продуктовые экраны и навигация появятся в следующих leaf-задачах (EPIC E-02,
 WP-07).
 
@@ -616,6 +617,80 @@ versions list/get/paging, restore/provenance (canned v1 и fallback для
 active/`versions_count` и без «висячего» active), ручная правка,
 401/403/404/422, управляемые ошибки по объявленным кодам и `reset()`.
 
+## Mock queue/selection (LT-07.2a)
+
+`src/mocks/handlers/sorting.ts` подключает к mock-fetch две операции WP-07 без
+matcher, readiness-детектора, claim/snapshot-алгоритма и файловых действий:
+
+| Метод и путь | Ответ | Особенности |
+|---|---|---|
+| `POST /sorting/queue/query` | 200 `QueueResponse` | canned-сценарий очереди, literal counters/generation; чтение без CSRF |
+| `POST /sorting/selections` | 201 `SelectionSnapshot` | EXPLICIT/ALL_MATCHING, снимок; CSRF обязателен |
+
+- Данные берутся из публичных примеров `contracts/examples/sorting/*.json`
+  через `src/mocks/sorting/queue.ts` и `src/mocks/sorting/selection.ts`:
+  `queue-ready-120-page1`, `queue-ready-0`, `queue-ready-1001-page1`,
+  `queue-all-active-120`, `queue-all-active-0`, `queue-missing-explicit`,
+  `queue-query-text`, `selection-snapshot-explicit-one/multiple`,
+  `selection-snapshot-all-matching-120`. Никакие counters/status_counts/
+  matching_count/eligible_count/membership не вычисляются: это literal
+  значения примеров.
+- `querySortingQueue` — чтение (`csrf: false`): требует активную mock-сессию,
+  валидирует `QueueQueryRequest` по схеме OAS (company_id, filters, cursor,
+  limit 1..100) и отдаёт canned-ответ выбранного сценария. Сценарий выбирает
+  `MockController.setQueueScenario('ready-120' | 'ready-0' | 'ready-1001' |
+  'all-active-120' | 'all-active-0' | 'missing-explicit' | 'query-text')` (по
+  умолчанию `ready-120`); фильтры запроса должны соответствовать сценарию,
+  иначе → 422 `VALIDATION_ERROR` без правдоподобного, но неверного успеха.
+  Объявлена только первая страница, поэтому непустой `cursor` → 422
+  `VALIDATION_ERROR`: mock не синтезирует вторую страницу.
+- `createSortingSelection` — объявленная мутация (`csrf: true`): требует
+  активную mock-сессию и корректный `X-CSRF-Token` (общий guard
+  `requireSessionAndCsrf`), валидирует `SelectionRequest` (oneOf
+  EXPLICIT/ALL_MATCHING). EXPLICIT отдаёт canned snapshot по числу элементов
+  (`selected_count` = число переданных items). ALL_MATCHING сверяет
+  `expected_eligible_count` с canned `eligible_count` текущего queue-сценария:
+  0 → 422 `EMPTY_SELECTION`; > 1000 → 422 `BATCH_LIMIT_EXCEEDED` без усечения;
+  расхождение → 409 `SELECTION_CHANGED`; иначе — 201 literal
+  `selection-snapshot-all-matching-120` с `selected_count` =
+  `expected_eligible_count` и `queue_generation` сценария. Созданный снимок
+  сохраняется в `SelectionStore`, поэтому поздние поступления и смена
+  queue-сценария его не меняют.
+- `SelectionStore.resolve(selection_id, { actorId, now })` воспроизводит
+  семантику использования снимка, объявленную для preview/batch, а не для
+  create: неизвестный id → `not_found` (404 `NOT_FOUND`), другой `user_id` →
+  `forbidden` (403 `FORBIDDEN`), истёкший `expires_at` при заданном
+  `setSelectionNow` → `expired` (409 `SELECTION_EXPIRED`). `create` эти
+  необъявленные для него статусы не возвращает. Хелперы
+  `selectionUseErrorResponse` и `declaredSelectionUseErrors` экспортируются из
+  `@/mocks` для следующих листьев preview/batch.
+- `MockController` управляет очередью/выбором: `setQueueScenario`,
+  `setEligibleCountOverride` (mismatch `expected_eligible_count`),
+  `setSelectionNow` (TTL снимка), `getSelectionStore`, а также объявленные
+  ошибки операций через `setError(operation, code)` / `failNext(operation,
+  code)` / `clearError` / `consumeSortingError`. Наборы строго разделены по
+  операциям (`sortingErrorCodesByOperation`, `isSortingErrorDeclaredForOperation`
+  из `@/mocks`): `querySortingQueue` — `UNAUTHENTICATED`/`FORBIDDEN`/
+  `VALIDATION_ERROR`/`RATE_LIMITED`/`INTERNAL_ERROR`/`SERVICE_UNAVAILABLE`;
+  `createSortingSelection` — те же плюс `SELECTION_CHANGED`/`EMPTY_SELECTION`/
+  `BATCH_LIMIT_EXCEEDED`. Overload'ы не принимают код другой операции, а
+  runtime-guard игнорирует такой код, поэтому undeclared HTTP-статус
+  невозможен. Тело/статус берутся из `contracts/examples/errors/*.json`; для
+  `SERVICE_UNAVAILABLE` (503) контрактного файла нет, поэтому тело
+  синтезируется по inline-примеру OAS `ErrorSERVICE_UNAVAILABLE`
+  (`retryable:true`, `operation_id:null`, пустые `field_errors`). `reset()`
+  восстанавливает сценарий `ready-120`, снимает override/TTL и очищает store и
+  управляемые ошибки.
+
+Проверки: `tests/mocks/sorting-queue-selection.test.ts` — 7 literal
+queue-сценариев (0/120/1001, все активные 0/120, MISSING, query_text),
+counters/generation/next_cursor, несоответствие фильтров/cursor/limit → 422,
+EXPLICIT one/multiple, ALL_MATCHING 120, 0 → `EMPTY_SELECTION`, 1001 →
+`BATCH_LIMIT_EXCEEDED`, count change → `SELECTION_CHANGED`, поздние поступления,
+owner/expiry/unknown снимка, 503 = `SERVICE_UNAVAILABLE` (никогда
+`SEARCH_UNAVAILABLE`), per-operation ограничение managed-кодов, 401/403/404/422,
+управляемые ошибки и `reset()`.
+
 ## Структура
 
 ```text
@@ -637,8 +712,8 @@ frontend/
       transport-error.ts  TransportError и безопасный разбор ошибок
       transport.ts        createApiClient: credentials/no-store/CSRF/idempotency/retry
     mocks/              schema-valid mocks bootstrap/session/config, поиска
-                        (WP-06), targets/dictionaries, симуляции и публикации
-                        (WP-07)
+                        (WP-06), targets/dictionaries, симуляции, публикации
+                        и очереди/выбора (WP-07)
       index.ts          createMockFetch, MockController, MOCK_MODE
       router.ts         разбор Request, статические и `{param}` маршруты
       validate.ts       ajv-валидация запросов по generated openapi.json
@@ -647,13 +722,15 @@ frontend/
       controller.ts     delay/profile/freshness/empty/session + search
                         scope-delay/error/queue + dictionary store/errors +
                         simulation scenario/store/errors + publishing
-                        scenario/store/errors/reset
+                        scenario/store/errors + sorting queue scenario/
+                        selection store/errors/reset
       responses.ts      контрактные заголовки и ErrorResponse
       handlers/         health, login, getSession, logout, appConfig, roots,
                         companies, search (searchFiles/getSearchFacet),
                         targets/dictionaries (LT-07.1a),
                         simulations (LT-07.1b),
-                        publishing (publish/versions/restore, LT-07.1c)
+                        publishing (publish/versions/restore, LT-07.1c),
+                        sorting (queue/selection, LT-07.2a)
       search/           golden search/facet foundation (LT-06.2a-i)
         corpus.ts       materializer corpus.json → SearchItem/Marker
         expectations.ts literal-resolver search_expectations.json
@@ -668,6 +745,10 @@ frontend/
       publishing/       publishing/versions/restore foundation (LT-07.1c)
         store.ts        seed версий, canned publish/restore, идемпотентность
         errors.ts       объявленные ошибки публикации/версий/restore
+      sorting/          queue/selection foundation (LT-07.2a)
+        queue.ts        canned queue-сценарии и фильтры
+        selection.ts    SelectionStore, creation/resolution снимков
+        errors.ts       объявленные ошибки очереди/выбора и использования снимка
   tests/
     App.test.tsx        component smoke-тест
     api/client.test.ts  runtime-проверки запросов клиента A/B/C
@@ -683,6 +764,7 @@ frontend/
     mocks/dictionaries-draft.test.ts  targets/dictionaries lifecycle mocks
     mocks/simulations.test.ts  simulation create/get, paging/stale/counts mocks
     mocks/publishing.test.ts  publish/versions/restore, gates/idempotency mocks
+    mocks/sorting-queue-selection.test.ts  queue/selection canned, owner/expiry mocks
     fixture-imports.test.ts  проверка alias-импорта JSON вне frontend/
     support/            технические модули scaffold
     browser/            Playwright smoke-тест

@@ -71,6 +71,38 @@ export type {
   RestoreDictionaryDraftErrorCode,
 } from './publishing/errors'
 export {
+  declaredSelectionUseErrors,
+  declaredSortingErrors,
+  isSortingErrorCode,
+  isSortingErrorDeclaredForOperation,
+  selectionUseErrorResponse,
+  sortingErrorCodesByOperation,
+} from './sorting/errors'
+export type {
+  CreateSortingSelectionErrorCode,
+  DeclaredSelectionUseError,
+  DeclaredSortingError,
+  MockSortingErrorCode,
+  MockSortingOperation,
+  QuerySortingQueueErrorCode,
+  SelectionUseErrorCode,
+} from './sorting/errors'
+export { QUEUE_SCENARIOS, getCannedQueueResponse } from './sorting/queue'
+export type { QueueScenario } from './sorting/queue'
+export {
+  MAX_BATCH_ITEMS,
+  SelectionStore,
+  resolveSelectionCreation,
+} from './sorting/selection'
+export type {
+  FrozenSelectionMember,
+  SelectionCreation,
+  SelectionCreationContext,
+  SelectionResolution,
+  SelectionResolveOptions,
+  StoredSelection,
+} from './sorting/selection'
+export {
   isAllowedTarget,
   listCompanyTargets,
   resolveTargetDisplayPath,

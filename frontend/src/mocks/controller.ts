@@ -28,6 +28,15 @@ import type {
   PublishDictionaryErrorCode,
   RestoreDictionaryDraftErrorCode,
 } from './publishing/errors'
+import {
+  isSortingErrorDeclaredForOperation,
+  type CreateSortingSelectionErrorCode,
+  type MockSortingErrorCode,
+  type MockSortingOperation,
+  type QuerySortingQueueErrorCode,
+} from './sorting/errors'
+import type { QueueScenario } from './sorting/queue'
+import { SelectionStore } from './sorting/selection'
 import { DictionaryStore } from './dictionaries/store'
 import { SimulationStore, type SimulationScenario } from './simulations/store'
 import {
@@ -80,24 +89,24 @@ export type MockPublishingOperation =
   | 'getDictionaryVersion'
   | 'restoreDictionaryDraft'
 
+/** Любая операция, для которой контроллер умеет управлять ошибкой. */
+type MockOperation =
+  | MockSearchOperation
+  | MockDictionaryOperation
+  | MockSimulationOperation
+  | MockPublishingOperation
+  | MockSortingOperation
+
 /** Возвращает `true` для операции поиска (иначе — targets/dictionaries). */
 function isSearchOperation(
-  operation:
-    | MockSearchOperation
-    | MockDictionaryOperation
-    | MockSimulationOperation
-    | MockPublishingOperation,
+  operation: MockOperation,
 ): operation is MockSearchOperation {
   return operation === 'searchFiles' || operation === 'getSearchFacet'
 }
 
 /** Возвращает `true` для операции симуляции. */
 function isSimulationOperation(
-  operation:
-    | MockSearchOperation
-    | MockDictionaryOperation
-    | MockSimulationOperation
-    | MockPublishingOperation,
+  operation: MockOperation,
 ): operation is MockSimulationOperation {
   return (
     operation === 'createDictionarySimulation' ||
@@ -107,17 +116,23 @@ function isSimulationOperation(
 
 /** Возвращает `true` для операции публикации/версий/восстановления. */
 function isPublishingOperation(
-  operation:
-    | MockSearchOperation
-    | MockDictionaryOperation
-    | MockSimulationOperation
-    | MockPublishingOperation,
+  operation: MockOperation,
 ): operation is MockPublishingOperation {
   return (
     operation === 'publishDictionary' ||
     operation === 'listDictionaryVersions' ||
     operation === 'getDictionaryVersion' ||
     operation === 'restoreDictionaryDraft'
+  )
+}
+
+/** Возвращает `true` для операции очереди/выбора (LT-07.2a). */
+function isSortingOperation(
+  operation: MockOperation,
+): operation is MockSortingOperation {
+  return (
+    operation === 'querySortingQueue' ||
+    operation === 'createSortingSelection'
   )
 }
 
@@ -179,6 +194,18 @@ export class MockController {
   private readonly nextPublishingErrors = new Map<
     MockPublishingOperation,
     MockPublishingErrorCode[]
+  >()
+  private queueScenario: QueueScenario = 'ready-120'
+  private eligibleCountOverride: number | null = null
+  private selectionNow: string | null = null
+  private readonly selectionStore = new SelectionStore()
+  private readonly persistentSortingErrors = new Map<
+    MockSortingOperation,
+    MockSortingErrorCode
+  >()
+  private readonly nextSortingErrors = new Map<
+    MockSortingOperation,
+    MockSortingErrorCode[]
   >()
   private readonly sleep: (ms: number) => Promise<void>
 
@@ -308,16 +335,21 @@ export class MockController {
     code: RestoreDictionaryDraftErrorCode,
   ): void
   setError(
-    operation:
-      | MockSearchOperation
-      | MockDictionaryOperation
-      | MockSimulationOperation
-      | MockPublishingOperation,
+    operation: 'querySortingQueue',
+    code: QuerySortingQueueErrorCode,
+  ): void
+  setError(
+    operation: 'createSortingSelection',
+    code: CreateSortingSelectionErrorCode,
+  ): void
+  setError(
+    operation: MockOperation,
     code:
       | SearchErrorCode
       | MockDictionaryErrorCode
       | MockSimulationErrorCode
-      | MockPublishingErrorCode,
+      | MockPublishingErrorCode
+      | MockSortingErrorCode,
   ): void {
     if (isSearchOperation(operation)) {
       this.persistentErrors.set(operation, code as SearchErrorCode)
@@ -331,6 +363,14 @@ export class MockController {
         operation,
         code as MockPublishingErrorCode,
       )
+    } else if (isSortingOperation(operation)) {
+      const sortingCode = code as MockSortingErrorCode
+      // Runtime-guard: код, не объявленный для операции, игнорируется, чтобы
+      // mock не мог отдать undeclared HTTP-статус.
+      if (!isSortingErrorDeclaredForOperation(operation, sortingCode)) {
+        return
+      }
+      this.persistentSortingErrors.set(operation, sortingCode)
     } else {
       this.persistentDictionaryErrors.set(
         operation,
@@ -368,16 +408,21 @@ export class MockController {
     code: RestoreDictionaryDraftErrorCode,
   ): void
   failNext(
-    operation:
-      | MockSearchOperation
-      | MockDictionaryOperation
-      | MockSimulationOperation
-      | MockPublishingOperation,
+    operation: 'querySortingQueue',
+    code: QuerySortingQueueErrorCode,
+  ): void
+  failNext(
+    operation: 'createSortingSelection',
+    code: CreateSortingSelectionErrorCode,
+  ): void
+  failNext(
+    operation: MockOperation,
     code:
       | SearchErrorCode
       | MockDictionaryErrorCode
       | MockSimulationErrorCode
-      | MockPublishingErrorCode,
+      | MockPublishingErrorCode
+      | MockSortingErrorCode,
   ): void {
     if (isSearchOperation(operation)) {
       const queue = this.nextErrors.get(operation)
@@ -410,6 +455,20 @@ export class MockController {
       }
       return
     }
+    if (isSortingOperation(operation)) {
+      const sortingCode = code as MockSortingErrorCode
+      // Runtime-guard: необъявленный для операции код не ставится в очередь.
+      if (!isSortingErrorDeclaredForOperation(operation, sortingCode)) {
+        return
+      }
+      const queue = this.nextSortingErrors.get(operation)
+      if (queue) {
+        queue.push(sortingCode)
+      } else {
+        this.nextSortingErrors.set(operation, [sortingCode])
+      }
+      return
+    }
     const queue = this.nextDictionaryErrors.get(operation)
     if (queue) {
       queue.push(code as MockDictionaryErrorCode)
@@ -423,13 +482,8 @@ export class MockController {
   clearError(operation: MockDictionaryOperation): void
   clearError(operation: MockSimulationOperation): void
   clearError(operation: MockPublishingOperation): void
-  clearError(
-    operation:
-      | MockSearchOperation
-      | MockDictionaryOperation
-      | MockSimulationOperation
-      | MockPublishingOperation,
-  ): void {
+  clearError(operation: MockSortingOperation): void
+  clearError(operation: MockOperation): void {
     if (isSearchOperation(operation)) {
       this.persistentErrors.delete(operation)
       this.nextErrors.delete(operation)
@@ -443,6 +497,11 @@ export class MockController {
     if (isPublishingOperation(operation)) {
       this.persistentPublishingErrors.delete(operation)
       this.nextPublishingErrors.delete(operation)
+      return
+    }
+    if (isSortingOperation(operation)) {
+      this.persistentSortingErrors.delete(operation)
+      this.nextSortingErrors.delete(operation)
       return
     }
     this.persistentDictionaryErrors.delete(operation)
@@ -503,6 +562,34 @@ export class MockController {
     return this.persistentPublishingErrors.get(operation)
   }
 
+  /**
+   * Возвращает объявленную ошибку очереди/выбора для текущей отправки и
+   * расходует одноразовую (LT-07.2a). Код, не объявленный для операции,
+   * никогда не возвращается (защита от undeclared статуса).
+   */
+  consumeSortingError(
+    operation: MockSortingOperation,
+  ): MockSortingErrorCode | undefined {
+    const queue = this.nextSortingErrors.get(operation)
+    if (queue && queue.length > 0) {
+      const code = queue.shift()
+      if (
+        code !== undefined &&
+        isSortingErrorDeclaredForOperation(operation, code)
+      ) {
+        return code
+      }
+    }
+    const persistent = this.persistentSortingErrors.get(operation)
+    if (
+      persistent !== undefined &&
+      isSortingErrorDeclaredForOperation(operation, persistent)
+    ) {
+      return persistent
+    }
+    return undefined
+  }
+
   /** In-memory store справочников (seed, reset и мутации). */
   getDictionaryStore(): DictionaryStore {
     return this.dictionaryStore
@@ -540,6 +627,50 @@ export class MockController {
   /** Задаёт «текущее время» (Instant) для TTL-проверки или `null`. */
   setPublishingNow(instant: string | null): void {
     this.publishingNow = instant
+  }
+
+  /** Текущий выбранный queue-сценарий (по умолчанию `ready-120`). */
+  getQueueScenario(): QueueScenario {
+    return this.queueScenario
+  }
+
+  /** Выбирает canned-сценарий `querySortingQueue`. */
+  setQueueScenario(scenario: QueueScenario): void {
+    this.queueScenario = scenario
+  }
+
+  /**
+   * Переопределение текущего eligible_count для ALL_MATCHING-выбора; `null`
+   * (по умолчанию) — использовать canned значение queue-сценария. Позволяет
+   * воспроизвести `expected_eligible_count` mismatch.
+   */
+  getEligibleCountOverride(): number | null {
+    return this.eligibleCountOverride
+  }
+
+  /** Задаёт переопределение eligible_count или `null` (без переопределения). */
+  setEligibleCountOverride(count: number | null): void {
+    this.eligibleCountOverride =
+      count === null || !Number.isFinite(count) ? null : Math.max(0, Math.floor(count))
+  }
+
+  /**
+   * Инъектированное «текущее время» (Instant) для проверки TTL снимка выбора;
+   * `null` (по умолчанию) отключает TTL-проверку. Сама create-операция TTL не
+   * проверяет: время использует резолвер снимка для preview/batch.
+   */
+  getSelectionNow(): string | null {
+    return this.selectionNow
+  }
+
+  /** Задаёт «текущее время» (Instant) для TTL-проверки снимка или `null`. */
+  setSelectionNow(instant: string | null): void {
+    this.selectionNow = instant
+  }
+
+  /** In-memory store созданных снимков выбора (LT-07.2a). */
+  getSelectionStore(): SelectionStore {
+    return this.selectionStore
   }
 
   /** Текущий выбранный сценарий симуляции (по умолчанию `full`). */
@@ -599,9 +730,10 @@ export class MockController {
   /**
    * Сбрасывает сессию, задержку, профиль, freshness, empty-переопределения,
    * scope-задержки, per-send очереди, управляемые ошибки поиска,
-   * targets/dictionaries, симуляции и публикации, а также восстанавливает seed
-   * справочников/симуляций/публикаций, сценарии `full`/`v2` и снимает
-   * TTL-время publish.
+   * targets/dictionaries, симуляции, публикации и очереди/выбора, а также
+   * восстанавливает seed справочников/симуляций/публикаций, сценарии
+   * `full`/`v2`/`ready-120`, снимает TTL-время publish/selection и очищает
+   * созданные снимки выбора.
    */
   reset(): void {
     this.session = null
@@ -623,11 +755,17 @@ export class MockController {
     this.nextSimulationErrors.clear()
     this.persistentPublishingErrors.clear()
     this.nextPublishingErrors.clear()
+    this.persistentSortingErrors.clear()
+    this.nextSortingErrors.clear()
     this.simulationScenario = 'full'
     this.publishingScenario = 'v2'
     this.publishingNow = null
+    this.queueScenario = 'ready-120'
+    this.eligibleCountOverride = null
+    this.selectionNow = null
     this.dictionaryStore.reset()
     this.simulationStore.reset()
     this.publishingStore.reset()
+    this.selectionStore.reset()
   }
 }
