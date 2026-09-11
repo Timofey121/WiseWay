@@ -99,6 +99,23 @@ function fromErrorExample(
   })
 }
 
+/**
+ * Ответ-ошибка ровно из объявленного контрактного примера
+ * `contracts/examples/errors/*.json` со статусом вызывающей стороны и
+ * безопасным `request_id` текущего mock-ответа.
+ *
+ * Используется управляемыми error-сценариями (LT-06.2b): код, сообщение и
+ * `retryable` берутся из публичного примера, а не выдумываются, поэтому
+ * mock-ошибка совпадает с контрактом.
+ */
+export function exampleErrorResponse(
+  requestId: string,
+  exampleId: string,
+  status: number,
+): Response {
+  return fromErrorExample(requestId, status, exampleId)
+}
+
 /** 401 LOGIN_FAILED — единая ошибка формы входа. */
 export function loginFailedResponse(requestId: string): Response {
   return fromErrorExample(requestId, 401, 'error-login-failed')

@@ -380,6 +380,51 @@ RESULTS/UNRECOGNIZED/freshness через HTTP-слой с literal golden зна
 facet-переоткрытие уровня, echo `request_state_id`, invalid/unknown → ошибка,
 без сессии → 401, отсутствие иных запросов.
 
+## Mock search delay/error/race (LT-06.2b)
+
+`MockController` управляет воспроизводимыми сценариями поиска раздельно по
+двум независимым request scope: `search` — основная таблица (`searchFiles`),
+`facet` — выпадающий список уровня (`getSearchFacet`). Поздний ответ одного
+scope не влияет на другой; `request_state_id` каждого ответа — точное эхо
+конкретной отправки.
+
+| Метод | Действие |
+|---|---|
+| `setScopeDelay('search' \| 'facet', ms)` | базовая задержка отдельного scope; `search` и `facet` независимы |
+| `getScopeDelay(scope)` | текущая задержка scope |
+| `setSendDelays(scope, [ms, …])` | очередь per-send задержек: каждая следующая отправка scope берёт следующее значение; после исчерпания действует `setScopeDelay` |
+| `enqueueSendDelay(scope, ms)` | добавить одно per-send значение в конец очереди |
+| `getPendingSendDelays(scope)` | остаток очереди (копия) |
+| `failNext('searchFiles' \| 'getSearchFacet', code)` | одноразовая объявленная ошибка следующей отправки операции |
+| `setError(operation, code)` | постоянная объявленная ошибка до `clearError`/`reset` |
+| `clearError(operation)` | снять и постоянную, и одноразовые ошибки операции |
+| `reset()` | очищает сессию, задержки, очереди, ошибки, профиль, freshness и empty-переопределения |
+
+Задержка применяется до нормального lookup handler-а и инъектируется через
+`sleep` (`new MockController({ sleep })`), поэтому тесты не ждут реально и
+управляют порядком через controlled clock. Per-send очередь позволяет
+детерминированно воспроизвести нужный порядок ответов (race): mock не «решает»
+гонку, а лишь отдаёт ответы в заданном порядке, чтобы UI-потребитель мог
+проверить собственную логику последнего запроса.
+
+Коды ошибок ограничены объявленными контрактом (`declaredSearchErrors` из
+`@/mocks`): `INVALID_QUERY` (400), `VALIDATION_ERROR`/`INVALID_MARKER_SELECTION`
+(422), `SCHEMA_VERSION_CHANGED`/`ROOT_NOT_READY` (409), `RATE_LIMITED` (429),
+`SEARCH_UNAVAILABLE` (503), `INTERNAL_ERROR` (500). Тело и `retryable` берутся
+из примеров `contracts/examples/errors/*.json`; выдуманных кодов и
+правдоподобного успеха вместо ошибки нет. Невалидный запрос по-прежнему даёт
+`422 VALIDATION_ERROR` до применения управляемой ошибки, валидный, но не
+объявленный — `400 INVALID_QUERY`.
+
+Через транспорт `503 SEARCH_UNAVAILABLE` (`retryable: true`) автоматически
+повторяется: в тестах используется `retry: { maxAttempts: 1 }` либо
+учитывается число попыток.
+
+Проверки: `tests/mocks/search-error-race.test.ts` — независимость scope-задержек,
+воспроизводимость каждой объявленной ошибки, одноразовость `failNext`,
+постоянство `setError`, очистка `reset()`, детерминированный порядок двух
+отправок, точный `request_state_id` и invalid request без успеха.
+
 ## Структура
 
 ```text
@@ -405,13 +450,15 @@ frontend/
       router.ts         разбор Request и диспетчеризация; неизвестный → 404
       validate.ts       ajv-валидация запросов по generated openapi.json
       data.ts           загрузка contracts/examples через @examples + manifest
-      controller.ts     delay/profile/freshness/empty/session/reset
+      controller.ts     delay/profile/freshness/empty/session + search
+                        scope-delay/error/queue/reset
       responses.ts      контрактные заголовки и ErrorResponse
       handlers/         health, login, getSession, logout, appConfig, roots,
                         companies, search (searchFiles/getSearchFacet)
       search/           golden search/facet foundation (LT-06.2a-i)
         corpus.ts       materializer corpus.json → SearchItem/Marker
         expectations.ts literal-resolver search_expectations.json
+        errors.ts       объявленные контрактом ошибки поиска (LT-06.2b)
   tests/
     App.test.tsx        component smoke-тест
     api/client.test.ts  runtime-проверки запросов клиента A/B/C
@@ -423,6 +470,7 @@ frontend/
     mocks/bootstrap.test.ts  bootstrap/session/config mocks и их состояния
     mocks/search-foundation.test.ts  golden search/facet foundation
     mocks/search-handlers.test.ts  HTTP-handlers searchFiles/getSearchFacet
+    mocks/search-error-race.test.ts  delay/error/race управление поиском
     fixture-imports.test.ts  проверка alias-импорта JSON вне frontend/
     support/            технические модули scaffold
     browser/            Playwright smoke-тест

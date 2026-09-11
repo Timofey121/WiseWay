@@ -27,9 +27,16 @@ export { MockController }
 export type {
   ConfigProfile,
   MockControllerOptions,
+  MockSearchOperation,
+  MockSearchScope,
   SearchFreshnessProfile,
 } from './controller'
 export { MOCK_MODE, MOCK_MARKER_HEADER } from './responses'
+export {
+  declaredSearchErrors,
+  isSearchErrorCode,
+} from './search/errors'
+export type { DeclaredSearchError, SearchErrorCode } from './search/errors'
 export type {
   MockHandler,
   MockRequestContext,

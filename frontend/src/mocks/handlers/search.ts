@@ -6,6 +6,11 @@
 // выполняет matcher, ranking, пересортировку или парсинг путей и ничего не
 // изменяет: обе операции — чтение (`csrf: false`, `idempotencyKey: false`).
 //
+// LT-06.2b: до нормального lookup handler применяет управляемую задержку
+// своего scope (`search`/`facet` независимы) и объявленную ошибку операции из
+// контроллера. Ошибка возвращается ровно контрактным примером
+// (`SearchErrorCode`), без выдуманных кодов и без правдоподобного успеха.
+//
 // `request_state_id` всегда эхо исходной отправки; freshness-профиль берётся из
 // контроллера (CURRENT по умолчанию). Ненайденный golden-сценарий даёт
 // объявленную контрактом 400 `INVALID_QUERY`, а не правдоподобный успех.
@@ -20,6 +25,7 @@ import {
   unauthenticatedResponse,
   validationErrorResponse,
 } from '../responses'
+import { declaredSearchErrorResponse } from '../search/errors'
 import {
   resolveFacetScenario,
   resolveSearchScenario,
@@ -54,6 +60,8 @@ export const searchHandler: MockHandler = async ({
     return unauthenticatedResponse(requestId)
   }
 
+  await controller.waitForScope('search')
+
   const body = await readJsonBody(request)
   if (!body.ok) {
     return invalidBodyResponse(requestId)
@@ -62,6 +70,11 @@ export const searchHandler: MockHandler = async ({
   const validation = validateSchema('SearchRequest', body.value)
   if (!validation.valid) {
     return validationErrorResponse(requestId, toFieldErrors(validation.errors))
+  }
+
+  const forcedError = controller.consumeError('searchFiles')
+  if (forcedError) {
+    return declaredSearchErrorResponse(requestId, forcedError)
   }
 
   const searchRequest = body.value as SearchRequest
@@ -95,6 +108,8 @@ export const searchFacetHandler: MockHandler = async ({
     return unauthenticatedResponse(requestId)
   }
 
+  await controller.waitForScope('facet')
+
   const body = await readJsonBody(request)
   if (!body.ok) {
     return invalidBodyResponse(requestId)
@@ -103,6 +118,11 @@ export const searchFacetHandler: MockHandler = async ({
   const validation = validateSchema('FacetRequest', body.value)
   if (!validation.valid) {
     return validationErrorResponse(requestId, toFieldErrors(validation.errors))
+  }
+
+  const forcedError = controller.consumeError('getSearchFacet')
+  if (forcedError) {
+    return declaredSearchErrorResponse(requestId, forcedError)
   }
 
   const facetRequest = body.value as FacetRequest
