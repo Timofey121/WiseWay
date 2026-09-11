@@ -16,7 +16,7 @@ function normalizeLineEndings(text) {
   return text.replace(/\r\n/g, '\n')
 }
 
-const ARTIFACTS = ['schema.ts', 'openapi.json']
+const ARTIFACTS = ['schema.ts', 'openapi.json', 'operation-meta.ts']
 
 const tempDir = await mkdtemp(path.join(os.tmpdir(), 'wiseway-generated-'))
 let failed = false

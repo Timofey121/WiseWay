@@ -1,10 +1,11 @@
 # WiseWay — frontend
 
 Минимальная рабочая основа (scaffold) frontend-приложения WiseWay. Сейчас в
-каталоге находятся конфигурация инструментов, точка входа, smoke-тесты и
-generated API-артефакты из единственного публичного OAS. Продуктовые экраны,
-навигация, дизайн-система и mock-сценарии появятся в следующих leaf-задачах
-(EPIC E-02, WP-05/WP-06/WP-07).
+каталоге находятся конфигурация инструментов, точка входа, smoke-тесты,
+generated API-артефакты из единственного публичного OAS и базовый
+request/session security transport (WP-05). Продуктовые экраны, навигация и
+mock-сценарии появятся в следующих leaf-задачах (EPIC E-02,
+WP-06/WP-07).
 
 Выбранный toolchain, точные версии и политика lock-файла закреплены в
 [ADR-0001. Frontend toolchain WiseWay](docs/ADR-0001-frontend-toolchain.md).
@@ -45,12 +46,13 @@ Lock-файл коммитится; повторная установка не �
 (OpenAPI 3.1.1, `info.version: 1.0.0`, 33 `operationId`). Второй контракт не
 создаётся, ручные DTO на клиенте запрещены.
 
-Из OAS воспроизводимо генерируются два артефакта (оба коммитятся):
+Из OAS воспроизводимо генерируются три артефакта (все коммитятся):
 
 | Артефакт | Назначение |
 |---|---|
 | `src/api/generated/schema.ts` | TypeScript-типы всех операций и схем (`openapi-typescript` 7). Импорт: `import type { paths, components, operations } from '@/api/generated/schema'`. |
 | `src/api/generated/openapi.json` | Тот же OAS, сконвертированный YAML → JSON; используется runtime-mocks (WP-06/WP-07), которым не нужен YAML-парсер в браузере. |
+| `src/api/generated/operation-meta.ts` | Карта `METHOD path` → `{ operationId, csrf, idempotencyKey }`, выведенная из OAS. Используется транспортом, чтобы ставить CSRF/Idempotency-Key только объявленным операциям. |
 
 Типизированный runtime-клиент `src/api/generated/client.ts` строится поверх
 `schema.ts` через `openapi-fetch` и не дублирует схемы. Фабрика:
@@ -73,9 +75,49 @@ git diff --exit-code -- src/api/generated   # пусто при неизменн
 npm run generate:api:check                  # без Git: сравнение с временным каталогом
 ```
 
-`schema.ts` и `openapi.json` генерируются целиком и не редактируются вручную:
-изменения будут перезаписаны следующей генерацией. Обоснование выбора
-генератора и клиента — в [ADR-0001](docs/ADR-0001-frontend-toolchain.md) §5.
+`schema.ts`, `openapi.json` и `operation-meta.ts` генерируются целиком и не
+редактируются вручную: изменения будут перезаписаны следующей генерацией.
+Обоснование выбора генератора и клиента — в
+[ADR-0001](docs/ADR-0001-frontend-toolchain.md) §5.
+
+## Безопасный HTTP-транспорт
+
+Единый клиент для real- и mock-режимов создаётся фабрикой
+`createApiClient` из `src/api/transport.ts`:
+
+```ts
+import { createApiClient } from '@/api/transport'
+import { setCsrfToken, clearSession } from '@/api/session-context'
+
+const api = createApiClient({ mode: 'real' }) // baseUrl по умолчанию — '/api/v1'
+
+const { data } = await api.GET('/session')
+setCsrfToken(data.csrf_token) // CSRF-токен живёт только в памяти вкладки
+```
+
+Что гарантирует транспорт (по `contracts/openapi/wiseway-v1.yaml` и API §2):
+
+- в `real`-режиме запросы идут с `credentials: 'include'` — HttpOnly cookie
+  `wiseway_session` обслуживает браузер; frontend её не читает и не хранит;
+- каждый запрос идёт с `cache: 'no-store'`;
+- `X-CSRF-Token` ставится только 10 операциям, объявившим
+  `#/components/parameters/XCSRFToken`, и только при наличии токена
+  (провайдер `csrfTokenProvider` или in-memory `session-context`);
+- `Idempotency-Key` ставится только 3 операциям с
+  `#/components/parameters/IdempotencyKey` и только если ключ предоставлен
+  `idempotencyKeyProvider`; фиктивный ключ не подставляется;
+- CSRF и ключ идут только в заголовках, не в теле;
+- `X-Request-ID` ответа передаётся в `onRequestId`;
+- ответ `401` очищает `session-context` и уведомляет подписчиков
+  `onUnauthorized`; `403` не повторяется автоматически.
+
+`src/api/session-context.ts` — in-memory держатель CSRF-токена: без
+`localStorage`, `sessionStorage`, cookie и URL; токен меняется при новом входе
+и очищается при logout/401. Секреты и тела запросов не логируются.
+
+`mode` меняет только transport config: `real` использует переданный/глобальный
+`fetch` c cookie credentials, `mock` — обязательный переданный mock-fetch
+(handlers подключают WP-06/WP-07). Схемы запросов/ответов общие.
 
 ## Структура
 
@@ -83,18 +125,22 @@ npm run generate:api:check                  # без Git: сравнение с 
 frontend/
   index.html
   scripts/
-    generate-api.mjs          генерация schema.ts + openapi.json из OAS
+    generate-api.mjs          генерация schema.ts + openapi.json + operation-meta.ts
     check-generated.mjs       проверка повторной генерации без diff
   src/
     main.tsx            точка входа React
     App.tsx             минимальный placeholder (без экранов продукта)
     features/{auth,search,dictionaries,sorting,quarantine,audit}/
     api/
-      generated/        generated-артефакты (schema.ts, openapi.json) и client.ts
+      generated/        generated-артефакты (schema.ts, openapi.json,
+                        operation-meta.ts) и client.ts
+      session-context.ts  in-memory CSRF/401-состояние
+      transport.ts        createApiClient: credentials/no-store/CSRF/idempotency
     mocks/              placeholder для schema-valid mocks (WP-06/WP-07)
   tests/
     App.test.tsx        component smoke-тест
     api/client.test.ts  runtime-проверки запросов клиента A/B/C
+    api/transport.test.ts  состав Request, CSRF/Idempotency/401/403/request_id
     api/generated-types.test.ts  type-level проверки generated-схемы
     fixture-imports.test.ts  проверка alias-импорта JSON вне frontend/
     support/            технические модули scaffold

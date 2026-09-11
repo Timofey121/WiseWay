@@ -107,6 +107,12 @@
   `createWiseWayClient` на `openapi-fetch@0.14.1` (`createClient<paths>`) с
   настраиваемыми `baseUrl`/`fetch`; ручных DTO и дублирования схем нет.
 - Все 33 `operationId` присутствуют в `schema.ts` и `openapi.json`.
+- LT-05.1a (WP-05) расширяет ту же генерацию артефактом
+  `src/api/generated/operation-meta.ts`: карта `METHOD path` →
+  `{ operationId, csrf, idempotencyKey }`, выведенная из наличия `$ref` на
+  `#/components/parameters/XCSRFToken` и `#/components/parameters/IdempotencyKey`.
+  Артефакт генерируется тем же `npm run generate:api` и проверяется
+  `generate:api:check`; решение §5 не меняется.
 
 ## 6. Совместимость с OpenAPI 3.1.1
 
