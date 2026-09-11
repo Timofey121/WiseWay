@@ -113,6 +113,13 @@
   `#/components/parameters/XCSRFToken` и `#/components/parameters/IdempotencyKey`.
   Артефакт генерируется тем же `npm run generate:api` и проверяется
   `generate:api:check`; решение §5 не меняется.
+- LT-05.1b (WP-05) добавляет рукописный `src/api/transport-error.ts` —
+  единый `TransportError` для HTTP/сетевых ошибок поверх результатов
+  `openapi-fetch`. Решение §5 (генерация типов из единственного OAS, без
+  ручных DTO) не меняется: модель не дублирует DTO, а ссылается на
+  generated-типы `components['schemas']['FieldError']`/`ErrorCode`. Транспорт
+  различает `401 UNAUTHENTICATED` (очистка сессии) и `401 LOGIN_FAILED`
+  (ошибка формы без очистки), читая тело через `Response.clone()`.
 
 ## 6. Совместимость с OpenAPI 3.1.1
 

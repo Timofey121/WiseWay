@@ -32,7 +32,7 @@ export function clearSession(): void {
 }
 
 /**
- * Подписывает слушателя на сигнал 401/UNAUTHENTICATED.
+ * Подписывает слушателя на сигнал `401/UNAUTHENTICATED`.
  *
  * @returns функция отписки.
  */
@@ -45,7 +45,8 @@ export function onUnauthorized(listener: () => void): () => void {
 
 /**
  * Сообщает приложению, что сессия недействительна: очищает токен и уведомляет
- * подписчиков. Транспорт вызывает это при ответе 401.
+ * подписчиков. Транспорт вызывает это только для `401` с кодом
+ * `UNAUTHENTICATED`; `LOGIN_FAILED` не очищает сессию.
  */
 export function emitUnauthorized(): void {
   clearSession()

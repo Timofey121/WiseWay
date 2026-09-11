@@ -108,12 +108,60 @@ setCsrfToken(data.csrf_token) // CSRF-токен живёт только в па
   `idempotencyKeyProvider`; фиктивный ключ не подставляется;
 - CSRF и ключ идут только в заголовках, не в теле;
 - `X-Request-ID` ответа передаётся в `onRequestId`;
-- ответ `401` очищает `session-context` и уведомляет подписчиков
-  `onUnauthorized`; `403` не повторяется автоматически.
+- ответ `401` с кодом `UNAUTHENTICATED` очищает `session-context` и уведомляет
+  подписчиков `onUnauthorized`; `401` с кодом `LOGIN_FAILED` остаётся ошибкой
+  формы входа и **не** очищает сессию; `403` не повторяется автоматически.
 
 `src/api/session-context.ts` — in-memory держатель CSRF-токена: без
 `localStorage`, `sessionStorage`, cookie и URL; токен меняется при новом входе
-и очищается при logout/401. Секреты и тела запросов не логируются.
+и очищается при logout/`UNAUTHENTICATED`. Секреты и тела запросов не логируются.
+
+### Единая безопасная модель ошибок
+
+`src/api/transport-error.ts` приводит и HTTP-ошибки, и сетевые сбои
+`openapi-fetch` к одному типу `TransportError`. Он доступен и через
+`src/api/transport.ts`:
+
+```ts
+import { createApiClient, throwIfError, isTransportError } from '@/api/transport'
+
+const api = createApiClient({ mode: 'real' })
+try {
+  const data = throwIfError(await api.GET('/session'))
+} catch (error) {
+  if (isTransportError(error)) {
+    // error.code, error.message, error.requestId, error.operationId,
+    // error.fieldErrors, error.retryable, error.retryAfterSeconds
+  }
+}
+```
+
+`TransportError` содержит только безопасные metadata публичного контракта:
+
+| Поле | Источник |
+|---|---|
+| `kind` | `'http'` для ответа сервера, `'network'` для сбоя/таймаута |
+| `status` | HTTP-статус; `null` для сети |
+| `code` | `error.code` из контракта; при отсутствии/битом теле — безопасный код по статусу |
+| `message` | безопасное русское пользовательское сообщение (`error.message` либо справочник) |
+| `requestId` | `error.request_id` либо `X-Request-ID` |
+| `operationId` | `error.operation_id` (`null`, если операция не создавалась) |
+| `retryable` | `error.retryable`; иначе по таблице API §11 (429/503/сеть — `true`) |
+| `fieldErrors` | `error.field_errors` (`#/components/schemas/FieldError`) |
+| `retryAfterSeconds` | `Retry-After` в секундах (delta-seconds), иначе `null` |
+
+Гарантии безопасности:
+
+- сырое тело ответа, пароль, поисковый текст, физические пути, стек и текст
+  исключения никогда не попадают в `TransportError`;
+- при отсутствии/битом теле код синтезируется по статусу
+  (`401 UNAUTHENTICATED`, `403 FORBIDDEN`, `404 NOT_FOUND`, `409 INVALID_STATE`,
+  `422 VALIDATION_ERROR`, `429 RATE_LIMITED`, `500 INTERNAL_ERROR`,
+  `503 SERVICE_UNAVAILABLE`), а сообщение берётся из безопасного справочника;
+- сетевой сбой даёт `kind: 'network'`, `code: 'NETWORK_ERROR'`,
+  `retryable: true` и не превращается в success;
+- `throwIfError` определяет успех по `response.ok`, поэтому `200/204` не
+  становится ошибкой, а ошибочный ответ без тела — ложным успехом.
 
 `mode` меняет только transport config: `real` использует переданный/глобальный
 `fetch` c cookie credentials, `mock` — обязательный переданный mock-fetch
@@ -135,12 +183,14 @@ frontend/
       generated/        generated-артефакты (schema.ts, openapi.json,
                         operation-meta.ts) и client.ts
       session-context.ts  in-memory CSRF/401-состояние
+      transport-error.ts  TransportError и безопасный разбор ошибок
       transport.ts        createApiClient: credentials/no-store/CSRF/idempotency
     mocks/              placeholder для schema-valid mocks (WP-06/WP-07)
   tests/
     App.test.tsx        component smoke-тест
     api/client.test.ts  runtime-проверки запросов клиента A/B/C
     api/transport.test.ts  состав Request, CSRF/Idempotency/401/403/request_id
+    api/transport-error.test.ts  HTTP/network-ошибки и отсутствие утечек
     api/generated-types.test.ts  type-level проверки generated-схемы
     fixture-imports.test.ts  проверка alias-импорта JSON вне frontend/
     support/            технические модули scaffold

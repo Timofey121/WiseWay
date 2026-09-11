@@ -19,7 +19,13 @@
 // - CSRF и ключ идут только в заголовках, не в теле запроса;
 // - `X-Request-ID` ответа передаётся в `onRequestId`;
 // - ответ 401 очищает клиентскую сессию и уведомляет подписчиков
-//   `session-context`; 403 не порождает автоматический повтор.
+//   `session-context` только для `UNAUTHENTICATED`; `LOGIN_FAILED` остаётся
+//   ошибкой формы входа без очистки; 403 не порождает автоматический повтор.
+//
+// Единая безопасная модель ошибок — `./transport-error` (`TransportError`,
+// `toTransportError`, `isTransportError`, `throwIfError`); она реэкспортируется
+// из этого модуля, чтобы потребители клиента получали безопасные
+// `request_id`/`operation_id`/`field_errors` без утечки тел и секретов.
 //
 // Транспорт не логирует тела, секреты и поисковый текст.
 
@@ -28,6 +34,19 @@ import createClient, { type Client, type Middleware } from 'openapi-fetch'
 import { operationMeta, type OperationMeta } from './generated/operation-meta'
 import type { paths } from './generated/schema'
 import { emitUnauthorized, getCsrfToken } from './session-context'
+
+export {
+  TransportError,
+  toTransportError,
+  isTransportError,
+  throwIfError,
+} from './transport-error'
+export type {
+  ApiResultLike,
+  ErrorCode,
+  FieldError,
+  TransportErrorKind,
+} from './transport-error'
 
 /** Режим транспорта: настоящий сервер или mock-fetch. */
 export type ApiMode = 'real' | 'mock'
@@ -84,6 +103,29 @@ export function findOperationMeta(
   schemaPath: string,
 ): OperationMeta | undefined {
   return operationMetaByKey[`${method.toUpperCase()} ${schemaPath}`]
+}
+
+/**
+ * Читает `error.code` из тела ответа через `Response.clone()`, не расходуя
+ * оригинальное тело, которое далее читает `openapi-fetch`. Возвращает `null`,
+ * если тела нет, оно не JSON или код отсутствует.
+ */
+async function readErrorCode(response: Response): Promise<string | null> {
+  try {
+    const body: unknown = await response.clone().json()
+    if (body && typeof body === 'object') {
+      const error = (body as { error?: unknown }).error
+      if (error && typeof error === 'object') {
+        const code = (error as { code?: unknown }).code
+        if (typeof code === 'string') {
+          return code
+        }
+      }
+    }
+  } catch {
+    // Тело отсутствует или не является JSON — код определить нельзя.
+  }
+  return null
 }
 
 /**
@@ -146,13 +188,21 @@ export function createApiClient(options: CreateApiClientOptions): WiseWayApiClie
       }
       return new Request(request, init)
     },
-    onResponse({ response }) {
+    async onResponse({ response }) {
       const requestId = response.headers.get('X-Request-ID')
       if (requestId) {
         options.onRequestId?.(requestId)
       }
       if (response.status === 401) {
-        emitUnauthorized()
+        // Различаем недействительную сессию (`UNAUTHENTICATED`) и неверные
+        // учётные данные формы входа (`LOGIN_FAILED`). Тело читаем из клона,
+        // поэтому оригинал остаётся доступен `openapi-fetch`. При нечитаемом
+        // теле код не подтверждён и очистка не выполняется: ложный logout
+        // хуже, чем пропущенный сигнал, который UI всё равно увидит как ошибку.
+        const code = await readErrorCode(response)
+        if (code === 'UNAUTHENTICATED') {
+          emitUnauthorized()
+        }
       }
       // 403 и прочие ошибки не повторяются: возвращаем ответ без изменений,
       // чтобы failure не превратился в success.
