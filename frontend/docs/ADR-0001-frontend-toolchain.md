@@ -137,6 +137,15 @@
   `WeakMap` (не в заголовках), состояние ограничено памятью вкладки.
   `Retry-After` берётся из уже реализованного `TransportError.retryAfterSeconds`
   (LT-05.1b), poll-интервалы остаются на feature-уровне (app-config).
+- LT-06.1 (WP-06) добавляет рукописный `src/mocks/` — контрактные mocks
+  bootstrap/session/config без backend (`getHealth`, `login`, `getSession`,
+  `logout`, `getAppConfig`, `listRoots`, `listCompanies`). Решение §5 не
+  меняется: ответы — это публичные примеры `contracts/examples/**`
+  (индексируются по `fixtures/synthetic/manifest.json`, alias `@examples`), а
+  тела запросов валидируются по `src/api/generated/openapi.json` тем же
+  `ajv@8` (`ajv/dist/2020`, JSON Schema 2020-12) + `ajv-formats` из §6. Ручных
+  DTO и правок OAS нет; mock явно помечен заголовком `X-WiseWay-Mock`, не
+  является защищённым auth backend и не содержит реальных credentials.
 
 ## 6. Совместимость с OpenAPI 3.1.1
 

@@ -255,6 +255,66 @@ try {
 `fetch` c cookie credentials, `mock` — обязательный переданный mock-fetch
 (handlers подключают WP-06/WP-07). Схемы запросов/ответов общие.
 
+## Mock-режим bootstrap/session/config (LT-06.1)
+
+`src/mocks/` — контрактные mocks без backend для семи операций:
+`getHealth`, `login`, `getSession`, `logout`, `getAppConfig`, `listRoots`,
+`listCompanies`. Ответы берутся из публичных примеров
+`contracts/examples/**` (индексируются по `fixtures/synthetic/manifest.json`),
+а не из ручных копий DTO, и валидируются по схемам единственного OAS.
+
+```ts
+import { createApiClient } from '@/api/transport'
+import { createMockFetch, MockController } from '@/mocks'
+
+const controller = new MockController()
+const api = createApiClient({
+  mode: 'mock',
+  baseUrl: 'http://localhost/api/v1', // в браузере достаточно '/api/v1'
+  fetch: createMockFetch(controller),
+})
+
+const health = await api.GET('/health') // 200 {status: 'ok'}
+```
+
+`createMockFetch(controller?)` — fetch-совместимый перехватчик; контроллер
+можно не передавать (будет создан свой). `MOCK_MODE`/`MOCK_MARKER_HEADER`
+(`X-WiseWay-Mock`) экспортируются из `@/mocks` как явный маркер mock-ответа.
+
+### Сценарии
+
+`MockController` управляет воспроизводимым состоянием:
+
+| Метод | Действие |
+|---|---|
+| `setDelayMs(ms)` | управляемая задержка ответа; ожидание инъектируется через `new MockController({ sleep })`, поэтому тесты не ждут реально |
+| `setConfigProfile('n100' \| 'n10')` | профиль `app-config`: `search_result_limit` 100 или 10 |
+| `setRootsEmpty(true)` | `listRoots` → `roots-empty` (пустой `items`) |
+| `setCompaniesEmpty(true)` | `listCompanies` → `companies-empty` (пустой `items`) |
+| `reset()` | очищает mock-сессию, задержку, профиль и empty-переопределения |
+
+Сессия создаётся успешным `login` по одному из synthetic-примеров
+(`login-request-worker-one/two/admin`) и очищается `logout`. `getSession`,
+`getAppConfig`, `listRoots`, `listCompanies` без сессии дают
+`401 UNAUTHENTICATED`; `logout` без/с неверным `X-CSRF-Token` — `403 CSRF_FAILED`.
+Неизвестный маршрут даёт безопасную `404 NOT_FOUND`, а не правдоподобный успех.
+Все ответы несут `X-Request-ID`, пользовательские — `Cache-Control: no-store`.
+
+Невалидное тело `login` (лишнее поле, отсутствие `password`, пустой/битый JSON)
+отклоняется до успеха: `422 VALIDATION_ERROR` с безопасными `field_errors` по
+схеме `LoginRequest`. Валидация выполняется `ajv@8` (`ajv/dist/2020`, JSON
+Schema 2020-12) + `ajv-formats` по `src/api/generated/openapi.json`; схемы
+вручную не копируются.
+
+**Границы:** mock — не защищённый auth backend. Он не проверяет реальные
+credentials, не устанавливает cookie и не хранит серверные сессии; пароли в
+примерах — инертные placeholder'ы, которые не логируются и не возвращаются.
+CSRF-проверка в mock — воспроизведение контрактного поведения, не
+доказательство безопасности сервера. Mock-прохождение не является real-backend
+evidence.
+
+Проверки сценариев: `npm run test` (файл `tests/mocks/bootstrap.test.ts`).
+
 ## Структура
 
 ```text
@@ -275,7 +335,14 @@ frontend/
       retry.ts            retry/backoff policy и single-flight poll registry
       transport-error.ts  TransportError и безопасный разбор ошибок
       transport.ts        createApiClient: credentials/no-store/CSRF/idempotency/retry
-    mocks/              placeholder для schema-valid mocks (WP-06/WP-07)
+    mocks/              schema-valid mocks bootstrap/session/config (LT-06.1)
+      index.ts          createMockFetch, MockController, MOCK_MODE
+      router.ts         разбор Request и диспетчеризация; неизвестный → 404
+      validate.ts       ajv-валидация запросов по generated openapi.json
+      data.ts           загрузка contracts/examples через @examples + manifest
+      controller.ts     delay/profile/empty/session/reset
+      responses.ts      контрактные заголовки и ErrorResponse
+      handlers/         health, login, getSession, logout, appConfig, roots, companies
   tests/
     App.test.tsx        component smoke-тест
     api/client.test.ts  runtime-проверки запросов клиента A/B/C
@@ -284,6 +351,7 @@ frontend/
     api/retry.test.ts   shouldRetry/backoff, same-Request retry, no-parallel-poll
     api/transport-error.test.ts  HTTP/network-ошибки и отсутствие утечек
     api/generated-types.test.ts  type-level проверки generated-схемы
+    mocks/bootstrap.test.ts  bootstrap/session/config mocks и их состояния
     fixture-imports.test.ts  проверка alias-импорта JSON вне frontend/
     support/            технические модули scaffold
     browser/            Playwright smoke-тест

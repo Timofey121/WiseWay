@@ -2,7 +2,7 @@
 
 Дата обследования: 10.09.2026. Область: внешняя синтетическая Demo-MVP.
 
-Это execution backlog: план декомпозиции и учёт подтверждённого прогресса, не доказательство готовой реализации сам по себе. Иерархия: **EPIC → EXECUTION UNIT → WORK PACKAGE → LEAF TASK**. В документе **10 EPIC, 32 WORK PACKAGE, 80 исходных leaf IDs**. Пять родителей WP-03 рекурсивно разделены на 10 дочерних leaf; дополнительно 33 слишком широких родителя E-02…E-09 заранее разделены на 71 исполняемый дочерний leaf. Исходные IDs сохранены как traceability-parent; всего получается **123 исполняемых конечных leaf**. WP-31/32 и их два leaf — условное планирование, не обязательные функции внешней MVP.
+Это execution backlog: план декомпозиции и учёт подтверждённого прогресса, не доказательство готовой реализации сам по себе. Иерархия: **EPIC → EXECUTION UNIT → WORK PACKAGE → LEAF TASK**. В документе **10 EPIC, 32 WORK PACKAGE, 80 исходных leaf IDs**. Пять родителей WP-03 рекурсивно разделены на 10 дочерних leaf; дополнительно 33 слишком широких родителя E-02…E-09 заранее разделены на 71 исполняемый дочерний leaf; при исполнении E-02 родитель LT-06.2a дополнительно разделён ещё на 2 дочерних leaf (LT-06.2a-i/ii). Исходные IDs сохранены как traceability-parent; всего получается **124 исполняемых конечных leaf**. WP-31/32 и их два leaf — условное планирование, не обязательные функции внешней MVP.
 
 ## 1. Источники истины и решения пользователя
 
@@ -274,7 +274,7 @@ LT-05.2b completion: добавлен `frontend/src/api/retry.ts` (`RetryConfig`
 
 ### WP-06 — Контрактные mocks A
 
-- **Status:** TODO. **Parent:** E-02. **Dependencies:** WP-03, WP-05.
+- **Status:** IN_PROGRESS. **Parent:** E-02. **Dependencies:** WP-03, WP-05.
 - **Goal:** воспроизводимые auth/search сценарии без backend.
 - **Sources of truth:** FE-02; API §3/4/12; QA §4/5; Q-001…014/043; OAS A-операции.
 - **Acceptance criteria:** requests/responses schema-valid, delay/error/reset управляемы; нет клиентского поиска/ranking по dataset; mock указан в evidence.
@@ -283,8 +283,10 @@ LT-05.2b completion: добавлен `frontend/src/api/retry.ts` (`RetryConfig`
 
 | Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
 |---|---|---|---|---|---|---|
-| LT-06.1 | TODO | WP-03, WP-05 | Mock bootstrap/session/config | OAS getHealth/login/getSession/logout/getAppConfig/listRoots/listCompanies; API §2/3; Q-001…004/043 | Session/401/403, empty roots/companies, разные limits/timezone, сеть/delay воспроизводимы; requests валидируются; реальных credentials нет; mock не защищённый auth backend | V-S/V-C всех handlers/headers/reset/invalid fields |
-| LT-06.2 | TODO | LT-06.1, LT-03.1 | Mock выдачи/facets/races | OAS searchFiles/getSearchFacet; API §4; Q-004…014 | IDLE/zero/limited/unrecognized/freshness, schema/marker/503 ошибки, управляемый порядок ответов таблицы/dropdown; request_state_id конкретной отправки; totals/order из эталона, не matcher | V-S/V-C handlers/delays; invalid request не даёт правдоподобный успех |
+| LT-06.1 | IN_PROGRESS | WP-03, WP-05 | Mock bootstrap/session/config | OAS getHealth/login/getSession/logout/getAppConfig/listRoots/listCompanies; API §2/3; Q-001…004/043 | Session/401/403, empty roots/companies, разные limits/timezone, сеть/delay воспроизводимы; requests валидируются; реальных credentials нет; mock не защищённый auth backend | V-S/V-C всех handlers/headers/reset/invalid fields |
+| LT-06.2 | PARENT | LT-06.1, LT-03.1 | Mock выдачи/facets/races | OAS searchFiles/getSearchFacet; API §4; Q-004…014 | IDLE/zero/limited/unrecognized/freshness, schema/marker/503 ошибки, управляемый порядок ответов таблицы/dropdown; request_state_id конкретной отправки; totals/order из эталона, не matcher | V-S/V-C handlers/delays; invalid request не даёт правдоподобный успех |
+
+SESSION CHECKPOINT (11.09.2026, orchestrator context-limit stop): LT-06.1 implementation фактически завершена worker-сессией, но независимый `frontend/reviewer` для неё **ещё не проводился**, статус оставлен IN_PROGRESS. Создан локальный WIP checkpoint commit с mock-инфраструктурой (`frontend/src/mocks/**`, `frontend/tests/mocks/bootstrap.test.ts`, README/ADR). Продолжение в новой orchestrator-сессии: сначала fresh LEAF review LT-06.1, затем LT-06.2a-i → LT-06.2a-ii → LT-06.2b, package review WP-06. Публикация — за пользователем (D-09).
 
 ### WP-07 — Контрактные mocks B/C
 
@@ -721,8 +723,10 @@ Status: BLOCKED (X-HELP/X-INTERNAL). Scope: FE-06, TZ §13. Не расширя�
 
 | Leaf ID | Parent | Status | Dependencies | Наблюдаемый результат и AC | Verification |
 |---|---|---|---|---|---|
-| LT-06.2a | LT-06.2 | TODO | LT-06.1, LT-03.1 | Canned schema-valid search/facet ответы из golden: IDLE/zero/limited/unrecognized/freshness, literal totals/order/facets; mock не вычисляет matcher/ranking | V-S/V-C handlers и literal golden assertions |
-| LT-06.2b | LT-06.2 | TODO | LT-06.2a | Управляемые delay/error/race сценарии search и facet: отдельные request scopes, 503/schema errors, порядок table/dropdown responses и конкретный `request_state_id` | Deterministic delay/error/race tests; invalid request не даёт правдоподобный success |
+| LT-06.2a | LT-06.2 | PARENT | LT-06.1, LT-03.1 | Traceability-parent: исходный AC «canned schema-valid search/facet ответы из golden» исполняется детьми LT-06.2a-i/ii | — |
+| LT-06.2a-i | LT-06.2a | TODO | LT-06.1, LT-03.1 | Golden search/facet data foundation: детерминированный materializer `fixtures/synthetic/corpus.json` → полные `SearchItem`/`Marker`/`Facet`; загрузчик и разрешение `fixtures/synthetic/search_expectations.json` (51 search + 6 facet сценариев) по request; literal totals/order/facets/item_ids; schema-valid; НЕ matcher/ranking | V-S/V-C: каждый сценарий разрешается в schema-valid `SearchResponse`/`FacetResponse`; literal totals/order/facets совпадают; item_ids ⊆ materialized inventory; нет алгоритма поиска |
+| LT-06.2a-ii | LT-06.2a | TODO | LT-06.2a-i | Mock HTTP handlers `searchFiles`/`getSearchFacet` над foundation: роутинг в mock-fetch, echo `request_state_id`, `index_generation`/`ranking_profile_version`/freshness из root, request validation, IDLE/zero/limited/unrecognized/freshness success-состояния | V-C: клиент через mock transport получает literal golden ответы; invalid request не даёт правдоподобный success; UI-потребители не нужны |
+| LT-06.2b | LT-06.2 | TODO | LT-06.2a-ii | Управляемые delay/error/race сценарии search и facet: отдельные request scopes, 503/schema errors, порядок table/dropdown responses и конкретный `request_state_id` | Deterministic delay/error/race tests; invalid request не даёт правдоподобный success |
 
 ### E-02 / WP-07 — B/C mocks
 
