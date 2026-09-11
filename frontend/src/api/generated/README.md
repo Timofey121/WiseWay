@@ -1,9 +1,29 @@
-# Generated API-клиент
+# Generated API-артефакты
 
-Содержимое этого каталога **генерируется** из единственного публичного
-контракта `contracts/openapi/wiseway-v1.yaml` и не редактируется вручную.
+Содержимое этого каталога генерируется из единственного публичного контракта
+`contracts/openapi/wiseway-v1.yaml` (OpenAPI 3.1.1, `info.version: 1.0.0`) и не
+редактируется вручную.
 
-Генерация типов и клиента выполняется в leaf LT-04.2 (EPIC E-02, WP-04)
-документированной командой на закреплённых версиях `openapi-typescript` и
-`openapi-fetch`. До завершения LT-04.2 каталог остаётся пустым
-placeholder-ом (`.gitkeep`).
+| Файл | Что это | Как получить |
+|---|---|---|
+| `schema.ts` | TypeScript-типы всех 33 операций и схем (`openapi-typescript` 7) | `npm run generate:api` |
+| `openapi.json` | Тот же OAS, сконвертированный YAML → JSON для runtime-mocks (WP-06/WP-07); браузеру не нужен YAML-парсер | `npm run generate:api` |
+| `client.ts` | Типизированная фабрика клиента на `openapi-fetch` поверх `schema.ts` (пишется вручную, схемы не дублирует) | — |
+| `README.md` | Этот файл | — |
+
+Команда генерации воспроизводима: повторный запуск при неизменном OAS не
+изменяет `schema.ts` и `openapi.json`. Проверка:
+
+```powershell
+npm run generate:api
+git diff --exit-code -- src/api/generated
+```
+
+Дополнительная автоматическая проверка без Git:
+
+```powershell
+npm run generate:api:check
+```
+
+Не редактируйте `schema.ts` и `openapi.json` вручную: изменения будут
+перезаписаны следующей генерацией.

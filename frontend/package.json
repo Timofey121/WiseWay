@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:browser": "npm run build && playwright test"
+    "test:browser": "npm run build && playwright test",
+    "generate:api": "node scripts/generate-api.mjs",
+    "generate:api:check": "node scripts/check-generated.mjs"
   },
   "engines": {
     "node": ">=22 <25",

@@ -90,6 +90,24 @@
 - Generated output не редактируется вручную. Команда генерации документируется и выполняется воспроизводимо; PLAN §7/API §12 требуют повторной генерации **без diff** как доказательства соответствия версии схемы.
 - Ручные копии DTO на клиенте запрещены (ТЗ §11, FE §2). Mock-и и real-потребители используют одну и ту же публичную схему.
 
+### 5.1. Реализованная generation-стратегия (LT-04.2)
+
+Решение §5 не меняется; ниже зафиксированы фактические артефакты и команда:
+
+- `npm run generate:api` (скрипт `frontend/scripts/generate-api.mjs`) запускает
+  закреплённый `openapi-typescript@7.13.0` против
+  `contracts/openapi/wiseway-v1.yaml` и записывает `src/api/generated/schema.ts`,
+  затем парсит тот же YAML библиотекой `yaml@2.9.0` и записывает
+  `src/api/generated/openapi.json` (JSON OAS для runtime-mocks без YAML-парсера
+  в браузере). Оба артефакта — generated-but-versioned и коммитятся.
+- `npm run generate:api:check` перегенерирует артефакты во временный каталог и
+  сравнивает их с закоммиченными (нормализуя переводы строк), давая машинную
+  проверку «повторная генерация без diff» независимо от Git.
+- `src/api/generated/client.ts` — тонкая рукописная фабрика
+  `createWiseWayClient` на `openapi-fetch@0.14.1` (`createClient<paths>`) с
+  настраиваемыми `baseUrl`/`fetch`; ручных DTO и дублирования схем нет.
+- Все 33 `operationId` присутствуют в `schema.ts` и `openapi.json`.
+
 ## 6. Совместимость с OpenAPI 3.1.1
 
 - `openapi-typescript@7.x` поддерживает OpenAPI 3.1 и корректно отображает конструкции 3.1 (`nullable` через union, `oneOf`, `additionalProperties`, `examples`) в TypeScript.
@@ -106,7 +124,7 @@
 
 ## 8. Последствия и известные ограничения
 
-- В `frontend/` намеренно отсутствует application scaffold (нет `src/`, `index.html`, tsconfig/vite/eslint/test-конфигов, scripts, generated client, mocks). Это следующий leaf LT-04.1b (scaffold и scripts) и LT-04.2 (generated client).
+- Scaffold и generated-артефакты добавлены в LT-04.1b/LT-04.2: `frontend/src`, конфиги, scripts, `src/api/generated/{schema.ts,openapi.json,client.ts}`. Mock-сценарии остаются следующими leaf (WP-06/WP-07) и в этом ADR не описываются.
 - `npm audit --omit=dev` — 0 уязвимостей. Полный `npm audit` сообщает 2 moderate в dev-цепочке `@vitest/mocker` (advisory GHSA-82fw-gwwq-j7x9) через Vitest 3.x; исправление требует Vitest 5 (breaking, вне разрешённого решения). Это dev-only и не блокирует leaf.
 - npm 11.19.0 сообщает предупреждение о том, что `esbuild@0.28.2` имеет postinstall (`node install.js`), не покрытый allowScripts. Бинарник esbuild фактически присутствует и работает (`npx esbuild --version` → 0.28.2); при более строгой политике scripts в LT-04.1b может потребоваться явное одобрение (`npm install-scripts approve esbuild`).
 - npm помечает `eslint@9.39.5` как версию, снятую с поддержки (в реестре уже есть ESLint 10), поскольку выбран разрешённый major 9.x.
