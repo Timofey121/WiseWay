@@ -170,6 +170,37 @@ export type {
   QuarantineScenario,
 } from './quarantine/store'
 export {
+  auditErrorCodesByOperation,
+  auditErrorResponse,
+  declaredAuditErrors,
+  isAuditErrorCode,
+  isAuditErrorDeclaredForOperation,
+} from './audit/errors'
+export type {
+  AuditErrorCode,
+  AuditErrorOptions,
+  DeclaredAuditError,
+  MockAuditErrorCode,
+  MockAuditOperation,
+} from './audit/errors'
+export {
+  AUDIT_ACTORS_PAGE_ID,
+  AUDIT_ATLAS_COMPANY_ID,
+  AUDIT_NEWEST_EVENT_ID,
+  AUDIT_QUERY_PAGE2_CURSORS,
+  AUDIT_SCENARIOS,
+  AUDIT_WORKER_NEWEST_EVENT_ID,
+  AuditStore,
+  deriveAuditScenario,
+  isValidAuditInterval,
+  parseAuditLimit,
+} from './audit/store'
+export type {
+  AuditActorsQuery,
+  AuditRole,
+  AuditScenario,
+} from './audit/store'
+export {
   PREVIEW_SCENARIOS,
   PreviewStore,
   derivePreviewScenario,

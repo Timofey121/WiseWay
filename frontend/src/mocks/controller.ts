@@ -66,6 +66,12 @@ import {
   QuarantineStore,
   type QuarantineScenario,
 } from './quarantine/store'
+import {
+  isAuditErrorDeclaredForOperation,
+  type MockAuditErrorCode,
+  type MockAuditOperation,
+} from './audit/errors'
+import { AuditStore, type AuditScenario } from './audit/store'
 import { DictionaryStore } from './dictionaries/store'
 import { SimulationStore, type SimulationScenario } from './simulations/store'
 import {
@@ -142,6 +148,7 @@ type MockOperation =
   | MockSortingOperation
   | MockBatchOperation
   | MockQuarantineOperation
+  | MockAuditOperation
 
 /** Возвращает `true` для операции поиска (иначе — targets/dictionaries). */
 function isSearchOperation(
@@ -202,6 +209,17 @@ function isQuarantineOperation(
   return (
     operation === 'listQuarantineItems' ||
     operation === 'returnQuarantineItem'
+  )
+}
+
+/** Возвращает `true` для операции журнала аудита (LT-07.3b). */
+function isAuditOperation(
+  operation: MockOperation,
+): operation is MockAuditOperation {
+  return (
+    operation === 'queryAuditEvents' ||
+    operation === 'getAuditUpdates' ||
+    operation === 'listAuditActors'
   )
 }
 
@@ -301,6 +319,17 @@ export class MockController {
   private readonly nextQuarantineErrors = new Map<
     MockQuarantineOperation,
     MockQuarantineErrorCode[]
+  >()
+  private auditScenario: AuditScenario | null = null
+  private auditEmptyJournal = false
+  private readonly auditStore = new AuditStore()
+  private readonly persistentAuditErrors = new Map<
+    MockAuditOperation,
+    MockAuditErrorCode
+  >()
+  private readonly nextAuditErrors = new Map<
+    MockAuditOperation,
+    MockAuditErrorCode[]
   >()
   private readonly sleep: (ms: number) => Promise<void>
 
@@ -447,6 +476,7 @@ export class MockController {
   ): void
   setError(operation: MockBatchOperation, code: MockBatchErrorCode): void
   setError(operation: MockQuarantineOperation, code: MockQuarantineErrorCode): void
+  setError(operation: MockAuditOperation, code: MockAuditErrorCode): void
   setError(
     operation: MockOperation,
     code:
@@ -456,7 +486,8 @@ export class MockController {
       | MockPublishingErrorCode
       | MockSortingErrorCode
       | MockBatchErrorCode
-      | MockQuarantineErrorCode,
+      | MockQuarantineErrorCode
+      | MockAuditErrorCode,
   ): void {
     if (isSearchOperation(operation)) {
       this.persistentErrors.set(operation, code as SearchErrorCode)
@@ -488,6 +519,14 @@ export class MockController {
         return
       }
       this.persistentQuarantineErrors.set(operation, quarantineCode)
+    } else if (isAuditOperation(operation)) {
+      const auditCode = code as MockAuditErrorCode
+      // Runtime-guard: код, не объявленный для операции, игнорируется, чтобы
+      // mock не мог отдать undeclared HTTP-статус.
+      if (!isAuditErrorDeclaredForOperation(operation, auditCode)) {
+        return
+      }
+      this.persistentAuditErrors.set(operation, auditCode)
     } else if (isSortingOperation(operation)) {
       const sortingCode = code as MockSortingErrorCode
       // Runtime-guard: код, не объявленный для операции, игнорируется, чтобы
@@ -553,6 +592,7 @@ export class MockController {
     operation: MockQuarantineOperation,
     code: MockQuarantineErrorCode,
   ): void
+  failNext(operation: MockAuditOperation, code: MockAuditErrorCode): void
   failNext(
     operation: MockOperation,
     code:
@@ -562,7 +602,8 @@ export class MockController {
       | MockPublishingErrorCode
       | MockSortingErrorCode
       | MockBatchErrorCode
-      | MockQuarantineErrorCode,
+      | MockQuarantineErrorCode
+      | MockAuditErrorCode,
   ): void {
     if (isSearchOperation(operation)) {
       const queue = this.nextErrors.get(operation)
@@ -625,6 +666,20 @@ export class MockController {
       }
       return
     }
+    if (isAuditOperation(operation)) {
+      const auditCode = code as MockAuditErrorCode
+      // Runtime-guard: необъявленный для операции код не ставится в очередь.
+      if (!isAuditErrorDeclaredForOperation(operation, auditCode)) {
+        return
+      }
+      const queue = this.nextAuditErrors.get(operation)
+      if (queue) {
+        queue.push(auditCode)
+      } else {
+        this.nextAuditErrors.set(operation, [auditCode])
+      }
+      return
+    }
     if (isSortingOperation(operation)) {
       const sortingCode = code as MockSortingErrorCode
       // Runtime-guard: необъявленный для операции код не ставится в очередь.
@@ -655,6 +710,7 @@ export class MockController {
   clearError(operation: MockSortingOperation): void
   clearError(operation: MockBatchOperation): void
   clearError(operation: MockQuarantineOperation): void
+  clearError(operation: MockAuditOperation): void
   clearError(operation: MockOperation): void {
     if (isSearchOperation(operation)) {
       this.persistentErrors.delete(operation)
@@ -679,6 +735,11 @@ export class MockController {
     if (isQuarantineOperation(operation)) {
       this.persistentQuarantineErrors.delete(operation)
       this.nextQuarantineErrors.delete(operation)
+      return
+    }
+    if (isAuditOperation(operation)) {
+      this.persistentAuditErrors.delete(operation)
+      this.nextAuditErrors.delete(operation)
       return
     }
     if (isSortingOperation(operation)) {
@@ -834,6 +895,34 @@ export class MockController {
     if (
       persistent !== undefined &&
       isQuarantineErrorDeclaredForOperation(operation, persistent)
+    ) {
+      return persistent
+    }
+    return undefined
+  }
+
+  /**
+   * Возвращает объявленную ошибку журнала аудита для текущей отправки и
+   * расходует одноразовую (LT-07.3b). Код, не объявленный для операции, никогда
+   * не возвращается (защита от undeclared статуса).
+   */
+  consumeAuditError(
+    operation: MockAuditOperation,
+  ): MockAuditErrorCode | undefined {
+    const queue = this.nextAuditErrors.get(operation)
+    if (queue && queue.length > 0) {
+      const code = queue.shift()
+      if (
+        code !== undefined &&
+        isAuditErrorDeclaredForOperation(operation, code)
+      ) {
+        return code
+      }
+    }
+    const persistent = this.persistentAuditErrors.get(operation)
+    if (
+      persistent !== undefined &&
+      isAuditErrorDeclaredForOperation(operation, persistent)
     ) {
       return persistent
     }
@@ -1064,6 +1153,36 @@ export class MockController {
     return this.quarantineStore
   }
 
+  /** In-memory canned-состояние журнала аудита (LT-07.3b). */
+  getAuditStore(): AuditStore {
+    return this.auditStore
+  }
+
+  /**
+   * Явно выбранный canned-сценарий журнала или `null` (по умолчанию): при
+   * `null` страница выводится из фильтров запроса.
+   */
+  getAuditScenario(): AuditScenario | null {
+    return this.auditScenario
+  }
+
+  /** Выбирает canned-сценарий журнала или снимает override (`null`). */
+  setAuditScenario(scenario: AuditScenario | null): void {
+    this.auditScenario = scenario
+    this.auditStore.setScenario(scenario)
+  }
+
+  /** Флаг первичного пустого журнала для `getAuditUpdates`. */
+  isAuditJournalEmpty(): boolean {
+    return this.auditEmptyJournal
+  }
+
+  /** Управляет флагом пустого журнала (обновления сообщают `false`). */
+  setAuditJournalEmpty(empty: boolean): void {
+    this.auditEmptyJournal = empty
+    this.auditStore.setEmptyJournal(empty)
+  }
+
   /** Текущий выбранный сценарий симуляции (по умолчанию `full`). */
   getSimulationScenario(): SimulationScenario {
     return this.simulationScenario
@@ -1153,6 +1272,8 @@ export class MockController {
     this.nextBatchErrors.clear()
     this.persistentQuarantineErrors.clear()
     this.nextQuarantineErrors.clear()
+    this.persistentAuditErrors.clear()
+    this.nextAuditErrors.clear()
     this.simulationScenario = 'full'
     this.publishingScenario = 'v2'
     this.publishingNow = null
@@ -1166,6 +1287,8 @@ export class MockController {
     this.batchGate = null
     this.quarantineScenario = 'technical'
     this.quarantineGate = null
+    this.auditScenario = null
+    this.auditEmptyJournal = false
     this.dictionaryStore.reset()
     this.simulationStore.reset()
     this.publishingStore.reset()
@@ -1173,5 +1296,6 @@ export class MockController {
     this.previewStore.reset()
     this.batchStore.reset()
     this.quarantineStore.reset()
+    this.auditStore.reset()
   }
 }

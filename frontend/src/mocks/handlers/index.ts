@@ -8,12 +8,18 @@
 // `createSortingSelection`), LT-07.2b (`createSortingPreview`/
 // `getSortingPreview`) и LT-07.2c (`createSortingBatch`/`getSortingBatch`/
 // `listSortingBatches`), а также LT-07.3a (`listQuarantineItems`/
-// `returnQuarantineItem`). Пути с `{param}`
+// `returnQuarantineItem`) и LT-07.3b (`queryAuditEvents`/`getAuditUpdates`/
+// `listAuditActors`). Пути с `{param}`
 // (company_id/dictionary_id/version_id/simulation_id/preview_id/batch_id/
 // quarantine_id) сопоставляются router'ом.
 // Неизвестный маршрут в router даёт безопасную 404, а не правдоподобный успех.
 
 import type { MockHandler } from '../types'
+import {
+  getAuditUpdatesHandler,
+  listAuditActorsHandler,
+  queryAuditEventsHandler,
+} from './audit'
 import { loginHandler, logoutHandler, sessionHandler } from './auth'
 import {
   createSortingBatchHandler,
@@ -92,4 +98,7 @@ export const handlersByKey: Record<string, MockHandler> = {
   'GET /sorting/batches/{batch_id}': getSortingBatchHandler,
   'GET /quarantine': listQuarantineItemsHandler,
   'POST /quarantine/{quarantine_id}/return': returnQuarantineItemHandler,
+  'POST /audit/query': queryAuditEventsHandler,
+  'GET /audit/updates': getAuditUpdatesHandler,
+  'GET /audit/actors': listAuditActorsHandler,
 }

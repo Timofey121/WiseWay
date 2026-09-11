@@ -923,6 +923,80 @@ literal подтверждённый список/company-scope/paging/cursor, c
 новый ключ, 401/403/404/422, управляемые ошибки по объявленным кодам,
 per-operation ограничение, позднее состояние списка и `reset()`.
 
+## Mock audit journal (LT-07.3b)
+
+`src/mocks/handlers/audit.ts` подключает к mock-fetch три операции чтения
+WP-07 без записи, immutability, серверного фильтр-алгоритма, cursor-store и
+actor-directory:
+
+| Метод и путь | Ответ | Особенности |
+|---|---|---|
+| `POST /audit/query` | 200 `AuditQueryResponse` | literal canned-страница; `AuditQueryRequest` в теле; интервал `[from,to)`; роли WORKER/ADMIN |
+| `GET /audit/updates` | 200 `AuditUpdatesResponse` | `after_event_id?`; `{has_new_events}` без текстов фильтров |
+| `GET /audit/actors` | 200 `ActorPage` | literal авторы, включая заблокированного; `prefix`/`cursor`/`limit` |
+
+- Данные берутся из публичных примеров `contracts/examples/audit/*.json`
+  через `src/mocks/audit/store.ts`: `audit-query-day-atlas`,
+  `audit-query-batch-accepted`, `audit-query-issue`,
+  `audit-query-cursor-page2`, `audit-query-empty-window`,
+  `audit-actors-atlas`, `audit-updates-after-known`. Запись, immutability,
+  matcher/ranking, cursor-store и actor-directory не выполняются: store лишь
+  хранит literal canned-страницы и делает lookup по фильтрам/сценарию.
+- `queryAuditEvents` — чтение (`csrf: false`): требует активную mock-сессию,
+  валидирует `AuditQueryRequest` (nullable `company_id`/`actor_id`/`action`/
+  `result`, `query_text`, `cursor`, `limit` 1..100) и объявленный порядок
+  интервала `[from,to)`. Невалидный интервал (`from >= to`) → 422
+  `VALIDATION_ERROR` с примером `error-audit-validation` (поле `from`,
+  код `ORDER`); невалидная схема/`limit` → 422. Чувствительные фильтры идут в
+  теле POST и не попадают в URL; они не журналируются и не сохраняются.
+- Выбор canned-страницы: `action=BATCH_ACCEPTED` → batch-accepted,
+  `result=ISSUE` → issue, известный курсор второй страницы
+  (`cursor-audit-atlas-page2`/`cursor-audit-primary-page2`) → cursor-page2,
+  окно после canned-дня → empty, компания кроме Atlas → пустая страница,
+  иначе — day. `MockController.setAuditScenario('day'|'issue'|'batch-accepted'|
+  'cursor-page2'|'empty')` задаёт сценарий напрямую; `getAuditScenario()` его
+  читает. `actor_id`/`query_text` отбирают literal-элементы уже выбранной
+  страницы (регистронезависимо по имени/логическому пути), не вычисляя
+  серверный matcher.
+- Роль из сессии: WORKER видит только BUSINESS, ADMIN — BUSINESS+SYSTEM
+  (canned-переключение). SYSTEM-события (включая единственный допустимый
+  `actor=null` у `LOGIN_FAILED` без инициатора) взяты literal из канонического
+  эталона `fixtures/synthetic/audit_expectations.json`; для BUSINESS
+  `actor=null` не выдумывается. Связи `request_id`/`operation_id`/
+  `source_attempt_id`/`batch_id`/`version_id`/`dictionary_id`/`item_id`
+  остаются literal из примеров.
+- `getAuditUpdates` — чтение: `after_event_id` необязателен; отсутствие
+  параметра означает первичный пустой журнал без нижней границы. Непустой
+  журнал без параметра сообщает `true`, пустой (`setAuditJournalEmpty(true)`) —
+  `false`; после новейшего доступного события роли — `false`, иначе `true`.
+  Пустой `after_event_id` → 422; тексты фильтров в URL не передаются.
+- `listAuditActors` — чтение: `prefix` регистронезависим по login/
+  display_name, `limit` 1..100, `cursor` — конечный `audit-actors-offset-<n>`.
+  Literal `audit-actors-atlas` включает заблокированного автора с доступными
+  событиями; несовпавший prefix и неизвестный курсор дают пустую страницу и
+  422 соответственно.
+- `MockController` управляет журналом: `getAuditStore`, `setAuditScenario`/
+  `getAuditScenario`, `setAuditJournalEmpty`/`isAuditJournalEmpty`, а также
+  объявленные ошибки через `setError(operation, code)` /
+  `failNext(operation, code)` / `clearError` / `consumeAuditError`. Набор
+  (`auditErrorCodesByOperation`, `isAuditErrorDeclaredForOperation` из
+  `@/mocks`) одинаков для трёх операций: `UNAUTHENTICATED`/`FORBIDDEN`/
+  `VALIDATION_ERROR`/`RATE_LIMITED`/`INTERNAL_ERROR`/`SERVICE_UNAVAILABLE`;
+  `CSRF_FAILED` и 404/409 журналу не объявлены. Overload'ы и runtime-guard не
+  допускают undeclared HTTP-статус. `reset()` снимает сценарий, флаг пустого
+  журнала и управляемые ошибки.
+- Mock не является доказательством реального аудита, immutability или
+  файловой безопасности. Mock-прохождение не является real-backend evidence.
+
+Проверки: `tests/mocks/audit.test.ts` — маршрутизация трёх операций,
+literal day/issue/batch-accepted/cursor-page2/empty с порядком и
+`newest_event_id`, фильтры company/from-to/actor/action/result/query_text,
+невалидный интервал 422, роль WORKER/ADMIN и null-actor только SYSTEM,
+обновления true/false/пустой журнал, авторы/prefix/cursor/заблокированный
+автор, literal связи request/operation/source-attempt/batch/version/
+dictionary, 401/403/422, управляемые ошибки по объявленным кодам,
+per-operation ограничение и `reset()`.
+
 ## Структура
 
 ```text
@@ -945,7 +1019,8 @@ frontend/
       transport.ts        createApiClient: credentials/no-store/CSRF/idempotency/retry
     mocks/              schema-valid mocks bootstrap/session/config, поиска
                         (WP-06), targets/dictionaries, симуляции, публикации,
-                        очереди/выбора, preview, партий и карантина (WP-07)
+                        очереди/выбора, preview, партий, карантина и журнала
+                        аудита (WP-07)
       index.ts          createMockFetch, MockController, MOCK_MODE
       router.ts         разбор Request, статические и `{param}` маршруты
       validate.ts       ajv-валидация запросов по generated openapi.json
@@ -957,7 +1032,8 @@ frontend/
                         scenario/store/errors + sorting queue scenario/
                         selection store/errors + preview scenario/store/
                         errors + batch scenario/phase/gate/store/errors +
-                        quarantine scenario/gate/store/errors/reset
+                        quarantine scenario/gate/store/errors + audit
+                        scenario/empty/store/errors/reset
       responses.ts      контрактные заголовки и ErrorResponse
       handlers/         health, login, getSession, logout, appConfig, roots,
                         companies, search (searchFiles/getSearchFacet),
@@ -967,7 +1043,8 @@ frontend/
                         sorting (queue/selection, LT-07.2a),
                         previews (preview create/get, LT-07.2b),
                         batches (batch create/get/list, LT-07.2c),
-                        quarantine (list/return, LT-07.3a)
+                        quarantine (list/return, LT-07.3a),
+                        audit (query/updates/actors, LT-07.3b)
       search/           golden search/facet foundation (LT-06.2a-i)
         corpus.ts       materializer corpus.json → SearchItem/Marker
         expectations.ts literal-resolver search_expectations.json
@@ -994,6 +1071,10 @@ frontend/
         store.ts        literal записи/состояния карантина, QuarantineStore,
                         идемпотентные операции, paging
         errors.ts       объявленные ошибки list/return
+      audit/            журнал аудита foundation (LT-07.3b)
+        store.ts        literal canned-страницы/сценарии, SYSTEM-события,
+                        AuditStore, updates/actors lookup
+        errors.ts       объявленные ошибки query/updates/actors
   tests/
     App.test.tsx        component smoke-тест
     api/client.test.ts  runtime-проверки запросов клиента A/B/C
@@ -1013,6 +1094,7 @@ frontend/
     mocks/sorting-preview.test.ts  preview create/get, predictions/collisions/expiry mocks
     mocks/sorting-batch.test.ts  batch create/get/list, progress/outcomes/gates mocks
     mocks/quarantine.test.ts  quarantine list/return, can_return/recovery/conflicts mocks
+    mocks/audit.test.ts  audit query/updates/actors, roles/null-actor/links mocks
     fixture-imports.test.ts  проверка alias-импорта JSON вне frontend/
     support/            технические модули scaffold
     browser/            Playwright smoke-тест
