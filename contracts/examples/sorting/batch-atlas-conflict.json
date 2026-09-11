@@ -1,0 +1,64 @@
+{
+  "batch_id": "batch-atlas-conflict",
+  "company_id": "company-demo-atlas",
+  "actor": {
+    "user_id": "user-demo-worker-1",
+    "login": "worker.one",
+    "display_name": "Иван Рабочий",
+    "role": "WORKER"
+  },
+  "selection_id": "selection-batch-atlas-conflict",
+  "preview_id": null,
+  "rule_set": {
+    "rule_set_id": "rule-set-atlas-eq-diff",
+    "company_id": "company-demo-atlas",
+    "members": [
+      {
+        "dictionary_id": "dictionary-atlas-general",
+        "version_id": "version-atlas-eq-diff-general-v1"
+      },
+      {
+        "dictionary_id": "dictionary-atlas-invoices",
+        "version_id": "version-atlas-eq-diff-invoices-v1"
+      }
+    ]
+  },
+  "status": "COMPLETED_WITH_ISSUES",
+  "created_at": "2031-05-10T09:38:00Z",
+  "started_at": "2031-05-10T09:38:01Z",
+  "finished_at": "2031-05-10T09:38:05Z",
+  "selected_count": 1,
+  "completed_count": 1,
+  "counts": {
+    "sorted": 0,
+    "manual_review": 1,
+    "requires_decision": 0,
+    "quarantined": 0,
+    "skipped": 0,
+    "recovery_required": 0
+  },
+  "outcomes": [
+    {
+      "attempt_id": "attempt-batch-atlas-conflict-batch-atlas-shared-file",
+      "item_id": "batch-atlas-shared-file",
+      "item_revision": 1,
+      "state": "MANUAL_REVIEW",
+      "reason_code": "RULE_CONFLICT",
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/shared-file.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/shared-file.pdf"
+      },
+      "planned_target": null,
+      "actual_location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "_manual_review/atlas/shared-file.pdf",
+        "display_path": "DEMO:/SandboxRoot/_manual_review/atlas/shared-file.pdf"
+      },
+      "matched_rule": null,
+      "started_at": "2031-05-10T09:38:02Z",
+      "finished_at": "2031-05-10T09:38:03Z"
+    }
+  ],
+  "next_cursor": null
+}

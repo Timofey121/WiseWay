@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Объект не найден.",
+    "request_id": "request-batch-not-found",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

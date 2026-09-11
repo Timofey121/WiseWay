@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "PATH_OUTSIDE_ROOT",
+    "message": "Путь находится вне разрешённого корня.",
+    "request_id": "request-demo-1",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

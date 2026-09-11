@@ -1,0 +1,11 @@
+{
+  "company_id": "company-demo-atlas",
+  "mode": "ALL_MATCHING",
+  "filters": {
+    "statuses": [
+      "READY"
+    ],
+    "query_text": ""
+  },
+  "expected_eligible_count": 120
+}

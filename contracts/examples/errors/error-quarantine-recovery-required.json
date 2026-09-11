@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "RECOVERY_REQUIRED",
+    "message": "Результат возврата требует ручной проверки. Не повторяйте перемещение.",
+    "request_id": "request-quarantine-demo-1",
+    "operation_id": "return-atlas-batch-tech-quarantine-recovery",
+    "retryable": false,
+    "field_errors": []
+  }
+}

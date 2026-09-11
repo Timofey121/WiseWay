@@ -1,0 +1,1273 @@
+{
+  "fixture_set": "wiseway-dictionary-lifecycle",
+  "version": "1.0.0",
+  "seed": "wiseway-demo-seed-2031",
+  "contract_version": "1.0.0",
+  "corpus_version": "1.2.0",
+  "rule_expectations_fixture": "wiseway-rule-target-expectations",
+  "target_display_prefix": "DEMO:/SandboxRoot",
+  "notes": "LT-03.2b finite, internally linked draft/simulation/publication/history/restore oracle for two actors. It extends the immutable LT-03.2a definitions (three published versions plus the separated scenario-role universes) and the auth fixture actors. Every request/response/error body is literal data: no matcher, priority selection, name derivation, revision bump or count is computed by the validator. The `timeline` is one coherent Atlas/Nova sequence; `failures` and `replays` are explicitly isolated scenarios that declare their own preconditions. The conflict/same-target simulations use their own isolated dictionary states (draft revisions 101/102, `universe` label, no live history) and never pretend to be the live revision 2. Idempotency is user-scoped: a different actor with the same UUID is a new operation evaluated on current conditions, not a key conflict. Scenario expected action/audit IDs are recorded for LT-03.5b but are NOT audit evidence.",
+  "actors": {
+    "worker-one": "user-demo-worker-1",
+    "worker-two": "user-demo-worker-2",
+    "admin-one": "user-demo-admin-1"
+  },
+  "dictionaries": [
+    {
+      "dictionary_id": "dictionary-atlas-cleanup",
+      "company_id": "company-demo-atlas",
+      "name": "Уборка Atlas",
+      "description": "Черновик для проверки ревизий и уникальности имени.",
+      "updated_by": "worker-one"
+    },
+    {
+      "dictionary_id": "dictionary-nova-scope-check",
+      "company_id": "company-demo-nova",
+      "name": "Счета Atlas",
+      "description": "Проверка отсутствия межкомпанийного конфликта имён.",
+      "updated_by": "worker-one"
+    }
+  ],
+  "versions": [
+    {
+      "version_id": "version-atlas-general-v2",
+      "dictionary_id": "dictionary-atlas-general",
+      "version_number": 2,
+      "role": "published",
+      "published_at": "2031-05-10T09:35:30Z",
+      "published_by": "worker-one",
+      "comment": "Публикация проверенного черновика Atlas.",
+      "restored_from_version_id": null,
+      "rules": [
+        { "rule_id": "rule-atlas-general-readme", "priority": 50, "match_field": "BASENAME", "mask": "README", "target_id": "target-atlas-data", "target_stem": "Readme" },
+        { "rule_id": "rule-atlas-general-env", "priority": 50, "match_field": "BASENAME", "mask": ".env", "target_id": "target-atlas-data", "target_stem": "EnvFile" },
+        { "rule_id": "rule-atlas-general-namedot", "priority": 50, "match_field": "BASENAME", "mask": "name.", "target_id": "target-atlas-data", "target_stem": "Named" },
+        { "rule_id": "rule-atlas-general-archive", "priority": 60, "match_field": "BASENAME", "mask": "*.tar.gz", "target_id": "target-atlas-reports", "target_stem": "Archive" },
+        { "rule_id": "rule-atlas-general-log", "priority": 40, "match_field": "BASENAME", "mask": "*.log", "target_id": "target-atlas-data", "target_stem": "Hidden" },
+        { "rule_id": "rule-atlas-general-occupied", "priority": 70, "match_field": "BASENAME", "mask": "*occupied*", "target_id": "target-atlas-reports", "target_stem": "Occupied" }
+      ]
+    },
+    {
+      "version_id": "version-atlas-general-v3",
+      "dictionary_id": "dictionary-atlas-general",
+      "version_number": 3,
+      "role": "published",
+      "published_at": "2031-05-10T09:42:00Z",
+      "published_by": "worker-one",
+      "comment": "Публикация восстановленной версии 1.",
+      "restored_from_version_id": "version-atlas-general-v1",
+      "rules": [
+        { "rule_id": "rule-atlas-general-readme", "priority": 50, "match_field": "BASENAME", "mask": "README", "target_id": "target-atlas-data", "target_stem": "Readme" },
+        { "rule_id": "rule-atlas-general-env", "priority": 50, "match_field": "BASENAME", "mask": ".env", "target_id": "target-atlas-data", "target_stem": "EnvFile" },
+        { "rule_id": "rule-atlas-general-namedot", "priority": 50, "match_field": "BASENAME", "mask": "name.", "target_id": "target-atlas-data", "target_stem": "Named" },
+        { "rule_id": "rule-atlas-general-archive", "priority": 60, "match_field": "BASENAME", "mask": "*.tar.gz", "target_id": "target-atlas-reports", "target_stem": "Archive" }
+      ]
+    },
+    {
+      "version_id": "version-atlas-invoices-v2",
+      "dictionary_id": "dictionary-atlas-invoices",
+      "version_number": 2,
+      "role": "published",
+      "published_at": "2031-05-10T09:38:00Z",
+      "published_by": "worker-two",
+      "comment": "Публикация дополнительного правила Atlas invoices.",
+      "restored_from_version_id": null,
+      "rules": [
+        { "rule_id": "rule-atlas-invoices-invoice", "priority": 10, "match_field": "BASENAME", "mask": "*invoice*", "target_id": "target-atlas-invoices", "target_stem": "Invoice" },
+        { "rule_id": "rule-atlas-invoices-pdf", "priority": 100, "match_field": "RELATIVE_PATH", "mask": "Archive/Atlas/Orion_2031/Reports/*.pdf", "target_id": "target-atlas-reports", "target_stem": "Report" },
+        { "rule_id": "rule-atlas-invoices-upper", "priority": 100, "match_field": "RELATIVE_PATH", "mask": "Archive/Atlas/Orion_2031/Data/*.TXT", "target_id": "target-atlas-data", "target_stem": "Invoice" },
+        { "rule_id": "rule-atlas-invoices-lifecycle", "priority": 20, "match_field": "BASENAME", "mask": "*lifecycle*", "target_id": "target-atlas-data", "target_stem": "Lifecycle" }
+      ]
+    },
+    {
+      "version_id": "version-atlas-general-scenario-conflict-v1",
+      "dictionary_id": "dictionary-atlas-general",
+      "version_number": 101,
+      "role": "scenario",
+      "published_at": "2031-05-10T09:50:00Z",
+      "published_by": "worker-one",
+      "comment": "Изолированный сценарный универсум: равный приоритет, разные цели.",
+      "restored_from_version_id": null,
+      "rules": [
+        { "rule_id": "rule-atlas-conflict-a", "priority": 100, "match_field": "BASENAME", "mask": "*shared*", "target_id": "target-atlas-reports", "target_stem": "ConflictA" },
+        { "rule_id": "rule-atlas-conflict-b", "priority": 100, "match_field": "BASENAME", "mask": "*shared*", "target_id": "target-atlas-invoices", "target_stem": "ConflictB" }
+      ]
+    },
+    {
+      "version_id": "version-atlas-general-scenario-same-target-v1",
+      "dictionary_id": "dictionary-atlas-general",
+      "version_number": 102,
+      "role": "scenario",
+      "published_at": "2031-05-10T09:50:00Z",
+      "published_by": "worker-one",
+      "comment": "Изолированный сценарный универсум: равный приоритет, одна итоговая цель.",
+      "restored_from_version_id": null,
+      "rules": [
+        { "rule_id": "rule-atlas-same-a", "priority": 100, "match_field": "BASENAME", "mask": "*shared*", "target_id": "target-atlas-reports", "target_stem": "SameName" },
+        { "rule_id": "rule-atlas-same-b", "priority": 100, "match_field": "BASENAME", "mask": "*shared*", "target_id": "target-atlas-reports", "target_stem": "SameName" }
+      ]
+    }
+  ],
+  "rule_sets": [
+    {
+      "rule_set_id": "rule-set-atlas-v2",
+      "company_id": "company-demo-atlas",
+      "role": "published",
+      "members": [
+        { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-general-v2" },
+        { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-invoices-v1" }
+      ]
+    },
+    {
+      "rule_set_id": "rule-set-atlas-v2-invoices-v2",
+      "company_id": "company-demo-atlas",
+      "role": "published",
+      "members": [
+        { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-general-v2" },
+        { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-invoices-v2" }
+      ]
+    },
+    {
+      "rule_set_id": "rule-set-atlas-v3",
+      "company_id": "company-demo-atlas",
+      "role": "published",
+      "members": [
+        { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-general-v3" },
+        { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-invoices-v2" }
+      ]
+    },
+    {
+      "rule_set_id": "rule-set-atlas-scenario-conflict",
+      "company_id": "company-demo-atlas",
+      "role": "scenario",
+      "members": [
+        { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-general-scenario-conflict-v1" },
+        { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-invoices-v1" }
+      ]
+    },
+    {
+      "rule_set_id": "rule-set-atlas-scenario-same-target",
+      "company_id": "company-demo-atlas",
+      "role": "scenario",
+      "members": [
+        { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-general-scenario-same-target-v1" },
+        { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-invoices-v1" }
+      ]
+    }
+  ],
+  "states": [
+    {
+      "state_id": "state-atlas-general-base",
+      "dictionary_id": "dictionary-atlas-general",
+      "draft_revision": 1,
+      "rules_version_id": "version-atlas-general-v1",
+      "based_on_version_id": "version-atlas-general-v1",
+      "active_version_id": "version-atlas-general-v1",
+      "history": ["version-atlas-general-v1"],
+      "updated_by": "worker-one",
+      "updated_at": "2031-05-10T09:30:00Z"
+    },
+    {
+      "state_id": "state-atlas-invoices-base",
+      "dictionary_id": "dictionary-atlas-invoices",
+      "draft_revision": 1,
+      "rules_version_id": "version-atlas-invoices-v1",
+      "based_on_version_id": "version-atlas-invoices-v1",
+      "active_version_id": "version-atlas-invoices-v1",
+      "history": ["version-atlas-invoices-v1"],
+      "updated_by": "worker-two",
+      "updated_at": "2031-05-10T09:31:00Z"
+    },
+    {
+      "state_id": "state-atlas-cleanup-created",
+      "dictionary_id": "dictionary-atlas-cleanup",
+      "draft_revision": 0,
+      "rules": [],
+      "based_on_version_id": null,
+      "active_version_id": null,
+      "history": [],
+      "updated_by": "worker-one",
+      "updated_at": "2031-05-10T09:20:00Z"
+    },
+    {
+      "state_id": "state-atlas-cleanup-saved",
+      "dictionary_id": "dictionary-atlas-cleanup",
+      "draft_revision": 1,
+      "rules": [
+        { "rule_id": "rule-cleanup-archive", "priority": 30, "match_field": "BASENAME", "mask": "*.cleanup", "target_id": "target-atlas-data", "target_stem": "Cleanup" }
+      ],
+      "based_on_version_id": null,
+      "active_version_id": null,
+      "history": [],
+      "updated_by": "worker-one",
+      "updated_at": "2031-05-10T09:22:00Z"
+    },
+    {
+      "state_id": "state-nova-scope-created",
+      "dictionary_id": "dictionary-nova-scope-check",
+      "draft_revision": 0,
+      "rules": [],
+      "based_on_version_id": null,
+      "active_version_id": null,
+      "history": [],
+      "updated_by": "worker-one",
+      "updated_at": "2031-05-10T09:24:00Z"
+    },
+    {
+      "state_id": "state-atlas-general-rev2",
+      "dictionary_id": "dictionary-atlas-general",
+      "draft_revision": 2,
+      "rules_version_id": "version-atlas-general-v2",
+      "based_on_version_id": "version-atlas-general-v1",
+      "active_version_id": "version-atlas-general-v1",
+      "history": ["version-atlas-general-v1"],
+      "updated_by": "worker-one",
+      "updated_at": "2031-05-10T09:34:00Z"
+    },
+    {
+      "state_id": "state-atlas-general-published-v2",
+      "dictionary_id": "dictionary-atlas-general",
+      "draft_revision": 2,
+      "rules_version_id": "version-atlas-general-v2",
+      "based_on_version_id": "version-atlas-general-v1",
+      "active_version_id": "version-atlas-general-v2",
+      "history": ["version-atlas-general-v1", "version-atlas-general-v2"],
+      "updated_by": "worker-one",
+      "updated_at": "2031-05-10T09:35:30Z"
+    },
+    {
+      "state_id": "state-atlas-invoices-draft-v2",
+      "dictionary_id": "dictionary-atlas-invoices",
+      "draft_revision": 2,
+      "rules_version_id": "version-atlas-invoices-v2",
+      "based_on_version_id": "version-atlas-invoices-v1",
+      "active_version_id": "version-atlas-invoices-v1",
+      "history": ["version-atlas-invoices-v1"],
+      "updated_by": "worker-two",
+      "updated_at": "2031-05-10T09:37:00Z"
+    },
+    {
+      "state_id": "state-atlas-invoices-published-v2",
+      "dictionary_id": "dictionary-atlas-invoices",
+      "draft_revision": 2,
+      "rules_version_id": "version-atlas-invoices-v2",
+      "based_on_version_id": "version-atlas-invoices-v1",
+      "active_version_id": "version-atlas-invoices-v2",
+      "history": ["version-atlas-invoices-v1", "version-atlas-invoices-v2"],
+      "updated_by": "worker-two",
+      "updated_at": "2031-05-10T09:38:00Z"
+    },
+    {
+      "state_id": "state-atlas-general-restored-v1",
+      "dictionary_id": "dictionary-atlas-general",
+      "draft_revision": 3,
+      "rules_version_id": "version-atlas-general-v1",
+      "based_on_version_id": "version-atlas-general-v1",
+      "active_version_id": "version-atlas-general-v2",
+      "history": ["version-atlas-general-v1", "version-atlas-general-v2"],
+      "updated_by": "worker-one",
+      "updated_at": "2031-05-10T09:40:00Z"
+    },
+    {
+      "state_id": "state-atlas-general-published-v3",
+      "dictionary_id": "dictionary-atlas-general",
+      "draft_revision": 3,
+      "rules_version_id": "version-atlas-general-v1",
+      "based_on_version_id": "version-atlas-general-v1",
+      "active_version_id": "version-atlas-general-v3",
+      "history": ["version-atlas-general-v1", "version-atlas-general-v2", "version-atlas-general-v3"],
+      "updated_by": "worker-one",
+      "updated_at": "2031-05-10T09:42:00Z"
+    },
+    {
+      "state_id": "state-atlas-general-manual-edit",
+      "dictionary_id": "dictionary-atlas-general",
+      "draft_revision": 4,
+      "rules": [
+        { "rule_id": "rule-atlas-general-readme", "priority": 50, "match_field": "BASENAME", "mask": "README", "target_id": "target-atlas-data", "target_stem": "Readme" },
+        { "rule_id": "rule-atlas-general-env", "priority": 50, "match_field": "BASENAME", "mask": ".env", "target_id": "target-atlas-data", "target_stem": "EnvFile" },
+        { "rule_id": "rule-atlas-general-namedot", "priority": 50, "match_field": "BASENAME", "mask": "name.", "target_id": "target-atlas-data", "target_stem": "Named" },
+        { "rule_id": "rule-atlas-general-archive", "priority": 60, "match_field": "BASENAME", "mask": "*.tar.gz", "target_id": "target-atlas-reports", "target_stem": "Archive" },
+        { "rule_id": "rule-atlas-general-manual", "priority": 30, "match_field": "BASENAME", "mask": "*.manual", "target_id": "target-atlas-data", "target_stem": "Manual" }
+      ],
+      "based_on_version_id": null,
+      "active_version_id": "version-atlas-general-v2",
+      "history": ["version-atlas-general-v1", "version-atlas-general-v2"],
+      "updated_by": "worker-one",
+      "updated_at": "2031-05-10T09:44:00Z"
+    },
+    {
+      "state_id": "state-atlas-general-scenario-conflict",
+      "universe": "scenario-conflict",
+      "dictionary_id": "dictionary-atlas-general",
+      "draft_revision": 101,
+      "rules": [
+        { "rule_id": "rule-atlas-conflict-a", "priority": 100, "match_field": "BASENAME", "mask": "*shared*", "target_id": "target-atlas-reports", "target_stem": "ConflictA" },
+        { "rule_id": "rule-atlas-conflict-b", "priority": 100, "match_field": "BASENAME", "mask": "*shared*", "target_id": "target-atlas-invoices", "target_stem": "ConflictB" }
+      ],
+      "based_on_version_id": null,
+      "active_version_id": null,
+      "history": [],
+      "updated_by": "worker-one",
+      "updated_at": "2031-05-10T09:52:00Z"
+    },
+    {
+      "state_id": "state-atlas-general-scenario-same-target",
+      "universe": "scenario-same-target",
+      "dictionary_id": "dictionary-atlas-general",
+      "draft_revision": 102,
+      "rules": [
+        { "rule_id": "rule-atlas-same-a", "priority": 100, "match_field": "BASENAME", "mask": "*shared*", "target_id": "target-atlas-reports", "target_stem": "SameName" },
+        { "rule_id": "rule-atlas-same-b", "priority": 100, "match_field": "BASENAME", "mask": "*shared*", "target_id": "target-atlas-reports", "target_stem": "SameName" }
+      ],
+      "based_on_version_id": null,
+      "active_version_id": null,
+      "history": [],
+      "updated_by": "worker-one",
+      "updated_at": "2031-05-10T09:53:00Z"
+    }
+  ],
+  "ready_sets": [
+    {
+      "ready_set_id": "ready-atlas-full",
+      "company_id": "company-demo-atlas",
+      "snapshot_id": "ready-snapshot-atlas-full",
+      "note": "All READY Atlas items, including the hidden/filtered ones and the item matched by another dictionary.",
+      "members": [
+        { "item_id": "ready-item-atlas-archive", "item_revision": 4, "filename": "archive.tar.gz", "location": { "root_id": "root-demo-atlas", "relative_path": "Incoming/atlas/archive.tar.gz", "display_path": "DEMO:/SandboxRoot/Incoming/atlas/archive.tar.gz" }, "queue_visible": true, "filter_matches": true, "covered_by": "candidate" },
+        { "item_id": "ready-item-atlas-invoice", "item_revision": 3, "filename": "invoice-2031.TXT", "location": { "root_id": "root-demo-atlas", "relative_path": "Incoming/atlas/invoice-2031.TXT", "display_path": "DEMO:/SandboxRoot/Incoming/atlas/invoice-2031.TXT" }, "queue_visible": true, "filter_matches": true, "covered_by": "other-dictionary" },
+        { "item_id": "ready-item-atlas-uncovered", "item_revision": 2, "filename": "unmatched.bin", "location": { "root_id": "root-demo-atlas", "relative_path": "Incoming/atlas/unmatched.bin", "display_path": "DEMO:/SandboxRoot/Incoming/atlas/unmatched.bin" }, "queue_visible": true, "filter_matches": false, "covered_by": "none" },
+        { "item_id": "ready-item-atlas-hidden", "item_revision": 5, "filename": "hidden.log", "location": { "root_id": "root-demo-atlas", "relative_path": "Incoming/atlas/hidden.log", "display_path": "DEMO:/SandboxRoot/Incoming/atlas/hidden.log" }, "queue_visible": false, "filter_matches": false, "covered_by": "candidate" },
+        { "item_id": "ready-item-atlas-occupied", "item_revision": 6, "filename": "occupied.pdf", "location": { "root_id": "root-demo-atlas", "relative_path": "Incoming/atlas/occupied.pdf", "display_path": "DEMO:/SandboxRoot/Incoming/atlas/occupied.pdf" }, "queue_visible": true, "filter_matches": true, "covered_by": "candidate" }
+      ]
+    },
+    {
+      "ready_set_id": "ready-atlas-empty",
+      "company_id": "company-demo-atlas",
+      "snapshot_id": "ready-snapshot-atlas-empty",
+      "note": "A company with zero READY items: the test is structurally valid but proves no coverage.",
+      "members": []
+    },
+    {
+      "ready_set_id": "ready-atlas-conflict",
+      "company_id": "company-demo-atlas",
+      "snapshot_id": "ready-snapshot-atlas-conflict",
+      "note": "Isolated scenario: one file matched by two equal-priority rules with different targets.",
+      "members": [
+        { "item_id": "ready-item-atlas-shared", "item_revision": 7, "filename": "shared.pdf", "location": { "root_id": "root-demo-atlas", "relative_path": "Incoming/atlas/shared.pdf", "display_path": "DEMO:/SandboxRoot/Incoming/atlas/shared.pdf" }, "queue_visible": true, "filter_matches": true, "covered_by": "candidate" }
+      ]
+    },
+    {
+      "ready_set_id": "ready-atlas-same-target",
+      "company_id": "company-demo-atlas",
+      "snapshot_id": "ready-snapshot-atlas-same-target",
+      "note": "Isolated scenario: two equal-priority rules planning the same final target.",
+      "members": [
+        { "item_id": "ready-item-atlas-shared-same", "item_revision": 8, "filename": "shared-same.pdf", "location": { "root_id": "root-demo-atlas", "relative_path": "Incoming/atlas/shared-same.pdf", "display_path": "DEMO:/SandboxRoot/Incoming/atlas/shared-same.pdf" }, "queue_visible": true, "filter_matches": true, "covered_by": "candidate" }
+      ]
+    },
+    {
+      "ready_set_id": "ready-atlas-invoices-v2",
+      "company_id": "company-demo-atlas",
+      "snapshot_id": "ready-snapshot-atlas-invoices-v2",
+      "note": "Isolated test for the invoices version 2 publication that makes the previously accepted Atlas test stale.",
+      "members": [
+        { "item_id": "ready-item-atlas-invoice-v2", "item_revision": 9, "filename": "invoice-v2.TXT", "location": { "root_id": "root-demo-atlas", "relative_path": "Incoming/atlas/invoice-v2.TXT", "display_path": "DEMO:/SandboxRoot/Incoming/atlas/invoice-v2.TXT" }, "queue_visible": true, "filter_matches": true, "covered_by": "candidate" }
+      ]
+    }
+  ],
+  "simulations": [
+    {
+      "page_id": "page-atlas-full-1",
+      "simulation_id": "simulation-atlas-general-v2-full",
+      "dictionary_id": "dictionary-atlas-general",
+      "draft_revision": 2,
+      "candidate_version_id": "version-atlas-general-v2",
+      "base_rule_set_id": "rule-set-atlas-published",
+      "ready_set_id": "ready-atlas-full",
+      "created_at": "2031-05-10T09:34:30Z",
+      "expires_at": "2031-05-10T09:39:30Z",
+      "total": 5,
+      "counts": { "will_move": 3, "will_manual_review": 1, "requires_decision": 1, "not_ready": 0, "rule_conflicts": 0, "no_scenario": 1 },
+      "warnings": [],
+      "next_cursor": "cursor-simulation-atlas-full-page2",
+      "rows": [
+        {
+          "item_id": "ready-item-atlas-archive",
+          "predicted_state": "WILL_MOVE",
+          "reason_code": null,
+          "matched_rules": [{ "dictionary_id": "dictionary-atlas-general", "version_id": null, "rule_id": "rule-atlas-general-archive" }],
+          "selected_rule": { "dictionary_id": "dictionary-atlas-general", "version_id": null, "rule_id": "rule-atlas-general-archive" },
+          "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Reports/Archive.gz", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/Archive.gz" }
+        },
+        {
+          "item_id": "ready-item-atlas-invoice",
+          "predicted_state": "WILL_MOVE",
+          "reason_code": null,
+          "matched_rules": [{ "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-invoices-v1", "rule_id": "rule-atlas-invoices-invoice" }],
+          "selected_rule": { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-invoices-v1", "rule_id": "rule-atlas-invoices-invoice" },
+          "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Invoices/Invoice.TXT", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Invoices/Invoice.TXT" }
+        },
+        {
+          "item_id": "ready-item-atlas-uncovered",
+          "predicted_state": "WILL_MANUAL_REVIEW",
+          "reason_code": "NO_SCENARIO",
+          "matched_rules": [],
+          "selected_rule": null,
+          "target": null
+        }
+      ]
+    },
+    {
+      "page_id": "page-atlas-full-2",
+      "simulation_id": "simulation-atlas-general-v2-full",
+      "dictionary_id": "dictionary-atlas-general",
+      "draft_revision": 2,
+      "candidate_version_id": "version-atlas-general-v2",
+      "base_rule_set_id": "rule-set-atlas-published",
+      "ready_set_id": "ready-atlas-full",
+      "created_at": "2031-05-10T09:34:30Z",
+      "expires_at": "2031-05-10T09:39:30Z",
+      "total": 5,
+      "counts": { "will_move": 3, "will_manual_review": 1, "requires_decision": 1, "not_ready": 0, "rule_conflicts": 0, "no_scenario": 1 },
+      "warnings": [],
+      "next_cursor": null,
+      "rows": [
+        {
+          "item_id": "ready-item-atlas-hidden",
+          "predicted_state": "WILL_MOVE",
+          "reason_code": null,
+          "matched_rules": [{ "dictionary_id": "dictionary-atlas-general", "version_id": null, "rule_id": "rule-atlas-general-log" }],
+          "selected_rule": { "dictionary_id": "dictionary-atlas-general", "version_id": null, "rule_id": "rule-atlas-general-log" },
+          "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/Hidden.log", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/Hidden.log" }
+        },
+        {
+          "item_id": "ready-item-atlas-occupied",
+          "predicted_state": "REQUIRES_DECISION",
+          "reason_code": "TARGET_OCCUPIED",
+          "matched_rules": [{ "dictionary_id": "dictionary-atlas-general", "version_id": null, "rule_id": "rule-atlas-general-occupied" }],
+          "selected_rule": { "dictionary_id": "dictionary-atlas-general", "version_id": null, "rule_id": "rule-atlas-general-occupied" },
+          "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Reports/Occupied.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/Occupied.pdf" },
+          "collision": {
+            "kind": "EXISTING_TARGET",
+            "source_metadata": { "filename": "occupied.pdf", "location": { "root_id": "root-demo-atlas", "relative_path": "Incoming/atlas/occupied.pdf", "display_path": "DEMO:/SandboxRoot/Incoming/atlas/occupied.pdf" }, "size_bytes": 2048, "modified_at": "2031-05-10T08:50:00Z" },
+            "existing_target_metadata": { "filename": "Occupied.pdf", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Reports/Occupied.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/Occupied.pdf" }, "size_bytes": 1024, "modified_at": "2031-05-09T08:50:00Z" },
+            "conflicting_item_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "page_id": "page-atlas-empty",
+      "simulation_id": "simulation-atlas-general-empty",
+      "dictionary_id": "dictionary-atlas-general",
+      "draft_revision": 2,
+      "candidate_version_id": "version-atlas-general-v2",
+      "base_rule_set_id": "rule-set-atlas-published",
+      "ready_set_id": "ready-atlas-empty",
+      "created_at": "2031-05-10T09:36:00Z",
+      "expires_at": "2031-05-10T09:41:00Z",
+      "total": 0,
+      "counts": { "will_move": 0, "will_manual_review": 0, "requires_decision": 0, "not_ready": 0, "rule_conflicts": 0, "no_scenario": 0 },
+      "warnings": ["EMPTY_READY_SET"],
+      "next_cursor": null,
+      "rows": []
+    },
+    {
+      "page_id": "page-atlas-conflict",
+      "simulation_id": "simulation-atlas-general-conflict",
+      "universe": "scenario-conflict",
+      "dictionary_id": "dictionary-atlas-general",
+      "draft_revision": 101,
+      "candidate_version_id": "version-atlas-general-scenario-conflict-v1",
+      "base_rule_set_id": "rule-set-atlas-scenario-conflict",
+      "ready_set_id": "ready-atlas-conflict",
+      "created_at": "2031-05-10T09:52:00Z",
+      "expires_at": "2031-05-10T09:57:00Z",
+      "total": 1,
+      "counts": { "will_move": 0, "will_manual_review": 1, "requires_decision": 0, "not_ready": 0, "rule_conflicts": 1, "no_scenario": 0 },
+      "warnings": [],
+      "next_cursor": null,
+      "rows": [
+        {
+          "item_id": "ready-item-atlas-shared",
+          "predicted_state": "WILL_MANUAL_REVIEW",
+          "reason_code": "RULE_CONFLICT",
+          "matched_rules": [
+            { "dictionary_id": "dictionary-atlas-general", "version_id": null, "rule_id": "rule-atlas-conflict-a" },
+            { "dictionary_id": "dictionary-atlas-general", "version_id": null, "rule_id": "rule-atlas-conflict-b" }
+          ],
+          "selected_rule": null,
+          "target": null
+        }
+      ]
+    },
+    {
+      "page_id": "page-atlas-same-target",
+      "simulation_id": "simulation-atlas-general-same-target",
+      "universe": "scenario-same-target",
+      "dictionary_id": "dictionary-atlas-general",
+      "draft_revision": 102,
+      "candidate_version_id": "version-atlas-general-scenario-same-target-v1",
+      "base_rule_set_id": "rule-set-atlas-scenario-same-target",
+      "ready_set_id": "ready-atlas-same-target",
+      "created_at": "2031-05-10T09:53:00Z",
+      "expires_at": "2031-05-10T09:58:00Z",
+      "total": 1,
+      "counts": { "will_move": 1, "will_manual_review": 0, "requires_decision": 0, "not_ready": 0, "rule_conflicts": 0, "no_scenario": 0 },
+      "warnings": [],
+      "next_cursor": null,
+      "rows": [
+        {
+          "item_id": "ready-item-atlas-shared-same",
+          "predicted_state": "WILL_MOVE",
+          "reason_code": null,
+          "matched_rules": [
+            { "dictionary_id": "dictionary-atlas-general", "version_id": null, "rule_id": "rule-atlas-same-a" },
+            { "dictionary_id": "dictionary-atlas-general", "version_id": null, "rule_id": "rule-atlas-same-b" }
+          ],
+          "selected_rule": { "dictionary_id": "dictionary-atlas-general", "version_id": null, "rule_id": "rule-atlas-same-a" },
+          "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Reports/SameName.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/SameName.pdf" }
+        }
+      ]
+    },
+    {
+      "page_id": "page-atlas-v3-restored",
+      "simulation_id": "simulation-atlas-general-v3-restored",
+      "dictionary_id": "dictionary-atlas-general",
+      "draft_revision": 3,
+      "candidate_version_id": "version-atlas-general-v3",
+      "base_rule_set_id": "rule-set-atlas-v2-invoices-v2",
+      "ready_set_id": "ready-atlas-full",
+      "created_at": "2031-05-10T09:40:30Z",
+      "expires_at": "2031-05-10T09:45:30Z",
+      "total": 5,
+      "counts": { "will_move": 2, "will_manual_review": 3, "requires_decision": 0, "not_ready": 0, "rule_conflicts": 0, "no_scenario": 3 },
+      "warnings": [],
+      "next_cursor": null,
+      "rows": [
+        {
+          "item_id": "ready-item-atlas-archive",
+          "predicted_state": "WILL_MOVE",
+          "reason_code": null,
+          "matched_rules": [{ "dictionary_id": "dictionary-atlas-general", "version_id": null, "rule_id": "rule-atlas-general-archive" }],
+          "selected_rule": { "dictionary_id": "dictionary-atlas-general", "version_id": null, "rule_id": "rule-atlas-general-archive" },
+          "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Reports/Archive.gz", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/Archive.gz" }
+        },
+        {
+          "item_id": "ready-item-atlas-invoice",
+          "predicted_state": "WILL_MOVE",
+          "reason_code": null,
+          "matched_rules": [{ "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-invoices-v2", "rule_id": "rule-atlas-invoices-invoice" }],
+          "selected_rule": { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-invoices-v2", "rule_id": "rule-atlas-invoices-invoice" },
+          "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Invoices/Invoice.TXT", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Invoices/Invoice.TXT" }
+        },
+        {
+          "item_id": "ready-item-atlas-uncovered",
+          "predicted_state": "WILL_MANUAL_REVIEW",
+          "reason_code": "NO_SCENARIO",
+          "matched_rules": [],
+          "selected_rule": null,
+          "target": null
+        },
+        {
+          "item_id": "ready-item-atlas-hidden",
+          "predicted_state": "WILL_MANUAL_REVIEW",
+          "reason_code": "NO_SCENARIO",
+          "matched_rules": [],
+          "selected_rule": null,
+          "target": null
+        },
+        {
+          "item_id": "ready-item-atlas-occupied",
+          "predicted_state": "WILL_MANUAL_REVIEW",
+          "reason_code": "NO_SCENARIO",
+          "matched_rules": [],
+          "selected_rule": null,
+          "target": null
+        }
+      ]
+    },
+    {
+      "page_id": "page-atlas-invoices-v2",
+      "simulation_id": "simulation-atlas-invoices-v2",
+      "dictionary_id": "dictionary-atlas-invoices",
+      "draft_revision": 2,
+      "candidate_version_id": "version-atlas-invoices-v2",
+      "base_rule_set_id": "rule-set-atlas-v2",
+      "ready_set_id": "ready-atlas-invoices-v2",
+      "created_at": "2031-05-10T09:37:30Z",
+      "expires_at": "2031-05-10T09:42:30Z",
+      "total": 1,
+      "counts": { "will_move": 1, "will_manual_review": 0, "requires_decision": 0, "not_ready": 0, "rule_conflicts": 0, "no_scenario": 0 },
+      "warnings": [],
+      "next_cursor": null,
+      "rows": [
+        {
+          "item_id": "ready-item-atlas-invoice-v2",
+          "predicted_state": "WILL_MOVE",
+          "reason_code": null,
+          "matched_rules": [{ "dictionary_id": "dictionary-atlas-invoices", "version_id": null, "rule_id": "rule-atlas-invoices-invoice" }],
+          "selected_rule": { "dictionary_id": "dictionary-atlas-invoices", "version_id": null, "rule_id": "rule-atlas-invoices-invoice" },
+          "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Invoices/Invoice.TXT", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Invoices/Invoice.TXT" }
+        }
+      ]
+    }
+  ],
+  "publishes": [
+    {
+      "publish_id": "publish-atlas-general-v2",
+      "operation": "publishDictionary",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-rev2",
+      "after_state": "state-atlas-general-published-v2",
+      "published_version_id": "version-atlas-general-v2",
+      "rule_set_id": "rule-set-atlas-v2",
+      "idempotency_key": "11111111-1111-4111-8111-111111111111",
+      "request": { "expected_draft_revision": 2, "simulation_id": "simulation-atlas-general-v2-full", "acknowledge_no_scenario": true, "comment": "Публикация проверенного черновика Atlas." }
+    },
+    {
+      "publish_id": "publish-atlas-invoices-v2",
+      "operation": "publishDictionary",
+      "actor": "worker-two",
+      "before_state": "state-atlas-invoices-draft-v2",
+      "after_state": "state-atlas-invoices-published-v2",
+      "published_version_id": "version-atlas-invoices-v2",
+      "rule_set_id": "rule-set-atlas-v2-invoices-v2",
+      "idempotency_key": "33333333-3333-4333-8333-333333333333",
+      "request": { "expected_draft_revision": 2, "simulation_id": "simulation-atlas-invoices-v2", "acknowledge_no_scenario": true, "comment": "Публикация дополнительного правила Atlas invoices." }
+    },
+    {
+      "publish_id": "publish-atlas-general-v3",
+      "operation": "publishDictionary",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-restored-v1",
+      "after_state": "state-atlas-general-published-v3",
+      "published_version_id": "version-atlas-general-v3",
+      "rule_set_id": "rule-set-atlas-v3",
+      "idempotency_key": "22222222-2222-4222-8222-222222222222",
+      "request": { "expected_draft_revision": 3, "simulation_id": "simulation-atlas-general-v3-restored", "acknowledge_no_scenario": true, "comment": "Публикация восстановленной версии 1." }
+    }
+  ],
+  "replays": [
+    {
+      "replay_id": "replay-publish-atlas-general-v2",
+      "q_ids": ["Q-029"],
+      "original_publish_id": "publish-atlas-general-v2",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-published-v2",
+      "after_state": "state-atlas-general-published-v2",
+      "idempotency_key": "11111111-1111-4111-8111-111111111111",
+      "published_version_id": "version-atlas-general-v2",
+      "rule_set_id": "rule-set-atlas-v2",
+      "request": { "expected_draft_revision": 2, "simulation_id": "simulation-atlas-general-v2-full", "acknowledge_no_scenario": true, "comment": "Публикация проверенного черновика Atlas." },
+      "reason": "The lost response is replayed with the same UUID, user and body; the key is checked before the simulation TTL, so the same immutable version is returned and nothing is re-published."
+    }
+  ],
+  "failures": [
+    {
+      "failure_id": "save-stale-revision-worker-two",
+      "q_ids": ["Q-016"],
+      "operation": "replaceDictionaryDraft",
+      "actor": "worker-two",
+      "before_state": "state-atlas-general-rev2",
+      "after_state": "state-atlas-general-rev2",
+      "mutates": false,
+      "schema_rejected": false,
+      "request": {
+        "expected_draft_revision": 1,
+        "name": "Общие правила Atlas",
+        "description": "Синтетические общие правила Atlas.",
+        "rules": [
+          { "rule_id": "rule-atlas-general-readme", "priority": 50, "match_field": "BASENAME", "mask": "README", "target_id": "target-atlas-data", "target_stem": "Readme" }
+        ]
+      },
+      "expected": { "status": 409, "code": "DRAFT_VERSION_CONFLICT" },
+      "preconditions": ["Both actors read draft revision 1.", "worker-one saved revision 2 first."],
+      "reason": "The stale expected_draft_revision rejects the whole write without merging or overwriting the colleague's revision."
+    },
+    {
+      "failure_id": "create-name-conflict-trim-casefold",
+      "q_ids": ["Q-016"],
+      "operation": "createDictionary",
+      "actor": "worker-two",
+      "company_id": "company-demo-atlas",
+      "before_state": "state-atlas-general-base",
+      "after_state": "state-atlas-general-base",
+      "mutates": false,
+      "schema_rejected": false,
+      "request": { "name": "  СЧЕТА ATLAS  ", "description": "Попытка дубликата имени." },
+      "expected": { "status": 409, "code": "DICTIONARY_NAME_CONFLICT" },
+      "preconditions": ["company-demo-atlas already has dictionary-atlas-invoices named 'Счета Atlas'."],
+      "reason": "After trim and casefold the name equals the existing Atlas dictionary; the create is rejected inside the company."
+    },
+    {
+      "failure_id": "simulate-stale-draft",
+      "q_ids": ["Q-018"],
+      "operation": "createDictionarySimulation",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-published-v2",
+      "after_state": "state-atlas-general-published-v2",
+      "mutates": false,
+      "schema_rejected": false,
+      "request": { "expected_draft_revision": 1 },
+      "expected": { "status": 409, "code": "DRAFT_VERSION_CONFLICT" },
+      "preconditions": ["The current draft revision is 2."],
+      "reason": "A simulation of a stale draft revision is rejected; no simulation is created."
+    },
+    {
+      "failure_id": "restore-stale-draft",
+      "q_ids": ["Q-021"],
+      "operation": "restoreDictionaryDraft",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-published-v2",
+      "after_state": "state-atlas-general-published-v2",
+      "mutates": false,
+      "schema_rejected": false,
+      "request": { "version_id": "version-atlas-general-v1", "expected_draft_revision": 1 },
+      "expected": { "status": 409, "code": "DRAFT_VERSION_CONFLICT" },
+      "preconditions": ["The current draft revision is 2."],
+      "reason": "Restore also requires the current draft revision; a stale one changes nothing."
+    },
+    {
+      "failure_id": "restore-unknown-version",
+      "q_ids": ["Q-021"],
+      "operation": "restoreDictionaryDraft",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-published-v2",
+      "after_state": "state-atlas-general-published-v2",
+      "mutates": false,
+      "schema_rejected": false,
+      "request": { "version_id": "version-atlas-general-does-not-exist", "expected_draft_revision": 2 },
+      "expected": { "status": 404, "code": "NOT_FOUND" },
+      "preconditions": ["The version id does not belong to the dictionary."],
+      "reason": "An unknown version cannot be restored; the draft is unchanged."
+    },
+    {
+      "failure_id": "publish-stale-draft",
+      "q_ids": ["Q-018"],
+      "operation": "publishDictionary",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-published-v2",
+      "after_state": "state-atlas-general-published-v2",
+      "mutates": false,
+      "schema_rejected": false,
+      "request": { "expected_draft_revision": 1, "simulation_id": "simulation-atlas-general-v2-full", "acknowledge_no_scenario": true, "comment": "Устаревшая ревизия черновика." },
+      "expected": { "status": 409, "code": "DRAFT_VERSION_CONFLICT" },
+      "preconditions": ["The current draft revision is 2."],
+      "reason": "Publish requires the current draft revision; a stale revision blocks publication without creating a version."
+    },
+    {
+      "failure_id": "publish-stale-simulation-ruleset",
+      "q_ids": ["Q-018"],
+      "operation": "publishDictionary",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-published-v2",
+      "after_state": "state-atlas-general-published-v2",
+      "mutates": false,
+      "schema_rejected": false,
+      "request": { "expected_draft_revision": 2, "simulation_id": "simulation-atlas-general-v2-full", "acknowledge_no_scenario": true, "comment": "Тест устарел: изменён другой участник набора." },
+      "expected": { "status": 409, "code": "STALE_SIMULATION" },
+      "preconditions": ["simulation-atlas-general-v2-full was created against rule-set-atlas-v2.", "dictionary-atlas-invoices was then published as version-atlas-invoices-v2, so the active set is now rule-set-atlas-v2-invoices-v2."],
+      "reason": "A changed member of the full RuleSet invalidates the test; the old simulation cannot be published."
+    },
+    {
+      "failure_id": "publish-stale-simulation-ready",
+      "q_ids": ["Q-018"],
+      "operation": "publishDictionary",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-published-v2",
+      "after_state": "state-atlas-general-published-v2",
+      "mutates": false,
+      "schema_rejected": false,
+      "request": { "expected_draft_revision": 2, "simulation_id": "simulation-atlas-general-v2-full", "acknowledge_no_scenario": true, "comment": "Тест устарел: изменился READY-набор." },
+      "expected": { "status": 409, "code": "STALE_SIMULATION" },
+      "preconditions": ["After the simulation a READY item revision changed (ready-item-atlas-archive 4 -> 5), so the READY snapshot is no longer current."],
+      "reason": "A changed READY set invalidates the test before publication; no version is created."
+    },
+    {
+      "failure_id": "publish-stale-simulation-ttl",
+      "q_ids": ["Q-018"],
+      "operation": "publishDictionary",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-published-v2",
+      "after_state": "state-atlas-general-published-v2",
+      "mutates": false,
+      "schema_rejected": false,
+      "request": { "expected_draft_revision": 2, "simulation_id": "simulation-atlas-general-v2-full", "acknowledge_no_scenario": true, "comment": "Тест устарел по TTL." },
+      "expected": { "status": 409, "code": "STALE_SIMULATION" },
+      "preconditions": ["Current time is after the simulation expires_at 2031-05-10T09:39:30Z."],
+      "reason": "An expired test cannot be published even when the draft and RuleSet are unchanged."
+    },
+    {
+      "failure_id": "publish-no-scenario-no-ack",
+      "q_ids": ["Q-019"],
+      "operation": "publishDictionary",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-rev2",
+      "after_state": "state-atlas-general-rev2",
+      "mutates": false,
+      "schema_rejected": false,
+      "request": { "expected_draft_revision": 2, "simulation_id": "simulation-atlas-general-v2-full", "acknowledge_no_scenario": false, "comment": "Публикация без подтверждения." },
+      "expected": { "status": 409, "code": "NO_SCENARIO_ACK_REQUIRED" },
+      "preconditions": ["simulation-atlas-general-v2-full has no_scenario = 1."],
+      "reason": "NO_SCENARIO requires an explicit acknowledgement tied to that simulation id; without it publication is blocked."
+    },
+    {
+      "failure_id": "publish-comment-empty",
+      "q_ids": ["Q-019"],
+      "operation": "publishDictionary",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-rev2",
+      "after_state": "state-atlas-general-rev2",
+      "mutates": false,
+      "schema_rejected": true,
+      "request": { "expected_draft_revision": 2, "simulation_id": "simulation-atlas-general-v2-full", "acknowledge_no_scenario": true, "comment": "" },
+      "expected": { "status": 422, "code": "VALIDATION_ERROR", "field_errors": [{ "field": "comment", "code": "MIN_LENGTH", "message": "Комментарий обязателен." }] },
+      "preconditions": ["The comment has zero characters."],
+      "reason": "The PublishDictionaryRequest.comment schema has minLength 1, so an empty comment is rejected before any publication."
+    },
+    {
+      "failure_id": "publish-comment-too-long",
+      "q_ids": ["Q-019"],
+      "operation": "publishDictionary",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-rev2",
+      "after_state": "state-atlas-general-rev2",
+      "mutates": false,
+      "schema_rejected": true,
+      "request": { "expected_draft_revision": 2, "simulation_id": "simulation-atlas-general-v2-full", "acknowledge_no_scenario": true, "comment": { "$repeat": { "char": "a", "count": 501 } } },
+      "expected": { "status": 422, "code": "VALIDATION_ERROR", "field_errors": [{ "field": "comment", "code": "MAX_LENGTH", "message": "Комментарий не длиннее 500 символов." }] },
+      "preconditions": ["The comment has 501 characters."],
+      "reason": "The comment schema has maxLength 500; the server does not truncate it and rejects the request."
+    },
+    {
+      "failure_id": "publish-conflict-blocked",
+      "q_ids": ["Q-018"],
+      "operation": "publishDictionary",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-scenario-conflict",
+      "after_state": "state-atlas-general-scenario-conflict",
+      "mutates": false,
+      "schema_rejected": false,
+      "request": { "expected_draft_revision": 101, "simulation_id": "simulation-atlas-general-conflict", "acknowledge_no_scenario": true, "comment": "Публикация конфликтного теста." },
+      "expected": { "status": 409, "code": "RULE_CONFLICT" },
+      "preconditions": ["Isolated scenario universe: the conflict draft revision is 101 and simulation-atlas-general-conflict has rule_conflicts = 1."],
+      "reason": "Any rule conflict blocks publication, even though the row is a manual review; no version is created."
+    },
+    {
+      "failure_id": "publish-idempotency-altered-body",
+      "q_ids": ["Q-029"],
+      "operation": "publishDictionary",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-published-v2",
+      "after_state": "state-atlas-general-published-v2",
+      "mutates": false,
+      "schema_rejected": false,
+      "idempotency_key": "11111111-1111-4111-8111-111111111111",
+      "request": { "expected_draft_revision": 2, "simulation_id": "simulation-atlas-general-v2-full", "acknowledge_no_scenario": true, "comment": "Другое тело с тем же ключом." },
+      "expected": { "status": 409, "code": "IDEMPOTENCY_KEY_REUSED" },
+      "preconditions": ["The key was already accepted with the publish-atlas-general-v2 body."],
+      "reason": "The same key with a different body hash is a reuse conflict; no second publication happens."
+    },
+    {
+      "failure_id": "publish-other-user-new-operation-stale",
+      "q_ids": ["Q-029"],
+      "operation": "publishDictionary",
+      "actor": "worker-two",
+      "before_state": "state-atlas-general-published-v2",
+      "after_state": "state-atlas-general-published-v2",
+      "mutates": false,
+      "schema_rejected": false,
+      "idempotency_key": "11111111-1111-4111-8111-111111111111",
+      "request": { "expected_draft_revision": 2, "simulation_id": "simulation-atlas-general-v2-full", "acknowledge_no_scenario": true, "comment": "Публикация проверенного черновика Atlas." },
+      "expected": { "status": 409, "code": "STALE_SIMULATION" },
+      "preconditions": ["The idempotency key is scoped to user_id, so for worker-two the same UUID is a new operation, not a replay.", "After the later invoices v2 publication the referenced simulation is genuinely stale."],
+      "reason": "A different actor does not inherit worker-one's idempotency record; the request is evaluated as a new operation on current conditions and is rejected as a stale test, not as a key reuse."
+    },
+    {
+      "failure_id": "publish-unknown-simulation",
+      "q_ids": ["Q-019"],
+      "operation": "publishDictionary",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-rev2",
+      "after_state": "state-atlas-general-rev2",
+      "mutates": false,
+      "schema_rejected": false,
+      "request": { "expected_draft_revision": 2, "simulation_id": "simulation-atlas-general-does-not-exist", "acknowledge_no_scenario": true, "comment": "Неизвестный тест." },
+      "expected": { "status": 404, "code": "NOT_FOUND" },
+      "preconditions": ["The simulation id does not exist."],
+      "reason": "Publication requires a fresh known test; an unknown simulation is not found and nothing is published."
+    }
+  ],
+  "version_pages": [
+    {
+      "page_id": "page-atlas-general-versions",
+      "dictionary_id": "dictionary-atlas-general",
+      "items": ["version-atlas-general-v3", "version-atlas-general-v2", "version-atlas-general-v1"],
+      "next_cursor": null
+    }
+  ],
+  "dictionary_lists": [
+    {
+      "list_id": "dictionary-list-atlas",
+      "states": ["state-atlas-general-base", "state-atlas-invoices-base"]
+    }
+  ],
+  "audit_expectations": [
+    { "scenario_id": "create-atlas-cleanup", "actions": ["DICTIONARY_CREATED"], "result": "SUCCESS", "evidence": false, "note": "Expected action for the future audit API (LT-03.5b). This fixture is not audit evidence." },
+    { "scenario_id": "save-atlas-cleanup", "actions": ["DRAFT_SAVED"], "result": "SUCCESS", "evidence": false, "note": "Expected action for the future audit API (LT-03.5b). This fixture is not audit evidence." },
+    { "scenario_id": "create-nova-scope", "actions": ["DICTIONARY_CREATED"], "result": "SUCCESS", "evidence": false, "note": "Expected action for the future audit API (LT-03.5b). This fixture is not audit evidence." },
+    { "scenario_id": "save-atlas-general-rev2", "actions": ["DRAFT_SAVED"], "result": "SUCCESS", "evidence": false, "note": "Expected action for the future audit API (LT-03.5b). This fixture is not audit evidence." },
+    { "scenario_id": "simulate-atlas-general-v2-full", "actions": ["DICTIONARY_SIMULATED"], "result": "SUCCESS", "evidence": false, "note": "Expected action for the future audit API (LT-03.5b). This fixture is not audit evidence." },
+    { "scenario_id": "publish-atlas-general-v2", "actions": ["DICTIONARY_PUBLISHED"], "result": "SUCCESS", "evidence": false, "note": "Expected action for the future audit API (LT-03.5b). This fixture is not audit evidence." },
+    { "scenario_id": "simulate-atlas-invoices-v2", "actions": ["DICTIONARY_SIMULATED"], "result": "SUCCESS", "evidence": false, "note": "Expected action for the future audit API (LT-03.5b). This fixture is not audit evidence." },
+    { "scenario_id": "save-atlas-invoices-v2", "actions": ["DRAFT_SAVED"], "result": "SUCCESS", "evidence": false, "note": "Expected action for the future audit API (LT-03.5b). This fixture is not audit evidence." },
+    { "scenario_id": "publish-atlas-invoices-v2", "actions": ["DICTIONARY_PUBLISHED"], "result": "SUCCESS", "evidence": false, "note": "Expected action for the future audit API (LT-03.5b). This fixture is not audit evidence." },
+    { "scenario_id": "restore-atlas-general-v1", "actions": ["DICTIONARY_RESTORED"], "result": "SUCCESS", "evidence": false, "note": "Expected action for the future audit API (LT-03.5b). This fixture is not audit evidence." },
+    { "scenario_id": "simulate-atlas-general-v3-restored", "actions": ["DICTIONARY_SIMULATED"], "result": "SUCCESS", "evidence": false, "note": "Expected action for the future audit API (LT-03.5b). This fixture is not audit evidence." },
+    { "scenario_id": "publish-atlas-general-v3", "actions": ["DICTIONARY_PUBLISHED"], "result": "SUCCESS", "evidence": false, "note": "Expected action for the future audit API (LT-03.5b). This fixture is not audit evidence." },
+    { "scenario_id": "manual-edit-atlas-general", "actions": ["DRAFT_SAVED"], "result": "SUCCESS", "evidence": false, "note": "Expected action for the future audit API (LT-03.5b). This fixture is not audit evidence." },
+    { "scenario_id": "simulate-atlas-empty", "actions": ["DICTIONARY_SIMULATED"], "result": "SUCCESS", "evidence": false, "note": "Expected action for the future audit API (LT-03.5b). This fixture is not audit evidence." },
+    { "scenario_id": "simulate-atlas-conflict", "actions": ["DICTIONARY_SIMULATED"], "result": "SUCCESS", "evidence": false, "note": "Expected action for the future audit API (LT-03.5b). This fixture is not audit evidence." },
+    { "scenario_id": "simulate-atlas-same-target", "actions": ["DICTIONARY_SIMULATED"], "result": "SUCCESS", "evidence": false, "note": "Expected action for the future audit API (LT-03.5b). This fixture is not audit evidence." }
+  ],
+  "batch_bindings": [
+    {
+      "binding_id": "batch-binding-atlas-v2",
+      "rule_set_id": "rule-set-atlas-v2",
+      "version_ids": ["version-atlas-general-v2", "version-atlas-invoices-v1"],
+      "batch_exists": false,
+      "note": "LT-03.2b describes the expectation only: a future accepted batch binds rule-set-atlas-v2 and its immutable member versions. Later draft edits or a later publication must not change that binding. No batch runtime exists in this leaf."
+    }
+  ],
+  "timeline": [
+    {
+      "step_id": "create-atlas-cleanup",
+      "q_ids": ["Q-016"],
+      "operation": "createDictionary",
+      "actor": "worker-one",
+      "company_id": "company-demo-atlas",
+      "before_state": null,
+      "after_state": "state-atlas-cleanup-created",
+      "mutates": true,
+      "request": { "name": "Уборка Atlas", "description": "Черновик для проверки ревизий и уникальности имени." },
+      "expected": { "status": 201, "state": "state-atlas-cleanup-created", "draft_revision": 0 },
+      "reason": "A new dictionary starts with an empty draft revision 0, no active version and an empty history."
+    },
+    {
+      "step_id": "save-atlas-cleanup",
+      "q_ids": ["Q-016"],
+      "operation": "replaceDictionaryDraft",
+      "actor": "worker-one",
+      "before_state": "state-atlas-cleanup-created",
+      "after_state": "state-atlas-cleanup-saved",
+      "mutates": true,
+      "request": {
+        "expected_draft_revision": 0,
+        "name": "Уборка Atlas",
+        "description": "Черновик для проверки ревизий и уникальности имени.",
+        "rules": [
+          { "rule_id": "rule-cleanup-archive", "priority": 30, "match_field": "BASENAME", "mask": "*.cleanup", "target_id": "target-atlas-data", "target_stem": "Cleanup" }
+        ]
+      },
+      "expected": { "status": 200, "state": "state-atlas-cleanup-saved", "draft_revision": 1 },
+      "reason": "A successful save from expected revision 0 returns revision 1 (revision + 1)."
+    },
+    {
+      "step_id": "create-nova-scope",
+      "q_ids": ["Q-016"],
+      "operation": "createDictionary",
+      "actor": "worker-one",
+      "company_id": "company-demo-nova",
+      "before_state": null,
+      "after_state": "state-nova-scope-created",
+      "mutates": true,
+      "request": { "name": "Счета Atlas", "description": "Проверка отсутствия межкомпанийного конфликта имён." },
+      "expected": { "status": 201, "state": "state-nova-scope-created", "draft_revision": 0 },
+      "reason": "The same name in another company is allowed; no false cross-company conflict."
+    },
+    {
+      "step_id": "save-atlas-general-rev2",
+      "q_ids": ["Q-016"],
+      "operation": "replaceDictionaryDraft",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-base",
+      "after_state": "state-atlas-general-rev2",
+      "mutates": true,
+      "request": {
+        "expected_draft_revision": 1,
+        "name": "Общие правила Atlas",
+        "description": "Синтетические общие правила Atlas.",
+        "rules": [
+          { "rule_id": "rule-atlas-general-readme", "priority": 50, "match_field": "BASENAME", "mask": "README", "target_id": "target-atlas-data", "target_stem": "Readme" },
+          { "rule_id": "rule-atlas-general-env", "priority": 50, "match_field": "BASENAME", "mask": ".env", "target_id": "target-atlas-data", "target_stem": "EnvFile" },
+          { "rule_id": "rule-atlas-general-namedot", "priority": 50, "match_field": "BASENAME", "mask": "name.", "target_id": "target-atlas-data", "target_stem": "Named" },
+          { "rule_id": "rule-atlas-general-archive", "priority": 60, "match_field": "BASENAME", "mask": "*.tar.gz", "target_id": "target-atlas-reports", "target_stem": "Archive" },
+          { "rule_id": "rule-atlas-general-log", "priority": 40, "match_field": "BASENAME", "mask": "*.log", "target_id": "target-atlas-data", "target_stem": "Hidden" },
+          { "rule_id": "rule-atlas-general-occupied", "priority": 70, "match_field": "BASENAME", "mask": "*occupied*", "target_id": "target-atlas-reports", "target_stem": "Occupied" }
+        ]
+      },
+      "expected": { "status": 200, "state": "state-atlas-general-rev2", "draft_revision": 2 },
+      "reason": "worker-one saves the shared draft from expected revision 1 to revision 2."
+    },
+    {
+      "step_id": "simulate-atlas-general-v2-full",
+      "q_ids": ["Q-017"],
+      "operation": "createDictionarySimulation",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-rev2",
+      "after_state": "state-atlas-general-rev2",
+      "mutates": false,
+      "request": { "expected_draft_revision": 2 },
+      "expected": { "status": 201, "simulation_id": "simulation-atlas-general-v2-full", "page_id": "page-atlas-full-1", "draft_revision": 2 },
+      "reason": "The candidate replaces only its own version over all READY Atlas items, including hidden/filtered ones and an item matched by another dictionary."
+    },
+    {
+      "step_id": "get-simulation-page2",
+      "q_ids": ["Q-017"],
+      "operation": "getSimulation",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-rev2",
+      "after_state": "state-atlas-general-rev2",
+      "mutates": false,
+      "request": { "simulation_id": "simulation-atlas-general-v2-full", "cursor": "cursor-simulation-atlas-full-page2" },
+      "expected": { "status": 200, "simulation_id": "simulation-atlas-general-v2-full", "page_id": "page-atlas-full-2" },
+      "reason": "The remaining rows come from a second page with the same fixed total and counts."
+    },
+    {
+      "step_id": "publish-atlas-general-v2",
+      "q_ids": ["Q-017", "Q-019", "Q-020"],
+      "operation": "publishDictionary",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-rev2",
+      "after_state": "state-atlas-general-published-v2",
+      "mutates": true,
+      "idempotency_key": "11111111-1111-4111-8111-111111111111",
+      "request": { "expected_draft_revision": 2, "simulation_id": "simulation-atlas-general-v2-full", "acknowledge_no_scenario": true, "comment": "Публикация проверенного черновика Atlas." },
+      "expected": { "status": 201, "publish_id": "publish-atlas-general-v2", "active_version_id": "version-atlas-general-v2", "draft_revision": 2 },
+      "reason": "The accepted publication acknowledges the specific NO_SCENARIO simulation, creates immutable version 2 and the full RuleSet; the occupied target is visible but does not block."
+    },
+    {
+      "step_id": "get-version-atlas-general-v2",
+      "q_ids": ["Q-020"],
+      "operation": "getDictionaryVersion",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-published-v2",
+      "after_state": "state-atlas-general-published-v2",
+      "mutates": false,
+      "request": { "version_id": "version-atlas-general-v2" },
+      "expected": { "status": 200, "version_id": "version-atlas-general-v2" },
+      "reason": "The published version is immutable and can be read after later edits."
+    },
+    {
+      "step_id": "save-atlas-invoices-v2",
+      "q_ids": ["Q-020"],
+      "operation": "replaceDictionaryDraft",
+      "actor": "worker-two",
+      "before_state": "state-atlas-invoices-base",
+      "after_state": "state-atlas-invoices-draft-v2",
+      "mutates": true,
+      "request": {
+        "expected_draft_revision": 1,
+        "name": "Счета Atlas",
+        "description": "Синтетические правила счетов Atlas.",
+        "rules": [
+          { "rule_id": "rule-atlas-invoices-invoice", "priority": 10, "match_field": "BASENAME", "mask": "*invoice*", "target_id": "target-atlas-invoices", "target_stem": "Invoice" },
+          { "rule_id": "rule-atlas-invoices-pdf", "priority": 100, "match_field": "RELATIVE_PATH", "mask": "Archive/Atlas/Orion_2031/Reports/*.pdf", "target_id": "target-atlas-reports", "target_stem": "Report" },
+          { "rule_id": "rule-atlas-invoices-upper", "priority": 100, "match_field": "RELATIVE_PATH", "mask": "Archive/Atlas/Orion_2031/Data/*.TXT", "target_id": "target-atlas-data", "target_stem": "Invoice" },
+          { "rule_id": "rule-atlas-invoices-lifecycle", "priority": 20, "match_field": "BASENAME", "mask": "*lifecycle*", "target_id": "target-atlas-data", "target_stem": "Lifecycle" }
+        ]
+      },
+      "expected": { "status": 200, "state": "state-atlas-invoices-draft-v2", "draft_revision": 2 },
+      "reason": "worker-two saves the shared invoices draft from revision 1 to revision 2 with the exact version 2 rules before testing it."
+    },
+    {
+      "step_id": "simulate-atlas-invoices-v2",
+      "q_ids": ["Q-020"],
+      "operation": "createDictionarySimulation",
+      "actor": "worker-two",
+      "before_state": "state-atlas-invoices-draft-v2",
+      "after_state": "state-atlas-invoices-draft-v2",
+      "mutates": false,
+      "request": { "expected_draft_revision": 2 },
+      "expected": { "status": 201, "simulation_id": "simulation-atlas-invoices-v2", "page_id": "page-atlas-invoices-v2", "draft_revision": 2 },
+      "reason": "The candidate invoices v2 draft is tested against the full set whose invoices member is still the previous active v1."
+    },
+    {
+      "step_id": "publish-atlas-invoices-v2",
+      "q_ids": ["Q-020"],
+      "operation": "publishDictionary",
+      "actor": "worker-two",
+      "before_state": "state-atlas-invoices-draft-v2",
+      "after_state": "state-atlas-invoices-published-v2",
+      "mutates": true,
+      "idempotency_key": "33333333-3333-4333-8333-333333333333",
+      "request": { "expected_draft_revision": 2, "simulation_id": "simulation-atlas-invoices-v2", "acknowledge_no_scenario": true, "comment": "Публикация дополнительного правила Atlas invoices." },
+      "expected": { "status": 201, "publish_id": "publish-atlas-invoices-v2", "active_version_id": "version-atlas-invoices-v2", "draft_revision": 2 },
+      "reason": "The accepted publication fixes invoices v2 in the full set and leaves the already accepted general version 2 and its history unchanged."
+    },
+    {
+      "step_id": "restore-atlas-general-v1",
+      "q_ids": ["Q-021"],
+      "operation": "restoreDictionaryDraft",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-published-v2",
+      "after_state": "state-atlas-general-restored-v1",
+      "mutates": true,
+      "request": { "version_id": "version-atlas-general-v1", "expected_draft_revision": 2 },
+      "expected": { "status": 200, "state": "state-atlas-general-restored-v1", "draft_revision": 3, "based_on_version_id": "version-atlas-general-v1" },
+      "reason": "Restore copies version 1 into the shared draft, increments the revision and records the provenance without rewriting history."
+    },
+    {
+      "step_id": "simulate-atlas-general-v3-restored",
+      "q_ids": ["Q-021"],
+      "operation": "createDictionarySimulation",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-restored-v1",
+      "after_state": "state-atlas-general-restored-v1",
+      "mutates": false,
+      "request": { "expected_draft_revision": 3 },
+      "expected": { "status": 201, "simulation_id": "simulation-atlas-general-v3-restored", "page_id": "page-atlas-v3-restored", "draft_revision": 3 },
+      "reason": "The restored draft must pass a fresh full READY test before it can be published."
+    },
+    {
+      "step_id": "publish-atlas-general-v3",
+      "q_ids": ["Q-021"],
+      "operation": "publishDictionary",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-restored-v1",
+      "after_state": "state-atlas-general-published-v3",
+      "mutates": true,
+      "idempotency_key": "22222222-2222-4222-8222-222222222222",
+      "request": { "expected_draft_revision": 3, "simulation_id": "simulation-atlas-general-v3-restored", "acknowledge_no_scenario": true, "comment": "Публикация восстановленной версии 1." },
+      "expected": { "status": 201, "publish_id": "publish-atlas-general-v3", "active_version_id": "version-atlas-general-v3", "restored_from_version_id": "version-atlas-general-v1", "draft_revision": 3 },
+      "reason": "The new version 3 records restored_from_version_id = version-atlas-general-v1; the previous history is untouched."
+    },
+    {
+      "step_id": "list-versions-atlas-general",
+      "q_ids": ["Q-020"],
+      "operation": "listDictionaryVersions",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-published-v3",
+      "after_state": "state-atlas-general-published-v3",
+      "mutates": false,
+      "request": { "dictionary_id": "dictionary-atlas-general" },
+      "expected": { "status": 200, "page_id": "page-atlas-general-versions" },
+      "reason": "The history contains only the dictionary's own published versions: v3, v2, v1. The scenario-role universes are never counted."
+    },
+    {
+      "step_id": "manual-edit-atlas-general",
+      "q_ids": ["Q-021"],
+      "operation": "replaceDictionaryDraft",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-restored-v1",
+      "after_state": "state-atlas-general-manual-edit",
+      "mutates": true,
+      "request": {
+        "expected_draft_revision": 3,
+        "name": "Общие правила Atlas",
+        "description": "Синтетические общие правила Atlas.",
+        "rules": [
+          { "rule_id": "rule-atlas-general-readme", "priority": 50, "match_field": "BASENAME", "mask": "README", "target_id": "target-atlas-data", "target_stem": "Readme" },
+          { "rule_id": "rule-atlas-general-env", "priority": 50, "match_field": "BASENAME", "mask": ".env", "target_id": "target-atlas-data", "target_stem": "EnvFile" },
+          { "rule_id": "rule-atlas-general-namedot", "priority": 50, "match_field": "BASENAME", "mask": "name.", "target_id": "target-atlas-data", "target_stem": "Named" },
+          { "rule_id": "rule-atlas-general-archive", "priority": 60, "match_field": "BASENAME", "mask": "*.tar.gz", "target_id": "target-atlas-reports", "target_stem": "Archive" },
+          { "rule_id": "rule-atlas-general-manual", "priority": 30, "match_field": "BASENAME", "mask": "*.manual", "target_id": "target-atlas-data", "target_stem": "Manual" }
+        ]
+      },
+      "expected": { "status": 200, "state": "state-atlas-general-manual-edit", "draft_revision": 4, "based_on_version_id": null },
+      "reason": "A manual edit after restore clears based_on_version_id, so the draft becomes an ordinary new candidate."
+    },
+    {
+      "step_id": "simulate-atlas-empty",
+      "q_ids": ["Q-017"],
+      "operation": "createDictionarySimulation",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-rev2",
+      "after_state": "state-atlas-general-rev2",
+      "mutates": false,
+      "request": { "expected_draft_revision": 2 },
+      "expected": { "status": 201, "simulation_id": "simulation-atlas-general-empty", "page_id": "page-atlas-empty", "draft_revision": 2, "warnings": ["EMPTY_READY_SET"] },
+      "reason": "Isolated precondition: the company has zero READY items. The test is valid but warns EMPTY_READY_SET and proves no coverage."
+    },
+    {
+      "step_id": "simulate-atlas-conflict",
+      "q_ids": ["Q-018"],
+      "operation": "createDictionarySimulation",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-scenario-conflict",
+      "after_state": "state-atlas-general-scenario-conflict",
+      "mutates": false,
+      "request": { "expected_draft_revision": 101 },
+      "expected": { "status": 201, "simulation_id": "simulation-atlas-general-conflict", "page_id": "page-atlas-conflict", "draft_revision": 101, "rule_conflicts": 1 },
+      "reason": "Isolated scenario universe scenario-conflict: revision 101 carries the conflict candidate rules; equal-priority rules plan different targets, so the file is a RULE_CONFLICT manual review."
+    },
+    {
+      "step_id": "simulate-atlas-same-target",
+      "q_ids": ["Q-018"],
+      "operation": "createDictionarySimulation",
+      "actor": "worker-one",
+      "before_state": "state-atlas-general-scenario-same-target",
+      "after_state": "state-atlas-general-scenario-same-target",
+      "mutates": false,
+      "request": { "expected_draft_revision": 102 },
+      "expected": { "status": 201, "simulation_id": "simulation-atlas-general-same-target", "page_id": "page-atlas-same-target", "draft_revision": 102, "rule_conflicts": 0 },
+      "reason": "Isolated scenario universe scenario-same-target: revision 102 carries the same-target candidate rules; equal-priority rules with the same final target are not a conflict and attribution is stable dictionary_id then rule_id."
+    }
+  ],
+  "coverage": {
+    "Q-016": [
+      "create-atlas-cleanup",
+      "save-atlas-cleanup",
+      "create-nova-scope",
+      "save-atlas-general-rev2",
+      "save-stale-revision-worker-two",
+      "create-name-conflict-trim-casefold"
+    ],
+    "Q-017": [
+      "simulate-atlas-general-v2-full",
+      "get-simulation-page2",
+      "publish-atlas-general-v2",
+      "simulate-atlas-empty"
+    ],
+    "Q-018": [
+      "simulate-atlas-conflict",
+      "simulate-atlas-same-target",
+      "publish-conflict-blocked",
+      "publish-stale-draft",
+      "publish-stale-simulation-ruleset",
+      "publish-stale-simulation-ready",
+      "publish-stale-simulation-ttl",
+      "simulate-stale-draft"
+    ],
+    "Q-019": [
+      "publish-atlas-general-v2",
+      "publish-no-scenario-no-ack",
+      "publish-comment-empty",
+      "publish-comment-too-long",
+      "publish-unknown-simulation"
+    ],
+    "Q-020": [
+      "publish-atlas-general-v2",
+      "get-version-atlas-general-v2",
+      "save-atlas-invoices-v2",
+      "simulate-atlas-invoices-v2",
+      "publish-atlas-invoices-v2",
+      "list-versions-atlas-general"
+    ],
+    "Q-021": [
+      "restore-atlas-general-v1",
+      "restore-stale-draft",
+      "restore-unknown-version",
+      "simulate-atlas-general-v3-restored",
+      "publish-atlas-general-v3",
+      "manual-edit-atlas-general"
+    ],
+    "Q-029": [
+      "replay-publish-atlas-general-v2",
+      "publish-idempotency-altered-body",
+      "publish-other-user-new-operation-stale"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "item_id": "src-rule-shared",
+  "item_revision": 1,
+  "source": {
+    "root_id": "root-demo-atlas",
+    "relative_path": "Archive/Atlas/Orion_2031/Data/shared-file.pdf",
+    "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/shared-file.pdf"
+  },
+  "filename": "shared-file.pdf",
+  "company_id": "company-demo-atlas",
+  "predicted_state": "WILL_MANUAL_REVIEW",
+  "reason_code": "RULE_CONFLICT",
+  "target": null,
+  "matched_rules": [
+    {
+      "dictionary_id": "dictionary-atlas-general",
+      "version_id": "version-atlas-eq-diff-general-v1",
+      "rule_id": "rule-atlas-eq-diff-general"
+    },
+    {
+      "dictionary_id": "dictionary-atlas-invoices",
+      "version_id": "version-atlas-eq-diff-invoices-v1",
+      "rule_id": "rule-atlas-eq-diff-invoices"
+    }
+  ],
+  "selected_rule": null,
+  "collision": null
+}

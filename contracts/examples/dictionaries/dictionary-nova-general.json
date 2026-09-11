@@ -1,0 +1,43 @@
+{
+  "dictionary_id": "dictionary-nova-general",
+  "company_id": "company-demo-nova",
+  "name": "Общие правила Nova",
+  "description": "Синтетические общие правила Nova.",
+  "draft": {
+    "draft_revision": 1,
+    "rules": [
+      {
+        "rule_id": "rule-nova-general-report",
+        "priority": 100,
+        "match_field": "RELATIVE_PATH",
+        "mask": "Archive/Nova/Orion_2031/North/Reports/*",
+        "target_stem": "NovaReport",
+        "target": {
+          "root_id": "root-demo-nova",
+          "relative_directory": "Archive/Nova/Orion_2031/North/Reports"
+        }
+      },
+      {
+        "rule_id": "rule-nova-general-data",
+        "priority": 50,
+        "match_field": "BASENAME",
+        "mask": "*.xlsx",
+        "target_stem": "NovaData",
+        "target": {
+          "root_id": "root-demo-nova",
+          "relative_directory": "Archive/Nova/Orion_2031/South/Data"
+        }
+      }
+    ],
+    "based_on_version_id": "version-nova-general-v1"
+  },
+  "active_version_id": "version-nova-general-v1",
+  "versions_count": 1,
+  "updated_at": "2031-05-10T09:32:00Z",
+  "updated_by": {
+    "user_id": "user-demo-worker-1",
+    "login": "worker.one",
+    "display_name": "Иван Рабочий",
+    "role": "WORKER"
+  }
+}

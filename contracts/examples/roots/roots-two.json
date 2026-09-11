@@ -1,0 +1,20 @@
+{
+  "items": [
+    {
+      "root_id": "root-demo-atlas",
+      "label": "Демо-корень Atlas",
+      "display_prefix": "DEMO:/SandboxRoot",
+      "schema_set_version": "schema-demo-1",
+      "index_generation": "generation-demo-1",
+      "indexed_at": "2031-05-10T09:30:00Z"
+    },
+    {
+      "root_id": "root-demo-nova",
+      "label": "Демо-корень Nova",
+      "display_prefix": "DEMO:/SandboxRoot",
+      "schema_set_version": "schema-demo-2",
+      "index_generation": "generation-demo-2",
+      "indexed_at": "2031-05-10T09:30:00Z"
+    }
+  ]
+}

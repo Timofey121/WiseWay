@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "BATCH_LIMIT_EXCEEDED",
+    "message": "Выбрано больше файлов, чем допускает одна партия.",
+    "request_id": "request-selection-limit",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

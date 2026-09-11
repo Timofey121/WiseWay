@@ -1,0 +1,17 @@
+{
+  "item_id": "file-atlas-type-arbitrary",
+  "item_revision": 3,
+  "source": {
+    "root_id": "root-demo-atlas",
+    "relative_path": "Archive/Atlas/Orion_2031/Data/data.bin",
+    "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/data.bin"
+  },
+  "filename": "data.bin",
+  "company_id": "company-demo-atlas",
+  "predicted_state": "WILL_MANUAL_REVIEW",
+  "reason_code": "NO_SCENARIO",
+  "target": null,
+  "matched_rules": [],
+  "selected_rule": null,
+  "collision": null
+}

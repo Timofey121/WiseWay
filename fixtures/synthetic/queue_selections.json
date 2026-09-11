@@ -1,0 +1,1412 @@
+{
+  "fixture_set": "wiseway-queue-selections",
+  "version": "1.0.0",
+  "seed": "wiseway-demo-seed-2031",
+  "contract_version": "1.0.0",
+  "corpus_version": "1.2.0",
+  "rule_fixture_version": "1.0.0",
+  "notes": "LT-03.3a finite queue/readiness/selection oracle. Every payload is a literal, schema-bound value; compact {index} group ranges only enumerate already-declared members and never implement queue/readiness/selection logic. matching_count/eligible_count, status_counts, counters, membership, readiness transitions and snapshot contents are declared literals and cross-checked by contractlib.queue_selections; no matcher, readiness detector, count or selection algorithm is implemented.",
+  "constants": {
+    "snapshot_ttl_seconds": 300,
+    "max_batch_items": 1000,
+    "queue_page_limit": 100,
+    "readiness_observation_interval_seconds": 5,
+    "display_timezone": "Europe/Moscow"
+  },
+  "companies": {
+    "atlas": {
+      "company_id": "company-demo-atlas",
+      "incoming_source_id": "incoming-demo-atlas",
+      "root_id": "root-demo-atlas"
+    },
+    "nova": {
+      "company_id": "company-demo-nova",
+      "incoming_source_id": "incoming-demo-nova",
+      "root_id": "root-demo-nova"
+    }
+  },
+  "actors": {
+    "worker1": "user-demo-worker-1",
+    "worker2": "user-demo-worker-2",
+    "admin": "user-demo-admin-1"
+  },
+  "rule_set": {
+    "rule_set_id": "rule-set-atlas-published",
+    "company_id": "company-demo-atlas",
+    "source_fixture": "rule_expectations.json",
+    "members": [
+      {
+        "dictionary_id": "dictionary-atlas-general",
+        "version_id": "version-atlas-general-v1"
+      },
+      {
+        "dictionary_id": "dictionary-atlas-invoices",
+        "version_id": "version-atlas-invoices-v1"
+      }
+    ],
+    "note": "Accepted LT-03.2b published RuleSet identity; LT-03.3b must reuse the same rule_set_id/members for preview."
+  },
+  "readiness": {
+    "note": "Finite observation sequences. The expected state is a declared literal; the checker only confirms the declared sequence satisfies the Q-022 criteria (two equal size/mtime observations at least 5s apart without an unfinished marker; change/rename returns to WAITING_READY with a new content revision; a claim does not change the content revision).",
+    "items": [
+      {
+        "item_id": "queue-atlas-readiness-stable",
+        "company_id": "company-demo-atlas",
+        "q_ids": ["Q-022"],
+        "change_kind": "stable",
+        "content_revision_before": 1,
+        "observations": [
+          {
+            "observed_at": "2031-05-10T09:00:00Z",
+            "filename": "Atlas-Report-0501.pdf",
+            "size_bytes": 2048,
+            "modified_at": "2031-05-10T08:59:00Z",
+            "unfinished": false
+          },
+          {
+            "observed_at": "2031-05-10T09:00:05Z",
+            "filename": "Atlas-Report-0501.pdf",
+            "size_bytes": 2048,
+            "modified_at": "2031-05-10T08:59:00Z",
+            "unfinished": false
+          }
+        ],
+        "claim": null,
+        "expected_status": "READY",
+        "expected_content_revision": 1,
+        "reason": "Two stable observations with equal size/mtime at least 5 seconds apart and no unfinished marker produce READY."
+      },
+      {
+        "item_id": "queue-atlas-readiness-changed",
+        "company_id": "company-demo-atlas",
+        "q_ids": ["Q-022"],
+        "change_kind": "changed",
+        "content_revision_before": 1,
+        "observations": [
+          {
+            "observed_at": "2031-05-10T09:01:00Z",
+            "filename": "Atlas-Report-0502.pdf",
+            "size_bytes": 2048,
+            "modified_at": "2031-05-10T09:00:50Z",
+            "unfinished": false
+          },
+          {
+            "observed_at": "2031-05-10T09:01:05Z",
+            "filename": "Atlas-Report-0502.pdf",
+            "size_bytes": 4096,
+            "modified_at": "2031-05-10T09:01:02Z",
+            "unfinished": false
+          }
+        ],
+        "claim": null,
+        "expected_status": "WAITING_READY",
+        "expected_content_revision": 2,
+        "reason": "A changed size/mtime invalidates the previous readiness and returns the item to WAITING_READY with a new content revision."
+      },
+      {
+        "item_id": "queue-atlas-readiness-renamed",
+        "company_id": "company-demo-atlas",
+        "q_ids": ["Q-022"],
+        "change_kind": "renamed",
+        "content_revision_before": 1,
+        "observations": [
+          {
+            "observed_at": "2031-05-10T09:02:00Z",
+            "filename": "Atlas-Report-0503.pdf",
+            "size_bytes": 2048,
+            "modified_at": "2031-05-10T09:01:50Z",
+            "unfinished": false
+          },
+          {
+            "observed_at": "2031-05-10T09:02:05Z",
+            "filename": "Atlas-Report-0503-renamed.pdf",
+            "size_bytes": 2048,
+            "modified_at": "2031-05-10T09:01:50Z",
+            "unfinished": false
+          }
+        ],
+        "claim": null,
+        "expected_status": "WAITING_READY",
+        "expected_content_revision": 2,
+        "reason": "A rename invalidates the previous readiness and returns the item to WAITING_READY with a new content revision."
+      },
+      {
+        "item_id": "queue-atlas-readiness-unfinished",
+        "company_id": "company-demo-atlas",
+        "q_ids": ["Q-022"],
+        "change_kind": "unfinished",
+        "content_revision_before": 1,
+        "observations": [
+          {
+            "observed_at": "2031-05-10T09:03:00Z",
+            "filename": "Atlas-Report-0504.pdf",
+            "size_bytes": 2048,
+            "modified_at": "2031-05-10T09:02:50Z",
+            "unfinished": false
+          },
+          {
+            "observed_at": "2031-05-10T09:03:05Z",
+            "filename": "Atlas-Report-0504.pdf",
+            "size_bytes": 2048,
+            "modified_at": "2031-05-10T09:02:50Z",
+            "unfinished": true
+          }
+        ],
+        "claim": null,
+        "expected_status": "WAITING_READY",
+        "expected_content_revision": 1,
+        "reason": "An unfinished incoming marker keeps the item in WAITING_READY even when the two observations look equal."
+      },
+      {
+        "item_id": "queue-atlas-readiness-claimed",
+        "company_id": "company-demo-atlas",
+        "q_ids": ["Q-022"],
+        "change_kind": "claimed",
+        "content_revision_before": 1,
+        "observations": [
+          {
+            "observed_at": "2031-05-10T09:04:00Z",
+            "filename": "Atlas-Report-0505.pdf",
+            "size_bytes": 2048,
+            "modified_at": "2031-05-10T09:03:50Z",
+            "unfinished": false
+          },
+          {
+            "observed_at": "2031-05-10T09:04:05Z",
+            "filename": "Atlas-Report-0505.pdf",
+            "size_bytes": 2048,
+            "modified_at": "2031-05-10T09:03:50Z",
+            "unfinished": false
+          }
+        ],
+        "claim": {
+          "active_attempt_id": "attempt-atlas-readiness-01"
+        },
+        "expected_status": "PROCESSING",
+        "expected_content_revision": 1,
+        "reason": "A claim moves the item to PROCESSING but does not change the content revision of the source."
+      }
+    ]
+  },
+  "profiles": [
+    {
+      "profile_id": "QUEUE-Q022-READY-120",
+      "q_ids": ["Q-022", "Q-023", "Q-024", "Q-025"],
+      "company": "atlas",
+      "queue_generation": "queue-generation-atlas-120",
+      "required_states": [
+        "DISCOVERED",
+        "WAITING_READY",
+        "READY",
+        "PROCESSING",
+        "REQUIRES_DECISION",
+        "RECOVERY_REQUIRED",
+        "MISSING"
+      ],
+      "status_counts": [
+        { "status": "DISCOVERED", "count": 2 },
+        { "status": "WAITING_READY", "count": 3 },
+        { "status": "READY", "count": 120 },
+        { "status": "PROCESSING", "count": 2 },
+        { "status": "REQUIRES_DECISION", "count": 2 },
+        { "status": "RECOVERY_REQUIRED", "count": 1 },
+        { "status": "MISSING", "count": 2 }
+      ],
+      "counters": {
+        "ready": 120,
+        "processing": 2,
+        "attention": 3
+      },
+      "groups": [
+        {
+          "group": "ready-120",
+          "id_template": "queue-atlas-ready-{index:04d}",
+          "index_start": 1,
+          "index_end": 120,
+          "status": "READY",
+          "stable": true,
+          "item_revision": 1,
+          "selectable": true,
+          "active_attempt_id": null,
+          "reason_code": null,
+          "filename_template": "Atlas-Report-{index:04d}.pdf",
+          "relative_path_template": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-{index:04d}.pdf",
+          "display_path_template": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-{index:04d}.pdf",
+          "source_name": "Atlas incoming",
+          "size_bytes": 2048,
+          "modified_at": "2031-05-10T08:00:00Z"
+        },
+        {
+          "group": "discovered-2",
+          "id_template": "queue-atlas-discovered-{index:02d}",
+          "index_start": 1,
+          "index_end": 2,
+          "status": "DISCOVERED",
+          "stable": false,
+          "item_revision": 0,
+          "selectable": false,
+          "active_attempt_id": null,
+          "reason_code": null,
+          "filename_template": "Atlas-Discovered-{index:02d}.pdf",
+          "relative_path_template": "Incoming/Atlas/Orion_2031/Reports/Atlas-Discovered-{index:02d}.pdf",
+          "display_path_template": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Discovered-{index:02d}.pdf",
+          "source_name": "Atlas incoming",
+          "size_bytes": 1024,
+          "modified_at": "2031-05-10T08:10:00Z"
+        },
+        {
+          "group": "waiting-3",
+          "id_template": "queue-atlas-waiting-{index:02d}",
+          "index_start": 1,
+          "index_end": 3,
+          "status": "WAITING_READY",
+          "stable": false,
+          "item_revision": 1,
+          "selectable": false,
+          "active_attempt_id": null,
+          "reason_code": null,
+          "filename_template": "Atlas-Waiting-{index:02d}.pdf",
+          "relative_path_template": "Incoming/Atlas/Orion_2031/Reports/Atlas-Waiting-{index:02d}.pdf",
+          "display_path_template": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Waiting-{index:02d}.pdf",
+          "source_name": "Atlas incoming",
+          "size_bytes": 1536,
+          "modified_at": "2031-05-10T08:20:00Z"
+        },
+        {
+          "group": "processing-2",
+          "id_template": "queue-atlas-processing-{index:02d}",
+          "index_start": 1,
+          "index_end": 2,
+          "status": "PROCESSING",
+          "stable": false,
+          "item_revision": 1,
+          "selectable": false,
+          "active_attempt_id": "attempt-atlas-processing-{index:02d}",
+          "reason_code": null,
+          "filename_template": "Atlas-Processing-{index:02d}.pdf",
+          "relative_path_template": "Incoming/Atlas/Orion_2031/Reports/Atlas-Processing-{index:02d}.pdf",
+          "display_path_template": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Processing-{index:02d}.pdf",
+          "source_name": "Atlas incoming",
+          "size_bytes": 2560,
+          "modified_at": "2031-05-10T08:30:00Z"
+        },
+        {
+          "group": "decision-stable-1",
+          "id_template": "queue-atlas-decision-stable-{index:02d}",
+          "index_start": 1,
+          "index_end": 1,
+          "status": "REQUIRES_DECISION",
+          "stable": true,
+          "item_revision": 1,
+          "selectable": true,
+          "active_attempt_id": null,
+          "reason_code": "TARGET_OCCUPIED",
+          "filename_template": "Atlas-Decision-{index:02d}.pdf",
+          "relative_path_template": "Incoming/Atlas/Orion_2031/Reports/Atlas-Decision-{index:02d}.pdf",
+          "display_path_template": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Decision-{index:02d}.pdf",
+          "source_name": "Atlas incoming",
+          "size_bytes": 3072,
+          "modified_at": "2031-05-10T08:40:00Z"
+        },
+        {
+          "group": "decision-claimed-1",
+          "id_template": "queue-atlas-decision-claimed-{index:02d}",
+          "index_start": 1,
+          "index_end": 1,
+          "status": "REQUIRES_DECISION",
+          "stable": true,
+          "item_revision": 1,
+          "selectable": false,
+          "active_attempt_id": "attempt-atlas-decision-01",
+          "reason_code": "TARGET_OCCUPIED",
+          "filename_template": "Atlas-Decision-Claimed-{index:02d}.pdf",
+          "relative_path_template": "Incoming/Atlas/Orion_2031/Reports/Atlas-Decision-Claimed-{index:02d}.pdf",
+          "display_path_template": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Decision-Claimed-{index:02d}.pdf",
+          "source_name": "Atlas incoming",
+          "size_bytes": 3072,
+          "modified_at": "2031-05-10T08:45:00Z"
+        },
+        {
+          "group": "recovery-1",
+          "id_template": "queue-atlas-recovery-{index:02d}",
+          "index_start": 1,
+          "index_end": 1,
+          "status": "RECOVERY_REQUIRED",
+          "stable": false,
+          "item_revision": 1,
+          "selectable": false,
+          "active_attempt_id": null,
+          "reason_code": "RECOVERY_REQUIRED",
+          "filename_template": "Atlas-Recovery-{index:02d}.pdf",
+          "relative_path_template": "Incoming/Atlas/Orion_2031/Reports/Atlas-Recovery-{index:02d}.pdf",
+          "display_path_template": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Recovery-{index:02d}.pdf",
+          "source_name": "Atlas incoming",
+          "size_bytes": 3584,
+          "modified_at": "2031-05-10T08:50:00Z"
+        },
+        {
+          "group": "missing-2",
+          "id_template": "queue-atlas-missing-{index:02d}",
+          "index_start": 1,
+          "index_end": 2,
+          "status": "MISSING",
+          "stable": false,
+          "item_revision": 1,
+          "selectable": false,
+          "active_attempt_id": null,
+          "reason_code": "SOURCE_MISSING",
+          "filename_template": "Atlas-Missing-{index:02d}.pdf",
+          "relative_path_template": "Incoming/Atlas/Orion_2031/Reports/Atlas-Missing-{index:02d}.pdf",
+          "display_path_template": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Missing-{index:02d}.pdf",
+          "source_name": "Atlas incoming",
+          "size_bytes": 4096,
+          "modified_at": "2031-05-10T08:55:00Z"
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "Q-Q024-READY-PAGE1",
+          "q_ids": ["Q-024"],
+          "filters": { "statuses": ["READY"], "query_text": "" },
+          "limit": 100,
+          "matching_count": 120,
+          "eligible_count": 120,
+          "matching_ids": {
+            "groups": [{ "group": "ready-120", "index_start": 1, "index_end": 120 }]
+          },
+          "eligible_ids": {
+            "groups": [{ "group": "ready-120", "index_start": 1, "index_end": 120 }]
+          },
+          "page_ids": {
+            "groups": [{ "group": "ready-120", "index_start": 1, "index_end": 100 }]
+          },
+          "next_cursor": "cursor-atlas-ready-0101",
+          "reason": "READY filter: matching and eligible both 120; the page is capped at 100 and continues with a cursor."
+        },
+        {
+          "query_id": "Q-Q022-ALL-ACTIVE",
+          "q_ids": ["Q-022"],
+          "filters": { "statuses": [], "query_text": "" },
+          "limit": 100,
+          "matching_count": 130,
+          "eligible_count": 121,
+          "matching_ids": {
+            "groups": [
+              { "group": "ready-120", "index_start": 1, "index_end": 120 },
+              { "group": "discovered-2", "index_start": 1, "index_end": 2 },
+              { "group": "waiting-3", "index_start": 1, "index_end": 3 },
+              { "group": "processing-2", "index_start": 1, "index_end": 2 },
+              { "group": "decision-stable-1", "index_start": 1, "index_end": 1 },
+              { "group": "decision-claimed-1", "index_start": 1, "index_end": 1 },
+              { "group": "recovery-1", "index_start": 1, "index_end": 1 }
+            ]
+          },
+          "eligible_ids": {
+            "groups": [
+              { "group": "ready-120", "index_start": 1, "index_end": 120 },
+              { "group": "decision-stable-1", "index_start": 1, "index_end": 1 }
+            ]
+          },
+          "page_ids": {
+            "groups": [
+              { "group": "discovered-2", "index_start": 1, "index_end": 2 },
+              { "group": "waiting-3", "index_start": 1, "index_end": 3 },
+              { "group": "processing-2", "index_start": 1, "index_end": 2 },
+              { "group": "decision-stable-1", "index_start": 1, "index_end": 1 },
+              { "group": "decision-claimed-1", "index_start": 1, "index_end": 1 },
+              { "group": "recovery-1", "index_start": 1, "index_end": 1 },
+              { "group": "ready-120", "index_start": 1, "index_end": 90 }
+            ]
+          },
+          "next_cursor": "cursor-atlas-active-0101",
+          "reason": "Empty statuses selects all active states; MISSING is excluded from the default active queue, so matching_count is 130 and eligible_count counts only selectable READY plus the stable REQUIRES_DECISION item (121)."
+        },
+        {
+          "query_id": "Q-Q022-MISSING-EXPLICIT",
+          "q_ids": ["Q-022"],
+          "filters": { "statuses": ["MISSING"], "query_text": "" },
+          "limit": 100,
+          "matching_count": 2,
+          "eligible_count": 0,
+          "matching_ids": {
+            "groups": [{ "group": "missing-2", "index_start": 1, "index_end": 2 }]
+          },
+          "eligible_ids": { "groups": [] },
+          "page_ids": {
+            "groups": [{ "group": "missing-2", "index_start": 1, "index_end": 2 }]
+          },
+          "next_cursor": null,
+          "reason": "MISSING appears only under an explicit status filter; it is never eligible for a batch."
+        },
+        {
+          "query_id": "Q-Q022-QUERY-TEXT",
+          "q_ids": ["Q-022"],
+          "filters": { "statuses": ["READY"], "query_text": "report-0001" },
+          "limit": 100,
+          "matching_count": 1,
+          "eligible_count": 1,
+          "matching_ids": {
+            "groups": [{ "group": "ready-120", "index_start": 1, "index_end": 1 }]
+          },
+          "eligible_ids": {
+            "groups": [{ "group": "ready-120", "index_start": 1, "index_end": 1 }]
+          },
+          "page_ids": {
+            "groups": [{ "group": "ready-120", "index_start": 1, "index_end": 1 }]
+          },
+          "next_cursor": null,
+          "reason": "query_text is a declared case-insensitive substring filter; the matching item set is a literal list, not a computed matcher."
+        }
+      ]
+    },
+    {
+      "profile_id": "QUEUE-Q024-READY-0",
+      "q_ids": ["Q-022", "Q-024"],
+      "company": "atlas",
+      "queue_generation": "queue-generation-atlas-0",
+      "required_states": ["DISCOVERED", "WAITING_READY"],
+      "status_counts": [
+        { "status": "DISCOVERED", "count": 2 },
+        { "status": "WAITING_READY", "count": 1 }
+      ],
+      "counters": {
+        "ready": 0,
+        "processing": 0,
+        "attention": 0
+      },
+      "groups": [
+        {
+          "group": "discovered-0-2",
+          "id_template": "queue-atlas0-discovered-{index:02d}",
+          "index_start": 1,
+          "index_end": 2,
+          "status": "DISCOVERED",
+          "stable": false,
+          "item_revision": 0,
+          "selectable": false,
+          "active_attempt_id": null,
+          "reason_code": null,
+          "filename_template": "Atlas-Zero-Discovered-{index:02d}.pdf",
+          "relative_path_template": "Incoming/Atlas/Orion_2031/Reports/Atlas-Zero-Discovered-{index:02d}.pdf",
+          "display_path_template": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Zero-Discovered-{index:02d}.pdf",
+          "source_name": "Atlas incoming",
+          "size_bytes": 512,
+          "modified_at": "2031-05-10T08:15:00Z"
+        },
+        {
+          "group": "waiting-0-1",
+          "id_template": "queue-atlas0-waiting-{index:02d}",
+          "index_start": 1,
+          "index_end": 1,
+          "status": "WAITING_READY",
+          "stable": false,
+          "item_revision": 1,
+          "selectable": false,
+          "active_attempt_id": null,
+          "reason_code": null,
+          "filename_template": "Atlas-Zero-Waiting-{index:02d}.pdf",
+          "relative_path_template": "Incoming/Atlas/Orion_2031/Reports/Atlas-Zero-Waiting-{index:02d}.pdf",
+          "display_path_template": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Zero-Waiting-{index:02d}.pdf",
+          "source_name": "Atlas incoming",
+          "size_bytes": 768,
+          "modified_at": "2031-05-10T08:25:00Z"
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "Q-Q024-READY-EMPTY",
+          "q_ids": ["Q-024"],
+          "filters": { "statuses": ["READY"], "query_text": "" },
+          "limit": 100,
+          "matching_count": 0,
+          "eligible_count": 0,
+          "matching_ids": { "groups": [] },
+          "eligible_ids": { "groups": [] },
+          "page_ids": { "groups": [] },
+          "next_cursor": null,
+          "reason": "Zero READY files: the filter matches nothing, so an ALL_MATCHING selection is rejected with EMPTY_SELECTION."
+        },
+        {
+          "query_id": "Q-Q022-ALL-ACTIVE-0",
+          "q_ids": ["Q-022"],
+          "filters": { "statuses": [], "query_text": "" },
+          "limit": 100,
+          "matching_count": 3,
+          "eligible_count": 0,
+          "matching_ids": {
+            "groups": [
+              { "group": "discovered-0-2", "index_start": 1, "index_end": 2 },
+              { "group": "waiting-0-1", "index_start": 1, "index_end": 1 }
+            ]
+          },
+          "eligible_ids": { "groups": [] },
+          "page_ids": {
+            "groups": [
+              { "group": "discovered-0-2", "index_start": 1, "index_end": 2 },
+              { "group": "waiting-0-1", "index_start": 1, "index_end": 1 }
+            ]
+          },
+          "next_cursor": null,
+          "reason": "Company still has DISCOVERED/WAITING_READY items, but none is selectable."
+        }
+      ]
+    },
+    {
+      "profile_id": "QUEUE-Q024-READY-1001",
+      "q_ids": ["Q-024"],
+      "company": "atlas",
+      "queue_generation": "queue-generation-atlas-1001",
+      "required_states": ["READY"],
+      "status_counts": [{ "status": "READY", "count": 1001 }],
+      "counters": {
+        "ready": 1001,
+        "processing": 0,
+        "attention": 0
+      },
+      "groups": [
+        {
+          "group": "ready-1001",
+          "id_template": "queue-atlas-limit-{index:04d}",
+          "index_start": 1,
+          "index_end": 1001,
+          "status": "READY",
+          "stable": true,
+          "item_revision": 1,
+          "selectable": true,
+          "active_attempt_id": null,
+          "reason_code": null,
+          "filename_template": "Atlas-Limit-{index:04d}.pdf",
+          "relative_path_template": "Incoming/Atlas/Orion_2031/Reports/Atlas-Limit-{index:04d}.pdf",
+          "display_path_template": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Limit-{index:04d}.pdf",
+          "source_name": "Atlas incoming",
+          "size_bytes": 2048,
+          "modified_at": "2031-05-10T08:05:00Z"
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "Q-Q024-READY-LIMIT-PAGE1",
+          "q_ids": ["Q-024"],
+          "filters": { "statuses": ["READY"], "query_text": "" },
+          "limit": 100,
+          "matching_count": 1001,
+          "eligible_count": 1001,
+          "matching_ids": {
+            "groups": [{ "group": "ready-1001", "index_start": 1, "index_end": 1001 }]
+          },
+          "eligible_ids": {
+            "groups": [{ "group": "ready-1001", "index_start": 1, "index_end": 1001 }]
+          },
+          "page_ids": {
+            "groups": [{ "group": "ready-1001", "index_start": 1, "index_end": 100 }]
+          },
+          "next_cursor": "cursor-atlas-limit-0101",
+          "reason": "1001 eligible files exceed max_batch_items=1000; the page is still capped at 100 and the batch request is rejected without truncation."
+        }
+      ]
+    },
+    {
+      "profile_id": "QUEUE-Q022-DECISION-STABILITY",
+      "q_ids": ["Q-022"],
+      "company": "atlas",
+      "queue_generation": "queue-generation-atlas-stability",
+      "required_states": ["READY", "REQUIRES_DECISION"],
+      "status_counts": [
+        { "status": "READY", "count": 1 },
+        { "status": "REQUIRES_DECISION", "count": 2 }
+      ],
+      "counters": {
+        "ready": 1,
+        "processing": 0,
+        "attention": 2
+      },
+      "groups": [
+        {
+          "group": "stability-ready-1",
+          "id_template": "queue-atlas-stability-ready-{index:02d}",
+          "index_start": 1,
+          "index_end": 1,
+          "status": "READY",
+          "stable": true,
+          "item_revision": 1,
+          "selectable": true,
+          "active_attempt_id": null,
+          "reason_code": null,
+          "filename_template": "Atlas-Stability-Ready-{index:02d}.pdf",
+          "relative_path_template": "Incoming/Atlas/Orion_2031/Reports/Atlas-Stability-Ready-{index:02d}.pdf",
+          "display_path_template": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Stability-Ready-{index:02d}.pdf",
+          "source_name": "Atlas incoming",
+          "size_bytes": 2048,
+          "modified_at": "2031-05-10T08:06:00Z"
+        },
+        {
+          "group": "stability-decision-stable-1",
+          "id_template": "queue-atlas-stability-decision-stable-{index:02d}",
+          "index_start": 1,
+          "index_end": 1,
+          "status": "REQUIRES_DECISION",
+          "stable": true,
+          "item_revision": 1,
+          "selectable": true,
+          "active_attempt_id": null,
+          "reason_code": "TARGET_OCCUPIED",
+          "filename_template": "Atlas-Stability-Decision-Stable-{index:02d}.pdf",
+          "relative_path_template": "Incoming/Atlas/Orion_2031/Reports/Atlas-Stability-Decision-Stable-{index:02d}.pdf",
+          "display_path_template": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Stability-Decision-Stable-{index:02d}.pdf",
+          "source_name": "Atlas incoming",
+          "size_bytes": 3072,
+          "modified_at": "2031-05-10T08:07:00Z"
+        },
+        {
+          "group": "stability-decision-unstable-1",
+          "id_template": "queue-atlas-stability-decision-unstable-{index:02d}",
+          "index_start": 1,
+          "index_end": 1,
+          "status": "REQUIRES_DECISION",
+          "stable": false,
+          "item_revision": 1,
+          "selectable": false,
+          "active_attempt_id": null,
+          "reason_code": "TARGET_OCCUPIED",
+          "filename_template": "Atlas-Stability-Decision-Unstable-{index:02d}.pdf",
+          "relative_path_template": "Incoming/Atlas/Orion_2031/Reports/Atlas-Stability-Decision-Unstable-{index:02d}.pdf",
+          "display_path_template": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Stability-Decision-Unstable-{index:02d}.pdf",
+          "source_name": "Atlas incoming",
+          "size_bytes": 3072,
+          "modified_at": "2031-05-10T08:08:00Z"
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "Q-Q022-STABILITY-ACTIVE",
+          "q_ids": ["Q-022"],
+          "filters": { "statuses": [], "query_text": "" },
+          "limit": 100,
+          "matching_count": 3,
+          "eligible_count": 2,
+          "matching_ids": {
+            "groups": [
+              { "group": "stability-ready-1", "index_start": 1, "index_end": 1 },
+              { "group": "stability-decision-stable-1", "index_start": 1, "index_end": 1 },
+              { "group": "stability-decision-unstable-1", "index_start": 1, "index_end": 1 }
+            ]
+          },
+          "eligible_ids": {
+            "groups": [
+              { "group": "stability-ready-1", "index_start": 1, "index_end": 1 },
+              { "group": "stability-decision-stable-1", "index_start": 1, "index_end": 1 }
+            ]
+          },
+          "page_ids": {
+            "groups": [
+              { "group": "stability-ready-1", "index_start": 1, "index_end": 1 },
+              { "group": "stability-decision-stable-1", "index_start": 1, "index_end": 1 },
+              { "group": "stability-decision-unstable-1", "index_start": 1, "index_end": 1 }
+            ]
+          },
+          "next_cursor": null,
+          "reason": "A REQUIRES_DECISION item without a claim is selectable only when its source is confirmed stable; the unstable no-claim item stays selectable=false and is not eligible. Stability is declared explicitly and is not a QueueItem field."
+        }
+      ]
+    }
+  ],
+  "selection_scenarios": [
+    {
+      "scenario_id": "SEL-Q024-EXPLICIT-ONE",
+      "q_ids": ["Q-023", "Q-024"],
+      "profile_id": "QUEUE-Q022-READY-120",
+      "owner": "worker1",
+      "mode": "EXPLICIT",
+      "request": {
+        "company_id": "company-demo-atlas",
+        "mode": "EXPLICIT",
+        "items": [{ "item_id": "queue-atlas-ready-0001", "item_revision": 1 }]
+      },
+      "expected": {
+        "selection_id": "selection-atlas-explicit-one",
+        "company_id": "company-demo-atlas",
+        "mode": "EXPLICIT",
+        "selected_count": 1,
+        "created_at": "2031-05-10T09:31:00Z",
+        "expires_at": "2031-05-10T09:36:00Z",
+        "queue_generation": "queue-generation-atlas-120"
+      },
+      "members": {
+        "groups": [{ "group": "ready-120", "index_start": 1, "index_end": 1 }]
+      },
+      "reason": "A single explicit item is frozen with its content revision; selected_count is 1."
+    },
+    {
+      "scenario_id": "SEL-Q024-EXPLICIT-MULTIPLE-OFFPAGE",
+      "q_ids": ["Q-023", "Q-024"],
+      "profile_id": "QUEUE-Q022-READY-120",
+      "owner": "worker1",
+      "mode": "EXPLICIT",
+      "request": {
+        "company_id": "company-demo-atlas",
+        "mode": "EXPLICIT",
+        "items": [
+          { "item_id": "queue-atlas-ready-0001", "item_revision": 1 },
+          { "item_id": "queue-atlas-ready-0101", "item_revision": 1 },
+          { "item_id": "queue-atlas-ready-0120", "item_revision": 1 }
+        ]
+      },
+      "expected": {
+        "selection_id": "selection-atlas-explicit-multiple",
+        "company_id": "company-demo-atlas",
+        "mode": "EXPLICIT",
+        "selected_count": 3,
+        "created_at": "2031-05-10T09:31:30Z",
+        "expires_at": "2031-05-10T09:36:30Z",
+        "queue_generation": "queue-generation-atlas-120"
+      },
+      "members": {
+        "groups": [{ "group": "ready-120", "index_start": 1, "index_end": 1 }],
+        "explicit": [
+          { "item_id": "queue-atlas-ready-0101", "item_revision": 1 },
+          { "item_id": "queue-atlas-ready-0120", "item_revision": 1 }
+        ]
+      },
+      "off_page_item_ids": ["queue-atlas-ready-0101", "queue-atlas-ready-0120"],
+      "reason": "A multi-item EXPLICIT snapshot may include items that are not on the first queue page; membership is not limited to the current page."
+    },
+    {
+      "scenario_id": "SEL-Q024-ALL-MATCHING-120",
+      "q_ids": ["Q-023", "Q-024", "Q-025"],
+      "profile_id": "QUEUE-Q022-READY-120",
+      "owner": "worker1",
+      "mode": "ALL_MATCHING",
+      "request": {
+        "company_id": "company-demo-atlas",
+        "mode": "ALL_MATCHING",
+        "filters": { "statuses": ["READY"], "query_text": "" },
+        "expected_eligible_count": 120
+      },
+      "expected": {
+        "selection_id": "selection-atlas-allmatching-120",
+        "company_id": "company-demo-atlas",
+        "mode": "ALL_MATCHING",
+        "selected_count": 120,
+        "created_at": "2031-05-10T09:31:00Z",
+        "expires_at": "2031-05-10T09:36:00Z",
+        "queue_generation": "queue-generation-atlas-120"
+      },
+      "members": {
+        "groups": [{ "group": "ready-120", "index_start": 1, "index_end": 120 }]
+      },
+      "off_page_item_ids": ["queue-atlas-ready-0101", "queue-atlas-ready-0120"],
+      "reason": "ALL_MATCHING freezes all 120 eligible READY files, including the 20 that are off the first page; the expected count must match before creation."
+    }
+  ],
+  "selection_errors": [
+    {
+      "error_id": "SEL-ERR-EMPTY",
+      "q_ids": ["Q-024"],
+      "operation": "createSortingSelection",
+      "status": 422,
+      "code": "EMPTY_SELECTION",
+      "request_id": "request-selection-empty",
+      "message": "Нет доступных файлов для выбранного фильтра.",
+      "profile_id": "QUEUE-Q024-READY-0",
+      "request": {
+        "company_id": "company-demo-atlas",
+        "mode": "ALL_MATCHING",
+        "filters": { "statuses": ["READY"], "query_text": "" },
+        "expected_eligible_count": 0
+      },
+      "eligible_count": 0,
+      "snapshot_created": false,
+      "reason": "Zero eligible files produce 422 EMPTY_SELECTION; no snapshot is created and no file operation runs."
+    },
+    {
+      "error_id": "SEL-ERR-LIMIT",
+      "q_ids": ["Q-024"],
+      "operation": "createSortingSelection",
+      "status": 422,
+      "code": "BATCH_LIMIT_EXCEEDED",
+      "request_id": "request-selection-limit",
+      "message": "Выбрано больше файлов, чем допускает одна партия.",
+      "profile_id": "QUEUE-Q024-READY-1001",
+      "request": {
+        "company_id": "company-demo-atlas",
+        "mode": "ALL_MATCHING",
+        "filters": { "statuses": ["READY"], "query_text": "" },
+        "expected_eligible_count": 1001
+      },
+      "eligible_count": 1001,
+      "selected_count": null,
+      "truncated": false,
+      "snapshot_created": false,
+      "reason": "1001 eligible files exceed max_batch_items=1000; the whole set is rejected with 422 BATCH_LIMIT_EXCEEDED and is never silently truncated."
+    },
+    {
+      "error_id": "SEL-ERR-CHANGED",
+      "q_ids": ["Q-025"],
+      "operation": "createSortingSelection",
+      "status": 409,
+      "code": "SELECTION_CHANGED",
+      "request_id": "request-selection-changed",
+      "message": "Состав подходящих файлов изменился. Обновите выбор.",
+      "profile_id": "QUEUE-Q022-READY-120",
+      "request": {
+        "company_id": "company-demo-atlas",
+        "mode": "ALL_MATCHING",
+        "filters": { "statuses": ["READY"], "query_text": "" },
+        "expected_eligible_count": 119
+      },
+      "eligible_count": 120,
+      "expected_eligible_count": 119,
+      "snapshot_created": false,
+      "reason": "The operator saw 119 but the current eligible set is 120; the mismatch returns 409 SELECTION_CHANGED before any snapshot is created."
+    },
+    {
+      "error_id": "SEL-ERR-FORBIDDEN",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingPreview",
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "request-selection-forbidden",
+      "message": "Снимок создан другим пользователем.",
+      "selection_id": "selection-atlas-allmatching-120",
+      "owner": "worker1",
+      "requesting_actor": "worker2",
+      "reason": "A snapshot is bound to the creating user_id; another user gets 403 FORBIDDEN on the preview operation."
+    },
+    {
+      "error_id": "SEL-ERR-EXPIRED-PREVIEW",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingPreview",
+      "status": 409,
+      "code": "SELECTION_EXPIRED",
+      "request_id": "request-selection-expired-preview",
+      "message": "Снимок выбора истёк. Создайте его заново.",
+      "selection_id": "selection-atlas-allmatching-120",
+      "expired": true,
+      "reason": "An expired snapshot is rejected on the real preview operation with 409 SELECTION_EXPIRED; no new endpoint is introduced."
+    },
+    {
+      "error_id": "SEL-ERR-EXPIRED-BATCH",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingBatch",
+      "status": 409,
+      "code": "SELECTION_EXPIRED",
+      "request_id": "request-selection-expired-batch",
+      "message": "Снимок выбора истёк. Создайте его заново.",
+      "selection_id": "selection-atlas-allmatching-120",
+      "expired": true,
+      "reason": "An expired snapshot is rejected on the real batch operation with 409 SELECTION_EXPIRED; no new endpoint is introduced."
+    },
+    {
+      "error_id": "SEL-ERR-NOT-FOUND",
+      "q_ids": ["Q-026"],
+      "operation": "createSortingPreview",
+      "status": 404,
+      "code": "NOT_FOUND",
+      "request_id": "request-selection-not-found",
+      "message": "Снимок выбора не найден.",
+      "selection_id": "selection-unknown",
+      "reason": "An unknown selection id returns 404 NOT_FOUND on the preview operation."
+    }
+  ],
+  "ownership": [
+    {
+      "scenario_id": "SEL-OWN-SAME-USER-NEW-SESSION",
+      "q_ids": ["Q-026"],
+      "selection_id": "selection-atlas-allmatching-120",
+      "owner": "worker1",
+      "requesting_actor": "worker1",
+      "operation": "createSortingPreview",
+      "expected": { "status": 201, "allowed": true },
+      "reason": "A new session of the same user_id may use the snapshot; the binding is to the user, not to a session."
+    },
+    {
+      "scenario_id": "SEL-OWN-OTHER-USER",
+      "q_ids": ["Q-026"],
+      "selection_id": "selection-atlas-allmatching-120",
+      "owner": "worker1",
+      "requesting_actor": "worker2",
+      "operation": "createSortingPreview",
+      "expected": { "status": 403, "code": "FORBIDDEN", "allowed": false },
+      "error_id": "SEL-ERR-FORBIDDEN",
+      "reason": "A different user is rejected with 403 FORBIDDEN before any calculation."
+    },
+    {
+      "scenario_id": "SEL-OWN-EXPIRED-PREVIEW",
+      "q_ids": ["Q-026"],
+      "selection_id": "selection-atlas-allmatching-120",
+      "owner": "worker1",
+      "requesting_actor": "worker1",
+      "operation": "createSortingPreview",
+      "expired": true,
+      "expected": { "status": 409, "code": "SELECTION_EXPIRED", "allowed": false },
+      "error_id": "SEL-ERR-EXPIRED-PREVIEW",
+      "reason": "The same user cannot preview an expired snapshot."
+    },
+    {
+      "scenario_id": "SEL-OWN-EXPIRED-BATCH",
+      "q_ids": ["Q-026"],
+      "selection_id": "selection-atlas-allmatching-120",
+      "owner": "worker1",
+      "requesting_actor": "worker1",
+      "operation": "createSortingBatch",
+      "expired": true,
+      "expected": { "status": 409, "code": "SELECTION_EXPIRED", "allowed": false },
+      "error_id": "SEL-ERR-EXPIRED-BATCH",
+      "reason": "The same user cannot start an expired snapshot as a batch."
+    }
+  ],
+  "sequences": [
+    {
+      "sequence_id": "SEL-Q025-LATE-ARRIVAL",
+      "q_ids": ["Q-025"],
+      "selection_scenario_id": "SEL-Q024-ALL-MATCHING-120",
+      "steps": [
+        {
+          "step": "create",
+          "expected_selected_count": 120,
+          "expected_eligible_count": 120
+        },
+        {
+          "step": "late_arrival",
+          "late_item_id": "queue-atlas-ready-0121",
+          "late_item_revision": 1
+        },
+        {
+          "step": "assert_unchanged",
+          "expected_selected_count": 120,
+          "new_item_included": false
+        }
+      ],
+      "reason": "After a successful snapshot a new matching arrival does not change or invalidate it by itself and is not included."
+    },
+    {
+      "sequence_id": "SEL-Q025-FILTER-SWITCH",
+      "q_ids": ["Q-025"],
+      "selection_scenario_id": "SEL-Q024-ALL-MATCHING-120",
+      "steps": [
+        {
+          "step": "create",
+          "expected_selected_count": 120
+        },
+        {
+          "step": "filter_switch",
+          "new_filters": { "statuses": ["PROCESSING"], "query_text": "" }
+        },
+        {
+          "step": "assert_unchanged",
+          "expected_selected_count": 120,
+          "membership_rebuilt": false
+        }
+      ],
+      "reason": "Changing the current UI filter does not silently rebuild the frozen membership."
+    },
+    {
+      "sequence_id": "SEL-Q026-TTL",
+      "q_ids": ["Q-026"],
+      "selection_scenario_id": "SEL-Q024-ALL-MATCHING-120",
+      "steps": [
+        {
+          "step": "create",
+          "expected_created_at": "2031-05-10T09:31:00Z",
+          "expected_expires_at": "2031-05-10T09:36:00Z"
+        }
+      ],
+      "expected_ttl_seconds": 300,
+      "reason": "The snapshot TTL is the demo five minutes; expiry is a server-side decision."
+    }
+  ],
+  "invalid_requests": [
+    {
+      "request_id": "QUEUE-NEG-NO-COMPANY",
+      "operation": "querySortingQueue",
+      "schema": "#/components/schemas/QueueQueryRequest",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "value": {
+        "filters": { "statuses": ["READY"], "query_text": "" },
+        "cursor": null,
+        "limit": 100
+      },
+      "reason": "company_id is required; a queue request without a company has no global queue."
+    },
+    {
+      "request_id": "SEL-NEG-NO-COMPANY",
+      "operation": "createSortingSelection",
+      "schema": "#/components/schemas/SelectionRequest",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "value": {
+        "mode": "EXPLICIT",
+        "items": [{ "item_id": "queue-atlas-ready-0001", "item_revision": 1 }]
+      },
+      "reason": "company_id is required on both SelectionRequest variants."
+    },
+    {
+      "request_id": "SEL-NEG-EMPTY-EXPLICIT",
+      "operation": "createSortingSelection",
+      "schema": "#/components/schemas/SelectionRequest",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "value": {
+        "company_id": "company-demo-atlas",
+        "mode": "EXPLICIT",
+        "items": []
+      },
+      "reason": "EXPLICIT items has minItems 1; an empty explicit selection is a schema error, not EMPTY_SELECTION."
+    },
+    {
+      "request_id": "SEL-NEG-EXPLICIT-OVER-LIMIT",
+      "operation": "createSortingSelection",
+      "schema": "#/components/schemas/SelectionRequest",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "value": {
+        "company_id": "company-demo-atlas",
+        "mode": "EXPLICIT",
+        "items": { "$repeat_items": { "item_prefix": "queue-atlas-limit-", "index_start": 1, "index_end": 1001, "item_revision": 1 } }
+      },
+      "reason": "EXPLICIT items has maxItems 1000; a 1001-item explicit request is schema-rejected, while the 1001 eligible ALL_MATCHING case is the domain BATCH_LIMIT_EXCEEDED."
+    },
+    {
+      "request_id": "SEL-NEG-UNKNOWN-MODE",
+      "operation": "createSortingSelection",
+      "schema": "#/components/schemas/SelectionRequest",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "value": {
+        "company_id": "company-demo-atlas",
+        "mode": "SELECT_ALL",
+        "items": [{ "item_id": "queue-atlas-ready-0001", "item_revision": 1 }]
+      },
+      "reason": "mode is constrained to EXPLICIT or ALL_MATCHING by the oneOf request schema."
+    },
+    {
+      "request_id": "SEL-NEG-EXTRA-PROPERTY",
+      "operation": "createSortingSelection",
+      "schema": "#/components/schemas/SelectionRequest",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "value": {
+        "company_id": "company-demo-atlas",
+        "mode": "ALL_MATCHING",
+        "filters": { "statuses": ["READY"], "query_text": "" },
+        "expected_eligible_count": 120,
+        "page_item_ids": ["queue-atlas-ready-0001"]
+      },
+      "reason": "additionalProperties is false; the client cannot pin a page of ids into an ALL_MATCHING request."
+    },
+    {
+      "request_id": "SEL-NEG-MISSING-EXPECTED-COUNT",
+      "operation": "createSortingSelection",
+      "schema": "#/components/schemas/SelectionRequest",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "value": {
+        "company_id": "company-demo-atlas",
+        "mode": "ALL_MATCHING",
+        "filters": { "statuses": ["READY"], "query_text": "" }
+      },
+      "reason": "expected_eligible_count is required for ALL_MATCHING."
+    },
+    {
+      "request_id": "SEL-NEG-DUPLICATE-ITEM",
+      "operation": "createSortingSelection",
+      "schema": "#/components/schemas/SelectionRequest",
+      "schema_rejected": false,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "value": {
+        "company_id": "company-demo-atlas",
+        "mode": "EXPLICIT",
+        "items": [
+          { "item_id": "queue-atlas-ready-0001", "item_revision": 1 },
+          { "item_id": "queue-atlas-ready-0001", "item_revision": 1 }
+        ]
+      },
+      "reason": "The JSON Schema cannot express item_id uniqueness; the domain rejects duplicate explicit items (documented, not executed)."
+    },
+    {
+      "request_id": "SEL-NEG-UNKNOWN-ITEM",
+      "operation": "createSortingSelection",
+      "schema": "#/components/schemas/SelectionRequest",
+      "schema_rejected": false,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "value": {
+        "company_id": "company-demo-atlas",
+        "mode": "EXPLICIT",
+        "items": [{ "item_id": "queue-atlas-ready-9999", "item_revision": 1 }]
+      },
+      "reason": "The item id is schema-valid but unknown to the company; the domain rejects the reference (documented, not executed)."
+    },
+    {
+      "request_id": "SEL-NEG-FOREIGN-COMPANY-ITEM",
+      "operation": "createSortingSelection",
+      "schema": "#/components/schemas/SelectionRequest",
+      "schema_rejected": false,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "value": {
+        "company_id": "company-demo-nova",
+        "mode": "EXPLICIT",
+        "items": [{ "item_id": "queue-atlas-ready-0001", "item_revision": 1 }]
+      },
+      "reason": "An explicit item from another company is schema-valid but rejected by the domain scope check (documented, not executed)."
+    }
+  ],
+  "links": [
+    {
+      "link_id": "SEL-Q024-EXPLICIT-ONE-COMPANY",
+      "relation": "equals",
+      "source": { "payload": "snapshot:SEL-Q024-EXPLICIT-ONE", "path": ["company_id"] },
+      "target": { "payload": "request:SEL-Q024-EXPLICIT-ONE", "path": ["company_id"] }
+    },
+    {
+      "link_id": "SEL-Q024-EXPLICIT-ONE-GENERATION",
+      "relation": "equals",
+      "source": { "payload": "snapshot:SEL-Q024-EXPLICIT-ONE", "path": ["queue_generation"] },
+      "target": { "payload": "queue:QUEUE-Q022-READY-120:Q-Q024-READY-PAGE1", "path": ["queue_generation"] }
+    },
+    {
+      "link_id": "SEL-Q024-EXPLICIT-ONE-COUNT",
+      "relation": "length_equals",
+      "source": { "payload": "members:SEL-Q024-EXPLICIT-ONE", "path": [] },
+      "target": { "payload": "snapshot:SEL-Q024-EXPLICIT-ONE", "path": ["selected_count"] }
+    },
+    {
+      "link_id": "SEL-Q024-EXPLICIT-MULTIPLE-COUNT",
+      "relation": "length_equals",
+      "source": { "payload": "members:SEL-Q024-EXPLICIT-MULTIPLE-OFFPAGE", "path": [] },
+      "target": { "payload": "snapshot:SEL-Q024-EXPLICIT-MULTIPLE-OFFPAGE", "path": ["selected_count"] }
+    },
+    {
+      "link_id": "SEL-Q024-EXPLICIT-MULTIPLE-SUBSET",
+      "relation": "membership_subset",
+      "source": { "payload": "members:SEL-Q024-EXPLICIT-MULTIPLE-OFFPAGE", "path": [] },
+      "target": { "payload": "membership:QUEUE-Q022-READY-120", "path": [] }
+    },
+    {
+      "link_id": "SEL-Q024-ALL-MATCHING-COUNT",
+      "relation": "length_equals",
+      "source": { "payload": "members:SEL-Q024-ALL-MATCHING-120", "path": [] },
+      "target": { "payload": "snapshot:SEL-Q024-ALL-MATCHING-120", "path": ["selected_count"] }
+    },
+    {
+      "link_id": "SEL-Q024-ALL-MATCHING-MEMBERSHIP",
+      "relation": "membership_equals",
+      "source": { "payload": "members:SEL-Q024-ALL-MATCHING-120", "path": [] },
+      "target": { "payload": "query_eligible:QUEUE-Q022-READY-120:Q-Q024-READY-PAGE1", "path": [] }
+    },
+    {
+      "link_id": "SEL-Q024-ALL-MATCHING-EXPECTED-COUNT",
+      "relation": "equals",
+      "source": { "payload": "request:SEL-Q024-ALL-MATCHING-120", "path": ["expected_eligible_count"] },
+      "target": { "payload": "query_eligible_count:QUEUE-Q022-READY-120:Q-Q024-READY-PAGE1", "path": [] }
+    },
+    {
+      "link_id": "SEL-ERR-EMPTY-ELIGIBLE",
+      "relation": "equals",
+      "source": { "payload": "error_meta:SEL-ERR-EMPTY", "path": ["eligible_count"] },
+      "target": { "payload": "query_eligible_count:QUEUE-Q024-READY-0:Q-Q024-READY-EMPTY", "path": [] }
+    },
+    {
+      "link_id": "SEL-ERR-LIMIT-ELIGIBLE",
+      "relation": "equals",
+      "source": { "payload": "error_meta:SEL-ERR-LIMIT", "path": ["eligible_count"] },
+      "target": { "payload": "query_eligible_count:QUEUE-Q024-READY-1001:Q-Q024-READY-LIMIT-PAGE1", "path": [] }
+    },
+    {
+      "link_id": "SEL-ERR-CHANGED-ELIGIBLE",
+      "relation": "equals",
+      "source": { "payload": "error_meta:SEL-ERR-CHANGED", "path": ["eligible_count"] },
+      "target": { "payload": "query_eligible_count:QUEUE-Q022-READY-120:Q-Q024-READY-PAGE1", "path": [] }
+    },
+    {
+      "link_id": "SEL-ERR-CHANGED-EXPECTED",
+      "relation": "equals",
+      "source": { "payload": "error_meta:SEL-ERR-CHANGED", "path": ["expected_eligible_count"] },
+      "target": { "payload": "error_meta:SEL-ERR-CHANGED", "path": ["request", "expected_eligible_count"] }
+    },
+    {
+      "link_id": "SEL-Q026-SAME-USER",
+      "relation": "equals",
+      "source": { "payload": "ownership:SEL-OWN-SAME-USER-NEW-SESSION", "path": ["owner"] },
+      "target": { "payload": "ownership:SEL-OWN-SAME-USER-NEW-SESSION", "path": ["requesting_actor"] }
+    },
+    {
+      "link_id": "SEL-Q026-OTHER-USER",
+      "relation": "not_equals",
+      "source": { "payload": "ownership:SEL-OWN-OTHER-USER", "path": ["owner"] },
+      "target": { "payload": "ownership:SEL-OWN-OTHER-USER", "path": ["requesting_actor"] }
+    },
+    {
+      "link_id": "SEL-Q026-OWNERSHIP-ERROR",
+      "relation": "equals",
+      "source": { "payload": "ownership:SEL-OWN-OTHER-USER", "path": ["error_id"] },
+      "target": { "payload": "error_meta:SEL-ERR-FORBIDDEN", "path": ["error_id"] }
+    },
+    {
+      "link_id": "SEL-Q024-RULE-SET-IDENTITY",
+      "relation": "equals",
+      "source": { "payload": "rule_set:queue-selections", "path": ["rule_set_id"] },
+      "target": { "payload": "rule_set:rule_expectations", "path": ["rule_set_id"] }
+    }
+  ],
+  "mutations": [
+    {
+      "mutation_id": "QUEUE-NEG-COUNT-SUM",
+      "validator": "queue_response",
+      "base": "queue:QUEUE-Q022-READY-120:Q-Q024-READY-PAGE1",
+      "operation": "set",
+      "path": ["status_counts", 2, "count"],
+      "value": 119,
+      "reason": "status_counts READY must agree with counters.ready=120."
+    },
+    {
+      "mutation_id": "QUEUE-NEG-ATTENTION",
+      "validator": "queue_response",
+      "base": "queue:QUEUE-Q022-READY-120:Q-Q024-READY-PAGE1",
+      "operation": "set",
+      "path": ["counters", "attention"],
+      "value": 4,
+      "reason": "attention must be REQUIRES_DECISION + RECOVERY_REQUIRED only."
+    },
+    {
+      "mutation_id": "QUEUE-NEG-SELECTABLE-CLAIM",
+      "validator": "queue_response",
+      "base": "queue:QUEUE-Q022-READY-120:Q-Q024-READY-PAGE1",
+      "operation": "set",
+      "path": ["items", 0, "active_attempt_id"],
+      "value": "attempt-atlas-unexpected-01",
+      "reason": "A selectable item must not carry an active claim."
+    },
+    {
+      "mutation_id": "QUEUE-NEG-PAGE-SIZE",
+      "validator": "queue_profile",
+      "base": "profile:QUEUE-Q022-READY-120",
+      "operation": "set",
+      "path": ["queries", 0, "page_ids", "groups", 0, "index_end"],
+      "value": 99,
+      "reason": "A matching_count above the limit must page exactly limit items."
+    },
+    {
+      "mutation_id": "QUEUE-NEG-MISSING-DEFAULT",
+      "validator": "queue_profile",
+      "base": "profile:QUEUE-Q022-READY-120",
+      "operation": "set",
+      "path": ["queries", 1, "page_ids", "groups"],
+      "value": [{ "group": "missing-2", "index_start": 1, "index_end": 2 }],
+      "reason": "MISSING must not appear in the default active queue."
+    },
+    {
+      "mutation_id": "SEL-NEG-COUNT",
+      "validator": "selection",
+      "base": "scenario:SEL-Q024-ALL-MATCHING-120",
+      "operation": "set",
+      "path": ["expected", "selected_count"],
+      "value": 119,
+      "reason": "selected_count must equal the frozen membership size."
+    },
+    {
+      "mutation_id": "SEL-NEG-COMPANY",
+      "validator": "selection",
+      "base": "scenario:SEL-Q024-EXPLICIT-ONE",
+      "operation": "set",
+      "path": ["expected", "company_id"],
+      "value": "company-demo-nova",
+      "reason": "A selection snapshot cannot mix companies."
+    },
+    {
+      "mutation_id": "SEL-NEG-UNKNOWN-MEMBER",
+      "validator": "selection",
+      "base": "scenario:SEL-Q024-EXPLICIT-ONE",
+      "operation": "set",
+      "path": ["members", "explicit"],
+      "value": [{ "item_id": "queue-atlas-ready-9999", "item_revision": 1 }],
+      "reason": "Explicit members must resolve to a queue item of the same company."
+    },
+    {
+      "mutation_id": "SEL-NEG-REVISION",
+      "validator": "selection",
+      "base": "scenario:SEL-Q024-EXPLICIT-ONE",
+      "operation": "set",
+      "path": ["members", "explicit"],
+      "value": [{ "item_id": "queue-atlas-ready-0001", "item_revision": 99 }],
+      "reason": "A frozen member revision must equal the current queue item revision."
+    },
+    {
+      "mutation_id": "READINESS-NEG-INTERVAL",
+      "validator": "readiness",
+      "base": "readiness:queue-atlas-readiness-stable",
+      "operation": "set",
+      "path": ["observations", 1, "observed_at"],
+      "value": "2031-05-10T09:00:03Z",
+      "reason": "READY requires two equal observations at least 5 seconds apart."
+    },
+    {
+      "mutation_id": "READINESS-NEG-UNFINISHED",
+      "validator": "readiness",
+      "base": "readiness:queue-atlas-readiness-stable",
+      "operation": "set",
+      "path": ["observations", 1, "unfinished"],
+      "value": true,
+      "reason": "An unfinished marker must prevent READY."
+    },
+    {
+      "mutation_id": "LINK-NEG-GENERATION",
+      "validator": "link",
+      "base": "snapshot:SEL-Q024-EXPLICIT-ONE",
+      "operation": "set",
+      "path": ["queue_generation"],
+      "value": "queue-generation-atlas-0",
+      "reason": "The snapshot queue_generation must equal the generation of its source queue."
+    }
+  ],
+  "coverage": {
+    "Q-022": [
+      "QUEUE-Q022-READY-120",
+      "QUEUE-Q024-READY-0",
+      "QUEUE-Q022-DECISION-STABILITY",
+      "queue-atlas-readiness-stable",
+      "queue-atlas-readiness-changed",
+      "queue-atlas-readiness-renamed",
+      "queue-atlas-readiness-unfinished",
+      "queue-atlas-readiness-claimed",
+      "Q-Q022-ALL-ACTIVE",
+      "Q-Q022-MISSING-EXPLICIT",
+      "Q-Q022-QUERY-TEXT",
+      "Q-Q022-STABILITY-ACTIVE"
+    ],
+    "Q-023": [
+      "SEL-Q024-EXPLICIT-ONE",
+      "SEL-Q024-EXPLICIT-MULTIPLE-OFFPAGE",
+      "SEL-Q024-ALL-MATCHING-120"
+    ],
+    "Q-024": [
+      "QUEUE-Q024-READY-0",
+      "QUEUE-Q024-READY-1001",
+      "Q-Q024-READY-PAGE1",
+      "Q-Q024-READY-EMPTY",
+      "Q-Q024-READY-LIMIT-PAGE1",
+      "SEL-Q024-EXPLICIT-ONE",
+      "SEL-Q024-EXPLICIT-MULTIPLE-OFFPAGE",
+      "SEL-Q024-ALL-MATCHING-120",
+      "SEL-ERR-EMPTY",
+      "SEL-ERR-LIMIT"
+    ],
+    "Q-025": [
+      "SEL-Q024-ALL-MATCHING-120",
+      "SEL-ERR-CHANGED",
+      "SEL-Q025-LATE-ARRIVAL",
+      "SEL-Q025-FILTER-SWITCH"
+    ],
+    "Q-026": [
+      "SEL-ERR-FORBIDDEN",
+      "SEL-ERR-EXPIRED-PREVIEW",
+      "SEL-ERR-EXPIRED-BATCH",
+      "SEL-ERR-NOT-FOUND",
+      "SEL-OWN-SAME-USER-NEW-SESSION",
+      "SEL-OWN-OTHER-USER",
+      "SEL-OWN-EXPIRED-PREVIEW",
+      "SEL-OWN-EXPIRED-BATCH",
+      "SEL-Q026-TTL"
+    ]
+  }
+}

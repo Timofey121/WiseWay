@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "Снимок создан другим пользователем.",
+    "request_id": "request-batch-forbidden",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

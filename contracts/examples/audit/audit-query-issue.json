@@ -1,0 +1,165 @@
+{
+  "items": [
+    {
+      "event_id": "AUD-QR-RETURN-RECOVERY",
+      "occurred_at": "2031-05-10T09:47:00Z",
+      "actor": {
+        "user_id": "user-demo-worker-1",
+        "login": "worker.one",
+        "display_name": "Иван Рабочий",
+        "role": "WORKER"
+      },
+      "category": "BUSINESS",
+      "action": "RECOVERY_REQUIRED",
+      "result": "ISSUE",
+      "request_id": "request-quarantine-return-2",
+      "operation_id": "return-atlas-batch-tech-quarantine-recovery",
+      "source_attempt_id": "attempt-batch-atlas-technical-batch-tech-quarantine",
+      "company_id": "company-demo-atlas",
+      "dictionary_id": null,
+      "version_id": null,
+      "rule_set_id": null,
+      "batch_id": "batch-atlas-technical",
+      "attempt_id": null,
+      "item_id": "batch-tech-quarantine",
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "_quarantine/atlas/attempt-batch-atlas-technical-batch-tech-quarantine/batch-tech-quarantine.tar.gz",
+        "display_path": "DEMO:/SandboxRoot/_quarantine/atlas/attempt-batch-atlas-technical-batch-tech-quarantine/batch-tech-quarantine.tar.gz"
+      },
+      "target": null,
+      "reason_code": "RECOVERY_REQUIRED",
+      "comment": null
+    },
+    {
+      "event_id": "audit-attempt-batch-atlas-technical-batch-tech-skip-missing-finished",
+      "occurred_at": "2031-05-10T09:40:03Z",
+      "actor": {
+        "user_id": "user-demo-worker-1",
+        "login": "worker.one",
+        "display_name": "Иван Рабочий",
+        "role": "WORKER"
+      },
+      "category": "BUSINESS",
+      "action": "FILE_ATTEMPT_FINISHED",
+      "result": "ISSUE",
+      "request_id": "request-demo-batch-07",
+      "operation_id": "attempt-batch-atlas-technical-batch-tech-skip-missing",
+      "source_attempt_id": null,
+      "company_id": "company-demo-atlas",
+      "dictionary_id": null,
+      "version_id": null,
+      "rule_set_id": "rule-set-atlas-published",
+      "batch_id": "batch-atlas-technical",
+      "attempt_id": "attempt-batch-atlas-technical-batch-tech-skip-missing",
+      "item_id": "batch-tech-skip-missing",
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Reports/batch-tech-skip-missing.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/batch-tech-skip-missing.pdf"
+      },
+      "target": null,
+      "reason_code": "SOURCE_MISSING",
+      "comment": null
+    },
+    {
+      "event_id": "audit-attempt-batch-atlas-technical-batch-tech-skip-claimed-finished",
+      "occurred_at": "2031-05-10T09:40:03Z",
+      "actor": {
+        "user_id": "user-demo-worker-1",
+        "login": "worker.one",
+        "display_name": "Иван Рабочий",
+        "role": "WORKER"
+      },
+      "category": "BUSINESS",
+      "action": "FILE_ATTEMPT_FINISHED",
+      "result": "ISSUE",
+      "request_id": "request-demo-batch-07",
+      "operation_id": "attempt-batch-atlas-technical-batch-tech-skip-claimed",
+      "source_attempt_id": null,
+      "company_id": "company-demo-atlas",
+      "dictionary_id": null,
+      "version_id": null,
+      "rule_set_id": "rule-set-atlas-published",
+      "batch_id": "batch-atlas-technical",
+      "attempt_id": "attempt-batch-atlas-technical-batch-tech-skip-claimed",
+      "item_id": "batch-tech-skip-claimed",
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Reports/batch-tech-skip-claimed.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/batch-tech-skip-claimed.pdf"
+      },
+      "target": null,
+      "reason_code": "ALREADY_PROCESSING",
+      "comment": null
+    },
+    {
+      "event_id": "audit-attempt-batch-atlas-technical-batch-tech-skip-changed-finished",
+      "occurred_at": "2031-05-10T09:40:03Z",
+      "actor": {
+        "user_id": "user-demo-worker-1",
+        "login": "worker.one",
+        "display_name": "Иван Рабочий",
+        "role": "WORKER"
+      },
+      "category": "BUSINESS",
+      "action": "FILE_ATTEMPT_FINISHED",
+      "result": "ISSUE",
+      "request_id": "request-demo-batch-07",
+      "operation_id": "attempt-batch-atlas-technical-batch-tech-skip-changed",
+      "source_attempt_id": null,
+      "company_id": "company-demo-atlas",
+      "dictionary_id": null,
+      "version_id": null,
+      "rule_set_id": "rule-set-atlas-published",
+      "batch_id": "batch-atlas-technical",
+      "attempt_id": "attempt-batch-atlas-technical-batch-tech-skip-changed",
+      "item_id": "batch-tech-skip-changed",
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Reports/batch-tech-skip-changed.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/batch-tech-skip-changed.pdf"
+      },
+      "target": null,
+      "reason_code": "SOURCE_CHANGED",
+      "comment": null
+    },
+    {
+      "event_id": "audit-attempt-batch-atlas-technical-batch-tech-quarantine-finished",
+      "occurred_at": "2031-05-10T09:40:03Z",
+      "actor": {
+        "user_id": "user-demo-worker-1",
+        "login": "worker.one",
+        "display_name": "Иван Рабочий",
+        "role": "WORKER"
+      },
+      "category": "BUSINESS",
+      "action": "FILE_ATTEMPT_FINISHED",
+      "result": "ISSUE",
+      "request_id": "request-demo-batch-07",
+      "operation_id": "attempt-batch-atlas-technical-batch-tech-quarantine",
+      "source_attempt_id": null,
+      "company_id": "company-demo-atlas",
+      "dictionary_id": null,
+      "version_id": null,
+      "rule_set_id": "rule-set-atlas-published",
+      "batch_id": "batch-atlas-technical",
+      "attempt_id": "attempt-batch-atlas-technical-batch-tech-quarantine",
+      "item_id": "batch-tech-quarantine",
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Reports/batch-tech-quarantine.tar.gz",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/batch-tech-quarantine.tar.gz"
+      },
+      "target": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "_quarantine/atlas/attempt-batch-atlas-technical-batch-tech-quarantine/batch-tech-quarantine.tar.gz",
+        "display_path": "DEMO:/SandboxRoot/_quarantine/atlas/attempt-batch-atlas-technical-batch-tech-quarantine/batch-tech-quarantine.tar.gz"
+      },
+      "reason_code": "TECHNICAL_ERROR",
+      "comment": null
+    }
+  ],
+  "next_cursor": "cursor-audit-issue-page2",
+  "newest_event_id": "AUD-QR-RETURN-RECOVERY"
+}

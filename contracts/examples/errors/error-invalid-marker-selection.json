@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "INVALID_MARKER_SELECTION",
+    "message": "Выбранная цепочка уровней недопустима. Обновите выбор.",
+    "request_id": "request-q010-invalid-marker",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

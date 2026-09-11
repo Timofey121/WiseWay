@@ -1,0 +1,1299 @@
+{
+  "fixture_set": "wiseway-synthetic-metadata",
+  "version": "1.2.0",
+  "seed": "wiseway-demo-seed-2031",
+  "contract_version": "1.0.0",
+  "display_timezone": "Europe/Moscow",
+  "defaults": {
+    "modified_at": "2031-05-10T09:30:00Z",
+    "size_bytes": 1024,
+    "structure_status": "VALID"
+  },
+  "schema": {
+    "roots": {
+      "root-demo-atlas": {
+        "schema_set_version": "schema-demo-1",
+        "levels": [
+          "level-section",
+          "level-company",
+          "level-project",
+          "level-category",
+          "level-subcategory"
+        ],
+        "optional_tail_level": "level-subcategory",
+        "optional_tail_values": [
+          "Text",
+          "Maps"
+        ]
+      },
+      "root-demo-nova": {
+        "schema_set_version": "schema-demo-2",
+        "levels": [
+          "level-section",
+          "level-company",
+          "level-project",
+          "level-area",
+          "level-category"
+        ],
+        "mandatory_middle_level": "level-area",
+        "mandatory_middle_values": [
+          "North",
+          "South"
+        ]
+      }
+    },
+    "levels": [
+      {
+        "level_id": "level-section",
+        "level_name": "Раздел",
+        "required": true
+      },
+      {
+        "level_id": "level-company",
+        "level_name": "Компания",
+        "required": true
+      },
+      {
+        "level_id": "level-project",
+        "level_name": "Проект",
+        "required": true,
+        "composite": true,
+        "note": "Сегмент вида Name_YYYY; имя и год извлекаются как служебные признаки."
+      },
+      {
+        "level_id": "level-area",
+        "level_name": "Область",
+        "required": false,
+        "note": "Обязателен для Nova, отсутствует в схеме Atlas."
+      },
+      {
+        "level_id": "level-category",
+        "level_name": "Категория",
+        "required": true
+      },
+      {
+        "level_id": "level-subcategory",
+        "level_name": "Подкатегория",
+        "required": false,
+        "note": "Необязательный конечный суффикс Atlas."
+      }
+    ]
+  },
+  "roots": [
+    {
+      "root_id": "root-demo-atlas",
+      "label": "Демо-корень Atlas",
+      "display_prefix": "DEMO:/SandboxRoot",
+      "schema_set_version": "schema-demo-1",
+      "index_generation": "generation-demo-1",
+      "indexed_at": "2031-05-10T09:30:00Z"
+    },
+    {
+      "root_id": "root-demo-nova",
+      "label": "Демо-корень Nova",
+      "display_prefix": "DEMO:/SandboxRoot",
+      "schema_set_version": "schema-demo-2",
+      "index_generation": "generation-demo-2",
+      "indexed_at": "2031-05-10T09:30:00Z"
+    }
+  ],
+  "companies": [
+    {
+      "company_id": "company-demo-atlas",
+      "name": "Atlas",
+      "incoming_source_ids": [
+        "incoming-demo-atlas"
+      ]
+    },
+    {
+      "company_id": "company-demo-nova",
+      "name": "Nova",
+      "incoming_source_ids": [
+        "incoming-demo-nova"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "item_id": "file-atlas-q008-cross-field",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/Main.pdf",
+      "extension": ".pdf",
+      "size_bytes": 2048,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-q009-metrics",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/metrics.pdf",
+      "extension": ".pdf",
+      "size_bytes": 1200,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-q009-symmetry",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/symmetry.pdf",
+      "extension": ".pdf",
+      "size_bytes": 1300,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-q009-typo",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/mte.pdf",
+      "extension": ".pdf",
+      "size_bytes": 1400,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-q009-space",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/met report.pdf",
+      "extension": ".pdf",
+      "size_bytes": 1500,
+      "modified_at": "2031-05-10T09:00:00Z",
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-q009-hyphen",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/met-report.pdf",
+      "extension": ".pdf",
+      "size_bytes": 1600,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-q009-underscore",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/met_report.pdf",
+      "extension": ".pdf",
+      "size_bytes": 1700,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-q009-dot",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/met.report.pdf",
+      "extension": ".pdf",
+      "size_bytes": 1800,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-q009-slash",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/report-slash.pdf",
+      "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/met/report-slash.pdf",
+      "extension": ".pdf",
+      "size_bytes": 1900,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-q009-backslash",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/report-backslash.pdf",
+      "display_path": "DEMO:\\SandboxRoot\\Archive\\Atlas\\Orion_2031\\Data\\met\\report-backslash.pdf",
+      "extension": ".pdf",
+      "size_bytes": 2000,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-q009-letter-digit",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/met2report.pdf",
+      "extension": ".pdf",
+      "size_bytes": 2100,
+      "modified_at": "2031-05-10T10:00:00Z",
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-q009-preceded-letter",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/smet.pdf",
+      "extension": ".pdf",
+      "size_bytes": 2200,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-q009-internal",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/submet.pdf",
+      "extension": ".pdf",
+      "size_bytes": 2300,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-type-docx",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/document.docx",
+      "extension": ".docx",
+      "size_bytes": 32000,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-type-xlsx",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/sheet.xlsx",
+      "extension": ".xlsx",
+      "size_bytes": 41000,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-type-pptx",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/slides.pptx",
+      "extension": ".pptx",
+      "size_bytes": 52000,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-type-png",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/image.png",
+      "extension": ".png",
+      "size_bytes": 63000,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-type-noext",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/README",
+      "extension": "",
+      "size_bytes": 256,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-type-zero",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/zero-byte.pdf",
+      "extension": ".pdf",
+      "size_bytes": 0,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-type-env",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/.env",
+      "extension": "",
+      "size_bytes": 64,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-type-namedot",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/name.",
+      "extension": "",
+      "size_bytes": 32,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-type-archive",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/archive.tar.gz",
+      "extension": ".gz",
+      "size_bytes": 70000,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-type-upper",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/invoice.TXT",
+      "extension": ".TXT",
+      "size_bytes": 333,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-type-arbitrary",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/data.bin",
+      "extension": ".bin",
+      "size_bytes": 999,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-tail-text",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Reports/Text/summary-text.pdf",
+      "extension": ".pdf",
+      "size_bytes": 4096,
+      "marker_context": "atlas-archive-atlas-orion-reports-text"
+    },
+    {
+      "item_id": "file-atlas-tail-maps",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Reports/Maps/map-overview.png",
+      "extension": ".png",
+      "size_bytes": 8192,
+      "marker_context": "atlas-archive-atlas-orion-reports-maps"
+    },
+    {
+      "item_id": "file-atlas-polaris-data",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Polaris_2030/Data/polaris-data.pdf",
+      "extension": ".pdf",
+      "size_bytes": 2048,
+      "marker_context": "atlas-archive-atlas-polaris-data"
+    },
+    {
+      "item_id": "file-atlas-rawcase-company",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/ATLAS/orion_2031/Reports/raw-case.txt",
+      "extension": ".txt",
+      "size_bytes": 128,
+      "marker_context": "atlas-archive-atlas-upper-orion-lower-reports"
+    },
+    {
+      "item_id": "file-atlas-issue-unexpected-depth",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Reports/Text/Extra/too-deep.pdf",
+      "extension": ".pdf",
+      "size_bytes": 1024,
+      "structure_status": "UNRECOGNIZED",
+      "structure_issue": {
+        "level_id": null,
+        "level_name": "Дополнительный уровень",
+        "code": "UNEXPECTED_DEPTH",
+        "message": "Лишний уровень после необязательного конечного суффикса."
+      },
+      "marker_context": "atlas-archive-atlas-orion-reports-text"
+    },
+    {
+      "item_id": "file-atlas-issue-invalid-value",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Invoices/bad-category.pdf",
+      "extension": ".pdf",
+      "size_bytes": 1024,
+      "structure_status": "UNRECOGNIZED",
+      "structure_issue": {
+        "level_id": "level-category",
+        "level_name": "Категория",
+        "code": "INVALID_LEVEL_VALUE",
+        "message": "Значение уровня «Категория» не входит в допустимый набор."
+      },
+      "marker_context": "atlas-archive-atlas-orion"
+    },
+    {
+      "item_id": "file-atlas-issue-invalid-composite",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion/Reports/bad-project.pdf",
+      "extension": ".pdf",
+      "size_bytes": 1024,
+      "structure_status": "UNRECOGNIZED",
+      "structure_issue": {
+        "level_id": "level-project",
+        "level_name": "Проект",
+        "code": "INVALID_COMPOSITE_SEGMENT",
+        "message": "Сегмент проекта не распознан как имя и год."
+      },
+      "marker_context": "atlas-archive-atlas"
+    },
+    {
+      "item_id": "file-atlas-content-only",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/opaque.bin",
+      "extension": ".bin",
+      "size_bytes": 555,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-old-path",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/current-name.pdf",
+      "extension": ".pdf",
+      "size_bytes": 777,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-natural-2",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/item-2.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-natural-10",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/item-10.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-russian-apple",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/Апельсин.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-russian-yabloko",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/Яблоко.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-russian-ezhik",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/Ёжик.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-tie-a",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/Item.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-tie-b",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Reports/Text/Item.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "marker_context": "atlas-archive-atlas-orion-reports-text"
+    },
+    {
+      "item_id": "file-atlas-tie-raw-note-upper",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/NOTE.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-tie-raw-note-lower",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/Note.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-rank-name-full",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Reports/atlas.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "marker_context": "atlas-archive-atlas-orion-reports"
+    },
+    {
+      "item_id": "file-atlas-rank-company-only",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/report.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-rank-phrase",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/Atlas-Main.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-atlas-rank-project",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Data/orion.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "marker_context": "atlas-archive-atlas-orion-data"
+    },
+    {
+      "item_id": "file-nova-q007-both",
+      "root_id": "root-demo-nova",
+      "relative_path": "Archive/Nova/Orion_2031/North/Reports/atlas.txt",
+      "extension": ".txt",
+      "size_bytes": 300,
+      "marker_context": "nova-archive-nova-orion-north-reports"
+    },
+    {
+      "item_id": "file-nova-q007-reports-only",
+      "root_id": "root-demo-nova",
+      "relative_path": "Archive/Nova/Orion_2031/North/Reports/summary.pdf",
+      "extension": ".pdf",
+      "size_bytes": 400,
+      "marker_context": "nova-archive-nova-orion-north-reports"
+    },
+    {
+      "item_id": "file-nova-q007-atlas-only",
+      "root_id": "root-demo-nova",
+      "relative_path": "Archive/Nova/Orion_2031/North/Data/atlas-notes.pdf",
+      "extension": ".pdf",
+      "size_bytes": 500,
+      "marker_context": "nova-archive-nova-orion-north-data"
+    },
+    {
+      "item_id": "file-nova-south-data",
+      "root_id": "root-demo-nova",
+      "relative_path": "Archive/Nova/Orion_2031/South/Data/nova-south.xlsx",
+      "extension": ".xlsx",
+      "size_bytes": 600,
+      "marker_context": "nova-archive-nova-orion-south-data"
+    },
+    {
+      "item_id": "file-nova-polaris-report",
+      "root_id": "root-demo-nova",
+      "relative_path": "Archive/Nova/Polaris_2030/North/Reports/polaris-report.xlsx",
+      "extension": ".xlsx",
+      "size_bytes": 700,
+      "marker_context": "nova-archive-nova-polaris-north-reports"
+    },
+    {
+      "item_id": "file-nova-polaris-data",
+      "root_id": "root-demo-nova",
+      "relative_path": "Archive/Nova/Polaris_2030/South/Data/polaris-data.csv",
+      "extension": ".csv",
+      "size_bytes": 800,
+      "marker_context": "nova-archive-nova-polaris-south-data"
+    },
+    {
+      "item_id": "file-nova-rawcase",
+      "root_id": "root-demo-nova",
+      "relative_path": "Archive/NOVA/Orion_2031/North/Reports/nova-upper.txt",
+      "extension": ".txt",
+      "size_bytes": 128,
+      "marker_context": "nova-archive-nova-upper-orion-north-reports"
+    },
+    {
+      "item_id": "file-nova-issue-missing-area",
+      "root_id": "root-demo-nova",
+      "relative_path": "Archive/Nova/Polaris_2030/Reports/missing-area.pdf",
+      "extension": ".pdf",
+      "size_bytes": 1024,
+      "structure_status": "UNRECOGNIZED",
+      "structure_issue": {
+        "level_id": "level-area",
+        "level_name": "Область",
+        "code": "MISSING_REQUIRED_LEVEL",
+        "message": "Обязательный уровень «Область» отсутствует."
+      },
+      "marker_context": "nova-archive-nova-polaris"
+    },
+    {
+      "item_id": "file-nova-q008-atlas-main",
+      "root_id": "root-demo-nova",
+      "relative_path": "Archive/Nova/Orion_2031/North/Reports/Atlas-Main.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "marker_context": "nova-archive-nova-orion-north-reports"
+    },
+    {
+      "item_id": "file-nova-q008-inserted",
+      "root_id": "root-demo-nova",
+      "relative_path": "Archive/Nova/Orion_2031/North/Reports/Atlas Final Main.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "marker_context": "nova-archive-nova-orion-north-reports"
+    },
+    {
+      "item_id": "file-nova-q008-prefix",
+      "root_id": "root-demo-nova",
+      "relative_path": "Archive/Nova/Orion_2031/North/Reports/Atlas-Maintenance.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "marker_context": "nova-archive-nova-orion-north-reports"
+    },
+    {
+      "item_id": "file-nova-q008-reversed",
+      "root_id": "root-demo-nova",
+      "relative_path": "Archive/Nova/Orion_2031/North/Reports/Main-Atlas.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "marker_context": "nova-archive-nova-orion-north-reports"
+    },
+    {
+      "item_id": "file-nova-q008-mixed",
+      "root_id": "root-demo-nova",
+      "relative_path": "Archive/Nova/Orion_2031/North/Reports/Atlas-Main-Metrics.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "marker_context": "nova-archive-nova-orion-north-reports"
+    },
+    {
+      "item_id": "file-atlas-rawcase-lower",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/atlas/orion_2031/reports/lower-case.txt",
+      "extension": ".txt",
+      "size_bytes": 128,
+      "marker_context": "atlas-archive-atlas-lower-orion-lower-reports-lower"
+    },
+    {
+      "item_id": "file-atlas-rawcase-polaris-lower",
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/atlas/polaris_2030/Data/polaris-lower.txt",
+      "extension": ".txt",
+      "size_bytes": 128,
+      "marker_context": "atlas-archive-atlas-lower-polaris-lower-data"
+    }
+  ],
+  "cohorts": [
+    {
+      "cohort_id": "atlas-orion-reports-103",
+      "root_id": "root-demo-atlas",
+      "count": 103,
+      "index_start": 1,
+      "index_pad": 4,
+      "item_id_pattern": "file-atlas-orion-report-{index}",
+      "relative_path_pattern": "Archive/Atlas/Orion_2031/Reports/Atlas-Orion-Report-{index}.pdf",
+      "extension": ".pdf",
+      "size_bytes": 4096,
+      "modified_at": "2031-05-10T09:30:00Z",
+      "marker_context": "atlas-archive-atlas-orion-reports"
+    }
+  ],
+  "service_objects": [
+    {
+      "item_id": "service-incoming-atlas",
+      "root_id": "root-demo-atlas",
+      "relative_path": "_incoming/atlas/new-upload.pdf",
+      "extension": ".pdf",
+      "size_bytes": 100
+    },
+    {
+      "item_id": "service-manual-atlas",
+      "root_id": "root-demo-atlas",
+      "relative_path": "_manual_review/atlas/unmatched.bin",
+      "extension": ".bin",
+      "size_bytes": 100
+    },
+    {
+      "item_id": "service-quarantine-atlas",
+      "root_id": "root-demo-atlas",
+      "relative_path": "_quarantine/atlas/broken.xlsx",
+      "extension": ".xlsx",
+      "size_bytes": 100
+    },
+    {
+      "item_id": "service-tmp-atlas",
+      "root_id": "root-demo-atlas",
+      "relative_path": "_tmp/atlas/.partial-upload",
+      "extension": "",
+      "size_bytes": 10
+    },
+    {
+      "item_id": "service-incoming-nova",
+      "root_id": "root-demo-nova",
+      "relative_path": "_incoming/nova/new.docx",
+      "extension": ".docx",
+      "size_bytes": 100
+    },
+    {
+      "item_id": "service-quarantine-nova",
+      "root_id": "root-demo-nova",
+      "relative_path": "_quarantine/nova/broken.pptx",
+      "extension": ".pptx",
+      "size_bytes": 100
+    }
+  ],
+  "controls": {
+    "content_only": [
+      {
+        "item_id": "file-atlas-content-only",
+        "probe_token": "zephyr",
+        "note": "Токен есть только в синтетическом содержимом, но не в имени, пути и маркерах; поиск по содержимому не выполняется."
+      }
+    ],
+    "old_path": [
+      {
+        "item_id": "file-atlas-old-path",
+        "probe_token": "legacy",
+        "current_relative_path": "Archive/Atlas/Orion_2031/Data/current-name.pdf",
+        "old_relative_path": "Archive/Atlas/Orion_2031/Data/legacy-token.pdf",
+        "note": "После переименования старый путь не участвует в поиске; совпадение по старому пути недопустимо."
+      }
+    ]
+  },
+  "lifecycle": {
+    "create": {
+      "item_id": "file-lifecycle-created",
+      "before": null,
+      "after": {
+        "item_id": "file-lifecycle-created",
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/created.pdf",
+        "extension": ".pdf",
+        "size_bytes": 100,
+        "marker_context": "atlas-archive-atlas-orion-data"
+      }
+    },
+    "change": {
+      "item_id": "file-lifecycle-changed",
+      "before": {
+        "item_id": "file-lifecycle-changed",
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/changed.pdf",
+        "extension": ".pdf",
+        "size_bytes": 100,
+        "modified_at": "2031-05-10T09:30:00Z",
+        "marker_context": "atlas-archive-atlas-orion-data"
+      },
+      "after": {
+        "item_id": "file-lifecycle-changed",
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/changed.pdf",
+        "extension": ".pdf",
+        "size_bytes": 250,
+        "modified_at": "2031-05-10T10:15:00Z",
+        "marker_context": "atlas-archive-atlas-orion-data"
+      }
+    },
+    "rename": {
+      "item_id": "file-lifecycle-renamed",
+      "before": {
+        "item_id": "file-lifecycle-renamed",
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/old-name.pdf",
+        "extension": ".pdf",
+        "size_bytes": 100,
+        "marker_context": "atlas-archive-atlas-orion-data"
+      },
+      "after": {
+        "item_id": "file-lifecycle-renamed",
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/new-name.pdf",
+        "extension": ".pdf",
+        "size_bytes": 100,
+        "marker_context": "atlas-archive-atlas-orion-data"
+      }
+    },
+    "move": {
+      "item_id": "file-lifecycle-moved",
+      "before": {
+        "item_id": "file-lifecycle-moved",
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/moved.pdf",
+        "extension": ".pdf",
+        "size_bytes": 100,
+        "marker_context": "atlas-archive-atlas-orion-data"
+      },
+      "after": {
+        "item_id": "file-lifecycle-moved",
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Reports/Text/moved.pdf",
+        "extension": ".pdf",
+        "size_bytes": 100,
+        "marker_context": "atlas-archive-atlas-orion-reports-text"
+      }
+    },
+    "delete": {
+      "item_id": "file-lifecycle-deleted",
+      "before": {
+        "item_id": "file-lifecycle-deleted",
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/deleted.pdf",
+        "extension": ".pdf",
+        "size_bytes": 100,
+        "marker_context": "atlas-archive-atlas-orion-data"
+      },
+      "after": null
+    }
+  },
+  "search_inputs": {
+    "q007_and": {
+      "root_id": "root-demo-nova",
+      "query_text": "atlas reports",
+      "matching_item_ids": [
+        "file-nova-q007-both",
+        "file-nova-q008-atlas-main",
+        "file-nova-q008-inserted",
+        "file-nova-q008-mixed",
+        "file-nova-q008-prefix",
+        "file-nova-q008-reversed"
+      ],
+      "non_matching": {
+        "reports_only": [
+          "file-nova-q007-reports-only"
+        ],
+        "atlas_only": [
+          "file-nova-q007-atlas-only"
+        ]
+      },
+      "note": "Все обычные слова обязательны как префиксы токенов и ищутся по filename+display_path, поэтому любой файл ветки Reports с Atlas в имени подходит; Reports/summary.pdf не содержит atlas, Data/atlas-notes.pdf не содержит reports. Точные ID/порядок — LT-03.1b."
+    },
+    "q008_phrase": {
+      "root_id": "root-demo-nova",
+      "query_text": "\"atlas main\"",
+      "matching_item_ids": [
+        "file-nova-q008-atlas-main",
+        "file-nova-q008-mixed"
+      ],
+      "non_matching": {
+        "inserted": [
+          "file-nova-q008-inserted"
+        ],
+        "prefix_inside_quotes": [
+          "file-nova-q008-prefix"
+        ],
+        "reversed": [
+          "file-nova-q008-reversed"
+        ]
+      },
+      "cross_field": {
+        "root_id": "root-demo-atlas",
+        "item_id": "file-atlas-q008-cross-field",
+        "note": "atlas приходит из компании, main — из имени файла; фраза целиком в одном поле не совпадает."
+      },
+      "mixed": {
+        "query_text": "\"atlas main\" met",
+        "matching_item_ids": [
+          "file-nova-q008-mixed"
+        ],
+        "note": "Внешнее met — отдельное обязательное префиксное условие."
+      }
+    },
+    "q009_boundaries": {
+      "root_id": "root-demo-atlas",
+      "token": "met",
+      "matching_item_ids": [
+        "file-atlas-q009-metrics",
+        "file-atlas-q009-space",
+        "file-atlas-q009-hyphen",
+        "file-atlas-q009-underscore",
+        "file-atlas-q009-dot",
+        "file-atlas-q009-slash",
+        "file-atlas-q009-backslash",
+        "file-atlas-q009-letter-digit"
+      ],
+      "non_matching": {
+        "internal_substring": [
+          "file-atlas-q009-symmetry",
+          "file-atlas-q009-internal"
+        ],
+        "preceded_by_letter": [
+          "file-atlas-q009-preceded-letter"
+        ],
+        "near_typo": [
+          "file-atlas-q009-typo"
+        ]
+      },
+      "separators": {
+        "space": "file-atlas-q009-space",
+        "hyphen": "file-atlas-q009-hyphen",
+        "underscore": "file-atlas-q009-underscore",
+        "dot": "file-atlas-q009-dot",
+        "slash": "file-atlas-q009-slash",
+        "backslash": "file-atlas-q009-backslash",
+        "letter_digit": "file-atlas-q009-letter-digit"
+      },
+      "note": "Канонический relative_path всегда '/'; backslash проверяется через display_path. Внутренняя подстрока и буква перед met не совпадают."
+    },
+    "natural_order": {
+      "root_id": "root-demo-atlas",
+      "numeric": [
+        "file-atlas-natural-2",
+        "file-atlas-natural-10"
+      ],
+      "russian": [
+        "file-atlas-russian-apple",
+        "file-atlas-russian-yabloko",
+        "file-atlas-russian-ezhik"
+      ],
+      "ties": [
+        "file-atlas-tie-a",
+        "file-atlas-tie-b"
+      ],
+      "raw_ties": [
+        "file-atlas-tie-raw-note-upper",
+        "file-atlas-tie-raw-note-lower"
+      ],
+      "note": "Списки — неупорядоченные кандидатные входы (unordered); точный ожидаемый порядок natural/русской сортировки и tie-break определяет LT-03.1b. raw_ties — пара с равным natural path и разным raw path для проверки второго звена tie-break.",
+      "ordered": false
+    },
+    "ranking": {
+      "root_id": "root-demo-atlas",
+      "inputs": [
+        {
+          "item_id": "file-atlas-rank-name-full",
+          "field": "filename",
+          "token": "atlas",
+          "coefficient": "full"
+        },
+        {
+          "item_id": "file-atlas-rank-company-only",
+          "field": "company",
+          "token": "atlas",
+          "coefficient": "full"
+        },
+        {
+          "item_id": "file-atlas-rank-phrase",
+          "field": "filename",
+          "token": "\"atlas main\"",
+          "coefficient": "phrase"
+        },
+        {
+          "item_id": "file-atlas-rank-project",
+          "field": "filename+project",
+          "token": "orion",
+          "coefficient": "full"
+        }
+      ],
+      "note": "Веса: filename=5, проект/год=4, компания=3, остальные уровни=1; коэффициент полного токена=2, prefix=1; фраза=2×токенов×вес. Точные ожидания — LT-03.1b."
+    }
+  },
+  "marker_model": {
+    "levels": {
+      "level-section": "Раздел",
+      "level-company": "Компания",
+      "level-project": "Проект",
+      "level-area": "Область",
+      "level-category": "Категория",
+      "level-subcategory": "Подкатегория"
+    },
+    "values": [
+      {
+        "value_id": "archive",
+        "level_id": "level-section",
+        "raw_value": "Archive",
+        "display_value": "Archive",
+        "kind": "VALUE"
+      },
+      {
+        "value_id": "atlas",
+        "level_id": "level-company",
+        "raw_value": "Atlas",
+        "display_value": "Atlas",
+        "kind": "VALUE"
+      },
+      {
+        "value_id": "atlas-upper",
+        "level_id": "level-company",
+        "raw_value": "ATLAS",
+        "display_value": "ATLAS",
+        "kind": "VALUE"
+      },
+      {
+        "value_id": "atlas-lower",
+        "level_id": "level-company",
+        "raw_value": "atlas",
+        "display_value": "atlas",
+        "kind": "VALUE"
+      },
+      {
+        "value_id": "nova",
+        "level_id": "level-company",
+        "raw_value": "Nova",
+        "display_value": "Nova",
+        "kind": "VALUE"
+      },
+      {
+        "value_id": "nova-upper",
+        "level_id": "level-company",
+        "raw_value": "NOVA",
+        "display_value": "NOVA",
+        "kind": "VALUE"
+      },
+      {
+        "value_id": "orion",
+        "level_id": "level-project",
+        "raw_value": "Orion_2031",
+        "display_value": "Orion_2031",
+        "kind": "VALUE"
+      },
+      {
+        "value_id": "orion-lower",
+        "level_id": "level-project",
+        "raw_value": "orion_2031",
+        "display_value": "orion_2031",
+        "kind": "VALUE"
+      },
+      {
+        "value_id": "polaris",
+        "level_id": "level-project",
+        "raw_value": "Polaris_2030",
+        "display_value": "Polaris_2030",
+        "kind": "VALUE"
+      },
+      {
+        "value_id": "polaris-lower",
+        "level_id": "level-project",
+        "raw_value": "polaris_2030",
+        "display_value": "polaris_2030",
+        "kind": "VALUE"
+      },
+      {
+        "value_id": "north",
+        "level_id": "level-area",
+        "raw_value": "North",
+        "display_value": "North",
+        "kind": "VALUE"
+      },
+      {
+        "value_id": "south",
+        "level_id": "level-area",
+        "raw_value": "South",
+        "display_value": "South",
+        "kind": "VALUE"
+      },
+      {
+        "value_id": "reports",
+        "level_id": "level-category",
+        "raw_value": "Reports",
+        "display_value": "Reports",
+        "kind": "VALUE"
+      },
+      {
+        "value_id": "reports-lower",
+        "level_id": "level-category",
+        "raw_value": "reports",
+        "display_value": "reports",
+        "kind": "VALUE"
+      },
+      {
+        "value_id": "data",
+        "level_id": "level-category",
+        "raw_value": "Data",
+        "display_value": "Data",
+        "kind": "VALUE"
+      },
+      {
+        "value_id": "text",
+        "level_id": "level-subcategory",
+        "raw_value": "Text",
+        "display_value": "Text",
+        "kind": "VALUE"
+      },
+      {
+        "value_id": "maps",
+        "level_id": "level-subcategory",
+        "raw_value": "Maps",
+        "display_value": "Maps",
+        "kind": "VALUE"
+      },
+      {
+        "value_id": "unrecognized-area",
+        "level_id": "level-area",
+        "raw_value": null,
+        "display_value": "Не распознано",
+        "kind": "UNRECOGNIZED"
+      },
+      {
+        "value_id": "unrecognized-category",
+        "level_id": "level-category",
+        "raw_value": null,
+        "display_value": "Не распознано",
+        "kind": "UNRECOGNIZED"
+      },
+      {
+        "value_id": "unrecognized-project",
+        "level_id": "level-project",
+        "raw_value": null,
+        "display_value": "Не распознано",
+        "kind": "UNRECOGNIZED"
+      }
+    ],
+    "contexts": [
+      {
+        "context_id": "atlas-archive-atlas",
+        "root_id": "root-demo-atlas",
+        "path": [
+          "archive",
+          "atlas"
+        ]
+      },
+      {
+        "context_id": "atlas-archive-atlas-lower-orion-lower-reports-lower",
+        "root_id": "root-demo-atlas",
+        "path": [
+          "archive",
+          "atlas-lower",
+          "orion-lower",
+          "reports-lower"
+        ]
+      },
+      {
+        "context_id": "atlas-archive-atlas-lower-polaris-lower-data",
+        "root_id": "root-demo-atlas",
+        "path": [
+          "archive",
+          "atlas-lower",
+          "polaris-lower",
+          "data"
+        ]
+      },
+      {
+        "context_id": "atlas-archive-atlas-orion",
+        "root_id": "root-demo-atlas",
+        "path": [
+          "archive",
+          "atlas",
+          "orion"
+        ]
+      },
+      {
+        "context_id": "atlas-archive-atlas-orion-data",
+        "root_id": "root-demo-atlas",
+        "path": [
+          "archive",
+          "atlas",
+          "orion",
+          "data"
+        ]
+      },
+      {
+        "context_id": "atlas-archive-atlas-orion-reports",
+        "root_id": "root-demo-atlas",
+        "path": [
+          "archive",
+          "atlas",
+          "orion",
+          "reports"
+        ]
+      },
+      {
+        "context_id": "atlas-archive-atlas-orion-reports-maps",
+        "root_id": "root-demo-atlas",
+        "path": [
+          "archive",
+          "atlas",
+          "orion",
+          "reports",
+          "maps"
+        ]
+      },
+      {
+        "context_id": "atlas-archive-atlas-orion-reports-text",
+        "root_id": "root-demo-atlas",
+        "path": [
+          "archive",
+          "atlas",
+          "orion",
+          "reports",
+          "text"
+        ]
+      },
+      {
+        "context_id": "atlas-archive-atlas-orion-unrecognized-category",
+        "root_id": "root-demo-atlas",
+        "path": [
+          "archive",
+          "atlas",
+          "orion",
+          "unrecognized-category"
+        ]
+      },
+      {
+        "context_id": "atlas-archive-atlas-polaris-data",
+        "root_id": "root-demo-atlas",
+        "path": [
+          "archive",
+          "atlas",
+          "polaris",
+          "data"
+        ]
+      },
+      {
+        "context_id": "atlas-archive-atlas-unrecognized-project",
+        "root_id": "root-demo-atlas",
+        "path": [
+          "archive",
+          "atlas",
+          "unrecognized-project"
+        ]
+      },
+      {
+        "context_id": "atlas-archive-atlas-upper-orion-lower-reports",
+        "root_id": "root-demo-atlas",
+        "path": [
+          "archive",
+          "atlas-upper",
+          "orion-lower",
+          "reports"
+        ]
+      },
+      {
+        "context_id": "nova-archive-nova-orion-north-data",
+        "root_id": "root-demo-nova",
+        "path": [
+          "archive",
+          "nova",
+          "orion",
+          "north",
+          "data"
+        ]
+      },
+      {
+        "context_id": "nova-archive-nova-orion-north-reports",
+        "root_id": "root-demo-nova",
+        "path": [
+          "archive",
+          "nova",
+          "orion",
+          "north",
+          "reports"
+        ]
+      },
+      {
+        "context_id": "nova-archive-nova-orion-south-data",
+        "root_id": "root-demo-nova",
+        "path": [
+          "archive",
+          "nova",
+          "orion",
+          "south",
+          "data"
+        ]
+      },
+      {
+        "context_id": "nova-archive-nova-polaris",
+        "root_id": "root-demo-nova",
+        "path": [
+          "archive",
+          "nova",
+          "polaris"
+        ]
+      },
+      {
+        "context_id": "nova-archive-nova-polaris-north-reports",
+        "root_id": "root-demo-nova",
+        "path": [
+          "archive",
+          "nova",
+          "polaris",
+          "north",
+          "reports"
+        ]
+      },
+      {
+        "context_id": "nova-archive-nova-polaris-south-data",
+        "root_id": "root-demo-nova",
+        "path": [
+          "archive",
+          "nova",
+          "polaris",
+          "south",
+          "data"
+        ]
+      },
+      {
+        "context_id": "nova-archive-nova-polaris-unrecognized-area",
+        "root_id": "root-demo-nova",
+        "path": [
+          "archive",
+          "nova",
+          "polaris",
+          "unrecognized-area"
+        ]
+      },
+      {
+        "context_id": "nova-archive-nova-upper-orion-north-reports",
+        "root_id": "root-demo-nova",
+        "path": [
+          "archive",
+          "nova-upper",
+          "orion",
+          "north",
+          "reports"
+        ]
+      }
+    ]
+  }
+}

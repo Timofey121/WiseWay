@@ -1,0 +1,1234 @@
+{
+  "fixture_set": "wiseway-quarantine-returns",
+  "version": "1.0.0",
+  "seed": "wiseway-demo-seed-2031",
+  "contract_version": "1.0.0",
+  "corpus_version": "1.2.0",
+  "batch_outcomes_fixture": "batch_outcomes.json",
+  "target_display_prefix": "DEMO:/SandboxRoot",
+  "notes": "LT-03.5a finite quarantine/return lifecycle oracle. It is bound to the actual LT-03.4a batch-atlas-technical QUARANTINED outcome (the confirmed technical quarantine) and deliberately excludes that batch's RECOVERY_REQUIRED outcomes from the confirmed quarantine list. Every QuarantineItem, QuarantinePage, QuarantineReturnRequest, QuarantineReturnResponse, ErrorResponse and AuditEvent is a literal, schema-bound value; the module materializes and cross-checks them without implementing a return executor, recovery engine, filesystem writer or idempotency store. can_return is a server stability flag from the OAS, never an invented permission. Audit descriptors are expected IDs for LT-03.5b, not measured audit evidence.",
+  "constants": {
+    "comment_min_length": 1,
+    "comment_max_length": 500,
+    "quarantine_page_limit": 100
+  },
+  "companies": {
+    "atlas": {
+      "company_id": "company-demo-atlas",
+      "root_id": "root-demo-atlas",
+      "incoming_source_id": "incoming-demo-atlas",
+      "source_name": "Atlas incoming"
+    }
+  },
+  "prior_batch": {
+    "batch_id": "batch-atlas-technical",
+    "status": "RECOVERY_REQUIRED",
+    "finished_at": null,
+    "quarantine_item_id": "batch-tech-quarantine"
+  },
+  "quarantine_states": [
+    {
+      "state_id": "QR-STATE-CONFIRMED",
+      "quarantine_id": "quarantine-atlas-batch-tech-quarantine",
+      "revision": 1,
+      "company": "atlas",
+      "outcome": {
+        "batch_id": "batch-atlas-technical",
+        "item_id": "batch-tech-quarantine"
+      },
+      "quarantined_at": "2031-05-10T09:40:03Z",
+      "can_return": true,
+      "recovery_operation_id": null,
+      "returned": false,
+      "listed": true,
+      "reason": "Confirmed technical quarantine created by the LT-03.4a QUARANTINED outcome; the original incoming path is free and the file identity is verified, so can_return is true."
+    },
+    {
+      "state_id": "QR-STATE-AMBIGUOUS",
+      "quarantine_id": "quarantine-atlas-batch-tech-quarantine",
+      "revision": 3,
+      "company": "atlas",
+      "outcome": {
+        "batch_id": "batch-atlas-technical",
+        "item_id": "batch-tech-quarantine"
+      },
+      "quarantined_at": "2031-05-10T09:40:03Z",
+      "can_return": false,
+      "recovery_operation_id": "return-atlas-batch-tech-quarantine-recovery",
+      "returned": false,
+      "listed": false,
+      "reason": "An ambiguous return failure registered a recovery operation. can_return=false only because the return became ambiguous; no successful placement is invented and no role/permission can_return is defined by the OAS."
+    }
+  ],
+  "quarantine_page": {
+    "state_ids": [
+      "QR-STATE-CONFIRMED"
+    ],
+    "next_cursor": null
+  },
+  "confirmed_outcomes": [
+    {
+      "batch_id": "batch-atlas-technical",
+      "item_id": "batch-tech-quarantine"
+    }
+  ],
+  "recovery_outcomes": [
+    {
+      "batch_id": "batch-atlas-technical",
+      "item_id": "batch-tech-recovery-unknown"
+    },
+    {
+      "batch_id": "batch-atlas-technical",
+      "item_id": "batch-tech-recovery-known"
+    }
+  ],
+  "return_inventory": {
+    "kind": "logical-inventory-expectation",
+    "no_file_writes": true,
+    "note": "No file is written or read by this fixture. The logical return expectation: after a confirmed successful return the quarantine location no longer holds the file and the original incoming path holds the same content; the prior LT-03.4a batch outcome and its logical inventory stay unchanged. For an ambiguous return no side is asserted and no successful placement is invented.",
+    "success": {
+      "source_quarantine_present_after": false,
+      "original_present_after": true,
+      "content_conserved": true,
+      "prior_batch_unchanged": true
+    },
+    "ambiguous": {
+      "source_quarantine_present_after": null,
+      "original_present_after": null,
+      "content_conserved": null,
+      "prior_batch_unchanged": true
+    }
+  },
+  "occupied_original_paths": [
+    {
+      "object_id": "existing-atlas-quarantine-original",
+      "location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Reports/batch-tech-quarantine.tar.gz",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/batch-tech-quarantine.tar.gz"
+      },
+      "content_tag": "lt035a-content-existing-atlas-quarantine-original",
+      "unchanged": true,
+      "reason": "A different existing object now occupies the original incoming path. The return must refuse with ORIGINAL_PATH_OCCUPIED and move nothing."
+    }
+  ],
+  "errors": [
+    {
+      "error_id": "error-quarantine-comment-validation",
+      "code": "VALIDATION_ERROR",
+      "status": 422,
+      "operation": "returnQuarantineItem",
+      "message": "Комментарий должен содержать от 1 до 500 символов.",
+      "request_id": "request-quarantine-demo-1",
+      "operation_id": null,
+      "retryable": false,
+      "field_errors": [
+        {
+          "field": "comment",
+          "code": "LENGTH",
+          "message": "Допустимая длина комментария — от 1 до 500 символов."
+        }
+      ]
+    },
+    {
+      "error_id": "error-quarantine-version-conflict",
+      "code": "QUARANTINE_VERSION_CONFLICT",
+      "status": 409,
+      "operation": "returnQuarantineItem",
+      "message": "Запись карантина изменена. Перечитайте её и повторите возврат.",
+      "request_id": "request-quarantine-demo-1",
+      "operation_id": null,
+      "retryable": false,
+      "field_errors": []
+    },
+    {
+      "error_id": "error-original-path-occupied",
+      "code": "ORIGINAL_PATH_OCCUPIED",
+      "status": 409,
+      "operation": "returnQuarantineItem",
+      "message": "Исходный входящий путь занят. Возврат не выполнен.",
+      "request_id": "request-quarantine-demo-1",
+      "operation_id": null,
+      "retryable": false,
+      "field_errors": []
+    },
+    {
+      "error_id": "error-quarantine-not-found",
+      "code": "NOT_FOUND",
+      "status": 404,
+      "operation": "returnQuarantineItem",
+      "message": "Запись карантина не найдена.",
+      "request_id": "request-quarantine-demo-1",
+      "operation_id": null,
+      "retryable": false,
+      "field_errors": []
+    },
+    {
+      "error_id": "error-quarantine-invalid-state",
+      "code": "INVALID_STATE",
+      "status": 409,
+      "operation": "returnQuarantineItem",
+      "message": "Запись уже возвращена. Возврат не выполнен.",
+      "request_id": "request-quarantine-demo-1",
+      "operation_id": null,
+      "retryable": false,
+      "field_errors": []
+    },
+    {
+      "error_id": "error-quarantine-recovery-required",
+      "code": "RECOVERY_REQUIRED",
+      "status": 409,
+      "operation": "returnQuarantineItem",
+      "message": "Результат возврата требует ручной проверки. Не повторяйте перемещение.",
+      "request_id": "request-quarantine-demo-1",
+      "operation_id": "return-atlas-batch-tech-quarantine-recovery",
+      "retryable": false,
+      "field_errors": []
+    },
+    {
+      "error_id": "error-quarantine-idempotency-key-reused",
+      "code": "IDEMPOTENCY_KEY_REUSED",
+      "status": 409,
+      "operation": "returnQuarantineItem",
+      "message": "Ключ идемпотентности уже использован с другим телом запроса.",
+      "request_id": "request-quarantine-demo-1",
+      "operation_id": null,
+      "retryable": false,
+      "field_errors": []
+    }
+  ],
+  "scenarios": [
+    {
+      "scenario_id": "QR-RETURN-SUCCESS",
+      "q_ids": [
+        "Q-038"
+      ],
+      "category": "SUCCESS",
+      "title": "Успешный возврат с актуальной revision",
+      "reason": "Актуальная revision 1, комментарий 1..500, UUID-ключ и свободный исходный путь. Успех возвращает WAITING_READY, selectable=false, без active attempt, без автосортировки и без нового batch/attempt.",
+      "operation": "returnQuarantineItem",
+      "record_state": "QR-STATE-CONFIRMED",
+      "actor": "worker1",
+      "idempotency_key": "11111111-1111-4111-8111-111111111111",
+      "body": {
+        "expected_revision": 1,
+        "comment": "Повторно проверить после устранения ошибки."
+      },
+      "returned_item_revision": 2,
+      "returned_modified_at": "2031-05-10T09:45:00Z",
+      "schema_rejected": false,
+      "expected": {
+        "http": 200,
+        "result": "RETURN",
+        "return_operation_id": "return-atlas-batch-tech-quarantine",
+        "item_status": "WAITING_READY",
+        "selectable": false,
+        "active_attempt_id": null,
+        "reason_code": null,
+        "no_autosort": true,
+        "new_batch": false,
+        "new_attempt": false,
+        "second_move": false,
+        "source_preserved": true
+      }
+    },
+    {
+      "scenario_id": "QR-COMMENT-EMPTY",
+      "q_ids": [
+        "Q-038",
+        "Q-043"
+      ],
+      "category": "SCHEMA_INVALID",
+      "title": "Пустой комментарий отклоняется схемой",
+      "reason": "comment пустой нарушает minLength=1; запрос схемно невалиден и не создаёт операцию.",
+      "operation": "returnQuarantineItem",
+      "record_state": "QR-STATE-CONFIRMED",
+      "actor": "worker1",
+      "idempotency_key": "22222222-2222-4222-8222-222222222222",
+      "body": {
+        "expected_revision": 1,
+        "comment": ""
+      },
+      "schema_rejected": true,
+      "expected": {
+        "http": 422,
+        "result": "ERROR",
+        "code": "VALIDATION_ERROR",
+        "error_id": "error-quarantine-comment-validation",
+        "mutates": false,
+        "new_move": false
+      }
+    },
+    {
+      "scenario_id": "QR-COMMENT-LONG",
+      "q_ids": [
+        "Q-038",
+        "Q-043"
+      ],
+      "category": "SCHEMA_INVALID",
+      "title": "Комментарий 501 символ отклоняется схемой",
+      "reason": "comment из 501 символа нарушает maxLength=500; запрос схемно невалиден и не создаёт операцию.",
+      "operation": "returnQuarantineItem",
+      "record_state": "QR-STATE-CONFIRMED",
+      "actor": "worker1",
+      "idempotency_key": "33333333-3333-4333-8333-333333333333",
+      "body": {
+        "expected_revision": 1,
+        "comment": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "schema_rejected": true,
+      "expected": {
+        "http": 422,
+        "result": "ERROR",
+        "code": "VALIDATION_ERROR",
+        "error_id": "error-quarantine-comment-validation",
+        "mutates": false,
+        "new_move": false
+      }
+    },
+    {
+      "scenario_id": "QR-STALE-REVISION",
+      "q_ids": [
+        "Q-038"
+      ],
+      "category": "VERSION_CONFLICT",
+      "title": "Устаревшая revision",
+      "reason": "expected_revision=0 не совпадает с revision=1; 409 QUARANTINE_VERSION_CONFLICT без перемещения.",
+      "operation": "returnQuarantineItem",
+      "record_state": "QR-STATE-CONFIRMED",
+      "actor": "worker1",
+      "idempotency_key": "44444444-4444-4444-8444-444444444444",
+      "body": {
+        "expected_revision": 0,
+        "comment": "Повторная попытка с устаревшей revision."
+      },
+      "schema_rejected": false,
+      "expected": {
+        "http": 409,
+        "result": "ERROR",
+        "code": "QUARANTINE_VERSION_CONFLICT",
+        "error_id": "error-quarantine-version-conflict",
+        "mutates": false,
+        "new_move": false
+      }
+    },
+    {
+      "scenario_id": "QR-ORIGINAL-PATH-OCCUPIED",
+      "q_ids": [
+        "Q-038"
+      ],
+      "category": "ORIGINAL_OCCUPIED",
+      "title": "Занятый исходный входящий путь",
+      "reason": "Другой объект занимает исходный путь; 409 ORIGINAL_PATH_OCCUPIED, ничего не перемещается, оба объекта сохранны.",
+      "operation": "returnQuarantineItem",
+      "record_state": "QR-STATE-CONFIRMED",
+      "actor": "worker1",
+      "idempotency_key": "55555555-5555-4555-8555-555555555555",
+      "body": {
+        "expected_revision": 1,
+        "comment": "Возврат при занятом исходном пути."
+      },
+      "occupied_object": "existing-atlas-quarantine-original",
+      "schema_rejected": false,
+      "expected": {
+        "http": 409,
+        "result": "ERROR",
+        "code": "ORIGINAL_PATH_OCCUPIED",
+        "error_id": "error-original-path-occupied",
+        "mutates": false,
+        "new_move": false,
+        "existing_unchanged": true
+      }
+    },
+    {
+      "scenario_id": "QR-UNKNOWN-ID",
+      "q_ids": [
+        "Q-038"
+      ],
+      "category": "NOT_FOUND",
+      "title": "Неизвестный quarantine_id",
+      "reason": "Неизвестный quarantine_id не является записью карантина; 404 NOT_FOUND без мутаций.",
+      "operation": "returnQuarantineItem",
+      "record_state": null,
+      "unknown_quarantine_id": "quarantine-does-not-exist",
+      "actor": "worker1",
+      "idempotency_key": "66666666-6666-4666-8666-666666666666",
+      "body": {
+        "expected_revision": 1,
+        "comment": "Возврат неизвестной записи."
+      },
+      "schema_rejected": false,
+      "expected": {
+        "http": 404,
+        "result": "ERROR",
+        "code": "NOT_FOUND",
+        "error_id": "error-quarantine-not-found",
+        "mutates": false,
+        "new_move": false
+      }
+    },
+    {
+      "scenario_id": "QR-ALREADY-RETURNED-NEW-KEY",
+      "q_ids": [
+        "Q-038"
+      ],
+      "category": "ALREADY_RETURNED",
+      "title": "Уже возвращённая запись с новым ключом",
+      "reason": "Запись уже возвращена; новый ключ создаёт новую операцию, которая по текущему состоянию даёт 409 INVALID_STATE без второго перемещения.",
+      "operation": "returnQuarantineItem",
+      "record_state": "QR-STATE-CONFIRMED",
+      "precondition": "RETURNED",
+      "actor": "worker1",
+      "idempotency_key": "77777777-7777-4777-8777-777777777777",
+      "body": {
+        "expected_revision": 2,
+        "comment": "Повторный возврат уже возвращённой записи."
+      },
+      "schema_rejected": false,
+      "expected": {
+        "http": 409,
+        "result": "ERROR",
+        "code": "INVALID_STATE",
+        "error_id": "error-quarantine-invalid-state",
+        "mutates": false,
+        "new_move": false,
+        "second_return": false
+      }
+    },
+    {
+      "scenario_id": "QR-RECOVERY-AMBIGUOUS",
+      "q_ids": [
+        "Q-038"
+      ],
+      "category": "RECOVERY_REQUIRED",
+      "title": "Неоднозначный возврат с зарегистрированной операцией",
+      "reason": "Неоднозначный исход возврата регистрирует операцию; 409 RECOVERY_REQUIRED с непустым error.operation_id, can_return=false с тем же recovery_operation_id, без выдуманного успешного размещения.",
+      "operation": "returnQuarantineItem",
+      "record_state": "QR-STATE-AMBIGUOUS",
+      "actor": "worker1",
+      "idempotency_key": "88888888-8888-4888-8888-888888888888",
+      "body": {
+        "expected_revision": 3,
+        "comment": "Возврат с неоднозначным исходом."
+      },
+      "schema_rejected": false,
+      "expected": {
+        "http": 409,
+        "result": "ERROR",
+        "code": "RECOVERY_REQUIRED",
+        "error_id": "error-quarantine-recovery-required",
+        "operation_id": "return-atlas-batch-tech-quarantine-recovery",
+        "can_return": false,
+        "produced_item": false,
+        "actual_placement": null,
+        "mutates": false,
+        "new_move": false
+      }
+    },
+    {
+      "scenario_id": "QR-KEY-REUSED-DIFFERENT-BODY",
+      "q_ids": [
+        "Q-029"
+      ],
+      "category": "KEY_REUSED",
+      "title": "Тот же ключ с другим телом",
+      "reason": "Повтор ключа успешного возврата с другим комментарием — 409 IDEMPOTENCY_KEY_REUSED, без второго перемещения.",
+      "operation": "returnQuarantineItem",
+      "record_state": "QR-STATE-CONFIRMED",
+      "replay_of": "QR-RETURN-SUCCESS",
+      "same_key": true,
+      "same_user": true,
+      "same_body": false,
+      "actor": "worker1",
+      "idempotency_key": "11111111-1111-4111-8111-111111111111",
+      "body": {
+        "expected_revision": 1,
+        "comment": "Изменённое тело при прежнем ключе."
+      },
+      "schema_rejected": false,
+      "expected": {
+        "http": 409,
+        "result": "ERROR",
+        "code": "IDEMPOTENCY_KEY_REUSED",
+        "error_id": "error-quarantine-idempotency-key-reused",
+        "idempotency_conflict": true,
+        "new_move": false
+      }
+    },
+    {
+      "scenario_id": "QR-USER-SCOPE-NEW-OPERATION",
+      "q_ids": [
+        "Q-029"
+      ],
+      "category": "USER_SCOPE",
+      "title": "Тот же ключ у другого пользователя — отдельный scope",
+      "reason": "Ключ идемпотентности scoped по user_id. Другой актор с той же строкой ключа создаёт новую операцию и оценивается по текущему состоянию (запись уже возвращена → 409 INVALID_STATE), а не как глобальный конфликт ключа.",
+      "operation": "returnQuarantineItem",
+      "record_state": "QR-STATE-CONFIRMED",
+      "precondition": "RETURNED",
+      "original_scenario": "QR-RETURN-SUCCESS",
+      "original_actor": "worker1",
+      "scoped_actor": "worker2",
+      "actor": "worker2",
+      "idempotency_key": "11111111-1111-4111-8111-111111111111",
+      "body": {
+        "expected_revision": 2,
+        "comment": "Повторно проверить после устранения ошибки."
+      },
+      "schema_rejected": false,
+      "expected": {
+        "http": 409,
+        "result": "ERROR",
+        "code": "INVALID_STATE",
+        "error_id": "error-quarantine-invalid-state",
+        "separate_scope": true,
+        "idempotency_conflict": false,
+        "new_move": false
+      }
+    },
+    {
+      "scenario_id": "QR-CAN-RETURN-STABILITY",
+      "q_ids": [
+        "Q-043"
+      ],
+      "category": "CAN_RETURN_STABILITY",
+      "title": "can_return — серверная стабильность, не права",
+      "reason": "OAS задаёт can_return как boolean стабильности возврата, а не как разрешение/роль. false появляется только вместе с зарегистрированным recovery_operation_id при неоднозначном возврате; ролевой can_return не изобретается.",
+      "operation": "returnQuarantineItem",
+      "record_state": "QR-STATE-AMBIGUOUS",
+      "actor": "worker1",
+      "idempotency_key": "99999999-9999-4999-8999-999999999999",
+      "body": {
+        "expected_revision": 3,
+        "comment": "Наблюдение стабильности can_return."
+      },
+      "schema_rejected": false,
+      "expected": {
+        "can_return": false,
+        "recovery_operation_id": "return-atlas-batch-tech-quarantine-recovery",
+        "permission_based": false,
+        "role_based": false
+      }
+    }
+  ],
+  "replays": [
+    {
+      "replay_id": "QR-REPLAY-SUCCESS",
+      "of": "QR-RETURN-SUCCESS",
+      "same_key": true,
+      "same_user": true,
+      "same_body": true,
+      "at": "2031-05-10T09:46:00Z",
+      "record_revision_after": 2,
+      "expected": {
+        "http": 200,
+        "result": "RETURN",
+        "return_operation_id": "return-atlas-batch-tech-quarantine",
+        "new_move": false,
+        "new_attempt": false,
+        "new_event": false
+      }
+    },
+    {
+      "replay_id": "QR-REPLAY-RECOVERY",
+      "of": "QR-RECOVERY-AMBIGUOUS",
+      "same_key": true,
+      "same_user": true,
+      "same_body": true,
+      "at": "2031-05-10T09:47:00Z",
+      "record_revision_after": 4,
+      "expected": {
+        "http": 409,
+        "result": "ERROR",
+        "code": "RECOVERY_REQUIRED",
+        "operation_id": "return-atlas-batch-tech-quarantine-recovery",
+        "new_move": false,
+        "new_attempt": false,
+        "new_event": false
+      }
+    }
+  ],
+  "audit_expectations": [
+    {
+      "audit_id": "AUD-QR-RETURNED-SUCCESS",
+      "record_state": "QR-STATE-CONFIRMED",
+      "actor": "worker1",
+      "category": "BUSINESS",
+      "action": "QUARANTINE_RETURNED",
+      "result": "SUCCESS",
+      "occurred_at": "2031-05-10T09:45:00Z",
+      "request_id": "request-quarantine-return-1",
+      "operation_id": "return-atlas-batch-tech-quarantine",
+      "source_attempt_id": "attempt-batch-atlas-technical-batch-tech-quarantine",
+      "source": "quarantine",
+      "target": "original",
+      "reason_code": null,
+      "comment": "Повторно проверить после устранения ошибки.",
+      "unique_key": "return-atlas-batch-tech-quarantine:QUARANTINE_RETURNED",
+      "evidence": false
+    },
+    {
+      "audit_id": "AUD-QR-RETURN-RECOVERY",
+      "record_state": "QR-STATE-AMBIGUOUS",
+      "actor": "worker1",
+      "category": "BUSINESS",
+      "action": "RECOVERY_REQUIRED",
+      "result": "ISSUE",
+      "occurred_at": "2031-05-10T09:47:00Z",
+      "request_id": "request-quarantine-return-2",
+      "operation_id": "return-atlas-batch-tech-quarantine-recovery",
+      "source_attempt_id": "attempt-batch-atlas-technical-batch-tech-quarantine",
+      "source": "quarantine",
+      "target": null,
+      "reason_code": "RECOVERY_REQUIRED",
+      "comment": null,
+      "unique_key": "return-atlas-batch-tech-quarantine-recovery:RECOVERY_REQUIRED",
+      "evidence": false
+    }
+  ],
+  "links": [
+    {
+      "link_id": "QR-LINK-ITEM",
+      "relation": "equals",
+      "source": {
+        "payload": "quarantine_item:QR-STATE-CONFIRMED",
+        "path": [
+          "item_id"
+        ]
+      },
+      "target": {
+        "payload": "outcome:batch-atlas-technical:batch-tech-quarantine",
+        "path": [
+          "item_id"
+        ]
+      }
+    },
+    {
+      "link_id": "QR-LINK-LOCATION",
+      "relation": "equals",
+      "source": {
+        "payload": "quarantine_item:QR-STATE-CONFIRMED",
+        "path": [
+          "location"
+        ]
+      },
+      "target": {
+        "payload": "outcome:batch-atlas-technical:batch-tech-quarantine",
+        "path": [
+          "actual_location"
+        ]
+      }
+    },
+    {
+      "link_id": "QR-LINK-ORIGINAL",
+      "relation": "equals",
+      "source": {
+        "payload": "quarantine_item:QR-STATE-CONFIRMED",
+        "path": [
+          "original_location"
+        ]
+      },
+      "target": {
+        "payload": "outcome:batch-atlas-technical:batch-tech-quarantine",
+        "path": [
+          "source"
+        ]
+      }
+    },
+    {
+      "link_id": "QR-LINK-ATTEMPT",
+      "relation": "equals",
+      "source": {
+        "payload": "quarantine_item:QR-STATE-CONFIRMED",
+        "path": [
+          "source_attempt_id"
+        ]
+      },
+      "target": {
+        "payload": "outcome:batch-atlas-technical:batch-tech-quarantine",
+        "path": [
+          "attempt_id"
+        ]
+      }
+    },
+    {
+      "link_id": "QR-LINK-REASON",
+      "relation": "equals",
+      "source": {
+        "payload": "quarantine_item:QR-STATE-CONFIRMED",
+        "path": [
+          "reason_code"
+        ]
+      },
+      "target": {
+        "payload": "outcome:batch-atlas-technical:batch-tech-quarantine",
+        "path": [
+          "reason_code"
+        ]
+      }
+    },
+    {
+      "link_id": "QR-LINK-RETURN-SOURCE",
+      "relation": "equals",
+      "source": {
+        "payload": "return_response:QR-RETURN-SUCCESS",
+        "path": [
+          "item",
+          "source"
+        ]
+      },
+      "target": {
+        "payload": "quarantine_item:QR-STATE-CONFIRMED",
+        "path": [
+          "original_location"
+        ]
+      }
+    },
+    {
+      "link_id": "QR-LINK-RETURN-FILENAME",
+      "relation": "equals",
+      "source": {
+        "payload": "return_response:QR-RETURN-SUCCESS",
+        "path": [
+          "item",
+          "filename"
+        ]
+      },
+      "target": {
+        "payload": "quarantine_item:QR-STATE-CONFIRMED",
+        "path": [
+          "filename"
+        ]
+      }
+    },
+    {
+      "link_id": "QR-LINK-RETURN-OPERATION",
+      "relation": "equals",
+      "source": {
+        "payload": "return_response:QR-RETURN-SUCCESS",
+        "path": [
+          "return_operation_id"
+        ]
+      },
+      "target": {
+        "payload": "scenario:QR-RETURN-SUCCESS",
+        "path": [
+          "expected",
+          "return_operation_id"
+        ]
+      }
+    },
+    {
+      "link_id": "QR-LINK-RETURN-STATUS",
+      "relation": "equals",
+      "source": {
+        "payload": "return_response:QR-RETURN-SUCCESS",
+        "path": [
+          "item",
+          "status"
+        ]
+      },
+      "target": {
+        "payload": "scenario:QR-RETURN-SUCCESS",
+        "path": [
+          "expected",
+          "item_status"
+        ]
+      }
+    },
+    {
+      "link_id": "QR-LINK-RETURN-SELECTABLE",
+      "relation": "equals",
+      "source": {
+        "payload": "return_response:QR-RETURN-SUCCESS",
+        "path": [
+          "item",
+          "selectable"
+        ]
+      },
+      "target": {
+        "payload": "false_value",
+        "path": []
+      }
+    },
+    {
+      "link_id": "QR-LINK-RETURN-NO-ATTEMPT",
+      "relation": "equals",
+      "source": {
+        "payload": "return_response:QR-RETURN-SUCCESS",
+        "path": [
+          "item",
+          "active_attempt_id"
+        ]
+      },
+      "target": {
+        "payload": "null_value",
+        "path": []
+      }
+    },
+    {
+      "link_id": "QR-LINK-RETURN-NO-REASON",
+      "relation": "equals",
+      "source": {
+        "payload": "return_response:QR-RETURN-SUCCESS",
+        "path": [
+          "item",
+          "reason_code"
+        ]
+      },
+      "target": {
+        "payload": "null_value",
+        "path": []
+      }
+    },
+    {
+      "link_id": "QR-LINK-AUDIT-OPERATION",
+      "relation": "equals",
+      "source": {
+        "payload": "audit:AUD-QR-RETURNED-SUCCESS",
+        "path": [
+          "operation_id"
+        ]
+      },
+      "target": {
+        "payload": "return_response:QR-RETURN-SUCCESS",
+        "path": [
+          "return_operation_id"
+        ]
+      }
+    },
+    {
+      "link_id": "QR-LINK-AUDIT-SOURCE-ATTEMPT",
+      "relation": "equals",
+      "source": {
+        "payload": "audit:AUD-QR-RETURNED-SUCCESS",
+        "path": [
+          "source_attempt_id"
+        ]
+      },
+      "target": {
+        "payload": "quarantine_item:QR-STATE-CONFIRMED",
+        "path": [
+          "source_attempt_id"
+        ]
+      }
+    },
+    {
+      "link_id": "QR-LINK-AUDIT-BATCH",
+      "relation": "equals",
+      "source": {
+        "payload": "audit:AUD-QR-RETURNED-SUCCESS",
+        "path": [
+          "batch_id"
+        ]
+      },
+      "target": {
+        "payload": "batch:batch-atlas-technical",
+        "path": [
+          "batch_id"
+        ]
+      }
+    },
+    {
+      "link_id": "QR-LINK-RECOVERY-OPERATION",
+      "relation": "equals",
+      "source": {
+        "payload": "error:error-quarantine-recovery-required",
+        "path": [
+          "error",
+          "operation_id"
+        ]
+      },
+      "target": {
+        "payload": "quarantine_item:QR-STATE-AMBIGUOUS",
+        "path": [
+          "recovery_operation_id"
+        ]
+      }
+    },
+    {
+      "link_id": "QR-LINK-RECOVERY-CANRETURN",
+      "relation": "equals",
+      "source": {
+        "payload": "quarantine_item:QR-STATE-AMBIGUOUS",
+        "path": [
+          "can_return"
+        ]
+      },
+      "target": {
+        "payload": "false_value",
+        "path": []
+      }
+    },
+    {
+      "link_id": "QR-LINK-RECOVERY-NO-PLACEMENT",
+      "relation": "equals",
+      "source": {
+        "payload": "scenario:QR-RECOVERY-AMBIGUOUS",
+        "path": [
+          "expected",
+          "actual_placement"
+        ]
+      },
+      "target": {
+        "payload": "null_value",
+        "path": []
+      }
+    },
+    {
+      "link_id": "QR-LINK-RECOVERY-NO-ITEM",
+      "relation": "equals",
+      "source": {
+        "payload": "scenario:QR-RECOVERY-AMBIGUOUS",
+        "path": [
+          "expected",
+          "produced_item"
+        ]
+      },
+      "target": {
+        "payload": "false_value",
+        "path": []
+      }
+    },
+    {
+      "link_id": "QR-LINK-PAGE-ITEM",
+      "relation": "equals",
+      "source": {
+        "payload": "quarantine_page",
+        "path": [
+          "items",
+          0,
+          "quarantine_id"
+        ]
+      },
+      "target": {
+        "payload": "quarantine_item:QR-STATE-CONFIRMED",
+        "path": [
+          "quarantine_id"
+        ]
+      }
+    },
+    {
+      "link_id": "QR-LINK-OCCUPIED-ORIGINAL",
+      "relation": "equals",
+      "source": {
+        "payload": "existing_object:existing-atlas-quarantine-original",
+        "path": [
+          "location"
+        ]
+      },
+      "target": {
+        "payload": "quarantine_item:QR-STATE-CONFIRMED",
+        "path": [
+          "original_location"
+        ]
+      }
+    }
+  ],
+  "mutations": [
+    {
+      "mutation_id": "QR-MUT-REVISION-DRIFT",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        0,
+        "body",
+        "expected_revision"
+      ],
+      "value": 0,
+      "validator": "expectation",
+      "reason": "A successful return must carry the current quarantine revision."
+    },
+    {
+      "mutation_id": "QR-MUT-SUCCESS-STATUS-DRIFT",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        0,
+        "expected",
+        "item_status"
+      ],
+      "value": "READY",
+      "validator": "expectation",
+      "reason": "A returned item is WAITING_READY, never READY."
+    },
+    {
+      "mutation_id": "QR-MUT-SUCCESS-SELECTABLE",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        0,
+        "expected",
+        "selectable"
+      ],
+      "value": true,
+      "validator": "expectation",
+      "reason": "A returned item is not selectable before readiness."
+    },
+    {
+      "mutation_id": "QR-MUT-SUCCESS-AUTOSORT",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        0,
+        "expected",
+        "no_autosort"
+      ],
+      "value": false,
+      "validator": "expectation",
+      "reason": "A return never starts sorting automatically."
+    },
+    {
+      "mutation_id": "QR-MUT-SUCCESS-SECOND-MOVE",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        0,
+        "expected",
+        "second_move"
+      ],
+      "value": true,
+      "validator": "expectation",
+      "reason": "A return performs exactly one move."
+    },
+    {
+      "mutation_id": "QR-MUT-VERSION-CONFLICT-CODE",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        3,
+        "expected",
+        "code"
+      ],
+      "value": "INVALID_STATE",
+      "validator": "expectation",
+      "reason": "A stale expected_revision is QUARANTINE_VERSION_CONFLICT, not INVALID_STATE."
+    },
+    {
+      "mutation_id": "QR-MUT-OCCUPIED-LOCATION",
+      "operation": "set",
+      "path": [
+        "occupied_original_paths",
+        0,
+        "location",
+        "relative_path"
+      ],
+      "value": "Archive/Atlas/Orion_2031/Reports/other.pdf",
+      "validator": "expectation",
+      "reason": "The occupying object must sit at the quarantine record's original incoming path."
+    },
+    {
+      "mutation_id": "QR-MUT-OCCUPIED-UNCHANGED",
+      "operation": "set",
+      "path": [
+        "occupied_original_paths",
+        0,
+        "unchanged"
+      ],
+      "value": false,
+      "validator": "expectation",
+      "reason": "An occupied original path preserves the existing object."
+    },
+    {
+      "mutation_id": "QR-MUT-RECOVERY-OPERATION-ID",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        7,
+        "expected",
+        "operation_id"
+      ],
+      "value": null,
+      "validator": "expectation",
+      "reason": "An ambiguous return must expose the registered recovery operation_id."
+    },
+    {
+      "mutation_id": "QR-MUT-AMBIGUOUS-CANRETURN",
+      "operation": "set",
+      "path": [
+        "quarantine_states",
+        1,
+        "can_return"
+      ],
+      "value": true,
+      "validator": "expectation",
+      "reason": "can_return=false must accompany the registered recovery_operation_id."
+    },
+    {
+      "mutation_id": "QR-MUT-REPLAY-NEW-MOVE",
+      "operation": "set",
+      "path": [
+        "replays",
+        0,
+        "expected",
+        "new_move"
+      ],
+      "value": true,
+      "validator": "expectation",
+      "reason": "A replay must not perform a second move."
+    },
+    {
+      "mutation_id": "QR-MUT-REPLAY-REVISION-UNCHANGED",
+      "operation": "set",
+      "path": [
+        "replays",
+        0,
+        "record_revision_after"
+      ],
+      "value": 1,
+      "validator": "expectation",
+      "reason": "The replay must be evaluated after the quarantine revision changed."
+    },
+    {
+      "mutation_id": "QR-MUT-USER-SCOPE-CONFLICT",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        9,
+        "expected",
+        "idempotency_conflict"
+      ],
+      "value": true,
+      "validator": "expectation",
+      "reason": "Another user reusing the key string is a separate scope, not a key conflict."
+    },
+    {
+      "mutation_id": "QR-MUT-KEY-REUSED-SAME-BODY",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        8,
+        "same_body"
+      ],
+      "value": true,
+      "validator": "expectation",
+      "reason": "A reused key with a different body must actually differ from the original body."
+    },
+    {
+      "mutation_id": "QR-MUT-RECOVERY-LISTED",
+      "operation": "append",
+      "path": [
+        "confirmed_outcomes"
+      ],
+      "value": {
+        "batch_id": "batch-atlas-technical",
+        "item_id": "batch-tech-recovery-unknown"
+      },
+      "validator": "list",
+      "reason": "A RECOVERY_REQUIRED outcome must not appear in the confirmed quarantine list."
+    },
+    {
+      "mutation_id": "QR-MUT-INVENTORY-QUARANTINE-LEFT",
+      "operation": "set",
+      "path": [
+        "return_inventory",
+        "success",
+        "source_quarantine_present_after"
+      ],
+      "value": true,
+      "validator": "inventory",
+      "reason": "A successful return must remove the file from the quarantine location."
+    },
+    {
+      "mutation_id": "QR-MUT-VALID-COMMENT-ACCEPTED",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        1,
+        "body",
+        "comment"
+      ],
+      "value": "valid",
+      "validator": "schema",
+      "reason": "A declared schema-invalid request must still be rejected by the schema."
+    },
+    {
+      "mutation_id": "QR-MUT-EMPTY-COMMENT-ACCEPTED",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        0,
+        "body",
+        "comment"
+      ],
+      "value": "",
+      "validator": "payload",
+      "reason": "A schema-valid return request must satisfy comment minLength=1."
+    },
+    {
+      "mutation_id": "QR-MUT-LINK-PLACEMENT",
+      "operation": "set",
+      "path": [
+        "links",
+        1,
+        "target",
+        "path"
+      ],
+      "value": [
+        "source"
+      ],
+      "validator": "link",
+      "reason": "The quarantine location link must point at the confirmed quarantine location, not the source."
+    },
+    {
+      "mutation_id": "QR-MUT-AUDIT-OPERATION",
+      "operation": "set",
+      "path": [
+        "audit_expectations",
+        0,
+        "operation_id"
+      ],
+      "value": null,
+      "validator": "audit",
+      "reason": "A QUARANTINE_RETURNED event links operation_id to the return_operation_id."
+    },
+    {
+      "mutation_id": "QR-MUT-COVERAGE-GAP",
+      "operation": "set",
+      "path": [
+        "coverage",
+        "Q-038"
+      ],
+      "value": [],
+      "validator": "coverage",
+      "reason": "The return conflicts must stay traced to Q-038."
+    },
+    {
+      "mutation_id": "QR-MUT-INVALID-UUID",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        0,
+        "idempotency_key"
+      ],
+      "value": "not-a-uuid",
+      "validator": "expectation",
+      "reason": "Idempotency-Key must be a UUID."
+    }
+  ],
+  "coverage": {
+    "Q-029": [
+      "QR-RETURN-SUCCESS",
+      "QR-REPLAY-SUCCESS",
+      "QR-REPLAY-RECOVERY",
+      "QR-KEY-REUSED-DIFFERENT-BODY",
+      "QR-USER-SCOPE-NEW-OPERATION"
+    ],
+    "Q-038": [
+      "QR-RETURN-SUCCESS",
+      "QR-COMMENT-EMPTY",
+      "QR-COMMENT-LONG",
+      "QR-STALE-REVISION",
+      "QR-ORIGINAL-PATH-OCCUPIED",
+      "QR-UNKNOWN-ID",
+      "QR-ALREADY-RETURNED-NEW-KEY",
+      "QR-RECOVERY-AMBIGUOUS"
+    ],
+    "Q-043": [
+      "QR-COMMENT-EMPTY",
+      "QR-COMMENT-LONG",
+      "QR-CAN-RETURN-STABILITY",
+      "error-quarantine-comment-validation"
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "RULE_CONFLICT",
+    "message": "Обнаружен конфликт правил. Публикация заблокирована.",
+    "request_id": "request-demo-1",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

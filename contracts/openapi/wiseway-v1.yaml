@@ -1409,7 +1409,7 @@ paths:
                       members:
                         - dictionary_id: dictionary-demo-1
                           version_id: version-demo-2
-                    ready_snapshot_id: ready-snapshot-demo-1
+                    ready_snapshot_id: ready-snapshot-demo-no-scenario
                     created_at: '2031-05-10T09:30:00Z'
                     expires_at: '2031-05-10T09:35:00Z'
                     total: 1
@@ -1426,8 +1426,8 @@ paths:
                         item_revision: 4
                         source:
                           root_id: root-demo-1
-                          relative_path: Incoming/atlas/invoice-2031.TXT
-                          display_path: DEMO:/SandboxRoot/Incoming/atlas/invoice-2031.TXT
+                          relative_path: Incoming/atlas/unmatched.bin
+                          display_path: DEMO:/SandboxRoot/Incoming/atlas/unmatched.bin
                         filename: unmatched.bin
                         company_id: company-demo-1
                         predicted_state: WILL_MANUAL_REVIEW
@@ -1444,12 +1444,14 @@ paths:
                     dictionary_id: dictionary-demo-1
                     draft_revision: 2
                     base_rule_set:
-                      rule_set_id: rule-set-demo-2
+                      rule_set_id: rule-set-demo-conflict
                       company_id: company-demo-1
                       members:
                         - dictionary_id: dictionary-demo-1
                           version_id: version-demo-2
-                    ready_snapshot_id: ready-snapshot-demo-1
+                        - dictionary_id: dictionary-demo-2
+                          version_id: version-demo-9
+                    ready_snapshot_id: ready-snapshot-demo-conflict
                     created_at: '2031-05-10T09:30:00Z'
                     expires_at: '2031-05-10T09:35:00Z'
                     total: 1
@@ -1468,7 +1470,7 @@ paths:
                           root_id: root-demo-1
                           relative_path: Incoming/atlas/invoice-2031.TXT
                           display_path: DEMO:/SandboxRoot/Incoming/atlas/invoice-2031.TXT
-                        filename: ambiguous.txt
+                        filename: invoice-2031.TXT
                         company_id: company-demo-1
                         predicted_state: WILL_MANUAL_REVIEW
                         reason_code: RULE_CONFLICT
@@ -1495,7 +1497,7 @@ paths:
                       members:
                         - dictionary_id: dictionary-demo-1
                           version_id: version-demo-2
-                    ready_snapshot_id: ready-snapshot-demo-1
+                    ready_snapshot_id: ready-snapshot-demo-occupied
                     created_at: '2031-05-10T09:30:00Z'
                     expires_at: '2031-05-10T09:35:00Z'
                     total: 1
@@ -1770,15 +1772,13 @@ paths:
             schema: { $ref: '#/components/schemas/SelectionRequest' }
             examples:
               explicit:
-                summary: Selected individual files
+                summary: Selected one individual file
                 value:
                   company_id: company-atlas
                   mode: EXPLICIT
                   items:
                     - item_id: item-001
                       item_revision: 3
-                    - item_id: item-002
-                      item_revision: 1
               allMatching:
                 summary: All currently eligible filtered files
                 value:
@@ -1795,9 +1795,20 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/SelectionSnapshot' }
               examples:
-                created:
+                explicit:
+                  summary: Explicit snapshot of the single selected file
                   value:
                     selection_id: selection-001
+                    company_id: company-atlas
+                    mode: EXPLICIT
+                    selected_count: 1
+                    created_at: '2031-05-10T09:31:00Z'
+                    expires_at: '2031-05-10T09:36:00Z'
+                    queue_generation: queue-gen-42
+                allMatching:
+                  summary: All-matching snapshot of 120 eligible files
+                  value:
+                    selection_id: selection-allmatching-120
                     company_id: company-atlas
                     mode: ALL_MATCHING
                     selected_count: 120
@@ -2074,7 +2085,7 @@ paths:
       summary: List company sorting batches
       description: Все партии компании, включая партии коллег. Порядок created_at DESC, batch_id DESC.
       parameters:
-        - { $ref: '#/components/parameters/CompanyId' }
+        - { $ref: '#/components/parameters/CompanyIdQuery' }
         - { $ref: '#/components/parameters/Cursor' }
         - { $ref: '#/components/parameters/Limit' }
       responses:
@@ -2520,7 +2531,7 @@ paths:
       summary: List quarantined files for a company
       description: Только подтверждённые технические перемещения в карантин; ручной разбор в этот список не входит.
       parameters:
-        - { $ref: '#/components/parameters/CompanyId' }
+        - { $ref: '#/components/parameters/CompanyIdQuery' }
         - { $ref: '#/components/parameters/Cursor' }
         - { $ref: '#/components/parameters/Limit' }
       responses:
@@ -2780,6 +2791,13 @@ components:
       in: path
       required: true
       description: Непрозрачный логический идентификатор объекта.
+      schema: { $ref: '#/components/schemas/Id' }
+      example: company-demo-1
+    CompanyIdQuery:
+      name: company_id
+      in: query
+      required: true
+      description: Компания, к которой относится запрашиваемый список.
       schema: { $ref: '#/components/schemas/Id' }
       example: company-demo-1
     DictionaryId:

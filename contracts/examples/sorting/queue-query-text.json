@@ -1,0 +1,62 @@
+{
+  "queue_generation": "queue-generation-atlas-120",
+  "items": [
+    {
+      "item_id": "queue-atlas-ready-0001",
+      "item_revision": 1,
+      "company_id": "company-demo-atlas",
+      "incoming_source_id": "incoming-demo-atlas",
+      "source_name": "Atlas incoming",
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0001.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0001.pdf"
+      },
+      "filename": "Atlas-Report-0001.pdf",
+      "size_bytes": 2048,
+      "modified_at": "2031-05-10T08:00:00Z",
+      "status": "READY",
+      "reason_code": null,
+      "selectable": true,
+      "active_attempt_id": null
+    }
+  ],
+  "matching_count": 1,
+  "eligible_count": 1,
+  "counters": {
+    "ready": 120,
+    "processing": 2,
+    "attention": 3
+  },
+  "status_counts": [
+    {
+      "status": "DISCOVERED",
+      "count": 2
+    },
+    {
+      "status": "WAITING_READY",
+      "count": 3
+    },
+    {
+      "status": "READY",
+      "count": 120
+    },
+    {
+      "status": "PROCESSING",
+      "count": 2
+    },
+    {
+      "status": "REQUIRES_DECISION",
+      "count": 2
+    },
+    {
+      "status": "RECOVERY_REQUIRED",
+      "count": 1
+    },
+    {
+      "status": "MISSING",
+      "count": 2
+    }
+  ],
+  "next_cursor": null
+}

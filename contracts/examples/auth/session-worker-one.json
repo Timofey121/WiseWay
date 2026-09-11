@@ -1,0 +1,10 @@
+{
+  "actor": {
+    "user_id": "user-demo-worker-1",
+    "login": "worker.one",
+    "display_name": "Иван Рабочий",
+    "role": "WORKER"
+  },
+  "expires_at": "2031-05-10T17:30:00Z",
+  "csrf_token": "csrf-inert-placeholder-worker-one-not-a-real-token"
+}

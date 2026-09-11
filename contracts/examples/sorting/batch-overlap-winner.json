@@ -1,0 +1,101 @@
+{
+  "batch_id": "batch-overlap-winner",
+  "company_id": "company-demo-atlas",
+  "actor": {
+    "user_id": "user-demo-worker-1",
+    "login": "worker.one",
+    "display_name": "Иван Рабочий",
+    "role": "WORKER"
+  },
+  "selection_id": "selection-overlap-worker1",
+  "preview_id": null,
+  "rule_set": {
+    "rule_set_id": "rule-set-atlas-published",
+    "company_id": "company-demo-atlas",
+    "members": [
+      {
+        "dictionary_id": "dictionary-atlas-general",
+        "version_id": "version-atlas-general-v1"
+      },
+      {
+        "dictionary_id": "dictionary-atlas-invoices",
+        "version_id": "version-atlas-invoices-v1"
+      }
+    ]
+  },
+  "status": "COMPLETED",
+  "created_at": "2031-05-10T09:50:29Z",
+  "started_at": "2031-05-10T09:50:30Z",
+  "finished_at": "2031-05-10T09:50:40Z",
+  "selected_count": 2,
+  "completed_count": 2,
+  "counts": {
+    "sorted": 2,
+    "manual_review": 0,
+    "requires_decision": 0,
+    "quarantined": 0,
+    "skipped": 0,
+    "recovery_required": 0
+  },
+  "outcomes": [
+    {
+      "attempt_id": "attempt-batch-overlap-winner-overlap-shared-pdf",
+      "item_id": "overlap-shared-pdf",
+      "item_revision": 1,
+      "state": "SORTED",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Reports/overlap-shared.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/overlap-shared.pdf"
+      },
+      "planned_target": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Reports/Report.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/Report.pdf"
+      },
+      "actual_location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Reports/Report.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/Report.pdf"
+      },
+      "matched_rule": {
+        "dictionary_id": "dictionary-atlas-invoices",
+        "version_id": "version-atlas-invoices-v1",
+        "rule_id": "rule-atlas-invoices-pdf"
+      },
+      "started_at": "2031-05-10T09:50:32Z",
+      "finished_at": "2031-05-10T09:50:35Z"
+    },
+    {
+      "attempt_id": "attempt-batch-overlap-winner-overlap-winner-safe-txt",
+      "item_id": "overlap-winner-safe-txt",
+      "item_revision": 1,
+      "state": "SORTED",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/overlap-winner-safe.TXT",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/overlap-winner-safe.TXT"
+      },
+      "planned_target": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/Invoice.TXT",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/Invoice.TXT"
+      },
+      "actual_location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/Invoice.TXT",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/Invoice.TXT"
+      },
+      "matched_rule": {
+        "dictionary_id": "dictionary-atlas-invoices",
+        "version_id": "version-atlas-invoices-v1",
+        "rule_id": "rule-atlas-invoices-upper"
+      },
+      "started_at": "2031-05-10T09:50:32Z",
+      "finished_at": "2031-05-10T09:50:34Z"
+    }
+  ],
+  "next_cursor": null
+}

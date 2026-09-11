@@ -1,0 +1,1090 @@
+{
+  "fixture_set": "wiseway-synthetic-metadata",
+  "version": "1.2.0",
+  "seed": "wiseway-demo-seed-2031",
+  "contract_version": "1.0.0",
+  "generated_by": "corpus: tests/contract/contractlib/synthetic.py (deterministic; no randomness); search/error examples: tests/contract/contractlib/search_expectations.py --write-examples (from literal expectations); rule/target examples: tests/contract/contractlib/rule_expectations.py --write-examples (from literal expectations); dictionary lifecycle examples: tests/contract/contractlib/dictionary_lifecycle.py --write-examples (from literal expectations); queue/selection examples: tests/contract/contractlib/queue_selections.py --write-examples (from literal expectations); preview/preflight examples: tests/contract/contractlib/preview_preflight.py --write-examples (from literal expectations); batch/outcome examples: tests/contract/contractlib/batch_outcomes.py --write-examples (from literal expectations); operational scenario examples: tests/contract/contractlib/batch_scenarios.py --write-examples (from literal expectations); quarantine/return examples: tests/contract/contractlib/quarantine_returns.py --write-examples (from literal expectations)",
+  "checksum": {
+    "algorithm": "sha256",
+    "canonicalization": "json.dumps(parse(content), sort_keys=True, separators=(',', ':'), ensure_ascii=False)",
+    "method": "content_hash(file) = sha256(canonical JSON bytes) so LF/CRLF checkouts hash identically; combined = sha256(utf8('fixture_set=<set>\\nversion=<version>\\nseed=<seed>\\ncorpus=<content_hash(corpus.json)>\\n' + concat('<example id>=<content_hash(payload)>\\n' in manifest order) + concat('fixture:<fixture id>=<content_hash(fixture)>\\n' in manifest order)))",
+    "corpus": "a6a7581d017c0d81a36f7e7a8e8bc1fce4d85c01a60ccde97d10b8dabb775535",
+    "examples": {
+      "auth-actor-worker-one": "91fe7ba2396c6f3ed3ba031c485c9b0b51cc7d7891527bf1e078d324745a9f36",
+      "auth-actor-worker-two": "1c3c5f5b4f9d5611ef9318b34c976c60c2901daa3ed283b094137e563532ee6b",
+      "auth-actor-admin": "c1de9b1e33aeee678d56df5387f0b3d41937e3f8ff250b0d5cdfa3b1637bcd63",
+      "auth-login-request-worker-one": "80192acb082997e7230839fa136dd5dbf42087d7fe3ea9e4bcbe4e9c81fffa69",
+      "auth-login-request-worker-two": "95982cb4a641217922dd9d752202d8e2bff181bffdd907729c60314705be05ef",
+      "auth-login-request-admin": "f7b37d9b645cd2551a9e3133af3236848923a5bc1cf94f0a32892fc9ad9823c6",
+      "auth-session-worker-one": "3b5c861170751296e70cd5c8b921bf222418a1af668774e45745476bf1590773",
+      "auth-session-worker-two": "e448bddc720f66b52edf17e50720a024e068d1fc068d05bed8d0d7d4a625128f",
+      "auth-session-admin": "b3dd89269365e7737fc90ec7242452dcf60f4082f8b12dee0ed5d0d99aa5ff1b",
+      "config-app-config-n100": "af53f65f00cdfc74acadf9b451b1aeef198be8e5ba78c83d8f8114908a4047f7",
+      "config-app-config-n10": "77aadaff17f48cfa4dd7a8821f23f6517aeeb711eb824089e35d34962200e24d",
+      "roots-two": "c4c3e4d39c5fb497e08077987c32acf9b08e7ecf8dea9a5f1265a9933ee75787",
+      "roots-empty": "eef46741adfc3a9f76294d3b78f37a45f113092ac9d44ee77c7a038a88ff09a1",
+      "companies-atlas-nova": "ee53d85061ad6c0aa97abb2df22dd7fa4611c4c8e901ae1103fb9d7f32936354",
+      "companies-empty": "eef46741adfc3a9f76294d3b78f37a45f113092ac9d44ee77c7a038a88ff09a1",
+      "search-idle-atlas": "123036dc4f24dc28c9dbcd5dc62460b973b8213142f8c991b56e97422620bbbb",
+      "search-results-n10-limited": "560179581a3d70d3dd1e9758199941c9c7aae2ede430098f4c918405d0184e9f",
+      "search-results-met-ranking": "26a879f360adec5df6a923eb50ec54375b4db7c4654853e1db911fd5a91cc0f3",
+      "search-results-and-markers": "ff104cb811c4ec53a64fab4bb72f070c1c08a4a51f83e5fd7315003d650d7717",
+      "facet-nova-orion-north": "3eee0effa0dd12d91989850d28952a991e7458584966bdfcbc654c0d1cdf4154",
+      "error-unauthenticated": "050de7d6f9f94ef154ff1e05b72371144be977ecbf5d40cf8ddeb546d12c8c2a",
+      "error-login-failed": "5298c48739d3166577872c4c5fb6b1e209bc384a7b7900f3d1345a43cee0b485",
+      "error-search-unavailable": "40b100dc119080aeb7c5fbea989799834321a3f9bc872c81006b96b142d4d7b0",
+      "error-internal-error": "83d5b2f21b0f102e6fd6f8586d9d1743702188852596e4a77472d358dce6a59c",
+      "error-invalid-query": "ebe03b9029b0b463ab895341df0310d65cfaf2ae01437f08193743708822ee65",
+      "error-validation-error": "d482ce7e063c7e02588c514b5547e48dd79fa56e0d375fa2be5f383c741db7cd",
+      "error-invalid-marker-selection": "574a5947cacb21d3b26b218d5760093d5b7d1ed4976b985ab4fc0c535f7335e1",
+      "error-schema-version-changed": "56a4f3a94b8771d39ad09f534a3dad5abf01bf593883b3de8b48fd99bb31603c",
+      "error-root-not-ready": "7aa7580156915a260903608ddc1b0589aa1b33d8190d21528e6b33692dd2e371",
+      "error-csrf-failed": "6db531040e0a23de9b17ad78fe3d61dd4ddbf8379fed630d4fd6138595689473",
+      "error-forbidden": "ba1ad2bb2caf3f4fe56c17e8d4db35d822c71083e2df9b7cf266a382a1293781",
+      "error-rate-limited": "cbd5a13963a9d6f334fdf83941778c6ff6e5ce7ff1cf30cf2347c9aea75e564b",
+      "target-atlas-reports": "49f0e5162dd03f338724428293f5cec088589066552fe92c780ec3e9c972c300",
+      "target-atlas-invoices": "de64e5b35b829736fe15c69ecd7756908d23331bee648eaafabcd2d9af8f42c3",
+      "target-nova-north-reports": "531371055bf43e86301dd3dd942586eebb213d7968a3c54801dc31dfd6657e2f",
+      "dictionary-atlas-general": "9df22c3a9102b5a5de29ea9499f0866b8aebcb35b7f23c982eb04baf77cd520b",
+      "dictionary-atlas-invoices": "4c31c18a2c4cd907fc82b3e0a4fd0ab172b9ce78e3ed2d1cf773dabab2c913fe",
+      "dictionary-nova-general": "546a60512f7a63413d488e9e96067f53f5159fea57bcc87e52007e875db4ed82",
+      "version-atlas-general-v1": "cb83428e81ae3a9baca5b863fd30fd984a41b9488343674a61c5dab1847a2d35",
+      "version-atlas-invoices-v1": "e2dff2247186f0025744074d10eebcf7136c6ba7f51f6e4745a0c6f57c510233",
+      "version-nova-general-v1": "f809498e03ea5d5bf8bb24f6dda036f3f1f6fba42e147c696852cceddae346ad",
+      "rule-set-atlas-published": "f0a6cad3fdf9a1d3856db47bfec6ae472f534f179a9294f88e5a7a6326a07aeb",
+      "rule-set-nova-published": "a2178a9d3bc7d4d2f9242b6f96267844a105fc5a857cd6dca8cfea2b11e115dc",
+      "plan-row-atlas-archive": "453716fc0154832e69b734b5bde8cd1f1a10276e65cdbc14373ee81ca5057a21",
+      "plan-row-atlas-upper-txt": "8bd3379fe7976f3c0fee904d8e7eb66afcbf2b2541dd2c0f319cbf32ac36bf40",
+      "plan-row-atlas-conflict": "904283a5cbf6334d59bb32bf47c32dc5f543cd2bc4887c5cb364cac67a09e7bb",
+      "plan-row-atlas-no-scenario": "3055189b17527a9188569339ba1f589714720a891c070c57a8657135d2e93fc7",
+      "error-invalid-target": "8b27b28be27c9dbc1de1cdcba0d736fabe2d0b7e35c19c34deef4ab6fee0b3a4",
+      "error-path-outside-root": "4386282cd698de3039471ba4be0c9617f324a68ff1aecf22d0c353e475462fe4",
+      "dictionary-atlas-cleanup-created": "ca72b926783b80e6c7c9ea554ae2d13aa3f8716c932a14975f6ae856b30aebea",
+      "dictionary-atlas-cleanup-saved": "03d97014ae360bb430dad8401a437b09fba92f9165e41063906532deb3db5796",
+      "dictionary-atlas-general-rev2": "b59061cf96700f6718df1e8e33454d8f89da20f6a30e9eb7a5a1a4fcef54923e",
+      "dictionary-atlas-general-published-v2": "ab7917f31c0f53db0bfc8501e21d022c24eaa7940157a7fff5a2a85ee656a9d5",
+      "dictionary-atlas-general-restored-v1": "c9e691804506ea082b4b9da4057c6116e9d24b2cf05b45ad5793d4269bca5fc8",
+      "dictionary-atlas-general-manual-edit": "6631b38839d9d9a3b1477d75e2b4d3317a239de232133b737598b3cf2aa83b8f",
+      "dictionary-atlas-general-published-v3": "2fcced00c63d78c9dc44d41b34bff42d451e30dbf4ceb034893c1cea612dd460",
+      "dictionary-nova-scope-created": "81750f035fc4f6d8204db3c8d1b2fd254e05b765c36dcb58cd0a7491a3b61e2e",
+      "dictionary-atlas-general-list": "723abde3ab5ee2fd35bc7a93d08e73face739f9315535dfbcc1281c2e19f33af",
+      "version-atlas-general-v2": "bf2e5512fd839167fa0c26603b7b67cdf5c18ae893422ff5c45cc579fbe159b0",
+      "version-atlas-general-v3": "475c0eb00228c5430a8933e9f083160cbbeb13c964d3073acf221dc9f726c6db",
+      "versions-atlas-general": "69eabccb7ee0f735e8dc7f502dc442a2435cd8437c47564bcf65a9429d61eb27",
+      "rule-set-atlas-v2": "11067e1a95e164a40ccbdaff5e1c65ab6a98780cc08529ee21a2305f0f875d70",
+      "rule-set-atlas-v3": "7ee6d9666d2b57e9c191757df5795901c3561defd90fa22e395d211d8bdf4163",
+      "simulation-atlas-full-page1": "285b542399c8cc96b9e52106760e5df7810b5712874f3a16c2a130a6652e168c",
+      "simulation-atlas-full-page2": "fd29f99469fe5766284135e0872970dfc3262c100701c9079d78739c63bb0edc",
+      "simulation-atlas-empty": "60a3d0f142c21b2ca4b84f5f4ab19607c0de4d66ca4274f8bf9df7ca615f113e",
+      "simulation-atlas-conflict": "60bbccdb9de6e27d3e88fcc193f48b765501c788b0b30437df8124d37d611af5",
+      "simulation-atlas-same-target": "d39d220c9ab9564ab28738251f892f6f85efdfe69cf6c413c249da97f79b8707",
+      "simulation-atlas-v3-restored": "f1312d0ffcf99e3055b81670da858295dc33054312f077e43f75f6537acbea96",
+      "publish-atlas-general-v2": "aa9eb5a0933fae3ca7d9a35530da1c1a0370f8fb004441ed1402601f9a2867f1",
+      "publish-atlas-general-v3": "e1c2360bd8663945f6e7e577557984b4f84adc70123f4f9680416a7fd1950abe",
+      "error-draft-version-conflict": "7dcd043996fc5311b32b6d2e4504fe405db92b8ee60edfb142a64f77f8e121f4",
+      "error-dictionary-name-conflict": "361103e7c4c139853b0f0c2285e7bc5ca643dc744f2d83df7c7ec5bb679c93ef",
+      "error-stale-simulation": "cdddf9d71c4e46210a493b44b49f22529e4dcff982871141fc8d38cca6a31177",
+      "error-no-scenario-ack-required": "c42a2f274ed410bf91f121b5762aa06d6a9e91c1cffdcf7ea406c2030cd7fda9",
+      "error-rule-conflict": "5da3b2dbedcae485ffb538fc608b85a4e72a54f6f7a03750db422248c77fc8f5",
+      "error-idempotency-key-reused": "13fef2000904aa7f6b63b967e2dec84d10b3253702281ba3d8811eb3592cfc94",
+      "queue-ready-120-page1": "f134a798c219fa7ad7fd50ace6e28dc6c98757803ed34d9e384f531a28d7b696",
+      "queue-all-active-120": "1b0fa4b8ff48ab66137c1fd0c4b9d6148136783cd0b98c47818e2dc1ce3def94",
+      "queue-missing-explicit": "82f6ca353364b8bee19bcc4a26ebc8a4c015d1d7a1cdbc6ac2fd670bd9639203",
+      "queue-query-text": "20617bbc2486d6e47b66928603a85f3510b0c5950e4b07ad2268a7fd523f9bf3",
+      "queue-ready-0": "00d8a485c906a8fd7ac25bf7fa8fff304253b56cc1ce182d4b90006efdd1012a",
+      "queue-all-active-0": "82405ced7313b0d0d7353631d5f3d39f7a5f2199d22501b9527633a327d0e45e",
+      "queue-ready-1001-page1": "a7842aef4c1df346536a159aa17c24c7cd9d93763433d9118ca08df034461e24",
+      "selection-request-explicit-one": "b3a44511af7f136d8ada1c5b01ef0da0eff936e8e58c0b7b64ea27ca98d30d80",
+      "selection-request-explicit-multiple": "370f27059050d01792a08810848ed6eca4454c5fd34388f01408cb8fdd409ce5",
+      "selection-request-all-matching-120": "386368894d7f8c996241732f6913a7293842a54bfef4453b02cc29dc982326a7",
+      "selection-snapshot-explicit-one": "ceb8328eb34e55ed8d09ca4f4c0a3204264ca18158810109d771713995c0bf40",
+      "selection-snapshot-explicit-multiple": "2d08ca0c13be8b6513bdfdbce822e7ce9446cee4fa3e30820a6b0f52497fbd00",
+      "selection-snapshot-all-matching-120": "bb4502d1bb1e9e177d7f380a8ddad676b60e84471082a670f498c9df1fa69ddc",
+      "error-empty-selection": "18b303b039834b4de956d0f4834b8e470fbee300e4686432865303c8df5dff40",
+      "error-batch-limit-exceeded": "b475884d24f23001c7c711b26fe4ddb17a03e61306e70781e8c213ddf9823992",
+      "error-selection-changed": "60ec3487bd4594382bca49314723440078740cee0efc23af819db3ea0e118324",
+      "error-selection-forbidden": "a64ec698e9fb39730d24eb2bc1820b7b02bf2f9fd296c17c039d2eac85f468ef",
+      "error-selection-expired-preview": "f6b45764635f52a1fa9cb7bc27093181e1a38312f6b44c21b6af1d79a2509ef3",
+      "error-selection-expired-batch": "d26bc18bdb371153df557353f5c1bd02bb045e8b177c455a9e3a36735c294577",
+      "error-selection-not-found": "bec3d835dac8993c8e87f04e7295157db8d29b13fd5f4555e0e65374264261f7",
+      "preview-atlas-allmatching-120-page1": "736ace269c25cab358e9447e58dd8d3896440a2072ec4a319c32288327a55dbe",
+      "preview-atlas-explicit-one": "50d773616d071d89ed37d4b07cd159a4f69e9d5659d67b405b10090e55844679",
+      "preview-atlas-explicit-multiple": "1e56b6738918ffbdb171db4028c89f29963211eaae91996605f9d28c765bf3b1",
+      "preview-atlas-hetero": "1316cc5dfed18c76034b3f490cdf724e6cb040ed70fe2b4b0e0b48d5f9c0c1cf",
+      "preview-atlas-conflict": "afd7224bb34e4ac659e332de67313155ac6605ad766f1eb7cdc6ad30e9471082",
+      "error-batch-selection-changed": "709f58efe2a74503f656f2054c6f20a2520f384a65ca17b08bb6f2c2277a8b0b",
+      "error-batch-stale-preview": "c31abe25fa3018b1bf01047e4e1f0dbd082aa3ae88bc977006378b2efba7cdc3",
+      "error-batch-selection-expired": "743ff8473668821f264b069fb042ae81e76551cd970265d0e44273266d4d4dca",
+      "error-batch-invalid-state": "ec8664aaf91bac7ad21d08ccfd09da203bcdaf0d0b6a1c23500039bcc7febf3c",
+      "error-batch-selection-not-found": "fcc9e87b97df7ed6a81d7a16a6f99ad8ef509fbb1bfe19aa095ae6c30089eeb3",
+      "error-batch-forbidden": "f000b53eea0613ba75023b09c7fdeeff5b446eaab8d63507d54492b7e67435bd",
+      "error-preview-selection-expired": "6a2c1816639d7b4d83a0efe7443cb08651f91be7ce312665c05bed75db6f099a",
+      "error-preview-selection-changed": "68829afe54755c95c8985aa301b23c8c402ff2c30cb2d7b28b0a25c177e2eaf1",
+      "batch-atlas-direct-fresh-page1": "76ad44dec9335ad7b345c4c2fa66ba4a010b1934b35430b0c3ae33484815b2fe",
+      "batch-atlas-direct-fresh-page2": "6c7871057e7bcb0192e55879dff88d36b850e8fe3caf3d0d24ca7709ec09c4a4",
+      "batch-atlas-previewed-fresh-page1": "e6d204d8ffb29503da4f2889dcfa432dac478535c3c55b46b8047bb3d9aaf4a5",
+      "batch-atlas-previewed-fresh-page2": "2d0db2871e619948b170a16a819cd3bc80c3c0c10577447bb057c97cd5e87189",
+      "batch-atlas-same-user-session": "c4d31db7d655677e2251e680e8dc5cfb3ce65633d7190ed44c876e99903ee691",
+      "batch-atlas-hetero": "89e513a4189263dc932599cc80344307b32f4dd69f84a6e7d83990a453b153da",
+      "batch-atlas-conflict": "5c6face2ee75ddb5712e02c0f2cf472400dafd1d2e2f5ce0fdb773f23c7cff32",
+      "batch-atlas-sorted": "4d1f98528c4920faacc823e0d45ce9501e0306e70195339f3ac1364ea35d5a0d",
+      "batch-atlas-technical": "f490e3e54dedcf84597b1b4249ba06089f91ba550f7961b5defe1c3dd682bd00",
+      "batch-history-atlas-page1": "13b37708c3eb4ee196e2a9f8914136557cc7fc9cf685ec97496311f91241796d",
+      "batch-overlap-winner": "cd47d939d71f29e050dcc1e80ba5d7331c75e25cb46b37e2f6f67b286eaa72d7",
+      "batch-overlap-loser": "2d71492a60b0b003155df64d5b7736a6ec2338746c1e8cae0ad4a23de00cd5b0",
+      "quarantine-item-atlas-technical": "063281f516341d01ed5ebbf77eac8b18a0bbe2421e7a8c19e88654515f2a88c7",
+      "quarantine-item-atlas-ambiguous": "c3d0c65a49277017920c50aab65943d271a2da1f20ea354c9e065cd79b4a99b7",
+      "quarantine-list-atlas": "1c0fe57a1d4d04264c4056d4fa7189eefa2cf87cf49e1f6672b9133b43c2e41c",
+      "quarantine-return-request": "c39663e859df00b6c8f3197944e9ffa1097eb06a4a8188fccaf8eec0850063c4",
+      "quarantine-return-response": "615c233a1f5ef780e7c762f4c30428ec06c02cf92083b30dd414368a19eb24ec",
+      "error-quarantine-comment-validation": "025fee1fcd796a9a7d0c886f20a9fde6d15d8f46101556ee35b283a32fec0848",
+      "error-quarantine-version-conflict": "f5a1022e554e6abb3668ca175ec7d7a43be92f61f1829170f87777edeec44508",
+      "error-original-path-occupied": "52281e8b201c9dac95ab84fc0b2099826e3f4094c1366af16d87928606284e57",
+      "error-quarantine-not-found": "6c072b5ed5a3c6c207b5e9388f7829e42ecb44a2aceb168308377ed6215a4ce1",
+      "error-quarantine-invalid-state": "73e6c53a4115e6fcdf0eec28c38f1631b5610e0451f1dc74d41e42e8ff1a1f48",
+      "error-quarantine-recovery-required": "36dec67a4ad97ccaf79e711bd90e6bb3280467c580f15f5680e16cfc8c397222",
+      "error-quarantine-idempotency-key-reused": "57b674ec4a379ad27a9faf551abd2c5eced95597d4167700cc1b50b56549ce1c",
+      "audit-query-day-atlas": "adbbb1b3adc35622480b870db8757d5004e5f1483d44b8206498e47d79a1cd55",
+      "audit-query-batch-accepted": "5faf47f6eb7f661bd273b89c5677483017264893aac1e571fff1c31bde9528f6",
+      "audit-query-issue": "b1a512d01908fa9c7976c0eb89df70bca4b7ded23911f834960b09e8474aa2ba",
+      "audit-query-cursor-page2": "ae5decc6e6a4ce8f8db41f073c13d4363efd53a1003736197b405ab25007bfa3",
+      "audit-query-empty-window": "acdefaf2753f96c1b45a4ebc43a001a298c1740ec743154148f8d63efa555121",
+      "audit-actors-atlas": "c5ce755946a9f758abd131605ec2d503bcc3f0f8dcf04beee42ddb1576646f01",
+      "audit-updates-after-known": "119ba828eec82a54ba6dd30b785b5881c68b1cd98aabba20b2513740616edf22",
+      "error-audit-validation": "95f408dc8d92576708ea0fe756e5bacbd1955930e4aed3de028fd6dcca17c5ac"
+    },
+    "combined": "013ef0f97907f79cb2e4f07e1d7ce004ad1130153643f98d36ba8b76457afb8d",
+    "fixtures": {
+      "search-expectations": "0910c9bbeb54eaba159105e4d060cd2ca06c7d71f0459946f220886f22751c1b",
+      "rule-expectations": "c3577511741d2611c4e951b0e49f5a3a458642d9df17b627f1f60107d2bf74ac",
+      "dictionary-lifecycle": "d6bf6fa32cd183a033d65790afd95d7e7d5a4d0d1244156f0051275fce489e9c",
+      "queue-selections": "328b828fbc429ca924619157c9f73cb5a7f5f836a4a9f86f149d3173039b8e90",
+      "preview-preflight": "4fac930e3441e1bb3e2bf37e6f81f66564f3fccfe241c08154642350b8050883",
+      "batch-outcomes": "1d25047fd0d13dca8a57c8a3094f50a69bf57ce1cd06c054bc5f3d17c1aecfcb",
+      "batch-scenarios": "91a827e56da9e5ea41bdd478b647c08df46941237076b2ab5e9785d353793538",
+      "quarantine-returns": "301486835a04079e33520a182087092a61c6f358beea5b47093652d9ec5dbccf",
+      "audit-expectations": "d9996bb68d2289a784182946a37d6a5557f8a58d922c35eda74ea016c979a71a"
+    }
+  },
+  "corpus": {
+    "file": "fixtures/synthetic/corpus.json",
+    "schema": "#/components/schemas/SearchItem",
+    "notes": "Compact corpus; synthetic.py materializes marker references and explicit ID/range cohorts into plain SearchItem JSON. Service objects are excluded from the searchable inventory."
+  },
+  "fixtures": [
+    {
+      "id": "search-expectations",
+      "file": "fixtures/synthetic/search_expectations.json",
+      "schema": null,
+      "description": "LT-03.1b literal search/facet/auth/error/race/lifecycle/format expectations over the corpus; materialized by contractlib.search_expectations without computing membership."
+    },
+    {
+      "id": "rule-expectations",
+      "file": "fixtures/synthetic/rule_expectations.json",
+      "schema": null,
+      "description": "LT-03.2a literal rule-input => target/name/reason and target resolver expectations with complete immutable version/rule-set definitions; materialized by contractlib.rule_expectations without a matcher."
+    },
+    {
+      "id": "dictionary-lifecycle",
+      "file": "fixtures/synthetic/dictionary_lifecycle.json",
+      "schema": null,
+      "description": "LT-03.2b literal draft/simulation/publication/history/restore expectations across two actors, built on the LT-03.2a immutable definitions; materialized by contractlib.dictionary_lifecycle without a runtime domain."
+    },
+    {
+      "id": "queue-selections",
+      "file": "fixtures/synthetic/queue_selections.json",
+      "schema": null,
+      "description": "LT-03.3a literal queue/readiness/selection oracle: 0/120/1001 READY profiles, explicit and ALL_MATCHING membership, pre-batch ownership/expiry errors; materialized by contractlib.queue_selections without a matcher, readiness detector or selection algorithm."
+    },
+    {
+      "id": "preview-preflight",
+      "file": "fixtures/synthetic/preview_preflight.json",
+      "schema": null,
+      "description": "LT-03.3b literal preview and DIRECT/PREVIEWED preflight oracle: 120/one/multiple previews linked to the queue_selections snapshots plus isolated Prediction/CollisionDetails coverage and pre-acceptance error pairs; materialized by contractlib.preview_preflight without a matcher or preflight algorithm."
+    },
+    {
+      "id": "batch-outcomes",
+      "file": "fixtures/synthetic/batch_outcomes.json",
+      "schema": null,
+      "description": "LT-03.4a literal BatchState/OutcomeState/OutcomeReasonCode oracle: real Batch payloads for the three accepted LT-03.3b preflights plus an isolated heterogeneous accepted selection, full 120-item page invariants, confirmed quarantine, per-file skips, unknown/known recovery and the logical inventory expectation contract; materialized by contractlib.batch_outcomes without a matcher, executor or filesystem writer."
+    },
+    {
+      "id": "batch-scenarios",
+      "file": "fixtures/synthetic/batch_scenarios.json",
+      "schema": null,
+      "description": "LT-03.4b literal operational retry/overlap/restart scenario oracle: idempotent replay after lost response and after dependency expiry, modified-body 409, per-user key scope, new-key manual retry, two-actor claim overlap, source change before/after acceptance, logout/reload continuation, late target, reversed duplicate target, three restart points and Q-044 containment, with expected batch/attempt IDs, outcomes, placements and audit phase/action IDs; materialized by contractlib.batch_scenarios without a matcher, executor, recovery engine or concurrency primitive."
+    },
+    {
+      "id": "quarantine-returns",
+      "file": "fixtures/synthetic/quarantine_returns.json",
+      "schema": null,
+      "description": "LT-03.5a literal quarantine/return lifecycle oracle: the confirmed LT-03.4a QUARANTINED outcome and its frozen source attempt/location, the return success as WAITING_READY/selectable=false/no active attempt/no autosort with the original source, every safe conflict (comment length 422, stale revision 409 QUARANTINE_VERSION_CONFLICT, occupied original path 409 ORIGINAL_PATH_OCCUPIED, unknown id 404 NOT_FOUND, already returned 409 INVALID_STATE, ambiguous 409 RECOVERY_REQUIRED with a registered operation_id), idempotent key/body/user replays without a second move, the per-user key scope and the OAS can_return stability semantics, plus audit descriptors for LT-03.5b; materialized by contractlib.quarantine_returns without a return executor, recovery engine, filesystem writer or idempotency store."
+    },
+    {
+      "id": "audit-expectations",
+      "file": "fixtures/synthetic/audit_expectations.json",
+      "schema": null,
+      "description": "LT-03.5b canonical audit journal oracle: all 14 OAS AuditAction values across the actual dictionary timeline, the LT-03.4a accepted batches and their 260 per-file outcomes, the LT-03.5a manual return and the session events; finite literal query/actors/updates expectations, cursor frozen upper bound, blocked author with historical display snapshot, no BUSINESS event for search/navigation/copy; materialized by contractlib.audit_expectations without a journal, filter engine, cursor store or actor directory."
+    }
+  ],
+  "examples": [
+    {
+      "id": "auth-actor-worker-one",
+      "schema": "#/components/schemas/Actor",
+      "file": "contracts/examples/auth/actor-worker-one.json",
+      "description": "Synthetic WORKER actor used by the first concurrent worker scenario."
+    },
+    {
+      "id": "auth-actor-worker-two",
+      "schema": "#/components/schemas/Actor",
+      "file": "contracts/examples/auth/actor-worker-two.json",
+      "description": "Synthetic WORKER actor used by the second concurrent worker scenario."
+    },
+    {
+      "id": "auth-actor-admin",
+      "schema": "#/components/schemas/Actor",
+      "file": "contracts/examples/auth/actor-admin.json",
+      "description": "Synthetic ADMIN actor; no real account or elevated secret is embedded."
+    },
+    {
+      "id": "auth-login-request-worker-one",
+      "schema": "#/components/schemas/LoginRequest",
+      "file": "contracts/examples/auth/login-request-worker-one.json",
+      "description": "Synthetic login request shape.",
+      "secret_note": "The password is an inert placeholder, is not a credential, and is not valid on any system."
+    },
+    {
+      "id": "auth-login-request-worker-two",
+      "schema": "#/components/schemas/LoginRequest",
+      "file": "contracts/examples/auth/login-request-worker-two.json",
+      "description": "Synthetic login request shape.",
+      "secret_note": "The password is an inert placeholder, is not a credential, and is not valid on any system."
+    },
+    {
+      "id": "auth-login-request-admin",
+      "schema": "#/components/schemas/LoginRequest",
+      "file": "contracts/examples/auth/login-request-admin.json",
+      "description": "Synthetic login request shape.",
+      "secret_note": "The password is an inert placeholder, is not a credential, and is not valid on any system."
+    },
+    {
+      "id": "auth-session-worker-one",
+      "schema": "#/components/schemas/Session",
+      "file": "contracts/examples/auth/session-worker-one.json",
+      "description": "Synthetic session for the first WORKER.",
+      "secret_note": "csrf_token is an explicitly inert, non-functional placeholder; it is not a reusable token."
+    },
+    {
+      "id": "auth-session-worker-two",
+      "schema": "#/components/schemas/Session",
+      "file": "contracts/examples/auth/session-worker-two.json",
+      "description": "Synthetic session for the second WORKER.",
+      "secret_note": "csrf_token is an explicitly inert, non-functional placeholder; it is not a reusable token."
+    },
+    {
+      "id": "auth-session-admin",
+      "schema": "#/components/schemas/Session",
+      "file": "contracts/examples/auth/session-admin.json",
+      "description": "Synthetic session for the ADMIN.",
+      "secret_note": "csrf_token is an explicitly inert, non-functional placeholder; it is not a reusable token."
+    },
+    {
+      "id": "config-app-config-n100",
+      "schema": "#/components/schemas/AppConfig",
+      "file": "contracts/examples/config/app-config-n100.json",
+      "description": "Default demo profile with search_result_limit = 100."
+    },
+    {
+      "id": "config-app-config-n10",
+      "schema": "#/components/schemas/AppConfig",
+      "file": "contracts/examples/config/app-config-n10.json",
+      "description": "Test profile with search_result_limit = 10."
+    },
+    {
+      "id": "roots-two",
+      "schema": "#/components/schemas/RootsResponse",
+      "file": "contracts/examples/roots/roots-two.json",
+      "description": "The two published logical roots, one per synthetic company."
+    },
+    {
+      "id": "roots-empty",
+      "schema": "#/components/schemas/RootsResponse",
+      "file": "contracts/examples/roots/roots-empty.json",
+      "description": "Empty roots state before any root is published."
+    },
+    {
+      "id": "companies-atlas-nova",
+      "schema": "#/components/schemas/CompaniesResponse",
+      "file": "contracts/examples/companies/companies-atlas-nova.json",
+      "description": "The two available companies Atlas and Nova."
+    },
+    {
+      "id": "companies-empty",
+      "schema": "#/components/schemas/CompaniesResponse",
+      "file": "contracts/examples/companies/companies-empty.json",
+      "description": "Empty companies state."
+    },
+    {
+      "id": "search-idle-atlas",
+      "schema": "#/components/schemas/SearchResponse",
+      "file": "contracts/examples/search/search-idle-atlas.json",
+      "description": "IDLE SearchResponse for root-demo-atlas with the first level-section facet."
+    },
+    {
+      "id": "search-results-n10-limited",
+      "schema": "#/components/schemas/SearchResponse",
+      "file": "contracts/examples/search/search-results-n10-limited.json",
+      "description": "RESULTS SearchResponse with total=13 > result_limit=10 and limited=true."
+    },
+    {
+      "id": "search-results-met-ranking",
+      "schema": "#/components/schemas/SearchResponse",
+      "file": "contracts/examples/search/search-results-met-ranking.json",
+      "description": "RELEVANCE DESC result for token met with the manual score order 10/5/2."
+    },
+    {
+      "id": "search-results-and-markers",
+      "schema": "#/components/schemas/SearchResponse",
+      "file": "contracts/examples/search/search-results-and-markers.json",
+      "description": "RESULTS SearchResponse for a marker chain AND text; terminal next_facet=null."
+    },
+    {
+      "id": "facet-nova-orion-north",
+      "schema": "#/components/schemas/FacetResponse",
+      "file": "contracts/examples/search/facet-nova-orion-north.json",
+      "description": "FacetResponse reopening level-category under Archive/Nova/Orion_2031/North."
+    },
+    {
+      "id": "error-unauthenticated",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-unauthenticated.json",
+      "description": "401 UNAUTHENTICATED for a protected operation without a session."
+    },
+    {
+      "id": "error-login-failed",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-login-failed.json",
+      "description": "401 LOGIN_FAILED for a wrong login/password."
+    },
+    {
+      "id": "error-search-unavailable",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-search-unavailable.json",
+      "description": "503 SEARCH_UNAVAILABLE; the previous result is stale, never a false success."
+    },
+    {
+      "id": "error-internal-error",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-internal-error.json",
+      "description": "500 INTERNAL_ERROR without technical details, request_id for triage."
+    },
+    {
+      "id": "error-invalid-query",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-invalid-query.json",
+      "description": "400 INVALID_QUERY for an unclosed quote."
+    },
+    {
+      "id": "error-validation-error",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-validation-error.json",
+      "description": "422 VALIDATION_ERROR with a safe field_errors entry for an over-long query."
+    },
+    {
+      "id": "error-invalid-marker-selection",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-invalid-marker-selection.json",
+      "description": "422 INVALID_MARKER_SELECTION for a stale marker chain."
+    },
+    {
+      "id": "error-schema-version-changed",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-schema-version-changed.json",
+      "description": "409 SCHEMA_VERSION_CHANGED after a schema generation change."
+    },
+    {
+      "id": "error-root-not-ready",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-root-not-ready.json",
+      "description": "409 ROOT_NOT_READY for an unpublished search root."
+    },
+    {
+      "id": "error-csrf-failed",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-csrf-failed.json",
+      "description": "403 CSRF_FAILED for an invalid X-CSRF-Token."
+    },
+    {
+      "id": "error-forbidden",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-forbidden.json",
+      "description": "403 FORBIDDEN for a disallowed action."
+    },
+    {
+      "id": "error-rate-limited",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-rate-limited.json",
+      "description": "429 RATE_LIMITED, retryable=true; the client honors Retry-After."
+    },
+    {
+      "id": "target-atlas-reports",
+      "schema": "#/components/schemas/TargetDirectory",
+      "file": "contracts/examples/targets/target-atlas-reports.json",
+      "description": "Allowlisted Atlas Reports target directory."
+    },
+    {
+      "id": "target-atlas-invoices",
+      "schema": "#/components/schemas/TargetDirectory",
+      "file": "contracts/examples/targets/target-atlas-invoices.json",
+      "description": "Allowlisted Atlas Invoices target directory."
+    },
+    {
+      "id": "target-nova-north-reports",
+      "schema": "#/components/schemas/TargetDirectory",
+      "file": "contracts/examples/targets/target-nova-north-reports.json",
+      "description": "Allowlisted Nova North/Reports target directory."
+    },
+    {
+      "id": "dictionary-atlas-general",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-atlas-general.json",
+      "description": "Atlas general dictionary with its full published rule set."
+    },
+    {
+      "id": "dictionary-atlas-invoices",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-atlas-invoices.json",
+      "description": "Atlas invoices dictionary with its full published rule set."
+    },
+    {
+      "id": "dictionary-nova-general",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-nova-general.json",
+      "description": "Nova general dictionary with its full published rule set."
+    },
+    {
+      "id": "version-atlas-general-v1",
+      "schema": "#/components/schemas/DictionaryVersion",
+      "file": "contracts/examples/dictionaries/version-atlas-general-v1.json",
+      "description": "Immutable first Atlas general version."
+    },
+    {
+      "id": "version-atlas-invoices-v1",
+      "schema": "#/components/schemas/DictionaryVersion",
+      "file": "contracts/examples/dictionaries/version-atlas-invoices-v1.json",
+      "description": "Immutable first Atlas invoices version."
+    },
+    {
+      "id": "version-nova-general-v1",
+      "schema": "#/components/schemas/DictionaryVersion",
+      "file": "contracts/examples/dictionaries/version-nova-general-v1.json",
+      "description": "Immutable first Nova general version."
+    },
+    {
+      "id": "rule-set-atlas-published",
+      "schema": "#/components/schemas/RuleSet",
+      "file": "contracts/examples/dictionaries/rule-set-atlas-published.json",
+      "description": "Full active Atlas RuleSet (all dictionaries, sorted by dictionary_id)."
+    },
+    {
+      "id": "rule-set-nova-published",
+      "schema": "#/components/schemas/RuleSet",
+      "file": "contracts/examples/dictionaries/rule-set-nova-published.json",
+      "description": "Full active Nova RuleSet (all dictionaries, sorted by dictionary_id)."
+    },
+    {
+      "id": "plan-row-atlas-archive",
+      "schema": "#/components/schemas/PlanRow",
+      "file": "contracts/examples/dictionaries/plan-row-atlas-archive.json",
+      "description": "PlanRow for archive.tar.gz: fixed stem Archive plus the last suffix .gz."
+    },
+    {
+      "id": "plan-row-atlas-upper-txt",
+      "schema": "#/components/schemas/PlanRow",
+      "file": "contracts/examples/dictionaries/plan-row-atlas-upper-txt.json",
+      "description": "PlanRow where priority 10 wins over 100 and .TXT keeps its original case."
+    },
+    {
+      "id": "plan-row-atlas-conflict",
+      "schema": "#/components/schemas/PlanRow",
+      "file": "contracts/examples/dictionaries/plan-row-atlas-conflict.json",
+      "description": "PlanRow for an equal-priority conflict with different final targets."
+    },
+    {
+      "id": "plan-row-atlas-no-scenario",
+      "schema": "#/components/schemas/PlanRow",
+      "file": "contracts/examples/dictionaries/plan-row-atlas-no-scenario.json",
+      "description": "PlanRow for a file with no matching published rule (NO_SCENARIO)."
+    },
+    {
+      "id": "error-invalid-target",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-invalid-target.json",
+      "description": "422 INVALID_TARGET for a missing or disallowed target directory."
+    },
+    {
+      "id": "error-path-outside-root",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-path-outside-root.json",
+      "description": "422 PATH_OUTSIDE_ROOT for a path escaping the allowed root."
+    },
+    {
+      "id": "dictionary-atlas-cleanup-created",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-atlas-cleanup-created.json",
+      "description": "New Atlas dictionary created with an empty draft revision 0."
+    },
+    {
+      "id": "dictionary-atlas-cleanup-saved",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-atlas-cleanup-saved.json",
+      "description": "Saved Atlas cleanup draft: expected revision 0 became revision 1."
+    },
+    {
+      "id": "dictionary-atlas-general-rev2",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-atlas-general-rev2.json",
+      "description": "Shared Atlas general draft after a successful save (revision 1 -> 2)."
+    },
+    {
+      "id": "dictionary-atlas-general-published-v2",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-atlas-general-published-v2.json",
+      "description": "Atlas general dictionary after publishing version 2 (history 1 -> 2)."
+    },
+    {
+      "id": "dictionary-atlas-general-restored-v1",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-atlas-general-restored-v1.json",
+      "description": "Atlas general draft restored from version 1, based_on_version_id set."
+    },
+    {
+      "id": "dictionary-atlas-general-manual-edit",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-atlas-general-manual-edit.json",
+      "description": "Manual edit after restore clears based_on_version_id."
+    },
+    {
+      "id": "dictionary-atlas-general-published-v3",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-atlas-general-published-v3.json",
+      "description": "Atlas general dictionary after publishing the restored version 3."
+    },
+    {
+      "id": "dictionary-nova-scope-created",
+      "schema": "#/components/schemas/Dictionary",
+      "file": "contracts/examples/dictionaries/dictionary-nova-scope-created.json",
+      "description": "The same name is allowed in another company: no cross-company conflict."
+    },
+    {
+      "id": "dictionary-atlas-general-list",
+      "schema": "#/components/schemas/DictionaryListResponse",
+      "file": "contracts/examples/dictionaries/dictionary-list-atlas.json",
+      "description": "Atlas dictionary list at the base state (general + invoices)."
+    },
+    {
+      "id": "version-atlas-general-v2",
+      "schema": "#/components/schemas/DictionaryVersion",
+      "file": "contracts/examples/dictionaries/version-atlas-general-v2.json",
+      "description": "Immutable published Atlas general version 2."
+    },
+    {
+      "id": "version-atlas-general-v3",
+      "schema": "#/components/schemas/DictionaryVersion",
+      "file": "contracts/examples/dictionaries/version-atlas-general-v3.json",
+      "description": "Immutable published Atlas general version 3 restored from version 1."
+    },
+    {
+      "id": "versions-atlas-general",
+      "schema": "#/components/schemas/PageDictionaryVersion",
+      "file": "contracts/examples/dictionaries/versions-atlas-general.json",
+      "description": "Atlas general published history page: v3, v2, v1."
+    },
+    {
+      "id": "rule-set-atlas-v2",
+      "schema": "#/components/schemas/RuleSet",
+      "file": "contracts/examples/dictionaries/rule-set-atlas-v2.json",
+      "description": "Full active Atlas RuleSet after publishing general version 2."
+    },
+    {
+      "id": "rule-set-atlas-v3",
+      "schema": "#/components/schemas/RuleSet",
+      "file": "contracts/examples/dictionaries/rule-set-atlas-v3.json",
+      "description": "Full active Atlas RuleSet after publishing the restored version 3."
+    },
+    {
+      "id": "simulation-atlas-full-page1",
+      "schema": "#/components/schemas/Simulation",
+      "file": "contracts/examples/simulations/simulation-atlas-full-page1.json",
+      "description": "Full READY simulation page 1: candidate + other dictionary + NO_SCENARIO."
+    },
+    {
+      "id": "simulation-atlas-full-page2",
+      "schema": "#/components/schemas/Simulation",
+      "file": "contracts/examples/simulations/simulation-atlas-full-page2.json",
+      "description": "Full READY simulation page 2: the remaining hidden and occupied rows."
+    },
+    {
+      "id": "simulation-atlas-empty",
+      "schema": "#/components/schemas/Simulation",
+      "file": "contracts/examples/simulations/simulation-atlas-empty.json",
+      "description": "Zero READY items: valid EMPTY_READY_SET warning, total 0."
+    },
+    {
+      "id": "simulation-atlas-conflict",
+      "schema": "#/components/schemas/Simulation",
+      "file": "contracts/examples/simulations/simulation-atlas-conflict.json",
+      "description": "Equal-priority rules with different targets: RULE_CONFLICT blocks publish."
+    },
+    {
+      "id": "simulation-atlas-same-target",
+      "schema": "#/components/schemas/Simulation",
+      "file": "contracts/examples/simulations/simulation-atlas-same-target.json",
+      "description": "Equal-priority rules with the same final target: not a conflict."
+    },
+    {
+      "id": "simulation-atlas-v3-restored",
+      "schema": "#/components/schemas/Simulation",
+      "file": "contracts/examples/simulations/simulation-atlas-v3-restored.json",
+      "description": "Simulation of the restored version 1 content over the same full READY set."
+    },
+    {
+      "id": "publish-atlas-general-v2",
+      "schema": "#/components/schemas/PublishedDictionaryResponse",
+      "file": "contracts/examples/dictionaries/publish-atlas-general-v2.json",
+      "description": "Accepted publication of Atlas general version 2 and the full RuleSet."
+    },
+    {
+      "id": "publish-atlas-general-v3",
+      "schema": "#/components/schemas/PublishedDictionaryResponse",
+      "file": "contracts/examples/dictionaries/publish-atlas-general-v3.json",
+      "description": "Accepted publication of the restored version 3 with restored_from_version_id."
+    },
+    {
+      "id": "error-draft-version-conflict",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-draft-version-conflict.json",
+      "description": "409 DRAFT_VERSION_CONFLICT for a stale shared draft revision."
+    },
+    {
+      "id": "error-dictionary-name-conflict",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-dictionary-name-conflict.json",
+      "description": "409 DICTIONARY_NAME_CONFLICT after trim+casefold."
+    },
+    {
+      "id": "error-stale-simulation",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-stale-simulation.json",
+      "description": "409 STALE_SIMULATION after another RuleSet member changed."
+    },
+    {
+      "id": "error-no-scenario-ack-required",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-no-scenario-ack-required.json",
+      "description": "409 NO_SCENARIO_ACK_REQUIRED for a test containing NO_SCENARIO."
+    },
+    {
+      "id": "error-rule-conflict",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-rule-conflict.json",
+      "description": "409 RULE_CONFLICT blocks publication."
+    },
+    {
+      "id": "error-idempotency-key-reused",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-idempotency-key-reused.json",
+      "description": "409 IDEMPOTENCY_KEY_REUSED for the same key with a different body."
+    },
+    {
+      "id": "queue-ready-120-page1",
+      "schema": "#/components/schemas/QueueResponse",
+      "file": "contracts/examples/sorting/queue-ready-120-page1.json",
+      "description": "LT-03.3a: company queue page 1 of 120 READY files; company counters and filtered counts differ."
+    },
+    {
+      "id": "queue-all-active-120",
+      "schema": "#/components/schemas/QueueResponse",
+      "file": "contracts/examples/sorting/queue-all-active-120.json",
+      "description": "LT-03.3a: default active queue excludes MISSING and pages 100 of 130 matches."
+    },
+    {
+      "id": "queue-missing-explicit",
+      "schema": "#/components/schemas/QueueResponse",
+      "file": "contracts/examples/sorting/queue-missing-explicit.json",
+      "description": "LT-03.3a: MISSING appears only under an explicit status filter."
+    },
+    {
+      "id": "queue-query-text",
+      "schema": "#/components/schemas/QueueResponse",
+      "file": "contracts/examples/sorting/queue-query-text.json",
+      "description": "LT-03.3a: literal query_text substring filter over filename/display path."
+    },
+    {
+      "id": "queue-ready-0",
+      "schema": "#/components/schemas/QueueResponse",
+      "file": "contracts/examples/sorting/queue-ready-0.json",
+      "description": "LT-03.3a: zero READY files; the empty READY page drives EMPTY_SELECTION."
+    },
+    {
+      "id": "queue-all-active-0",
+      "schema": "#/components/schemas/QueueResponse",
+      "file": "contracts/examples/sorting/queue-all-active-0.json",
+      "description": "LT-03.3a: non-empty company queue with no selectable item."
+    },
+    {
+      "id": "queue-ready-1001-page1",
+      "schema": "#/components/schemas/QueueResponse",
+      "file": "contracts/examples/sorting/queue-ready-1001-page1.json",
+      "description": "LT-03.3a: 1001 eligible READY files; the page is capped at 100 and the batch limit is exceeded."
+    },
+    {
+      "id": "selection-request-explicit-one",
+      "schema": "#/components/schemas/SelectionRequest",
+      "file": "contracts/examples/sorting/selection-request-explicit-one.json",
+      "description": "LT-03.3a: EXPLICIT selection request for one item with its content revision."
+    },
+    {
+      "id": "selection-request-explicit-multiple",
+      "schema": "#/components/schemas/SelectionRequest",
+      "file": "contracts/examples/sorting/selection-request-explicit-multiple.json",
+      "description": "LT-03.3a: EXPLICIT selection request for several items, including off-page ids."
+    },
+    {
+      "id": "selection-request-all-matching-120",
+      "schema": "#/components/schemas/SelectionRequest",
+      "file": "contracts/examples/sorting/selection-request-all-matching-120.json",
+      "description": "LT-03.3a: ALL_MATCHING selection request with expected_eligible_count=120."
+    },
+    {
+      "id": "selection-snapshot-explicit-one",
+      "schema": "#/components/schemas/SelectionSnapshot",
+      "file": "contracts/examples/sorting/selection-snapshot-explicit-one.json",
+      "description": "LT-03.3a: immutable snapshot of one explicit item."
+    },
+    {
+      "id": "selection-snapshot-explicit-multiple",
+      "schema": "#/components/schemas/SelectionSnapshot",
+      "file": "contracts/examples/sorting/selection-snapshot-explicit-multiple.json",
+      "description": "LT-03.3a: immutable snapshot of several explicit items, including off-page ids."
+    },
+    {
+      "id": "selection-snapshot-all-matching-120",
+      "schema": "#/components/schemas/SelectionSnapshot",
+      "file": "contracts/examples/sorting/selection-snapshot-all-matching-120.json",
+      "description": "LT-03.3a: immutable ALL_MATCHING snapshot of all 120 eligible READY files."
+    },
+    {
+      "id": "error-empty-selection",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-empty-selection.json",
+      "description": "LT-03.3a: 422 EMPTY_SELECTION for a filter with zero eligible files."
+    },
+    {
+      "id": "error-batch-limit-exceeded",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-batch-limit-exceeded.json",
+      "description": "LT-03.3a: 422 BATCH_LIMIT_EXCEEDED for 1001 eligible files, without truncation."
+    },
+    {
+      "id": "error-selection-changed",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-selection-changed.json",
+      "description": "LT-03.3a: 409 SELECTION_CHANGED before snapshot creation."
+    },
+    {
+      "id": "error-selection-forbidden",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-selection-forbidden.json",
+      "description": "LT-03.3a: 403 FORBIDDEN for another user of a bound snapshot."
+    },
+    {
+      "id": "error-selection-expired-preview",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-selection-expired-preview.json",
+      "description": "LT-03.3a: 409 SELECTION_EXPIRED on the preview operation."
+    },
+    {
+      "id": "error-selection-expired-batch",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-selection-expired-batch.json",
+      "description": "LT-03.3a: 409 SELECTION_EXPIRED on the batch operation."
+    },
+    {
+      "id": "error-selection-not-found",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-selection-not-found.json",
+      "description": "LT-03.3a: 404 NOT_FOUND for an unknown selection id on the preview operation."
+    },
+    {
+      "id": "preview-atlas-allmatching-120-page1",
+      "schema": "#/components/schemas/Preview",
+      "file": "contracts/examples/sorting/preview-atlas-allmatching-120-page1.json",
+      "description": "LT-03.3b: page 1 of the 120-item preview; all rows NO_SCENARIO with no target."
+    },
+    {
+      "id": "preview-atlas-explicit-one",
+      "schema": "#/components/schemas/Preview",
+      "file": "contracts/examples/sorting/preview-atlas-explicit-one.json",
+      "description": "LT-03.3b: single-item EXPLICIT preview (total=1)."
+    },
+    {
+      "id": "preview-atlas-explicit-multiple",
+      "schema": "#/components/schemas/Preview",
+      "file": "contracts/examples/sorting/preview-atlas-explicit-multiple.json",
+      "description": "LT-03.3b: three-item EXPLICIT preview (total=3)."
+    },
+    {
+      "id": "preview-atlas-hetero",
+      "schema": "#/components/schemas/Preview",
+      "file": "contracts/examples/sorting/preview-atlas-hetero.json",
+      "description": "LT-03.3b: isolated heterogeneous preview covering all four Prediction kinds and all three CollisionDetails kinds."
+    },
+    {
+      "id": "preview-atlas-conflict",
+      "schema": "#/components/schemas/Preview",
+      "file": "contracts/examples/sorting/preview-atlas-conflict.json",
+      "description": "LT-03.3b: isolated equal-priority RULE_CONFLICT preview."
+    },
+    {
+      "id": "error-batch-selection-changed",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-batch-selection-changed.json",
+      "description": "LT-03.3b: 409 SELECTION_CHANGED on the DIRECT batch preflight."
+    },
+    {
+      "id": "error-batch-stale-preview",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-batch-stale-preview.json",
+      "description": "LT-03.3b: 409 STALE_PREVIEW on the PREVIEWED batch preflight."
+    },
+    {
+      "id": "error-batch-selection-expired",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-batch-selection-expired.json",
+      "description": "LT-03.3b: 409 SELECTION_EXPIRED on the batch operation."
+    },
+    {
+      "id": "error-batch-invalid-state",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-batch-invalid-state.json",
+      "description": "LT-03.3b: 409 INVALID_STATE for a mismatched selection/preview pair."
+    },
+    {
+      "id": "error-batch-selection-not-found",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-batch-selection-not-found.json",
+      "description": "LT-03.3b: 404 NOT_FOUND for an unknown selection/preview id."
+    },
+    {
+      "id": "error-batch-forbidden",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-batch-forbidden.json",
+      "description": "LT-03.3b: 403 FORBIDDEN for another user of a bound selection."
+    },
+    {
+      "id": "error-preview-selection-expired",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-preview-selection-expired.json",
+      "description": "LT-03.3b: 409 SELECTION_EXPIRED on the preview operation."
+    },
+    {
+      "id": "error-preview-selection-changed",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-preview-selection-changed.json",
+      "description": "LT-03.3b: 409 SELECTION_CHANGED on the preview operation."
+    },
+    {
+      "id": "batch-atlas-direct-fresh-page1",
+      "schema": "#/components/schemas/Batch",
+      "file": "contracts/examples/sorting/batch-atlas-direct-fresh-page1.json",
+      "description": "LT-03.4a: ACCEPTED 120-item DIRECT batch, page 1 of 100 PENDING outcomes."
+    },
+    {
+      "id": "batch-atlas-direct-fresh-page2",
+      "schema": "#/components/schemas/Batch",
+      "file": "contracts/examples/sorting/batch-atlas-direct-fresh-page2.json",
+      "description": "LT-03.4a: ACCEPTED 120-item DIRECT batch, page 2 of 20 PENDING outcomes."
+    },
+    {
+      "id": "batch-atlas-previewed-fresh-page1",
+      "schema": "#/components/schemas/Batch",
+      "file": "contracts/examples/sorting/batch-atlas-previewed-fresh-page1.json",
+      "description": "LT-03.4a: RUNNING 120-item PREVIEWED batch, page 1 full with manual review outcomes."
+    },
+    {
+      "id": "batch-atlas-previewed-fresh-page2",
+      "schema": "#/components/schemas/Batch",
+      "file": "contracts/examples/sorting/batch-atlas-previewed-fresh-page2.json",
+      "description": "LT-03.4a: RUNNING batch page 2 with the last manual review rows plus PENDING and PROCESSING."
+    },
+    {
+      "id": "batch-atlas-same-user-session",
+      "schema": "#/components/schemas/Batch",
+      "file": "contracts/examples/sorting/batch-atlas-same-user-session.json",
+      "description": "LT-03.4a: COMPLETED_WITH_ISSUES EXPLICIT batch accepted from a new session of the same user."
+    },
+    {
+      "id": "batch-atlas-hetero",
+      "schema": "#/components/schemas/Batch",
+      "file": "contracts/examples/sorting/batch-atlas-hetero.json",
+      "description": "LT-03.4a: isolated heterogeneous accepted selection with safe renames, manual review, decisions and an occupied name."
+    },
+    {
+      "id": "batch-atlas-conflict",
+      "schema": "#/components/schemas/Batch",
+      "file": "contracts/examples/sorting/batch-atlas-conflict.json",
+      "description": "LT-03.4a: equal-priority RULE_CONFLICT moves to flat manual review without quarantine."
+    },
+    {
+      "id": "batch-atlas-sorted",
+      "schema": "#/components/schemas/Batch",
+      "file": "contracts/examples/sorting/batch-atlas-sorted.json",
+      "description": "LT-03.4a: COMPLETED batch where every outcome is a confirmed safe rename."
+    },
+    {
+      "id": "batch-atlas-technical",
+      "schema": "#/components/schemas/Batch",
+      "file": "contracts/examples/sorting/batch-atlas-technical.json",
+      "description": "LT-03.4a: RECOVERY_REQUIRED batch with confirmed quarantine, per-file skips and unknown/known recovery."
+    },
+    {
+      "id": "batch-history-atlas-page1",
+      "schema": "#/components/schemas/BatchPage",
+      "file": "contracts/examples/sorting/batch-history-atlas-page1.json",
+      "description": "LT-03.4a: BatchSummary history ordered created_at DESC, batch_id DESC."
+    },
+    {
+      "id": "batch-overlap-winner",
+      "schema": "#/components/schemas/Batch",
+      "file": "contracts/examples/sorting/batch-overlap-winner.json",
+      "description": "LT-03.4b: overlap winner batch that claims and sorts the shared item plus its independent safe item."
+    },
+    {
+      "id": "batch-overlap-loser",
+      "schema": "#/components/schemas/Batch",
+      "file": "contracts/examples/sorting/batch-overlap-loser.json",
+      "description": "LT-03.4b: overlap loser batch with SKIPPED/ALREADY_PROCESSING for the claimed shared item and a sorted independent safe item."
+    },
+    {
+      "id": "quarantine-item-atlas-technical",
+      "schema": "#/components/schemas/QuarantineItem",
+      "file": "contracts/examples/quarantine/quarantine-item-atlas-technical.json",
+      "description": "LT-03.5a: confirmed quarantine record derived from the LT-03.4a QUARANTINED outcome."
+    },
+    {
+      "id": "quarantine-item-atlas-ambiguous",
+      "schema": "#/components/schemas/QuarantineItem",
+      "file": "contracts/examples/quarantine/quarantine-item-atlas-ambiguous.json",
+      "description": "LT-03.5a: ambiguous return record with can_return=false and a registered recovery_operation_id."
+    },
+    {
+      "id": "quarantine-list-atlas",
+      "schema": "#/components/schemas/QuarantinePage",
+      "file": "contracts/examples/quarantine/quarantine-list-atlas.json",
+      "description": "LT-03.5a: confirmed quarantine list containing only the QUARANTINED outcome."
+    },
+    {
+      "id": "quarantine-return-request",
+      "schema": "#/components/schemas/QuarantineReturnRequest",
+      "file": "contracts/examples/quarantine/quarantine-return-request.json",
+      "description": "LT-03.5a: valid return request with the current revision and a 1..500 comment."
+    },
+    {
+      "id": "quarantine-return-response",
+      "schema": "#/components/schemas/QuarantineReturnResponse",
+      "file": "contracts/examples/quarantine/quarantine-return-response.json",
+      "description": "LT-03.5a: successful return response with a WAITING_READY, non-selectable QueueItem and the original source."
+    },
+    {
+      "id": "error-quarantine-comment-validation",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-quarantine-comment-validation.json",
+      "description": "LT-03.5a: 422 VALIDATION_ERROR for an out-of-range return comment."
+    },
+    {
+      "id": "error-quarantine-version-conflict",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-quarantine-version-conflict.json",
+      "description": "LT-03.5a: 409 QUARANTINE_VERSION_CONFLICT for a stale expected_revision."
+    },
+    {
+      "id": "error-original-path-occupied",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-original-path-occupied.json",
+      "description": "LT-03.5a: 409 ORIGINAL_PATH_OCCUPIED without moving anything."
+    },
+    {
+      "id": "error-quarantine-not-found",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-quarantine-not-found.json",
+      "description": "LT-03.5a: 404 NOT_FOUND for an unknown quarantine id."
+    },
+    {
+      "id": "error-quarantine-invalid-state",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-quarantine-invalid-state.json",
+      "description": "LT-03.5a: 409 INVALID_STATE for an already returned record with a new key."
+    },
+    {
+      "id": "error-quarantine-recovery-required",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-quarantine-recovery-required.json",
+      "description": "LT-03.5a: 409 RECOVERY_REQUIRED with the registered operation_id."
+    },
+    {
+      "id": "error-quarantine-idempotency-key-reused",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/errors/error-quarantine-idempotency-key-reused.json",
+      "description": "LT-03.5a: 409 IDEMPOTENCY_KEY_REUSED for the same key with a different body."
+    },
+    {
+      "id": "audit-query-day-atlas",
+      "schema": "#/components/schemas/AuditQueryResponse",
+      "file": "contracts/examples/audit/audit-query-day-atlas.json",
+      "description": "LT-03.5b: first Moscow-day page of the shared BUSINESS journal (occurred_at DESC, event_id DESC)."
+    },
+    {
+      "id": "audit-query-batch-accepted",
+      "schema": "#/components/schemas/AuditQueryResponse",
+      "file": "contracts/examples/audit/audit-query-batch-accepted.json",
+      "description": "LT-03.5b: action filter BATCH_ACCEPTED with the literal accepted-event ids."
+    },
+    {
+      "id": "audit-query-issue",
+      "schema": "#/components/schemas/AuditQueryResponse",
+      "file": "contracts/examples/audit/audit-query-issue.json",
+      "description": "LT-03.5b: result filter ISSUE with the literal terminal/recovery event ids."
+    },
+    {
+      "id": "audit-query-cursor-page2",
+      "schema": "#/components/schemas/AuditQueryResponse",
+      "file": "contracts/examples/audit/audit-query-cursor-page2.json",
+      "description": "LT-03.5b: cursor page bounded to the frozen upper bound under new events."
+    },
+    {
+      "id": "audit-query-empty-window",
+      "schema": "#/components/schemas/AuditQueryResponse",
+      "file": "contracts/examples/audit/audit-query-empty-window.json",
+      "description": "LT-03.5b: empty window returns items=[], next_cursor=null and newest_event_id=null."
+    },
+    {
+      "id": "audit-actors-atlas",
+      "schema": "#/components/schemas/ActorPage",
+      "file": "contracts/examples/audit/audit-actors-atlas.json",
+      "description": "LT-03.5b: filterable authors including the blocked author with its current display snapshot."
+    },
+    {
+      "id": "audit-updates-after-known",
+      "schema": "#/components/schemas/AuditUpdatesResponse",
+      "file": "contracts/examples/audit/audit-updates-after-known.json",
+      "description": "LT-03.5b: has_new_events=true for an after_event_id that precedes the newest event."
+    },
+    {
+      "id": "error-audit-validation",
+      "schema": "#/components/schemas/ErrorResponse",
+      "file": "contracts/examples/audit/error-audit-validation.json",
+      "description": "LT-03.5b: 422 VALIDATION_ERROR for an invalid audit query interval."
+    }
+  ]
+}

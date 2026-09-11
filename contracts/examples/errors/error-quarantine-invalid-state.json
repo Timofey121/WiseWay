@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "INVALID_STATE",
+    "message": "Запись уже возвращена. Возврат не выполнен.",
+    "request_id": "request-quarantine-demo-1",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

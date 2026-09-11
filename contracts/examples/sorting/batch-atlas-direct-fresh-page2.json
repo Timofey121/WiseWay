@@ -1,0 +1,383 @@
+{
+  "batch_id": "batch-atlas-direct-fresh",
+  "company_id": "company-demo-atlas",
+  "actor": {
+    "user_id": "user-demo-worker-1",
+    "login": "worker.one",
+    "display_name": "Иван Рабочий",
+    "role": "WORKER"
+  },
+  "selection_id": "selection-atlas-allmatching-120",
+  "preview_id": null,
+  "rule_set": {
+    "rule_set_id": "rule-set-atlas-published",
+    "company_id": "company-demo-atlas",
+    "members": [
+      {
+        "dictionary_id": "dictionary-atlas-general",
+        "version_id": "version-atlas-general-v1"
+      },
+      {
+        "dictionary_id": "dictionary-atlas-invoices",
+        "version_id": "version-atlas-invoices-v1"
+      }
+    ]
+  },
+  "status": "ACCEPTED",
+  "created_at": "2031-05-10T09:35:00Z",
+  "started_at": null,
+  "finished_at": null,
+  "selected_count": 120,
+  "completed_count": 0,
+  "counts": {
+    "sorted": 0,
+    "manual_review": 0,
+    "requires_decision": 0,
+    "quarantined": 0,
+    "skipped": 0,
+    "recovery_required": 0
+  },
+  "outcomes": [
+    {
+      "attempt_id": "attempt-batch-atlas-direct-fresh-queue-atlas-ready-0101",
+      "item_id": "queue-atlas-ready-0101",
+      "item_revision": 1,
+      "state": "PENDING",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0101.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0101.pdf"
+      },
+      "planned_target": null,
+      "actual_location": null,
+      "matched_rule": null,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-direct-fresh-queue-atlas-ready-0102",
+      "item_id": "queue-atlas-ready-0102",
+      "item_revision": 1,
+      "state": "PENDING",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0102.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0102.pdf"
+      },
+      "planned_target": null,
+      "actual_location": null,
+      "matched_rule": null,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-direct-fresh-queue-atlas-ready-0103",
+      "item_id": "queue-atlas-ready-0103",
+      "item_revision": 1,
+      "state": "PENDING",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0103.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0103.pdf"
+      },
+      "planned_target": null,
+      "actual_location": null,
+      "matched_rule": null,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-direct-fresh-queue-atlas-ready-0104",
+      "item_id": "queue-atlas-ready-0104",
+      "item_revision": 1,
+      "state": "PENDING",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0104.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0104.pdf"
+      },
+      "planned_target": null,
+      "actual_location": null,
+      "matched_rule": null,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-direct-fresh-queue-atlas-ready-0105",
+      "item_id": "queue-atlas-ready-0105",
+      "item_revision": 1,
+      "state": "PENDING",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0105.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0105.pdf"
+      },
+      "planned_target": null,
+      "actual_location": null,
+      "matched_rule": null,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-direct-fresh-queue-atlas-ready-0106",
+      "item_id": "queue-atlas-ready-0106",
+      "item_revision": 1,
+      "state": "PENDING",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0106.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0106.pdf"
+      },
+      "planned_target": null,
+      "actual_location": null,
+      "matched_rule": null,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-direct-fresh-queue-atlas-ready-0107",
+      "item_id": "queue-atlas-ready-0107",
+      "item_revision": 1,
+      "state": "PENDING",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0107.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0107.pdf"
+      },
+      "planned_target": null,
+      "actual_location": null,
+      "matched_rule": null,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-direct-fresh-queue-atlas-ready-0108",
+      "item_id": "queue-atlas-ready-0108",
+      "item_revision": 1,
+      "state": "PENDING",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0108.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0108.pdf"
+      },
+      "planned_target": null,
+      "actual_location": null,
+      "matched_rule": null,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-direct-fresh-queue-atlas-ready-0109",
+      "item_id": "queue-atlas-ready-0109",
+      "item_revision": 1,
+      "state": "PENDING",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0109.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0109.pdf"
+      },
+      "planned_target": null,
+      "actual_location": null,
+      "matched_rule": null,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-direct-fresh-queue-atlas-ready-0110",
+      "item_id": "queue-atlas-ready-0110",
+      "item_revision": 1,
+      "state": "PENDING",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0110.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0110.pdf"
+      },
+      "planned_target": null,
+      "actual_location": null,
+      "matched_rule": null,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-direct-fresh-queue-atlas-ready-0111",
+      "item_id": "queue-atlas-ready-0111",
+      "item_revision": 1,
+      "state": "PENDING",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0111.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0111.pdf"
+      },
+      "planned_target": null,
+      "actual_location": null,
+      "matched_rule": null,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-direct-fresh-queue-atlas-ready-0112",
+      "item_id": "queue-atlas-ready-0112",
+      "item_revision": 1,
+      "state": "PENDING",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0112.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0112.pdf"
+      },
+      "planned_target": null,
+      "actual_location": null,
+      "matched_rule": null,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-direct-fresh-queue-atlas-ready-0113",
+      "item_id": "queue-atlas-ready-0113",
+      "item_revision": 1,
+      "state": "PENDING",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0113.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0113.pdf"
+      },
+      "planned_target": null,
+      "actual_location": null,
+      "matched_rule": null,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-direct-fresh-queue-atlas-ready-0114",
+      "item_id": "queue-atlas-ready-0114",
+      "item_revision": 1,
+      "state": "PENDING",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0114.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0114.pdf"
+      },
+      "planned_target": null,
+      "actual_location": null,
+      "matched_rule": null,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-direct-fresh-queue-atlas-ready-0115",
+      "item_id": "queue-atlas-ready-0115",
+      "item_revision": 1,
+      "state": "PENDING",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0115.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0115.pdf"
+      },
+      "planned_target": null,
+      "actual_location": null,
+      "matched_rule": null,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-direct-fresh-queue-atlas-ready-0116",
+      "item_id": "queue-atlas-ready-0116",
+      "item_revision": 1,
+      "state": "PENDING",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0116.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0116.pdf"
+      },
+      "planned_target": null,
+      "actual_location": null,
+      "matched_rule": null,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-direct-fresh-queue-atlas-ready-0117",
+      "item_id": "queue-atlas-ready-0117",
+      "item_revision": 1,
+      "state": "PENDING",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0117.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0117.pdf"
+      },
+      "planned_target": null,
+      "actual_location": null,
+      "matched_rule": null,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-direct-fresh-queue-atlas-ready-0118",
+      "item_id": "queue-atlas-ready-0118",
+      "item_revision": 1,
+      "state": "PENDING",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0118.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0118.pdf"
+      },
+      "planned_target": null,
+      "actual_location": null,
+      "matched_rule": null,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-direct-fresh-queue-atlas-ready-0119",
+      "item_id": "queue-atlas-ready-0119",
+      "item_revision": 1,
+      "state": "PENDING",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0119.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0119.pdf"
+      },
+      "planned_target": null,
+      "actual_location": null,
+      "matched_rule": null,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-direct-fresh-queue-atlas-ready-0120",
+      "item_id": "queue-atlas-ready-0120",
+      "item_revision": 1,
+      "state": "PENDING",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0120.pdf",
+        "display_path": "DEMO:/SandboxRoot/Incoming/Atlas/Orion_2031/Reports/Atlas-Report-0120.pdf"
+      },
+      "planned_target": null,
+      "actual_location": null,
+      "matched_rule": null,
+      "started_at": null,
+      "finished_at": null
+    }
+  ],
+  "next_cursor": null
+}

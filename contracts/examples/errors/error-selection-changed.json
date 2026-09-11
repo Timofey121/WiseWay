@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "SELECTION_CHANGED",
+    "message": "Состав подходящих файлов изменился. Обновите выбор.",
+    "request_id": "request-selection-changed",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

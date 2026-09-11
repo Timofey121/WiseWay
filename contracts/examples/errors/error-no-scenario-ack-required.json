@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "NO_SCENARIO_ACK_REQUIRED",
+    "message": "Есть файлы без сценария. Подтвердите результат теста.",
+    "request_id": "request-demo-1",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

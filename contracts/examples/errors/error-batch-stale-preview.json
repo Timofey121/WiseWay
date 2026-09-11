@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "STALE_PREVIEW",
+    "message": "Данные изменились. Выполните проверку повторно.",
+    "request_id": "request-batch-stale-preview",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

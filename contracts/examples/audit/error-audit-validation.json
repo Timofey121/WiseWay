@@ -1,0 +1,16 @@
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Проверьте порядок и допустимость интервала журнала.",
+    "request_id": "request-audit-demo-1",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": [
+      {
+        "field": "from",
+        "code": "ORDER",
+        "message": "Начало интервала должно быть раньше конца."
+      }
+    ]
+  }
+}
