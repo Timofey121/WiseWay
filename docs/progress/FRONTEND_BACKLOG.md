@@ -274,7 +274,7 @@ LT-05.2b completion: добавлен `frontend/src/api/retry.ts` (`RetryConfig`
 
 ### WP-06 — Контрактные mocks A
 
-- **Status:** IN_PROGRESS. **Parent:** E-02. **Dependencies:** WP-03, WP-05.
+- **Status:** VERIFIED. **Parent:** E-02. **Dependencies:** WP-03, WP-05.
 - **Goal:** воспроизводимые auth/search сценарии без backend.
 - **Sources of truth:** FE-02; API §3/4/12; QA §4/5; Q-001…014/043; OAS A-операции.
 - **Acceptance criteria:** requests/responses schema-valid, delay/error/reset управляемы; нет клиентского поиска/ranking по dataset; mock указан в evidence.
@@ -285,6 +285,8 @@ LT-05.2b completion: добавлен `frontend/src/api/retry.ts` (`RetryConfig`
 |---|---|---|---|---|---|---|
 | LT-06.1 | VERIFIED | WP-03, WP-05 | Mock bootstrap/session/config | OAS getHealth/login/getSession/logout/getAppConfig/listRoots/listCompanies; API §2/3; Q-001…004/043 | Session/401/403, empty roots/companies, разные limits/timezone, сеть/delay воспроизводимы; requests валидируются; реальных credentials нет; mock не защищённый auth backend | V-S/V-C всех handlers/headers/reset/invalid fields |
 | LT-06.2 | VERIFIED | LT-06.1, LT-03.1 | Mock выдачи/facets/races | OAS searchFiles/getSearchFacet; API §4; Q-004…014 | IDLE/zero/limited/unrecognized/freshness, schema/marker/503 ошибки, управляемый порядок ответов таблицы/dropdown; request_state_id конкретной отправки; totals/order из эталона, не matcher | V-S/V-C handlers/delays; invalid request не даёт правдоподобный успех |
+
+WP-06 package completion: commits `ecab4df`, `43c17c5`, `5950787`, `e92469d`, `62e9641`; полный WORK_PACKAGE review диапазона `a3ed646..62e9641` — PASS. Reviewer фактически: `npm ci` exit 0, `typecheck`/`lint`/`build` exit 0, `test` 329 PASS, `generate:api:check` без diff; независимая сверка через реальный mock-fetch HTTP-слой — 51+6 golden search/facet literal, bootstrap-ответы deep-equal `contracts/examples/**`, все ответы schema-valid; нет storage/logging секретов; forbidden/generated/lock не изменены. AC WP-06 (schema-valid, управляемые delay/error/reset, отсутствие клиентского matcher/ranking, mock явно указан) — выполнены. Non-blocking: freshness fallback; `result_limit` не из config-профиля; scope-имена `search`/`facet` vs fixture `table`/`level-list`; retry interplay с 503; один timezone; root/schema 409 только через управляемую ошибку. M/A/E NOT_RUN; публикация — за пользователем (D-09).
 
 LT-06.1 completion: создана mock-инфраструктура `frontend/src/mocks/**` (`router`/`validate` (ajv 2020-12 по `generated/openapi.json`)/`controller`/`data` (примеры через manifest)/`responses`/`handlers`) и 7 операций (`getHealth/login/getSession/logout/getAppConfig/listRoots/listCompanies`); mock-fetch совместим с `createApiClient({mode:'mock'})`. WIP checkpoint `ecab4df`; после него независимый LEAF reviewer PASS: `test` 211 PASS (bootstrap 30); `typecheck`/`lint`/`build` exit 0; `generate:api:check` без diff; ответы schema-valid из `contracts/examples`, session/401/403, empty roots/companies, профили N=100/N=10, delay/reset, unknown route 404; невалидный payload → 422 без успеха; реальных секретов нет. Non-blocking: оба config-примера имеют один timezone (различие только в limit); network-failure injection отсутствует (search-ошибки — LT-06.2b); login не ставит `Set-Cookie` (mock не auth backend); 204-body не покрыт отдельной ассерцией. M/A/E NOT_RUN.
 
