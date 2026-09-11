@@ -1062,14 +1062,13 @@
     "note": "No file is written or read by this fixture. Content tags are deterministic logical labels derived from the fixture seed, company and item id; they are not measured filesystem hashes and must not be presented as proof. The inventory records only describe what a conforming backend must preserve or leave untouched.",
     "no_file_writes": true,
     "content_recipe": {
-      "algorithm": "deterministic-synthetic-bytes",
+      "algorithm": "logical-content-tag",
       "seed": "wiseway-demo-seed-2031",
       "inputs": [
-        "company_id",
-        "item_id",
-        "size_bytes"
+        "item_id"
       ],
-      "tag_prefix": "lt034a-content-"
+      "tag_prefix": "lt034a-content-",
+      "description": "The content tag is the literal tag_prefix + item_id label; it is a deterministic logical marker, not bytes or a measured hash."
     },
     "state_rules": [
       {

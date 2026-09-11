@@ -1089,3 +1089,157 @@ git diff --check
   links и негативных мутаций), затем LT-03.4b (lost response/идемпотентность/
   claim overlap/restart).
 - **Блокирующая зависимость:** нет.
+
+# LT-03.4b — эталон операционных повторов, пересечений и перезапусков
+
+Дополнение фиксирует результат leaf LT-03.4b (parent LT-03.4, WP-03, Epic
+E-01). **Status:** IN_PROGRESS (публикация отложена D-06).
+
+## Задача и основание
+
+- **Цель:** конечные операционные сценарии поверх принятых партий/размещений
+  LT-03.4a и preflight/ошибок LT-03.3b: идемпотентный повтор после потерянного
+  ответа и истечения зависимости, изменённое тело, scope пользователя, новый
+  ручной повтор, claim overlap двух акторов, source change до/после принятия,
+  logout/reload continuation, поздняя цель, обратный порядок дубликата цели, три
+  точки перезапуска и containment Q-044. Реальный concurrency/FS/recovery не
+  реализуется; fault-точки, барьеры и durable intent — логические метки.
+- **Основание:** AGENTS; FRONTEND_BACKLOG LT-03.4/LT-03.4b; D-03/D-06; API
+  §2 (идемпотентность) и §8 (pre/post-acceptance); TZ QUEUE-07…10, AUTH-03,
+  FILE-08/09; QA §4/8; MATRIX Q-028…030/031/032/040/044; OAS
+  `BatchCreateRequest`/`Batch`/`Outcome`/`ErrorResponse`/`AuditEvent`/
+  `AuditAction`/`ErrorCode`; `contracts/semantics.md`.
+
+## Изменённые/добавленные файлы
+
+| Файл | Характер |
+|---|---|
+| `fixtures/synthetic/batch_scenarios.json` | новый эталон: 12 сценариев (IDEMPOTENCY/OVERLAP/SOURCE_CHANGE/CONTINUATION/LATE_TARGET/DUPLICATE_TARGET/RESTART/CONTAINMENT), 3 изолированных выбора, 3 изолированные партии, 4 replay, 9 containment cases, 18 audit events, 41 link, 23 mutation, coverage Q-028…030/031/032/040/044 |
+| `contracts/examples/sorting/batch-overlap-winner.json`, `batch-overlap-loser.json` | 2 публичных `Batch` изолированных overlap-партий |
+| `tests/contract/contractlib/batch_scenarios.py` | declarative loader/materializer/checker + `--write-examples`; переиспользует `batch_outcomes`/`preview_preflight`, не дублирует executor |
+| `tests/contract/contractlib/fixture_checks.py` | FIX-SCN-001/002/003 |
+| `tests/contract/contractlib/report.py`, `__init__.py`, `verify_contract.py` | счётчики/экспорт/строка отчёта |
+| `tests/contract/test_batch_scenarios.py` | 56 тестов: структура/схемы/links/coverage/identity/inventory, идемпотентность, overlap, source change, continuation, late target, duplicate reversed, restart, containment, audit, негативные мутации |
+| `tests/contract/test_synthetic_corpus.py` | 122 публичных примера, FIX-SCN-счётчики |
+| `fixtures/synthetic/batch_outcomes.json` | точечно исправлен `inventory.content_recipe`: логическая метка `tag_prefix + item_id` вместо мнимого `deterministic-synthetic-bytes` по company/size (ранее расходилось с фактическим `content_tag`); checksums пересчитаны |
+| `fixtures/synthetic/manifest.json` | fixture `batch-scenarios`, 2 привязанных examples, пересчитанные канонические checksums; версия корпуса **1.2.0 без изменения** |
+| `README.md` | раздел LT-03.4b и команда генерации |
+| `docs/team/WP-03_SYNTHETIC_HANDOFF.md` | этот раздел |
+
+OAS, `contracts/semantics.md`, control plane, backlog, backend/UI и
+`corpus.json`/`rule_expectations.json`/`dictionary_lifecycle.json`/
+`queue_selections.json`/`preview_preflight.json` **не изменялись**.
+
+## Что именно зафиксировано
+
+- **Идемпотентность (Q-029/030).** `SCN-IDEM-REPLAY-DIRECT`/`-PREVIEWED`:
+  ключ/пользователь/тело повторяются после потерянного ответа (before expiry) и
+  после истечения snapshot/preview (after expiry) и возвращают ту же партию с
+  `new_attempts=0`. `SCN-IDEM-MODIFIED-BODY`: другое тело с тем же ключом —
+  409 `IDEMPOTENCY_KEY_REUSED` через `ErrorResponse`. `SCN-IDEM-DIFFERENT-USER-SCOPE`:
+  та же строка ключа у другого пользователя — отдельный scope, своя партия, не
+  конфликт. `SCN-MANUAL-RETRY-NEW-KEY`: отказ `SELECTION_CHANGED` без партии и
+  попыток, затем новый ключ + новый выбор → новая партия и новая попытка;
+  attempt IDs глобально уникальны.
+- **Claim overlap (Q-028/030).** `SCN-OVERLAP-TWO-ACTORS`: `overlap-shared-pdf`
+  входит в оба выбора с одинаковыми location/revision; победитель `SORTED`,
+  проигравший `SKIPPED`/`ALREADY_PROCESSING`, `actual_location=null`, без второго
+  перемещения; содержательная ревизия не меняется claim-ом; независимые
+  безопасные элементы обоих акторов `SORTED`; барьер фиксирует claim победителя
+  раньше попытки проигравшего.
+- **Source change (Q-028/029).** До принятия — отказ `SELECTION_CHANGED`
+  (DIRECT) и `STALE_PREVIEW` (PREVIEWED) без партии/ФС; после принятия —
+  `SKIPPED`/`SOURCE_CHANGED`, `actual_location=null`, возврат к `WAITING_READY`,
+  мутации нет.
+- **Continuation (Q-030, AUTH-03).** После logout/reload другой пользователь
+  читает ту же партию с исходным автором; операции отмены партии нет, новый
+  зритель не становится автором, партия не создаётся повторно.
+- **Поздняя цель (Q-032).** Цель, появившаяся после фиксации плана, даёт
+  `REQUIRES_DECISION`/`TARGET_OCCUPIED`, источник остаётся, существующий объект
+  неизменён, замены нет.
+- **Дубликат цели (Q-031).** Обратный порядок входных ID даёт тот же результат
+  всем участникам (`REQUIRES_DECISION`/`TARGET_OCCUPIED`), победителя нет,
+  независимый безопасный файл проходит.
+- **Перезапуск (Q-040, FILE-09).** Три точки: до мутации (intent сохранён,
+  повтор ключа возвращает ту же партию), после доказанной фиксации (один
+  результат без второго перемещения), неоднозначная (`RECOVERY_REQUIRED`, без
+  слепого повтора, зарегистрированный `operation_id`). `live_evidence=false`.
+- **Containment (Q-044, FILE-08).** До партии: 404 `NOT_FOUND`, 403 `FORBIDDEN`,
+  409 `INVALID_STATE` (чужая компания), 422
+  `INVALID_TARGET`/`PATH_OUTSIDE_ROOT`/`VALIDATION_ERROR` — только коды,
+  объявленные соответствующей операцией OAS; после принятия: подтверждённый
+  `QUARANTINED`/`TECHNICAL_ERROR` или безопасный `RECOVERY_REQUIRED` без
+  выдуманного исхода; вне песочницы доступа нет.
+- **Audit для LT-03.5b.** 18 ожидаемых событий с phase (`ACCEPT`/
+  `ATTEMPT_START`/`ATTEMPT_FINISH`/`RECOVERY`/`SESSION`), `AuditAction`,
+  категорией/результатом, автором и связями `batch_id`/`attempt_id`/`item_id`/
+  `request_id`/`operation_id`/`source_attempt_id`; уникальный
+  attempt/phase-ключ исключает дубли; `RECOVERY_REQUIRED` связывает
+  `source_attempt_id` с попыткой.
+- **Негативные мутации.** 23 конечные мутации отклоняются валидаторами
+  (replay/attempt, modified body, scope, retry key, claim winner/double claim,
+  revision drift, source change location/queue, continuation author/cancel,
+  duplicate winner, restart blind retry/ambiguous final, containment outside
+  access/wrong code, audit action/duplicate key/system actor, coverage, UUID).
+- **Изолированные данные.** Три выбора (`selection-overlap-worker1`,
+  `selection-overlap-worker2`, `selection-batch-atlas-retry`) и три партии
+  (`batch-overlap-winner`, `batch-overlap-loser`, `batch-atlas-retry`) используют
+  immutable `rule-set-atlas-published`; существующие batch IDs не
+  переиспользуются с другим actor/snapshot/RuleSet.
+
+## V-S: точные команды и фактические результаты
+
+```powershell
+.\.venv-contract\Scripts\python.exe tests\contract\verify_contract.py
+.\.venv-contract\Scripts\python.exe -m unittest tests.contract.test_batch_scenarios
+.\.venv-contract\Scripts\python.exe -m unittest discover -s tests\contract -p "test_*.py"
+.\.venv-contract\Scripts\python.exe -m pip check
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\batch_scenarios.py --write-examples
+.\.venv-contract\Scripts\python.exe tests\contract\contractlib\synthetic.py --update-checksums
+git diff --check
+```
+
+- `verify_contract.py` → `RESULT: PASS (45 checks, 0 failures)`, `Examples: 127`,
+  `Fixtures: 122 public example(s)`, `Batch scenario expectations: 12 scenario(s),
+  4 replay(s), 9 containment case(s), 18 audit event(s), 23 mutation(s)`;
+  FIX-SCN-001/002/003 — PASS.
+- `test_batch_scenarios.py` → 56 OK.
+- `unittest discover` → `Ran 448 tests ... OK` (было 392; добавлено 56).
+- `pip check` → `No broken requirements found.`
+- `--write-examples` идемпотентно; повторная генерация совпадает с
+  закоммиченными файлами (FIX-SCN-003). `--update-checksums` не меняет
+  пересчитанный manifest.
+- `git diff --check` → PASS (только предупреждения CRLF).
+
+## Ограничения и явно не выполненное
+
+- Это **S**-уровень: схемы/статические проверки и литеральный эталон.
+  **M (mock/UI), A (реальный API/ФС), E (E2E) — NOT_RUN.** Реальные гонки,
+  потеря ответа, перезапуск, claim, файловые операции, TTL-часы и восстановление
+  не выполнялись; fault-точки/барьеры/durable intent — логические требования.
+- Matcher/priority resolver/target derivation/executor/recovery/concurrency не
+  реализуются: значения объявлены и сверяются между собой. Сценарии не
+  доказывают поведение backend.
+- `WAITING_READY` для изменившегося источника — объявленное ожидаемое состояние
+  очереди, не materialized QueueResponse.
+- Backend/UI/control plane/backlog не затрагивались. Staging/commit/push worker
+  не выполняет (D-06).
+
+## ID-модель для следующего leaf (LT-03.5a/5b)
+
+- Изолированные партии LT-03.4b: `batch-overlap-winner`, `batch-overlap-loser`,
+  `batch-atlas-retry`.
+- Изолированные выборы: `selection-overlap-worker1`, `selection-overlap-worker2`,
+  `selection-batch-atlas-retry`.
+- Audit events: `AUD-BATCH-ACCEPT-*`, `AUD-ATTEMPT-*`, `AUD-RECOVERY-REQUIRED`,
+  `AUD-LOGOUT-SYSTEM`; `source_attempt_id` у recovery указывает на attempt
+  `attempt-batch-atlas-technical-batch-tech-recovery-unknown`.
+- RuleSet: published `rule-set-atlas-published`.
+
+## Статус и следующий владелец
+
+- **Следующий владелец:** reviewer LT-03.4b (независимая сверка replay/attempt,
+  overlap/no-second-move, source change, continuation, late/duplicate target,
+  restart intent, containment-кодов и audit-связей), затем LT-03.5a (quarantine/
+  return) и LT-03.5b (audit) на основе audit-ожиданий этого leaf.
+- **Блокирующая зависимость:** нет.

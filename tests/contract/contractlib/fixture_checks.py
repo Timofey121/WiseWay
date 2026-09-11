@@ -16,7 +16,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from . import batch_outcomes, dictionary_lifecycle, preview_preflight, queue_selections, rule_expectations, search_expectations, synthetic
+from . import batch_outcomes, batch_scenarios, dictionary_lifecycle, preview_preflight, queue_selections, rule_expectations, search_expectations, synthetic
 from .semantic import validate_fixture
 
 
@@ -121,6 +121,7 @@ def run_fixture_checks(report, registry, root: Optional[Path] = None) -> None:
     _run_queue_selections(report, registry, base)
     _run_preview_preflight(report, registry, base)
     _run_batch_outcomes(report, registry, base)
+    _run_batch_scenarios(report, registry, base)
 
 
 def _run_search_expectations(report, registry, base: Path) -> None:
@@ -558,6 +559,72 @@ def _run_batch_outcomes(report, registry, base: Path) -> None:
 
     try:
         generated = batch_outcomes.generated_examples(expectations, context)
+    except Exception as exc:  # noqa: BLE001
+        examples_check.add(f"cannot regenerate examples: {type(exc).__name__}: {exc}")
+        return
+    for relative, payload in generated.items():
+        target = base / relative
+        if not target.is_file():
+            examples_check.add(f"generated example is missing: {relative}")
+            continue
+        try:
+            committed = synthetic.load_json(target)
+        except Exception as exc:  # noqa: BLE001
+            examples_check.add(f"cannot parse {relative}: {type(exc).__name__}: {exc}")
+            continue
+        if committed != payload:
+            examples_check.add(f"committed example differs from regeneration: {relative}")
+
+
+def _run_batch_scenarios(report, registry, base: Path) -> None:
+    """LT-03.4b: literal operational retry/overlap/restart scenario oracle."""
+    oracle_check = report.check(
+        "FIX-SCN-001",
+        "Operational batch scenarios materialize to schema-valid literal requests/"
+        "responses and satisfy the finite idempotency/overlap/restart invariants",
+    )
+    mutation_check = report.check(
+        "FIX-SCN-002",
+        "Declared batch-scenario negative mutations are rejected by the "
+        "consistency validators",
+    )
+    examples_check = report.check(
+        "FIX-SCN-003",
+        "Generated public overlap batch examples match the committed files",
+    )
+    try:
+        expectations = batch_scenarios.load_expectations(base)
+        context = batch_scenarios.build_context(base, expectations)
+    except Exception as exc:  # noqa: BLE001 - report unreadable expectations
+        oracle_check.add(
+            f"cannot load batch-scenario expectations: {type(exc).__name__}: {exc}"
+        )
+        return
+
+    for message in batch_scenarios.expectation_errors(expectations, context):
+        oracle_check.add(message)
+    for message in batch_scenarios.identity_errors(expectations, context):
+        oracle_check.add(message)
+    for message in batch_scenarios.inventory_errors(expectations, context):
+        oracle_check.add(message)
+    for message in batch_scenarios.payload_errors(expectations, context, registry):
+        oracle_check.add(message)
+    for message in batch_scenarios.link_errors(expectations, context):
+        oracle_check.add(message)
+    for message in batch_scenarios.mutation_errors(expectations, context, registry):
+        mutation_check.add(message)
+
+    report.scenario_scenarios = len(expectations["scenarios"])
+    report.scenario_replays = sum(
+        len(scenario.get("replays", [])) for scenario in expectations["scenarios"]
+    )
+    report.scenario_containment = len(context["containment"])
+    report.scenario_audit = len(expectations["audit_expectations"])
+    report.scenario_mutations = len(expectations["mutations"])
+    report.scenario_links = len(expectations["links"])
+
+    try:
+        generated = batch_scenarios.generated_examples(expectations, context)
     except Exception as exc:  # noqa: BLE001
         examples_check.add(f"cannot regenerate examples: {type(exc).__name__}: {exc}")
         return
