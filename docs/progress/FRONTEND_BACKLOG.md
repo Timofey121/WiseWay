@@ -221,11 +221,13 @@ E-01 final completion: финальный независимый EXECUTION_UNIT 
 
 ## EPIC E-02 — Toolchain, generated client, транспорт и mocks
 
-Status: TODO. Scope: FE-02; TZ §11/14; NFR-02/05. Браузерная сборка — frontend, backend/infra здесь не реализуются.
+Status: IN_PROGRESS. Scope: FE-02; TZ §11/14; NFR-02/05. Браузерная сборка — frontend, backend/infra здесь не реализуются.
+
+Execution baseline 11.09.2026: branch `feat/e-02`, HEAD `78bbeeb` (= `origin/main` после merge PR #1 E-01); `frontend/` отсутствует, продуктовых артефактов E-02 нет. Dependencies WP-04: WP-02 удовлетворён фактическим состоянием (runner/эталоны E-01 в `tests/contract/`, `contracts/examples/`, `fixtures/synthetic/`). WP-04 → WP-05 → WP-06/WP-07. X-STACK закрывается инженерным решением LT-04.1a.
 
 ### WP-04 — Воспроизводимая браузерная основа
 
-- **Status:** TODO. **Parent:** E-02. **Dependencies:** WP-02.
+- **Status:** IN_PROGRESS. **Parent:** E-02. **Dependencies:** WP-02.
 - **Goal:** одна собираемая frontend-структура и generated client.
 - **Sources of truth:** TZ §11/NFR-02; FE §2/3, FE-02; PLAN §2/3/7; OAS целиком.
 - **Acceptance criteria:** toolchain/ADR/lock закреплены; typecheck/lint/component/browser/build доступны; поддержка OpenAPI 3.1, без ручных DTO.
@@ -236,6 +238,8 @@ Status: TODO. Scope: FE-02; TZ §11/14; NFR-02/05. Браузерная сбор
 |---|---|---|---|---|---|---|
 | LT-04.1 | TODO | — | Scaffold с runner | TZ §11/NFR-02; FE §3; PLAN §2/3/7 | Orchestrator принимает X-STACK внутри требований: runtime/package manager/generator/test runners и обычный frontend toolchain; решение закреплено в ADR, runtime/dependencies/lock зафиксированы; одна структура features/api/generated/mocks/tests; реальные typecheck/lint/component/browser/build команды; без лишних экранов/design system | V-C smoke/build/установки по lock; V-H ADR/README; React+TS не объявлены уже установленными |
 | LT-04.2 | TODO | LT-04.1, WP-02 | Клиент единственного OAS | Все 33 OAS operationId/schemas; API §12; FE-02; Q-043 S | Generated types/client в `frontend/src/api/generated`; nullable/unions/oneOf/headers/query/body корректны; генерация документирована, без ручных DTO/правок output | V-C usage tests A/B/C, DIRECT/PREVIEWED/query company_id; повторная генерация без diff |
+
+LT-04.1a completion: X-STACK закрыт инженерным решением (Node 24.x/npm 11.x, React 19 + TypeScript 5.9, Vite 7, Vitest 3 + Testing Library + jsdom, Playwright 1.x, ESLint 9 + typescript-eslint, openapi-typescript 7 + openapi-fetch 0.14, ajv 8 + yaml 2). ADR `frontend/docs/ADR-0001-frontend-toolchain.md`; `frontend/package.json` с exact-пинами, `engines`, `packageManager`; committed `package-lock.json` (lockfileVersion 3); `frontend/.npmrc` (`save-exact=true`), `frontend/.gitignore` (`/node_modules/`). Независимый LEAF reviewer PASS. Orchestrator фактически: `npm ci` → exit 0; `npm ls --depth=0` → exit 0 без unmet peer; `npm audit --omit=dev` → 0 vulnerabilities; pinned `openapi-typescript 7.13.0` против OAS 3.1.1 → exit 0 (132291 bytes, `/auth/login`, `/sorting/batches`); `git diff --check` PASS. Полный `npm audit` даёт 2 moderate только в dev-цепочке Vitest 3.x (fix — Vitest 5, вне решения), записано в ADR §8. Application scaffold/scripts/generated/mocks в этом leaf намеренно отсутствуют (LT-04.1b). M/A/E NOT_RUN.
 
 ### WP-05 — Безопасный HTTP-транспорт
 
@@ -684,7 +688,7 @@ Status: BLOCKED (X-HELP/X-INTERNAL). Scope: FE-06, TZ §13. Не расширя�
 
 | Leaf ID | Parent | Status | Dependencies | Наблюдаемый результат и AC | Verification |
 |---|---|---|---|---|---|
-| LT-04.1a | LT-04.1 | TODO | — | Выбран и зафиксирован обычный frontend toolchain: runtime, package manager, OpenAPI generator, unit/component/browser runners; ADR объясняет решение, версии и lock policy. X-STACK закрывается инженерным решением без человеческого gate | Clean tool versions/install resolution; V-H ADR и pinned choices |
+| LT-04.1a | LT-04.1 | VERIFIED | — | Выбран и зафиксирован обычный frontend toolchain: runtime, package manager, OpenAPI generator, unit/component/browser runners; ADR объясняет решение, версии и lock policy. X-STACK закрывается инженерным решением без человеческого gate | Clean tool versions/install resolution; V-H ADR и pinned choices |
 | LT-04.1b | LT-04.1 | TODO | LT-04.1a | Создан минимальный scaffold `features/api/generated/mocks/tests` и реально работающие scripts для typecheck/lint/component/browser/build; без лишних экранов/design system | Clean install по lock, smoke каждого script, production build |
 
 ### E-02 / WP-05 — transport
