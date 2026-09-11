@@ -6,8 +6,9 @@
 // корректный `X-CSRF-Token` (общий guard `requireSessionAndCsrf`). Тела
 // валидируются по схемам OAS до любого успеха. Имя уникально внутри компании
 // после trim+casefold (in-memory store), черновик заменяется атомарно с
-// `draft_revision + 1`, stale-ревизия отклоняется без частичной записи. Mock не
-// выполняет matcher, publish/restore или файловые действия.
+// `draft_revision + 1`, stale-ревизия отклоняется без частичной записи. Ручная
+// правка восстановленного черновика очищает `based_on_version_id` (LT-07.1c).
+// Mock не выполняет matcher, publish/restore или файловые действия.
 
 import { readJsonBody } from '../body'
 import { declaredDictionaryErrorResponse } from '../dictionaries/errors'
@@ -198,6 +199,11 @@ export const replaceDictionaryDraftHandler: MockHandler = async (context) => {
   if (!actor) {
     return unauthenticatedResponse(requestId)
   }
+  // Ручная правка восстановленного черновика очищает происхождение restore
+  // (API §6): `based_on_version_id` снимается, черновик становится обычным
+  // кандидатом.
+  const publishingStore = controller.getPublishingStore()
+  const restoredDraft = publishingStore.isRestoredDraft(params.dictionary_id)
   const saved = store.replaceDraft(
     params.dictionary_id,
     {
@@ -206,6 +212,10 @@ export const replaceDictionaryDraftHandler: MockHandler = async (context) => {
       rules: payload.rules,
     },
     actor,
+    { clearBasedOnVersion: restoredDraft },
   )
+  if (restoredDraft) {
+    publishingStore.clearRestoredDraft(params.dictionary_id)
+  }
   return jsonResponse(saved, requestId)
 }

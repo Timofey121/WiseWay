@@ -3,9 +3,10 @@
 //
 // Набор ограничен операциями LT-06.1 (bootstrap/session/config), LT-06.2a-ii
 // (`searchFiles`/`getSearchFacet`), LT-07.1a (targets/dictionaries) и LT-07.1b
-// (`createDictionarySimulation`/`getSimulation`). Пути с `{param}`
-// (company_id/dictionary_id/simulation_id) сопоставляются router'ом. Неизвестный
-// маршрут в router даёт безопасную 404, а не правдоподобный успех.
+// (`createDictionarySimulation`/`getSimulation`), LT-07.1c
+// (publish/versions/restore). Пути с `{param}`
+// (company_id/dictionary_id/version_id/simulation_id) сопоставляются router'ом.
+// Неизвестный маршрут в router даёт безопасную 404, а не правдоподобный успех.
 
 import type { MockHandler } from '../types'
 import { loginHandler, logoutHandler, sessionHandler } from './auth'
@@ -18,6 +19,12 @@ import {
   replaceDictionaryDraftHandler,
 } from './dictionaries'
 import { healthHandler } from './health'
+import {
+  getDictionaryVersionHandler,
+  listDictionaryVersionsHandler,
+  publishDictionaryHandler,
+  restoreDictionaryDraftHandler,
+} from './publishing'
 import { searchFacetHandler, searchHandler } from './search'
 import {
   createDictionarySimulationHandler,
@@ -45,6 +52,12 @@ export const handlersByKey: Record<string, MockHandler> = {
   'POST /companies/{company_id}/dictionaries': createDictionaryHandler,
   'GET /dictionaries/{dictionary_id}': getDictionaryHandler,
   'PUT /dictionaries/{dictionary_id}/draft': replaceDictionaryDraftHandler,
+  'GET /dictionaries/{dictionary_id}/versions': listDictionaryVersionsHandler,
+  'GET /dictionaries/{dictionary_id}/versions/{version_id}':
+    getDictionaryVersionHandler,
+  'POST /dictionaries/{dictionary_id}/restore-draft':
+    restoreDictionaryDraftHandler,
+  'POST /dictionaries/{dictionary_id}/publish': publishDictionaryHandler,
   'POST /dictionaries/{dictionary_id}/simulate':
     createDictionarySimulationHandler,
   'GET /simulations/{simulation_id}': getSimulationHandler,

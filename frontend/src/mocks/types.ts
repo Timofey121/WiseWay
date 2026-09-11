@@ -28,6 +28,15 @@ export type DictionaryDraft = components['schemas']['DictionaryDraft']
 export type Dictionary = components['schemas']['Dictionary']
 export type DictionaryListResponse =
   components['schemas']['DictionaryListResponse']
+export type DictionaryVersion = components['schemas']['DictionaryVersion']
+export type PageDictionaryVersion =
+  components['schemas']['PageDictionaryVersion']
+export type PublishedDictionaryResponse =
+  components['schemas']['PublishedDictionaryResponse']
+export type PublishDictionaryRequest =
+  components['schemas']['PublishDictionaryRequest']
+export type RestoreDictionaryDraftRequest =
+  components['schemas']['RestoreDictionaryDraftRequest']
 export type CreateDictionaryRequest =
   components['schemas']['CreateDictionaryRequest']
 export type ReplaceDictionaryDraftRequest =

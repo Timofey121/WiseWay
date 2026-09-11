@@ -4,9 +4,10 @@
 каталоге находятся конфигурация инструментов, точка входа, smoke-тесты,
 generated API-артефакты из единственного публичного OAS, базовый
 request/session security transport (WP-05) и контрактные mocks
-bootstrap/session/config, golden-поиска (WP-06) и targets/dictionaries/симуляции
-(WP-07, LT-07.1a/LT-07.1b). Продуктовые экраны и навигация появятся в следующих
-leaf-задачах (EPIC E-02, WP-07).
+bootstrap/session/config, golden-поиска (WP-06) и
+targets/dictionaries/симуляции/публикации (WP-07, LT-07.1a/LT-07.1b/LT-07.1c).
+Продуктовые экраны и навигация появятся в следующих leaf-задачах (EPIC E-02,
+WP-07).
 
 Выбранный toolchain, точные версии и политика lock-файла закреплены в
 [ADR-0001. Frontend toolchain WiseWay](docs/ADR-0001-frontend-toolchain.md).
@@ -540,6 +541,81 @@ full/empty/conflict/same-target/no-scenario, counts/`base_rule_set` references,
 page1→page2 без 409, 401/403/404/422, управляемые ошибки по объявленным кодам и
 `reset()`.
 
+## Mock publishing/versions/restore (LT-07.1c)
+
+`src/mocks/handlers/publishing.ts` подключает к mock-fetch четыре операции
+WP-07 без backend, matcher, RuleSet-вычисления и файловых действий:
+
+| Метод и путь | Ответ | Особенности |
+|---|---|---|
+| `POST /dictionaries/{dictionary_id}/publish` | 201 `PublishedDictionaryResponse` | canned v2/v3, gates, `Idempotency-Key`; CSRF обязателен |
+| `GET /dictionaries/{dictionary_id}/versions` | 200 `PageDictionaryVersion` | история newest-first, `cursor`/`limit` |
+| `GET /dictionaries/{dictionary_id}/versions/{version_id}` | 200 `DictionaryVersion` | неизвестный → 404 `NOT_FOUND` |
+| `POST /dictionaries/{dictionary_id}/restore-draft` | 200 `Dictionary` | `revision+1`, `based_on_version_id`; CSRF обязателен |
+
+- Данные берутся из публичных примеров `contracts/examples/dictionaries/*.json`
+  через `src/mocks/publishing/store.ts`: seed-версии
+  (`version-atlas-general-v1`, `version-atlas-invoices-v1`,
+  `version-nova-general-v1`), canned `publish-atlas-general-v2/v3` и canned
+  `dictionary-atlas-general-restored-v1`. Publish append'ит literal
+  `published_version` и literal `rule_set`; RuleSet не пересчитывается.
+- `publishDictionary` требует сессию, корректный `X-CSRF-Token` (общий guard
+  `requireSessionAndCsrf`) и непустой `Idempotency-Key`, валидирует
+  `PublishDictionaryRequest` (`comment` 1–500). Gates воспроизводимы по
+  canned-состоянию: неизвестный dictionary/simulation → 404;
+  `expected_draft_revision` ≠ текущей ревизии `DictionaryStore` → 409
+  `DRAFT_VERSION_CONFLICT`; simulation, зафиксированная на другой ревизии, или
+  истёкшая (инъекция `setPublishingNow`) → 409 `STALE_SIMULATION`;
+  `counts.rule_conflicts > 0` → 409 `RULE_CONFLICT`; `counts.no_scenario > 0`
+  без `acknowledge_no_scenario` → 409 `NO_SCENARIO_ACK_REQUIRED`. Успех — 201
+  literal `publish-atlas-general-v2`/`v3` (выбор
+  `setPublishingScenario('v2' | 'v3')`), обновление `DictionaryStore`, истории
+  версий и active RuleSet. Сортировка/партия не запускаются.
+- Идемпотентность на mock-стороне scoped по actor+dictionary+ключу: повтор того
+  же ключа/тела возвращает прежний результат **до** staleness-проверок (API §2,
+  потерянный ответ), другое тело с тем же ключом → 409
+  `IDEMPOTENCY_KEY_REUSED`; новый ключ — новая операция. Ключ проверяется до
+  TTL/ревизии, поэтому replay принятой публикации работает и при устаревшем
+  тесте.
+- `restoreDictionaryDraft` валидирует `{version_id, expected_draft_revision}`,
+  неизвестный dictionary/version → 404, stale-ревизия → 409
+  `DRAFT_VERSION_CONFLICT`. Успех переносит name/description/rules версии в
+  черновик (`revision+1`, `based_on_version_id` установлен) и помечает черновик
+  восстановленным. Restore — не публикация (API §6): `active_version_id` и
+  `versions_count` берутся из текущего `DictionaryStore` и **никогда** не
+  меняются. Canned-пример `dictionary-atlas-general-restored-v1` применяется
+  только при выполнении его предусловий (канонический сценарий restore после
+  publish v2: active v2, история v1+v2, `versions_count=2`, и запрошена именно
+  `version-atlas-general-v1`, которую восстанавливает canned); иначе черновик
+  собирается из name/description/rules ИМЕННО запрошенной версии с
+  `based_on_version_id=version_id`, поэтому для любой отданной
+  `active_version_id` `GET /versions/{version_id}` отвечает 200 — «висячего»
+  active нет и выбранная версия не подменяется. Последующая ручная правка (`PUT /draft`) очищает
+  `based_on_version_id` (API §6), после чего черновик — обычный новый кандидат.
+- `listDictionaryVersions`/`getDictionaryVersion` — чтение: только активная
+  mock-сессия, неизвестный dictionary/version → 404, недействительный
+  `cursor`/`limit` → 422; 409 у чтения не объявлен и не возвращается. После
+  публикаций v2/v3 список равен literal `versions-atlas-general` (v3/v2/v1).
+- `MockController` управляет объявленными ошибками публикации:
+  `setError(operation, code)` / `failNext(operation, code)` / `clearError` /
+  `consumePublishingError`. Коды ограничены объявленными для каждой операции
+  (`declaredPublishingErrors` из `@/mocks`): для `publishDictionary` —
+  `DRAFT_VERSION_CONFLICT`, `STALE_SIMULATION`, `RULE_CONFLICT`,
+  `NO_SCENARIO_ACK_REQUIRED`, `IDEMPOTENCY_KEY_REUSED`, `VALIDATION_ERROR`; для
+  `listDictionaryVersions`/`getDictionaryVersion` — только `VALIDATION_ERROR`;
+  для `restoreDictionaryDraft` — `DRAFT_VERSION_CONFLICT`, `VALIDATION_ERROR`.
+  Тело/статус берутся из `contracts/examples/errors/*.json`. `reset()`
+  восстанавливает seed публикаций, сценарий `v2`, снимает TTL-время и очищает
+  управляемые ошибки.
+
+Проверки: `tests/mocks/publishing.test.ts` — literal publish v2/v3,
+dictionary/version/RuleSet и отсутствие сортировки, gates
+rule/ack/stale/TTL/comment 0–501, идемпотентный retry/reuse/lost response,
+versions list/get/paging, restore/provenance (canned v1 и fallback для
+запрошенной v2; неканонический save-без-publish без смены
+active/`versions_count` и без «висячего» active), ручная правка,
+401/403/404/422, управляемые ошибки по объявленным кодам и `reset()`.
+
 ## Структура
 
 ```text
@@ -561,7 +637,8 @@ frontend/
       transport-error.ts  TransportError и безопасный разбор ошибок
       transport.ts        createApiClient: credentials/no-store/CSRF/idempotency/retry
     mocks/              schema-valid mocks bootstrap/session/config, поиска
-                        (WP-06), targets/dictionaries и симуляции (WP-07)
+                        (WP-06), targets/dictionaries, симуляции и публикации
+                        (WP-07)
       index.ts          createMockFetch, MockController, MOCK_MODE
       router.ts         разбор Request, статические и `{param}` маршруты
       validate.ts       ajv-валидация запросов по generated openapi.json
@@ -569,12 +646,14 @@ frontend/
       guards.ts         общий session+CSRF guard mutation-операций
       controller.ts     delay/profile/freshness/empty/session + search
                         scope-delay/error/queue + dictionary store/errors +
-                        simulation scenario/store/errors/reset
+                        simulation scenario/store/errors + publishing
+                        scenario/store/errors/reset
       responses.ts      контрактные заголовки и ErrorResponse
       handlers/         health, login, getSession, logout, appConfig, roots,
                         companies, search (searchFiles/getSearchFacet),
                         targets/dictionaries (LT-07.1a),
-                        simulations (LT-07.1b)
+                        simulations (LT-07.1b),
+                        publishing (publish/versions/restore, LT-07.1c)
       search/           golden search/facet foundation (LT-06.2a-i)
         corpus.ts       materializer corpus.json → SearchItem/Marker
         expectations.ts literal-resolver search_expectations.json
@@ -586,6 +665,9 @@ frontend/
       simulations/      simulation foundation (LT-07.1b)
         store.ts        literal seed/store сценариев и страниц симуляции
         errors.ts       объявленные ошибки симуляции
+      publishing/       publishing/versions/restore foundation (LT-07.1c)
+        store.ts        seed версий, canned publish/restore, идемпотентность
+        errors.ts       объявленные ошибки публикации/версий/restore
   tests/
     App.test.tsx        component smoke-тест
     api/client.test.ts  runtime-проверки запросов клиента A/B/C
@@ -600,6 +682,7 @@ frontend/
     mocks/search-error-race.test.ts  delay/error/race управление поиском
     mocks/dictionaries-draft.test.ts  targets/dictionaries lifecycle mocks
     mocks/simulations.test.ts  simulation create/get, paging/stale/counts mocks
+    mocks/publishing.test.ts  publish/versions/restore, gates/idempotency mocks
     fixture-imports.test.ts  проверка alias-импорта JSON вне frontend/
     support/            технические модули scaffold
     browser/            Playwright smoke-тест

@@ -21,8 +21,19 @@ import type {
   GetSimulationErrorCode,
   MockSimulationErrorCode,
 } from './simulations/errors'
+import type {
+  GetDictionaryVersionErrorCode,
+  ListDictionaryVersionsErrorCode,
+  MockPublishingErrorCode,
+  PublishDictionaryErrorCode,
+  RestoreDictionaryDraftErrorCode,
+} from './publishing/errors'
 import { DictionaryStore } from './dictionaries/store'
 import { SimulationStore, type SimulationScenario } from './simulations/store'
+import {
+  PublishingStore,
+  type PublishingScenario,
+} from './publishing/store'
 
 export type ConfigProfile = 'n100' | 'n10'
 
@@ -59,12 +70,23 @@ export type MockSimulationOperation =
   | 'createDictionarySimulation'
   | 'getSimulation'
 
+/**
+ * Операции публикации/версий/восстановления, для которых включается управляемая
+ * ошибка (LT-07.1c).
+ */
+export type MockPublishingOperation =
+  | 'publishDictionary'
+  | 'listDictionaryVersions'
+  | 'getDictionaryVersion'
+  | 'restoreDictionaryDraft'
+
 /** Возвращает `true` для операции поиска (иначе — targets/dictionaries). */
 function isSearchOperation(
   operation:
     | MockSearchOperation
     | MockDictionaryOperation
-    | MockSimulationOperation,
+    | MockSimulationOperation
+    | MockPublishingOperation,
 ): operation is MockSearchOperation {
   return operation === 'searchFiles' || operation === 'getSearchFacet'
 }
@@ -74,11 +96,28 @@ function isSimulationOperation(
   operation:
     | MockSearchOperation
     | MockDictionaryOperation
-    | MockSimulationOperation,
+    | MockSimulationOperation
+    | MockPublishingOperation,
 ): operation is MockSimulationOperation {
   return (
     operation === 'createDictionarySimulation' ||
     operation === 'getSimulation'
+  )
+}
+
+/** Возвращает `true` для операции публикации/версий/восстановления. */
+function isPublishingOperation(
+  operation:
+    | MockSearchOperation
+    | MockDictionaryOperation
+    | MockSimulationOperation
+    | MockPublishingOperation,
+): operation is MockPublishingOperation {
+  return (
+    operation === 'publishDictionary' ||
+    operation === 'listDictionaryVersions' ||
+    operation === 'getDictionaryVersion' ||
+    operation === 'restoreDictionaryDraft'
   )
 }
 
@@ -129,6 +168,17 @@ export class MockController {
   private readonly nextSimulationErrors = new Map<
     MockSimulationOperation,
     MockSimulationErrorCode[]
+  >()
+  private publishingScenario: PublishingScenario = 'v2'
+  private publishingNow: string | null = null
+  private readonly publishingStore = new PublishingStore()
+  private readonly persistentPublishingErrors = new Map<
+    MockPublishingOperation,
+    MockPublishingErrorCode
+  >()
+  private readonly nextPublishingErrors = new Map<
+    MockPublishingOperation,
+    MockPublishingErrorCode[]
   >()
   private readonly sleep: (ms: number) => Promise<void>
 
@@ -242,11 +292,32 @@ export class MockController {
   ): void
   setError(operation: 'getSimulation', code: GetSimulationErrorCode): void
   setError(
+    operation: 'publishDictionary',
+    code: PublishDictionaryErrorCode,
+  ): void
+  setError(
+    operation: 'listDictionaryVersions',
+    code: ListDictionaryVersionsErrorCode,
+  ): void
+  setError(
+    operation: 'getDictionaryVersion',
+    code: GetDictionaryVersionErrorCode,
+  ): void
+  setError(
+    operation: 'restoreDictionaryDraft',
+    code: RestoreDictionaryDraftErrorCode,
+  ): void
+  setError(
     operation:
       | MockSearchOperation
       | MockDictionaryOperation
-      | MockSimulationOperation,
-    code: SearchErrorCode | MockDictionaryErrorCode | MockSimulationErrorCode,
+      | MockSimulationOperation
+      | MockPublishingOperation,
+    code:
+      | SearchErrorCode
+      | MockDictionaryErrorCode
+      | MockSimulationErrorCode
+      | MockPublishingErrorCode,
   ): void {
     if (isSearchOperation(operation)) {
       this.persistentErrors.set(operation, code as SearchErrorCode)
@@ -254,6 +325,11 @@ export class MockController {
       this.persistentSimulationErrors.set(
         operation,
         code as MockSimulationErrorCode,
+      )
+    } else if (isPublishingOperation(operation)) {
+      this.persistentPublishingErrors.set(
+        operation,
+        code as MockPublishingErrorCode,
       )
     } else {
       this.persistentDictionaryErrors.set(
@@ -276,11 +352,32 @@ export class MockController {
   ): void
   failNext(operation: 'getSimulation', code: GetSimulationErrorCode): void
   failNext(
+    operation: 'publishDictionary',
+    code: PublishDictionaryErrorCode,
+  ): void
+  failNext(
+    operation: 'listDictionaryVersions',
+    code: ListDictionaryVersionsErrorCode,
+  ): void
+  failNext(
+    operation: 'getDictionaryVersion',
+    code: GetDictionaryVersionErrorCode,
+  ): void
+  failNext(
+    operation: 'restoreDictionaryDraft',
+    code: RestoreDictionaryDraftErrorCode,
+  ): void
+  failNext(
     operation:
       | MockSearchOperation
       | MockDictionaryOperation
-      | MockSimulationOperation,
-    code: SearchErrorCode | MockDictionaryErrorCode | MockSimulationErrorCode,
+      | MockSimulationOperation
+      | MockPublishingOperation,
+    code:
+      | SearchErrorCode
+      | MockDictionaryErrorCode
+      | MockSimulationErrorCode
+      | MockPublishingErrorCode,
   ): void {
     if (isSearchOperation(operation)) {
       const queue = this.nextErrors.get(operation)
@@ -302,6 +399,17 @@ export class MockController {
       }
       return
     }
+    if (isPublishingOperation(operation)) {
+      const queue = this.nextPublishingErrors.get(operation)
+      if (queue) {
+        queue.push(code as MockPublishingErrorCode)
+      } else {
+        this.nextPublishingErrors.set(operation, [
+          code as MockPublishingErrorCode,
+        ])
+      }
+      return
+    }
     const queue = this.nextDictionaryErrors.get(operation)
     if (queue) {
       queue.push(code as MockDictionaryErrorCode)
@@ -314,11 +422,13 @@ export class MockController {
   clearError(operation: MockSearchOperation): void
   clearError(operation: MockDictionaryOperation): void
   clearError(operation: MockSimulationOperation): void
+  clearError(operation: MockPublishingOperation): void
   clearError(
     operation:
       | MockSearchOperation
       | MockDictionaryOperation
-      | MockSimulationOperation,
+      | MockSimulationOperation
+      | MockPublishingOperation,
   ): void {
     if (isSearchOperation(operation)) {
       this.persistentErrors.delete(operation)
@@ -328,6 +438,11 @@ export class MockController {
     if (isSimulationOperation(operation)) {
       this.persistentSimulationErrors.delete(operation)
       this.nextSimulationErrors.delete(operation)
+      return
+    }
+    if (isPublishingOperation(operation)) {
+      this.persistentPublishingErrors.delete(operation)
+      this.nextPublishingErrors.delete(operation)
       return
     }
     this.persistentDictionaryErrors.delete(operation)
@@ -374,6 +489,20 @@ export class MockController {
     return this.persistentSimulationErrors.get(operation)
   }
 
+  /**
+   * Возвращает объявленную ошибку публикации/версий/восстановления для текущей
+   * отправки и расходует одноразовую (LT-07.1c).
+   */
+  consumePublishingError(
+    operation: MockPublishingOperation,
+  ): MockPublishingErrorCode | undefined {
+    const queue = this.nextPublishingErrors.get(operation)
+    if (queue && queue.length > 0) {
+      return queue.shift()
+    }
+    return this.persistentPublishingErrors.get(operation)
+  }
+
   /** In-memory store справочников (seed, reset и мутации). */
   getDictionaryStore(): DictionaryStore {
     return this.dictionaryStore
@@ -382,6 +511,35 @@ export class MockController {
   /** In-memory store симуляций (seed, reset и созданные результаты). */
   getSimulationStore(): SimulationStore {
     return this.simulationStore
+  }
+
+  /** In-memory store публикаций/версий/восстановлений (LT-07.1c). */
+  getPublishingStore(): PublishingStore {
+    return this.publishingStore
+  }
+
+  /** Текущий выбранный сценарий успешной публикации (по умолчанию `v2`). */
+  getPublishingScenario(): PublishingScenario {
+    return this.publishingScenario
+  }
+
+  /** Выбирает canned-сценарий успешной публикации (`v2`/`v3`). */
+  setPublishingScenario(scenario: PublishingScenario): void {
+    this.publishingScenario = scenario
+  }
+
+  /**
+   * Инъектированное «текущее время» для проверки TTL simulation при publish.
+   * `null` (по умолчанию) отключает TTL-проверку: mock не привязан к реальным
+   * часам.
+   */
+  getPublishingNow(): string | null {
+    return this.publishingNow
+  }
+
+  /** Задаёт «текущее время» (Instant) для TTL-проверки или `null`. */
+  setPublishingNow(instant: string | null): void {
+    this.publishingNow = instant
   }
 
   /** Текущий выбранный сценарий симуляции (по умолчанию `full`). */
@@ -441,8 +599,9 @@ export class MockController {
   /**
    * Сбрасывает сессию, задержку, профиль, freshness, empty-переопределения,
    * scope-задержки, per-send очереди, управляемые ошибки поиска,
-   * targets/dictionaries и симуляции, а также восстанавливает seed справочников
-   * и симуляций и сценарий `full`.
+   * targets/dictionaries, симуляции и публикации, а также восстанавливает seed
+   * справочников/симуляций/публикаций, сценарии `full`/`v2` и снимает
+   * TTL-время publish.
    */
   reset(): void {
     this.session = null
@@ -462,8 +621,13 @@ export class MockController {
     this.nextDictionaryErrors.clear()
     this.persistentSimulationErrors.clear()
     this.nextSimulationErrors.clear()
+    this.persistentPublishingErrors.clear()
+    this.nextPublishingErrors.clear()
     this.simulationScenario = 'full'
+    this.publishingScenario = 'v2'
+    this.publishingNow = null
     this.dictionaryStore.reset()
     this.simulationStore.reset()
+    this.publishingStore.reset()
   }
 }

@@ -28,6 +28,7 @@ export type {
   ConfigProfile,
   MockControllerOptions,
   MockDictionaryOperation,
+  MockPublishingOperation,
   MockSearchOperation,
   MockSearchScope,
   MockSimulationOperation,
@@ -58,6 +59,18 @@ export type {
   MockSimulationErrorCode,
 } from './simulations/errors'
 export {
+  declaredPublishingErrors,
+  isPublishingErrorCode,
+} from './publishing/errors'
+export type {
+  DeclaredPublishingError,
+  GetDictionaryVersionErrorCode,
+  ListDictionaryVersionsErrorCode,
+  MockPublishingErrorCode,
+  PublishDictionaryErrorCode,
+  RestoreDictionaryDraftErrorCode,
+} from './publishing/errors'
+export {
   isAllowedTarget,
   listCompanyTargets,
   resolveTargetDisplayPath,
@@ -75,6 +88,17 @@ export type {
   SimulationScenario,
   StoredSimulation,
 } from './simulations/store'
+export {
+  parseVersionsLimit,
+  PUBLISHING_SCENARIOS,
+  PublishingStore,
+  resolveVersionsPage,
+} from './publishing/store'
+export type {
+  PublishingScenario,
+  StoredPublishOperation,
+  VersionPageQuery,
+} from './publishing/store'
 export type {
   MockHandler,
   MockRequestContext,
