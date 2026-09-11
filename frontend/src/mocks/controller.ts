@@ -1,16 +1,20 @@
 // Управление сценариями mock-сервера WiseWay.
 //
 // Контроллер хранит только воспроизводимое состояние сценария: активную
-// mock-сессию, управляемую задержку ответа, профиль app-config (N=100/N=10) и
-// пустые состояния roots/companies. Никаких реальных учётных данных, файлов или
+// mock-сессию, управляемую задержку ответа, профиль app-config (N=100/N=10),
+// пустые состояния roots/companies и freshness-профиль поиска
+// (CURRENT/UPDATING/STALE). Никаких реальных учётных данных, файлов или
 // сетевых подключений здесь нет: mock не является защищённым auth backend.
 //
 // Задержка инъектируется через `sleep`, поэтому тесты проверяют её без реальных
 // ожиданий (controlled clock / fake sleep).
 
-import type { Session } from './types'
+import type { SearchFreshness, Session } from './types'
 
 export type ConfigProfile = 'n100' | 'n10'
+
+/** Профиль freshness, выбираемый для `/search` из golden-эталона. */
+export type SearchFreshnessProfile = SearchFreshness['status']
 
 export interface MockControllerOptions {
   /** Инъекция ожидания; по умолчанию реальный `setTimeout`. */
@@ -27,6 +31,7 @@ export class MockController {
   private session: Session | null = null
   private delayMs = 0
   private configProfile: ConfigProfile = 'n100'
+  private searchFreshnessProfile: SearchFreshnessProfile = 'CURRENT'
   private rootsEmpty = false
   private companiesEmpty = false
   private requestSequence = 0
@@ -83,6 +88,16 @@ export class MockController {
     this.configProfile = profile
   }
 
+  /** Текущий freshness-профиль поиска (CURRENT по умолчанию). */
+  getSearchFreshnessProfile(): SearchFreshnessProfile {
+    return this.searchFreshnessProfile
+  }
+
+  /** Задаёт freshness-профиль, отражаемый в ответах `/search`. */
+  setSearchFreshnessProfile(profile: SearchFreshnessProfile): void {
+    this.searchFreshnessProfile = profile
+  }
+
   /** Пустое состояние roots. */
   isRootsEmpty(): boolean {
     return this.rootsEmpty
@@ -107,11 +122,12 @@ export class MockController {
     return `request-mock-${this.requestSequence}`
   }
 
-  /** Сбрасывает сессию, задержку, профиль и empty-переопределения. */
+  /** Сбрасывает сессию, задержку, профиль, freshness и empty-переопределения. */
   reset(): void {
     this.session = null
     this.delayMs = 0
     this.configProfile = 'n100'
+    this.searchFreshnessProfile = 'CURRENT'
     this.rootsEmpty = false
     this.companiesEmpty = false
     this.requestSequence = 0

@@ -122,6 +122,15 @@ export function validationErrorResponse(
   return fromErrorExample(requestId, 422, 'error-validation-error', fieldErrors)
 }
 
+/**
+ * 400 INVALID_QUERY — объявленная контрактом безопасная ошибка поиска.
+ * Используется, когда запрос валиден по схеме, но literal golden-сценарий для
+ * него не объявлен: mock не выполняет matcher/ranking и не выдумывает успех.
+ */
+export function invalidQueryResponse(requestId: string): Response {
+  return fromErrorExample(requestId, 400, 'error-invalid-query')
+}
+
 /** Безопасное сообщение 404 без выдуманных деталей. */
 const NOT_FOUND_MESSAGE = 'Объект не найден.'
 

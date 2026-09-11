@@ -5,11 +5,13 @@
 // запросов/ответов — те же generated-типы единственного OAS, что и в
 // real-режиме; подменяется только транспорт.
 //
-// Mock обслуживает только bootstrap/session/config операции без backend:
-// health, login, getSession, logout, getAppConfig, listRoots, listCompanies.
-// Он не является защищённым auth backend: реальные credentials, cookie-сессии
-// и серверные проверки отсутствуют, а пароли в примерах — инертные
-// placeholder'ы.
+// Mock обслуживает только операции без backend: bootstrap/session/config
+// (health, login, getSession, logout, getAppConfig, listRoots, listCompanies) и
+// golden-поиск (searchFiles, getSearchFacet). Он не является защищённым auth
+// backend: реальные credentials, cookie-сессии и серверные проверки
+// отсутствуют, а пароли в примерах — инертные placeholder'ы. Поиск не
+// выполняет matcher/ranking: handler отдаёт literal golden-ответ либо
+// объявленную ошибку.
 //
 // @example
 // import { createApiClient } from '@/api/transport'
@@ -25,6 +27,7 @@ export { MockController }
 export type {
   ConfigProfile,
   MockControllerOptions,
+  SearchFreshnessProfile,
 } from './controller'
 export { MOCK_MODE, MOCK_MARKER_HEADER } from './responses'
 export type {

@@ -2,10 +2,10 @@
 
 Минимальная рабочая основа (scaffold) frontend-приложения WiseWay. Сейчас в
 каталоге находятся конфигурация инструментов, точка входа, smoke-тесты,
-generated API-артефакты из единственного публичного OAS и базовый
-request/session security transport (WP-05). Продуктовые экраны, навигация и
-mock-сценарии появятся в следующих leaf-задачах (EPIC E-02,
-WP-06/WP-07).
+generated API-артефакты из единственного публичного OAS, базовый
+request/session security transport (WP-05) и контрактные mocks
+bootstrap/session/config и golden-поиска (WP-06). Продуктовые экраны и
+навигация появятся в следующих leaf-задачах (EPIC E-02, WP-07).
 
 Выбранный toolchain, точные версии и политика lock-файла закреплены в
 [ADR-0001. Frontend toolchain WiseWay](docs/ADR-0001-frontend-toolchain.md).
@@ -257,9 +257,10 @@ try {
 
 ## Mock-режим bootstrap/session/config (LT-06.1)
 
-`src/mocks/` — контрактные mocks без backend для семи операций:
+`src/mocks/` — контрактные mocks без backend для операций
 `getHealth`, `login`, `getSession`, `logout`, `getAppConfig`, `listRoots`,
-`listCompanies`. Ответы берутся из публичных примеров
+`listCompanies` и golden-поиска `searchFiles`/`getSearchFacet` (см. раздел
+«Mock search handlers»). Ответы bootstrap берутся из публичных примеров
 `contracts/examples/**` (индексируются по `fixtures/synthetic/manifest.json`),
 а не из ручных копий DTO, и валидируются по схемам единственного OAS.
 
@@ -289,9 +290,10 @@ const health = await api.GET('/health') // 200 {status: 'ok'}
 |---|---|
 | `setDelayMs(ms)` | управляемая задержка ответа; ожидание инъектируется через `new MockController({ sleep })`, поэтому тесты не ждут реально |
 | `setConfigProfile('n100' \| 'n10')` | профиль `app-config`: `search_result_limit` 100 или 10 |
+| `setSearchFreshnessProfile('CURRENT' \| 'UPDATING' \| 'STALE')` | freshness-профиль golden-ответов `/search` (по умолчанию `CURRENT`) |
 | `setRootsEmpty(true)` | `listRoots` → `roots-empty` (пустой `items`) |
 | `setCompaniesEmpty(true)` | `listCompanies` → `companies-empty` (пустой `items`) |
-| `reset()` | очищает mock-сессию, задержку, профиль и empty-переопределения |
+| `reset()` | очищает mock-сессию, задержку, профиль, freshness и empty-переопределения (freshness → `CURRENT`) |
 
 Сессия создаётся успешным `login` по одному из synthetic-примеров
 (`login-request-worker-one/two/admin`) и очищается `logout`. `getSession`,
@@ -317,9 +319,8 @@ evidence.
 
 ## Mock search foundation (LT-06.2a-i)
 
-`src/mocks/search/` — golden data foundation для будущих HTTP-handlers
-`searchFiles`/`getSearchFacet` (LT-06.2a-ii). Это ещё не HTTP-слой: модули
-вызываются напрямую и не подключены к `router`/`mock-fetch`.
+`src/mocks/search/` — golden data foundation для HTTP-handlers
+`searchFiles`/`getSearchFacet` (LT-06.2a-ii, см. следующий раздел).
 
 - `corpus.ts` — детерминированный materializer
   `fixtures/synthetic/corpus.json`: раскрывает `files[]` и `cohorts[]` (только
@@ -346,6 +347,39 @@ evidence.
 cohort раскрыт, UNRECOGNIZED-отклонения и freshness-профили воспроизводимы,
 неизвестный request даёт `undefined`.
 
+## Mock search handlers (LT-06.2a-ii)
+
+`POST /api/v1/search` (`searchFiles`) и `POST /api/v1/search/facet`
+(`getSearchFacet`) подключены к mock-fetch через `src/mocks/handlers/search.ts`
+и зарегистрированы в `src/mocks/handlers/index.ts`. HTTP-слой только
+маршрутизирует и валидирует; literal-ответ формирует foundation
+`src/mocks/search/`:
+
+- требуется активная mock-сессия: без неё оба метода отвечают
+  `401 UNAUTHENTICATED`;
+- тело проверяется по схемам OAS `SearchRequest`/`FacetRequest` (ajv): лишнее
+  или отсутствующее поле, пустое/битое JSON-тело → `422 VALIDATION_ERROR` с
+  безопасными `field_errors` и без успеха;
+- валидный, но не объявленный в golden сценарий → объявленная контрактом
+  `400 INVALID_QUERY` с безопасным сообщением (matcher/ranking не выполняются и
+  правдоподобный успех не выдумывается);
+- найденный сценарий → полный `SearchResponse`/`FacetResponse` из foundation:
+  literal totals/order/items/next_facet, `index_generation`/
+  `schema_set_version`/`ranking_profile_version` из корня и
+  `request_state_id` — точное эхо исходной отправки;
+- freshness-профиль (`CURRENT`/`UPDATING`/`STALE`) задаётся
+  `MockController.setSearchFreshnessProfile` и отражается в ответе; `reset()`
+  возвращает `CURRENT`;
+- поиск — чтение (`csrf: false`, `idempotencyKey: false`): он не несёт
+  `X-CSRF-Token`/`Idempotency-Key` и не инициирует mutation/batch запросов;
+- ответы несут `X-Request-ID`, `Cache-Control: no-store` и mock-маркер
+  `X-WiseWay-Mock`.
+
+Проверки: `tests/mocks/search-handlers.test.ts` — IDLE/zero/limited (N=10)/
+RESULTS/UNRECOGNIZED/freshness через HTTP-слой с literal golden значениями,
+facet-переоткрытие уровня, echo `request_state_id`, invalid/unknown → ошибка,
+без сессии → 401, отсутствие иных запросов.
+
 ## Структура
 
 ```text
@@ -366,14 +400,15 @@ frontend/
       retry.ts            retry/backoff policy и single-flight poll registry
       transport-error.ts  TransportError и безопасный разбор ошибок
       transport.ts        createApiClient: credentials/no-store/CSRF/idempotency/retry
-    mocks/              schema-valid mocks bootstrap/session/config (LT-06.1)
+    mocks/              schema-valid mocks bootstrap/session/config и golden-поиска (WP-06)
       index.ts          createMockFetch, MockController, MOCK_MODE
       router.ts         разбор Request и диспетчеризация; неизвестный → 404
       validate.ts       ajv-валидация запросов по generated openapi.json
       data.ts           загрузка contracts/examples через @examples + manifest
-      controller.ts     delay/profile/empty/session/reset
+      controller.ts     delay/profile/freshness/empty/session/reset
       responses.ts      контрактные заголовки и ErrorResponse
-      handlers/         health, login, getSession, logout, appConfig, roots, companies
+      handlers/         health, login, getSession, logout, appConfig, roots,
+                        companies, search (searchFiles/getSearchFacet)
       search/           golden search/facet foundation (LT-06.2a-i)
         corpus.ts       materializer corpus.json → SearchItem/Marker
         expectations.ts literal-resolver search_expectations.json
@@ -387,6 +422,7 @@ frontend/
     api/generated-types.test.ts  type-level проверки generated-схемы
     mocks/bootstrap.test.ts  bootstrap/session/config mocks и их состояния
     mocks/search-foundation.test.ts  golden search/facet foundation
+    mocks/search-handlers.test.ts  HTTP-handlers searchFiles/getSearchFacet
     fixture-imports.test.ts  проверка alias-импорта JSON вне frontend/
     support/            технические модули scaffold
     browser/            Playwright smoke-тест
