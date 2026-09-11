@@ -15,6 +15,8 @@
 
 import type { SearchFreshness, Session } from './types'
 import type { SearchErrorCode } from './search/errors'
+import type { MockDictionaryErrorCode } from './dictionaries/errors'
+import { DictionaryStore } from './dictionaries/store'
 
 export type ConfigProfile = 'n100' | 'n10'
 
@@ -31,6 +33,25 @@ export type MockSearchScope = 'search' | 'facet'
 
 /** Операции поиска, для которых включается управляемая ошибка. */
 export type MockSearchOperation = 'searchFiles' | 'getSearchFacet'
+
+/**
+ * Операции targets/dictionaries, для которых включается управляемая ошибка
+ * (LT-07.1a).
+ */
+export type MockDictionaryOperation =
+  | 'listTargetDirectories'
+  | 'resolveTargetDirectory'
+  | 'listDictionaries'
+  | 'createDictionary'
+  | 'getDictionary'
+  | 'replaceDictionaryDraft'
+
+/** Возвращает `true` для операции поиска (иначе — targets/dictionaries). */
+function isSearchOperation(
+  operation: MockSearchOperation | MockDictionaryOperation,
+): operation is MockSearchOperation {
+  return operation === 'searchFiles' || operation === 'getSearchFacet'
+}
 
 export interface MockControllerOptions {
   /** Инъекция ожидания; по умолчанию реальный `setTimeout`. */
@@ -61,6 +82,15 @@ export class MockController {
   }
   private readonly persistentErrors = new Map<MockSearchOperation, SearchErrorCode>()
   private readonly nextErrors = new Map<MockSearchOperation, SearchErrorCode[]>()
+  private readonly dictionaryStore = new DictionaryStore()
+  private readonly persistentDictionaryErrors = new Map<
+    MockDictionaryOperation,
+    MockDictionaryErrorCode
+  >()
+  private readonly nextDictionaryErrors = new Map<
+    MockDictionaryOperation,
+    MockDictionaryErrorCode[]
+  >()
   private readonly sleep: (ms: number) => Promise<void>
 
   constructor(options: MockControllerOptions = {}) {
@@ -165,8 +195,20 @@ export class MockController {
    * Включает объявленную ошибку для операции до её снятия. Значение — код из
    * публичного `ErrorCode`; тело/статус берутся из контрактного примера.
    */
-  setError(operation: MockSearchOperation, code: SearchErrorCode): void {
-    this.persistentErrors.set(operation, code)
+  setError(operation: MockSearchOperation, code: SearchErrorCode): void
+  setError(operation: MockDictionaryOperation, code: MockDictionaryErrorCode): void
+  setError(
+    operation: MockSearchOperation | MockDictionaryOperation,
+    code: SearchErrorCode | MockDictionaryErrorCode,
+  ): void {
+    if (isSearchOperation(operation)) {
+      this.persistentErrors.set(operation, code as SearchErrorCode)
+    } else {
+      this.persistentDictionaryErrors.set(
+        operation,
+        code as MockDictionaryErrorCode,
+      )
+    }
   }
 
   /**
@@ -174,19 +216,42 @@ export class MockController {
    * (one-shot). Значения расходуются по порядку; после них действует
    * `setError`.
    */
-  failNext(operation: MockSearchOperation, code: SearchErrorCode): void {
-    const queue = this.nextErrors.get(operation)
+  failNext(operation: MockSearchOperation, code: SearchErrorCode): void
+  failNext(operation: MockDictionaryOperation, code: MockDictionaryErrorCode): void
+  failNext(
+    operation: MockSearchOperation | MockDictionaryOperation,
+    code: SearchErrorCode | MockDictionaryErrorCode,
+  ): void {
+    if (isSearchOperation(operation)) {
+      const queue = this.nextErrors.get(operation)
+      if (queue) {
+        queue.push(code as SearchErrorCode)
+      } else {
+        this.nextErrors.set(operation, [code as SearchErrorCode])
+      }
+      return
+    }
+    const queue = this.nextDictionaryErrors.get(operation)
     if (queue) {
-      queue.push(code)
+      queue.push(code as MockDictionaryErrorCode)
     } else {
-      this.nextErrors.set(operation, [code])
+      this.nextDictionaryErrors.set(operation, [code as MockDictionaryErrorCode])
     }
   }
 
   /** Снимает и постоянную, и одноразовые ошибки операции. */
-  clearError(operation: MockSearchOperation): void {
-    this.persistentErrors.delete(operation)
-    this.nextErrors.delete(operation)
+  clearError(operation: MockSearchOperation): void
+  clearError(operation: MockDictionaryOperation): void
+  clearError(
+    operation: MockSearchOperation | MockDictionaryOperation,
+  ): void {
+    if (isSearchOperation(operation)) {
+      this.persistentErrors.delete(operation)
+      this.nextErrors.delete(operation)
+      return
+    }
+    this.persistentDictionaryErrors.delete(operation)
+    this.nextDictionaryErrors.delete(operation)
   }
 
   /**
@@ -199,6 +264,25 @@ export class MockController {
       return queue.shift()
     }
     return this.persistentErrors.get(operation)
+  }
+
+  /**
+   * Возвращает объявленную ошибку targets/dictionaries для текущей отправки и
+   * расходует одноразовую (LT-07.1a).
+   */
+  consumeDictionaryError(
+    operation: MockDictionaryOperation,
+  ): MockDictionaryErrorCode | undefined {
+    const queue = this.nextDictionaryErrors.get(operation)
+    if (queue && queue.length > 0) {
+      return queue.shift()
+    }
+    return this.persistentDictionaryErrors.get(operation)
+  }
+
+  /** In-memory store справочников (seed, reset и мутации). */
+  getDictionaryStore(): DictionaryStore {
+    return this.dictionaryStore
   }
 
   /** Текущий профиль app-config. */
@@ -247,7 +331,8 @@ export class MockController {
 
   /**
    * Сбрасывает сессию, задержку, профиль, freshness, empty-переопределения,
-   * scope-задержки, per-send очереди и управляемые ошибки поиска.
+   * scope-задержки, per-send очереди, управляемые ошибки поиска и
+   * targets/dictionaries, а также восстанавливает seed справочников.
    */
   reset(): void {
     this.session = null
@@ -263,5 +348,8 @@ export class MockController {
     this.sendDelayQueues.facet = []
     this.persistentErrors.clear()
     this.nextErrors.clear()
+    this.persistentDictionaryErrors.clear()
+    this.nextDictionaryErrors.clear()
+    this.dictionaryStore.reset()
   }
 }

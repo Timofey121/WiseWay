@@ -27,6 +27,7 @@ export { MockController }
 export type {
   ConfigProfile,
   MockControllerOptions,
+  MockDictionaryOperation,
   MockSearchOperation,
   MockSearchScope,
   SearchFreshnessProfile,
@@ -37,6 +38,21 @@ export {
   isSearchErrorCode,
 } from './search/errors'
 export type { DeclaredSearchError, SearchErrorCode } from './search/errors'
+export {
+  declaredDictionaryErrors,
+  isDictionaryErrorCode,
+} from './dictionaries/errors'
+export type {
+  DeclaredDictionaryError,
+  MockDictionaryErrorCode,
+} from './dictionaries/errors'
+export {
+  isAllowedTarget,
+  listCompanyTargets,
+  resolveTargetDisplayPath,
+} from './dictionaries/targets'
+export type { ResolveTargetResult } from './dictionaries/targets'
+export { DictionaryStore } from './dictionaries/store'
 export type {
   MockHandler,
   MockRequestContext,

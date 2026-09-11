@@ -300,7 +300,7 @@ SESSION CHECKPOINT (11.09.2026, orchestrator context-limit stop): точка в�
 
 ### WP-07 — Контрактные mocks B/C
 
-- **Status:** TODO. **Parent:** E-02. **Dependencies:** WP-03, WP-05, LT-06.1.
+- **Status:** IN_PROGRESS. **Parent:** E-02. **Dependencies:** WP-03, WP-05, LT-06.1.
 - **Goal:** finite сценарии операционных экранов без файловых действий.
 - **Sources of truth:** FE-02/04; API §5–12; Q-015…041/043/044; OAS B/C operations.
 - **Acceptance criteria:** revisions/stale/TTL/access/lost responses/все исходы; mocks не domain backend; схемы общие с real.
@@ -312,6 +312,8 @@ SESSION CHECKPOINT (11.09.2026, orchestrator context-limit stop): точка в�
 | LT-07.1 | TODO | LT-03.2, WP-05, LT-06.1 | Mock targets/dictionaries lifecycle | OAS target/dictionary/simulation operations; API §5/6; Q-015…021 | Canned responses разрешённой/невалидной цели, create/save/revision/lost response, simulation READY/empty/stale/conflict/no-scenario, publish retry/restore/history; schemas, без правил/FS алгоритма | V-S/V-C handlers/error/cursor/references/reset |
 | LT-07.2 | TODO | LT-03.3, LT-03.4, WP-05, LT-06.1 | Mock sorting lifecycle | OAS sorting operations; API §7/8; Q-022…037/039/040 | EXPLICIT/ALL_MATCHING, 0/120/1001, late arrivals, stale/expiry, DIRECT/PREVIEWED/lost response/retry; все BatchState/Outcome/reasons/progress/cursor; scripted scenarios, не claim/snapshot алгоритмы | V-S/V-C finite scenarios/таймеров/request variants; mock race не доказательство реальной гонки |
 | LT-07.3 | TODO | LT-03.5, WP-05, LT-06.1 | Mock quarantine/audit | OAS quarantine/audit operations; API §9–11; Q-029/038/041/043 | Confirmed quarantine/can_return/recovery/return conflicts; BUSINESS/SYSTEM/nullable actor/заблокированные авторы; cursor/new events/operation_id/source_attempt_id; без recovery endpoint | V-S/V-C handlers/null/cursor/reset/late responses/errors |
+
+LT-07.1a completion: добавлены mock handlers targets/dictionaries (`listTargetDirectories`, `resolveTargetDirectory`, `listDictionaries`, `createDictionary`, `getDictionary`, `replaceDictionaryDraft`), in-memory `DictionaryStore` (seed/reset, trim+casefold), allowlist целей из `rule_expectations.json`, общий CSRF-guard, router `{param}`, объявленные ошибки. Независимый LEAF reviewer PASS: `test` 362 PASS (dictionaries-draft 33); `typecheck`/`lint`/`build`/`generate:api:check` exit 0; независимый набор 12/12 через mock transport. Non-blocking: README-формулировка про guard переобобщает (`resolveTargetDirectory` — чтение без CSRF); `decodeURIComponent` может бросить URIError на malformed escape; casefold ≈ toLowerCase; managed-ошибки без 429/500/503. M/A/E NOT_RUN.
 
 ## EPIC E-03 — Оболочка и сессия
 
@@ -742,7 +744,7 @@ Status: BLOCKED (X-HELP/X-INTERNAL). Scope: FE-06, TZ §13. Не расширя�
 
 | Leaf ID | Parent | Status | Dependencies | Наблюдаемый результат и AC | Verification |
 |---|---|---|---|---|---|
-| LT-07.1a | LT-07.1 | TODO | LT-03.2, WP-05, LT-06.1 | Target + dictionary draft finite handlers: allowed/invalid targets, create/save/revision/name conflict/lost-response reconciliation; без FS/rule алгоритмов | V-S/V-C target/draft handlers, errors, reset |
+| LT-07.1a | LT-07.1 | VERIFIED | LT-03.2, WP-05, LT-06.1 | Target + dictionary draft finite handlers: allowed/invalid targets, create/save/revision/name conflict/lost-response reconciliation; без FS/rule алгоритмов | V-S/V-C target/draft handlers, errors, reset |
 | LT-07.1b | LT-07.1 | TODO | LT-07.1a | Simulation finite handlers: READY/empty/stale/conflict/no-scenario, paging и full RuleSet references; canned expectations, не matcher | V-S/V-C simulation pages/errors/references |
 | LT-07.1c | LT-07.1 | TODO | LT-07.1b | Publish/version/restore finite handlers: ack/comment/TTL, idempotent retry, history/provenance/restore и lost responses | V-S/V-C publish/history/restore/idempotency cases |
 | LT-07.2a | LT-07.2 | TODO | LT-03.3, WP-05, LT-06.1 | Queue/readiness/selection scripted scenarios: 0/120/1001, filters, EXPLICIT/ALL_MATCHING, late arrivals, count change, expiry/owner scope | V-S/V-C queue/selection variants and request bodies |

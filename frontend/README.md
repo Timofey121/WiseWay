@@ -4,8 +4,9 @@
 каталоге находятся конфигурация инструментов, точка входа, smoke-тесты,
 generated API-артефакты из единственного публичного OAS, базовый
 request/session security transport (WP-05) и контрактные mocks
-bootstrap/session/config и golden-поиска (WP-06). Продуктовые экраны и
-навигация появятся в следующих leaf-задачах (EPIC E-02, WP-07).
+bootstrap/session/config, golden-поиска (WP-06) и targets/dictionaries
+(WP-07, LT-07.1a). Продуктовые экраны и навигация появятся в следующих
+leaf-задачах (EPIC E-02, WP-07).
 
 Выбранный toolchain, точные версии и политика lock-файла закреплены в
 [ADR-0001. Frontend toolchain WiseWay](docs/ADR-0001-frontend-toolchain.md).
@@ -425,6 +426,60 @@ scope не влияет на другой; `request_state_id` каждого о�
 постоянство `setError`, очистка `reset()`, детерминированный порядок двух
 отправок, точный `request_state_id` и invalid request без успеха.
 
+## Mock targets/dictionaries (LT-07.1a)
+
+`src/mocks/handlers/targets.ts` и `src/mocks/handlers/dictionaries.ts`
+подключают к mock-fetch шесть операций WP-07 без backend и filesystem:
+
+| Метод и путь | Ответ | Особенности |
+|---|---|---|
+| `GET /companies/{company_id}/target-directories` | 200 `PageTargetDirectory` | finite-страница allowlist компании, `prefix`/`cursor`/`limit` |
+| `POST /companies/{company_id}/target-directories/resolve` | 200 `TargetDirectory` | разрешает synthetic `display_path`; каталоги не создаются |
+| `GET /companies/{company_id}/dictionaries` | 200 `DictionaryListResponse` | company-scoped |
+| `POST /companies/{company_id}/dictionaries` | 201 `Dictionary` | пустой черновик `draft_revision=0`; CSRF обязателен |
+| `GET /dictionaries/{dictionary_id}` | 200 `Dictionary` | неизвестный → 404 `NOT_FOUND` |
+| `PUT /dictionaries/{dictionary_id}/draft` | 200 `Dictionary` | атомарная замена, `draft_revision+1`; CSRF обязателен |
+
+- Allowlist целей и его `display_path` берутся из literal-фикстуры
+  `fixtures/synthetic/rule_expectations.json` (`target_directories` +
+  `target_display_prefix`). `resolve` ищет только настроенную цель компании:
+  несуществующий каталог и цель другой компании → 422 `INVALID_TARGET`,
+  путь вне `DEMO:/SandboxRoot/` → 422 `PATH_OUTSIDE_ROOT`, малформед
+  `relative_directory` → 422 `VALIDATION_ERROR`. Файлового доступа и
+  создания каталогов нет.
+- Store справочников (`src/mocks/dictionaries/store.ts`) — in-memory,
+  session-scoped, seed из `contracts/examples/dictionaries/*`
+  (`dictionary-atlas-general`, `dictionary-atlas-invoices`,
+  `dictionary-nova-general`). Уникальность имени — внутри компании после
+  `trim` + casefold; конфликт → 409 `DICTIONARY_NAME_CONFLICT`. `reset()`
+  восстанавливает seed.
+- `replaceDictionaryDraft` сохраняет переданные имя/описание/правила и
+  увеличивает `draft_revision`; несовпадение `expected_draft_revision` → 409
+  `DRAFT_VERSION_CONFLICT` без частичной записи. `Rule` валидируется по схеме
+  OAS (priority 1–1000, `match_field`, mask 1–512 без `**`, `target_stem`
+  1–200), `rule_id` уникальны, а `target` должен входить в allowlist компании
+  (иначе 422 `INVALID_TARGET`). Matcher, publish/restore и файловые действия
+  отсутствуют.
+- GET-операции требуют только активной mock-сессии (без неё 401
+  `UNAUTHENTICATED`). POST/PUT проходят общий guard
+  `requireSessionAndCsrf` (тот же, что и `logout`): без/с неверным
+  `X-CSRF-Token` → 403 `CSRF_FAILED` без изменения store.
+- Тела валидируются по схемам OAS до успеха: лишнее поле, отсутствующее поле,
+  пустое/битое JSON-тело → 422 `VALIDATION_ERROR`. Ответы несут
+  `X-Request-ID`, `Cache-Control: no-store` и маркер `X-WiseWay-Mock`.
+- `MockController` управляет объявленными ошибками targets/dictionaries:
+  `setError(operation, code)` / `failNext(operation, code)` / `clearError` /
+  `consumeDictionaryError`. Коды ограничены объявленными контрактом
+  (`declaredDictionaryErrors` из `@/mocks`): `INVALID_TARGET`,
+  `PATH_OUTSIDE_ROOT`, `DICTIONARY_NAME_CONFLICT`, `DRAFT_VERSION_CONFLICT`,
+  `VALIDATION_ERROR`. Тело/статус берутся из
+  `contracts/examples/errors/*.json`.
+
+Проверки: `tests/mocks/dictionaries-draft.test.ts` — targets list/resolve
+valid/invalid/outside, company-scope и пагинация, list/get/create/replace
+dictionaries, name- и revision-conflict, границы `Rule` и `CreateDictionary`,
+401/403/404/422, управляемые ошибки и `reset()`.
+
 ## Структура
 
 ```text
@@ -445,20 +500,27 @@ frontend/
       retry.ts            retry/backoff policy и single-flight poll registry
       transport-error.ts  TransportError и безопасный разбор ошибок
       transport.ts        createApiClient: credentials/no-store/CSRF/idempotency/retry
-    mocks/              schema-valid mocks bootstrap/session/config и golden-поиска (WP-06)
+    mocks/              schema-valid mocks bootstrap/session/config, поиска
+                        (WP-06) и targets/dictionaries (WP-07)
       index.ts          createMockFetch, MockController, MOCK_MODE
-      router.ts         разбор Request и диспетчеризация; неизвестный → 404
+      router.ts         разбор Request, статические и `{param}` маршруты
       validate.ts       ajv-валидация запросов по generated openapi.json
       data.ts           загрузка contracts/examples через @examples + manifest
+      guards.ts         общий session+CSRF guard mutation-операций
       controller.ts     delay/profile/freshness/empty/session + search
-                        scope-delay/error/queue/reset
+                        scope-delay/error/queue + dictionary store/errors/reset
       responses.ts      контрактные заголовки и ErrorResponse
       handlers/         health, login, getSession, logout, appConfig, roots,
-                        companies, search (searchFiles/getSearchFacet)
+                        companies, search (searchFiles/getSearchFacet),
+                        targets/dictionaries (LT-07.1a)
       search/           golden search/facet foundation (LT-06.2a-i)
         corpus.ts       materializer corpus.json → SearchItem/Marker
         expectations.ts literal-resolver search_expectations.json
         errors.ts       объявленные контрактом ошибки поиска (LT-06.2b)
+      dictionaries/     targets/dictionaries foundation (LT-07.1a)
+        targets.ts      allowlist целей из rule_expectations.json + resolver
+        store.ts        in-memory seed/store справочников, trim+casefold
+        errors.ts       объявленные ошибки targets/dictionaries
   tests/
     App.test.tsx        component smoke-тест
     api/client.test.ts  runtime-проверки запросов клиента A/B/C
@@ -471,6 +533,7 @@ frontend/
     mocks/search-foundation.test.ts  golden search/facet foundation
     mocks/search-handlers.test.ts  HTTP-handlers searchFiles/getSearchFacet
     mocks/search-error-race.test.ts  delay/error/race управление поиском
+    mocks/dictionaries-draft.test.ts  targets/dictionaries lifecycle mocks
     fixture-imports.test.ts  проверка alias-импорта JSON вне frontend/
     support/            технические модули scaffold
     browser/            Playwright smoke-тест

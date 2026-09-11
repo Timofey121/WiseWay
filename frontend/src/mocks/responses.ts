@@ -139,6 +139,17 @@ export function validationErrorResponse(
   return fromErrorExample(requestId, 422, 'error-validation-error', fieldErrors)
 }
 
+/** 422 VALIDATION_ERROR для пустого/битого JSON-тела без эха значений. */
+export function invalidBodyResponse(requestId: string): Response {
+  return validationErrorResponse(requestId, [
+    {
+      field: 'request',
+      code: 'INVALID_BODY',
+      message: 'Тело запроса должно быть корректным JSON.',
+    },
+  ])
+}
+
 /**
  * 400 INVALID_QUERY — объявленная контрактом безопасная ошибка поиска.
  * Используется, когда запрос валиден по схеме, но literal golden-сценарий для

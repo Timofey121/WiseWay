@@ -20,6 +20,19 @@ export type FacetRequest = components['schemas']['FacetRequest']
 export type SearchResponse = components['schemas']['SearchResponse']
 export type FacetResponse = components['schemas']['FacetResponse']
 export type SearchFreshness = components['schemas']['SearchFreshness']
+export type TargetDirectory = components['schemas']['TargetDirectory']
+export type PageTargetDirectory = components['schemas']['PageTargetDirectory']
+export type ResolveTargetRequest = components['schemas']['ResolveTargetRequest']
+export type Rule = components['schemas']['Rule']
+export type DictionaryDraft = components['schemas']['DictionaryDraft']
+export type Dictionary = components['schemas']['Dictionary']
+export type DictionaryListResponse =
+  components['schemas']['DictionaryListResponse']
+export type CreateDictionaryRequest =
+  components['schemas']['CreateDictionaryRequest']
+export type ReplaceDictionaryDraftRequest =
+  components['schemas']['ReplaceDictionaryDraftRequest']
+export type Actor = components['schemas']['Actor']
 export type ErrorResponse = components['schemas']['ErrorResponse']
 export type ErrorDetails = components['schemas']['ErrorDetails']
 export type FieldError = components['schemas']['FieldError']
@@ -37,6 +50,11 @@ export interface MockRequestContext {
   requestId: string
   /** Путь относительно префикса API, например `/health`. */
   path: string
+  /**
+   * Извлечённые path-параметры шаблона маршрута (например `company_id`,
+   * `dictionary_id`). Для статических путей — пустой объект.
+   */
+  params: Record<string, string>
 }
 
 /** Обработчик одной операции; возвращает готовый `Response`. */

@@ -20,6 +20,7 @@
 
 import { readJsonBody } from '../body'
 import {
+  invalidBodyResponse,
   invalidQueryResponse,
   jsonResponse,
   unauthenticatedResponse,
@@ -32,17 +33,6 @@ import {
 } from '../search/expectations'
 import type { FacetRequest, MockHandler, SearchRequest } from '../types'
 import { toFieldErrors, validateSchema } from '../validate'
-
-/** Безопасная 422 для пустого/битого JSON-тела без эха значений. */
-function invalidBodyResponse(requestId: string): Response {
-  return validationErrorResponse(requestId, [
-    {
-      field: 'request',
-      code: 'INVALID_BODY',
-      message: 'Тело запроса должно быть корректным JSON.',
-    },
-  ])
-}
 
 /**
  * POST /search → 200 SearchResponse | 400 INVALID_QUERY | 401 | 422.

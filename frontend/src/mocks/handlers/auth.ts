@@ -8,8 +8,8 @@
 
 import { readJsonBody } from '../body'
 import { getExample } from '../data'
+import { requireSessionAndCsrf } from '../guards'
 import {
-  csrfFailedResponse,
   jsonResponse,
   loginFailedResponse,
   noContentResponse,
@@ -105,19 +105,11 @@ export const sessionHandler: MockHandler = ({ controller, requestId }) => {
  * Мутация объявлена с `#/components/parameters/XCSRFToken`: неверный или
  * отсутствующий токен даёт 403 и не завершает сессию.
  */
-export const logoutHandler: MockHandler = ({
-  controller,
-  request,
-  requestId,
-}) => {
-  const session = controller.getSession()
-  if (!session) {
-    return unauthenticatedResponse(requestId)
+export const logoutHandler: MockHandler = (context) => {
+  const guard = requireSessionAndCsrf(context)
+  if (guard) {
+    return guard
   }
-  const csrfToken = request.headers.get('X-CSRF-Token')
-  if (!csrfToken || csrfToken !== session.csrf_token) {
-    return csrfFailedResponse(requestId)
-  }
-  controller.clearSession()
-  return noContentResponse(requestId)
+  context.controller.clearSession()
+  return noContentResponse(context.requestId)
 }

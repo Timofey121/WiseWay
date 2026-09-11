@@ -29,12 +29,72 @@ export function toApiPath(pathname: string): string {
   return pathname
 }
 
+/**
+ * Сопоставляет шаблон пути вида `/companies/{company_id}/dictionaries` с
+ * конкретным путём, возвращая извлечённые параметры или `null`. Сегменты
+ * `{name}` захватывают ровно один сегмент; число сегментов должно совпадать.
+ */
+function matchPathTemplate(
+  template: string,
+  path: string,
+): Record<string, string> | null {
+  const templateSegments = template.split('/').filter((segment) => segment !== '')
+  const pathSegments = path.split('/').filter((segment) => segment !== '')
+  if (templateSegments.length !== pathSegments.length) {
+    return null
+  }
+  const params: Record<string, string> = {}
+  for (let index = 0; index < templateSegments.length; index += 1) {
+    const templateSegment = templateSegments[index]
+    const pathSegment = pathSegments[index]
+    if (templateSegment.startsWith('{') && templateSegment.endsWith('}')) {
+      const name = templateSegment.slice(1, -1)
+      params[name] = decodeURIComponent(pathSegment)
+    } else if (templateSegment !== pathSegment) {
+      return null
+    }
+  }
+  return params
+}
+
+export interface MatchedMockRoute {
+  handler: MockHandler
+  params: Record<string, string>
+}
+
+/**
+ * Находит handler и path-параметры по методу и пути. Сначала проверяется точное
+ * совпадение (статический маршрут), затем — шаблоны с `{param}` в порядке
+ * регистрации. Неизвестный маршрут даёт `undefined`.
+ */
+export function matchMockRoute(
+  method: string,
+  path: string,
+): MatchedMockRoute | undefined {
+  const upperMethod = method.toUpperCase()
+  const exact = handlersByKey[`${upperMethod} ${path}`]
+  if (exact) {
+    return { handler: exact, params: {} }
+  }
+  for (const [key, handler] of Object.entries(handlersByKey)) {
+    const separator = key.indexOf(' ')
+    if (key.slice(0, separator) !== upperMethod) {
+      continue
+    }
+    const params = matchPathTemplate(key.slice(separator + 1), path)
+    if (params) {
+      return { handler, params }
+    }
+  }
+  return undefined
+}
+
 /** Находит handler по методу и пути относительно префикса API. */
 export function findMockHandler(
   method: string,
   path: string,
 ): MockHandler | undefined {
-  return handlersByKey[`${method.toUpperCase()} ${path}`]
+  return matchMockRoute(method, path)?.handler
 }
 
 /**
@@ -53,8 +113,8 @@ export async function routeMockRequest(
 
   await controller.wait()
 
-  const handler = findMockHandler(method, path)
-  if (!handler) {
+  const matched = matchMockRoute(method, path)
+  if (!matched) {
     return notFoundResponse(requestId)
   }
 
@@ -64,6 +124,7 @@ export async function routeMockRequest(
     url,
     requestId,
     path,
+    params: matched.params,
   }
-  return handler(context)
+  return matched.handler(context)
 }
