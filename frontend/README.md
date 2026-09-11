@@ -315,6 +315,37 @@ evidence.
 
 Проверки сценариев: `npm run test` (файл `tests/mocks/bootstrap.test.ts`).
 
+## Mock search foundation (LT-06.2a-i)
+
+`src/mocks/search/` — golden data foundation для будущих HTTP-handlers
+`searchFiles`/`getSearchFacet` (LT-06.2a-ii). Это ещё не HTTP-слой: модули
+вызываются напрямую и не подключены к `router`/`mock-fetch`.
+
+- `corpus.ts` — детерминированный materializer
+  `fixtures/synthetic/corpus.json`: раскрывает `files[]` и `cohorts[]` (только
+  literal `{index}`/`index_pad`, без поиска) в полные schema-valid
+  `SearchItem` и строит контекстный каталог `Marker` из
+  `marker_model.contexts`. `marker_id` = `marker-<root_id>-<value_id>-…`;
+  `display_path` = `<root.display_prefix>/<relative_path>` (или явный из
+  корпуса); `filename` — basename. `SearchItem.markers` содержит только
+  распознанные VALUE-родителей; терминальный UNRECOGNIZED-маркер отклонения
+  доступен отдельно (`getUnrecognizedMarker`) и входит в каталог/фасеты.
+- `expectations.ts` — загрузчик golden
+  `fixtures/synthetic/search_expectations.json` (51 search + 6 facet) и
+  literal-resolver `resolveSearchScenario(request, { freshnessProfile? })` /
+  `resolveFacetScenario(request)`. Ответ — полный schema-valid
+  `SearchResponse`/`FacetResponse`; `request_state_id` эхо исходного запроса;
+  `items` — из materialized-инвентаря по `expected.item_ids` в заданном
+  порядке; `next_facet`/facet options обогащаются `raw_value`/`display_value`/
+  `kind` из каталога; freshness — профиль CURRENT по умолчанию (UPDATING/STALE
+  выбираются явно). Если сценарий не найден — `undefined`; matcher, ranking и
+  парсинг путей отсутствуют, вычисленного fallback нет.
+
+Проверки: `tests/mocks/search-foundation.test.ts` — 57 golden-сценариев
+разрешаются в schema-valid ответы с literal totals/order/`item_ids`/facets,
+cohort раскрыт, UNRECOGNIZED-отклонения и freshness-профили воспроизводимы,
+неизвестный request даёт `undefined`.
+
 ## Структура
 
 ```text
@@ -343,6 +374,9 @@ frontend/
       controller.ts     delay/profile/empty/session/reset
       responses.ts      контрактные заголовки и ErrorResponse
       handlers/         health, login, getSession, logout, appConfig, roots, companies
+      search/           golden search/facet foundation (LT-06.2a-i)
+        corpus.ts       materializer corpus.json → SearchItem/Marker
+        expectations.ts literal-resolver search_expectations.json
   tests/
     App.test.tsx        component smoke-тест
     api/client.test.ts  runtime-проверки запросов клиента A/B/C
@@ -352,6 +386,7 @@ frontend/
     api/transport-error.test.ts  HTTP/network-ошибки и отсутствие утечек
     api/generated-types.test.ts  type-level проверки generated-схемы
     mocks/bootstrap.test.ts  bootstrap/session/config mocks и их состояния
+    mocks/search-foundation.test.ts  golden search/facet foundation
     fixture-imports.test.ts  проверка alias-импорта JSON вне frontend/
     support/            технические модули scaffold
     browser/            Playwright smoke-тест
