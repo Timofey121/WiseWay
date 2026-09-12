@@ -263,7 +263,6 @@ Write-Host ""
 
 & opencode `
     --agent "frontend/orchestrator" `
-    --title "WiseWay $TargetId" `
     --prompt $Prompt
 
 if ($LASTEXITCODE -ne 0) {
