@@ -3,7 +3,7 @@
 // и провайдер загрузки `AppConfig`. Приватное состояние живёт только в памяти
 // вкладки.
 
-export { AppShell } from './AppShell'
+export { AppShell, type AppShellProps } from './AppShell'
 export {
   appSections,
   defaultSectionId,
@@ -25,7 +25,7 @@ export {
   type AppApiMode,
 } from './app-api'
 export { roleLabel, type UserRole } from './roles'
-export { useAuthenticatedSession } from './use-session'
+export { useAuthenticatedSession, useSessionStatus } from './use-session'
 export {
   AppConfigProvider,
   type AppConfigProviderProps,

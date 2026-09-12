@@ -119,3 +119,56 @@ test('недоступность сессии показывает сообще�
   await expect(page.getByRole('button', { name: 'Повторить' })).toBeVisible()
   await expect(page.getByLabel('Логин')).toHaveCount(0)
 })
+
+test('выход возвращает на экран входа без перезагрузки', async ({ page }) => {
+  await page.goto('/')
+  await fillAndSubmit(page, 'worker.one', PASSWORD)
+
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'WiseWay' }),
+  ).toBeVisible()
+  await expect(page.getByText('Иван Рабочий')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Выйти' }).click()
+
+  await expect(
+    page.getByRole('heading', { name: 'Вход в WiseWay' }),
+  ).toBeVisible()
+  await expect(page.getByLabel('Логин')).toBeVisible()
+  await expect(
+    page.getByRole('navigation', { name: 'Разделы приложения' }),
+  ).toHaveCount(0)
+  await expect(page.getByText('Иван Рабочий')).toHaveCount(0)
+})
+
+test('перезагрузка очищает локальное состояние и показывает вход', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await fillAndSubmit(page, 'worker.one', PASSWORD)
+
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'WiseWay' }),
+  ).toBeVisible()
+
+  // В mock-режиме серверная сессия живёт только в памяти страницы: после
+  // перезагрузки bootstrap получает 401 и показывает вход, а не сохранённое
+  // состояние.
+  await page.reload()
+
+  await expect(
+    page.getByRole('heading', { name: 'Вход в WiseWay' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('navigation', { name: 'Разделы приложения' }),
+  ).toHaveCount(0)
+
+  const stored = await page.evaluate(() => ({
+    local: Object.keys(window.localStorage),
+    session: Object.keys(window.sessionStorage),
+    cookie: document.cookie,
+  }))
+  expect(stored.local).toEqual([])
+  expect(stored.session).toEqual([])
+  expect(stored.cookie).toBe('')
+})

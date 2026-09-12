@@ -60,6 +60,13 @@ export interface SessionBootstrapStore {
   retry: () => void
   /** Фиксирует успешный вход: CSRF и серверный actor/`expires_at`. */
   completeLogin: (session: Session) => void
+  /**
+   * Фиксирует завершение сессии (logout/`401 UNAUTHENTICATED`): переводит
+   * снимок в `anonymous` и отменяет поздний ответ устаревшей bootstrap-проверки
+   * по счётчику `sequence`. Повторная очистка CSRF/idempotency/polls не
+   * выполняется — это делает `auth-lifecycle`/`session-context`.
+   */
+  completeLogout: () => void
 }
 
 const CHECKING_SNAPSHOT: SessionBootstrapSnapshot = {
@@ -185,6 +192,16 @@ export function createSessionBootstrapStore(
       sequence += 1
       started = true
       applySession(session)
+    },
+    completeLogout() {
+      // Поздний ответ прежней сессии (например, ещё летящий `GET /session`)
+      // не должен вернуть пользователя в authenticated.
+      sequence += 1
+      started = true
+      // Сначала фиксируем снимок, затем состояние сессии: подписчик
+      // session-state увидит уже `anonymous`-снимок и не вызовет повтор.
+      update(ANONYMOUS_SNAPSHOT)
+      markAnonymous()
     },
   }
 }

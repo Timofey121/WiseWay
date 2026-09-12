@@ -6,16 +6,15 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import {
-  getCsrfToken,
-  resetSessionContext,
-} from '@/api/session-context'
+import { getCsrfToken, resetSessionContext } from '@/api/session-context'
 import { createApiClient } from '@/api/transport'
+import { registerPrivateStateReset } from '@/app/index'
 import {
   getAuthenticatedSession,
   getSessionStatus,
   resetSessionState,
 } from '@/app/session-state'
+import { endAuthenticatedSession } from '@/features/auth/auth-lifecycle'
 import { createSessionBootstrapStore } from '@/features/auth/session-bootstrap-store'
 import { createMockFetch, MockController, type MockFetch } from '@/mocks'
 import { getExample } from '@/mocks/data'
@@ -169,5 +168,65 @@ describe('session-bootstrap-store — повтор и вход', () => {
       expires_at: session.expires_at,
     })
     expect(getCsrfToken()).toBe(session.csrf_token)
+  })
+})
+
+describe('session-bootstrap-store — завершение сессии и поздний ответ', () => {
+  it('completeLogout переводит снимок в anonymous', () => {
+    const store = createSessionBootstrapStore(
+      createMockClient(createMockFetch(new MockController())),
+    )
+
+    store.completeLogout()
+
+    expect(store.getSnapshot().status).toBe('anonymous')
+  })
+
+  it('поздний успешный GET /session после завершения сессии не возвращает authenticated', async () => {
+    const controller = new MockController()
+    const session = getExample<Session>('auth-session-worker-one')
+    controller.setSession(session)
+
+    let release: () => void = () => undefined
+    const gate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const mockFetch = createMockFetch(controller)
+    let completed = false
+    const gatedFetch: MockFetch = async (input, init) => {
+      await gate
+      const response = await mockFetch(input, init)
+      completed = true
+      return response
+    }
+    const store = createSessionBootstrapStore(createMockClient(gatedFetch))
+
+    // Зарегистрированное приватное состояние прошлой сессии.
+    let probe: string | null = 'search-draft'
+    const unsubscribeProbe = registerPrivateStateReset(() => {
+      probe = null
+    })
+
+    store.start()
+    expect(store.getSnapshot().status).toBe('checking')
+
+    // Сессия завершается (logout/401), пока bootstrap-проверка ещё в полёте.
+    endAuthenticatedSession()
+    store.completeLogout()
+    expect(probe).toBeNull()
+
+    // Поздний успешный ответ приходит после сброса.
+    release()
+    await vi.waitFor(() => {
+      expect(completed).toBe(true)
+    })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(store.getSnapshot().status).toBe('anonymous')
+    expect(getSessionStatus()).toBe('anonymous')
+    expect(getAuthenticatedSession()).toBeNull()
+    expect(probe).toBeNull()
+
+    unsubscribeProbe()
   })
 })

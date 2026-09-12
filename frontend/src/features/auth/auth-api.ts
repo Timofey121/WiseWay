@@ -11,6 +11,7 @@
 // - сетевой сбой/5xx не является ни тем, ни другим и не превращается в успех.
 
 import type { components } from '@/api/generated/schema'
+import { getCsrfToken } from '@/api/session-context'
 import { throwIfError, type WiseWayApiClient } from '@/api/transport'
 
 /** Серверная сессия из публичного контракта. */
@@ -48,6 +49,24 @@ export async function submitLogin(
         login: credentials.login,
         password: credentials.password,
       },
+    }),
+  )
+}
+
+/**
+ * Завершает серверную сессию: `POST /auth/logout` с ПУСТЫМ телом и без
+ * `Idempotency-Key` (операция его не объявляет). Успех — `204`, и `undefined`
+ * не превращается в ошибку.
+ *
+ * Заголовок `X-CSRF-Token` в `params.header` нужен только для типа
+ * generated-клиента: фактическое значение подставляет общий транспорт из
+ * in-memory `@/api/session-context` (тот же путь, что и для остальных
+ * CSRF-мутаций). Отдельный токен здесь не выдумывается и не персистится.
+ */
+export async function submitLogout(client: WiseWayApiClient): Promise<void> {
+  throwIfError(
+    await client.POST('/auth/logout', {
+      params: { header: { 'X-CSRF-Token': getCsrfToken() ?? '' } },
     }),
   )
 }

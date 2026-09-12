@@ -1,10 +1,11 @@
-// Публичная точка входа auth-фичи WiseWay (LT-09.1).
+// Публичная точка входа auth-фичи WiseWay (LT-09.1/LT-09.2).
 //
-// Экран входа, bootstrap-проверка сессии и auth-гейт. Компоненты не хранят
-// пароль и не персистят приватное состояние.
+// Экран входа, bootstrap-проверка сессии, auth-гейт и выход из системы.
+// Компоненты не хранят пароль и не персистят приватное состояние.
 
 export { AuthGate, type AuthGateProps } from './auth-gate'
 export { LoginScreen, type LoginScreenProps } from './login-screen'
+export { LogoutControl, type LogoutControlProps } from './logout-control'
 export {
   SessionCheckingScreen,
   SessionUnavailableScreen,
@@ -22,8 +23,19 @@ export {
   type UseSessionBootstrapResult,
 } from './use-session-bootstrap'
 export {
+  endAuthenticatedSession,
+  installUnauthorizedReset,
+} from './auth-lifecycle'
+export {
+  performLogout,
+  type LogoutResult,
+  type LogoutResultStatus,
+} from './logout'
+export { useLogout, type LogoutStatus, type UseLogoutResult } from './use-logout'
+export {
   fetchActiveSession,
   submitLogin,
+  submitLogout,
   type LoginCredentials,
   type Session,
 } from './auth-api'

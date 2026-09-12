@@ -24,6 +24,23 @@
   margin-bottom: 16px;
 }
 
+.app-shell__header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.app-shell__brand {
+  min-width: 0;
+}
+
+.app-shell__header-actions {
+  display: flex;
+  align-items: flex-start;
+}
+
 .app-shell__title {
   margin: 0;
   font-size: 28px;

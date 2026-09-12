@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState, type ReactNode } from 'react'
 
 import { roleLabel } from './roles'
 import {
@@ -31,8 +31,16 @@ function SectionPlaceholder({ section }: { section: AppSection }) {
  * пишется в URL, history state, browser storage или cookie. Переключение
  * раздела не выполняет сетевых запросов. До реализации входа стартовым
  * разделом всегда является «Поиск».
+ *
+ * `headerActions` — необязательный узел действий в шапке (например, доступное
+ * управление выходом). Оболочка не знает о транспорте и не создаёт его.
  */
-export function AppShell() {
+export interface AppShellProps {
+  /** Действия в шапке справа; `undefined` — шапка без действий. */
+  readonly headerActions?: ReactNode
+}
+
+export function AppShell({ headerActions }: AppShellProps = {}) {
   const [activeSectionId, setActiveSectionId] =
     useState<AppSectionId>(defaultSectionId)
   const session = useAuthenticatedSession()
@@ -51,8 +59,15 @@ export function AppShell() {
   return (
     <div className="app-shell">
       <header className="app-shell__header">
-        <h1 className="app-shell__title">WiseWay</h1>
-        <p className="app-shell__subtitle">Поиск и сортировка файлов</p>
+        <div className="app-shell__header-row">
+          <div className="app-shell__brand">
+            <h1 className="app-shell__title">WiseWay</h1>
+            <p className="app-shell__subtitle">Поиск и сортировка файлов</p>
+          </div>
+          {headerActions ? (
+            <div className="app-shell__header-actions">{headerActions}</div>
+          ) : null}
+        </div>
         {session ? (
           <p className="app-shell__user">
             <span className="app-shell__user-name">
