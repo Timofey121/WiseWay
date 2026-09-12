@@ -1,0 +1,97 @@
+/* Экран входа и состояния bootstrap-проверки сессии WiseWay.
+   Целевая среда — настольный браузер от 1280×720 (NFR-01). Стили потребляют
+   общий foundation (`src/styles/foundation.css`) и общие примитивы; вход и
+   оболочка используют одну визуальную систему. Ошибки обозначены текстом,
+   рамкой и заголовком, а не только цветом; фокус виден с клавиатуры. */
+
+/* Экран входа и состояния сессии центрируются в viewport. */
+.session-screen,
+.login-screen {
+  box-sizing: border-box;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ww-space-8) var(--ww-space-6);
+}
+
+.session-screen__status {
+  font-size: var(--ww-font-size-lg);
+}
+
+.session-unavailable {
+  width: 100%;
+  max-width: 520px;
+}
+
+.session-unavailable__request {
+  color: var(--ww-color-text-muted);
+  font-family: var(--ww-font-mono);
+  font-size: var(--ww-font-size-sm);
+}
+
+.session-unavailable__retry {
+  align-self: flex-start;
+  margin-top: var(--ww-space-1);
+}
+
+/* Компактная карточка входа в общей системе. */
+.login-form {
+  width: 100%;
+  max-width: 400px;
+  padding: var(--ww-space-8);
+}
+
+.login-form__title {
+  font-size: var(--ww-font-size-2xl);
+  font-weight: var(--ww-font-weight-bold);
+  line-height: var(--ww-line-height-tight);
+}
+
+.login-form__intro {
+  margin: var(--ww-space-2) 0 var(--ww-space-6);
+  color: var(--ww-color-text-muted);
+}
+
+.login-form__field {
+  margin-bottom: var(--ww-space-4);
+}
+
+.login-form__submit {
+  width: 100%;
+  margin-top: var(--ww-space-2);
+}
+
+.login-form__reason {
+  margin: var(--ww-space-2) 0 0;
+  color: var(--ww-color-text-muted);
+  font-size: var(--ww-font-size-sm);
+}
+
+.login-form__error {
+  margin-top: var(--ww-space-4);
+}
+
+.login-form__error-message {
+  font-weight: var(--ww-font-weight-semibold);
+}
+
+.login-form__retry {
+  align-self: flex-start;
+  margin-top: var(--ww-space-1);
+}
+
+/* Управление выходом в шапке оболочки. Неизвестный исход обозначен текстом,
+   рамкой и заголовком, а не только цветом; фокус виден с клавиатуры (NFR-01). */
+
+.logout-control {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--ww-space-2);
+}
+
+.logout-control__message {
+  max-width: 320px;
+  text-align: left;
+}

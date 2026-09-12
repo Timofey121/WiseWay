@@ -8,8 +8,12 @@ bootstrap/session/config, golden-поиска (WP-06) и
 targets/dictionaries/симуляции/публикации/очереди/выбора/preview/партий (WP-07,
 LT-07.1a/LT-07.1b/LT-07.1c/LT-07.2a/LT-07.2b/LT-07.2c) и карантина/возврата
 (LT-07.3a).
-Продуктовые экраны и навигация появятся в следующих leaf-задачах (EPIC E-02,
-WP-07).
+Продуктовые экраны появятся в следующих leaf-задачах; русская оболочка с
+навигацией по разделам добавлена в LT-08.1, app-level клиент с переключателем
+real/mock, контейнер сессии, загрузка `app-config` и единые форматы —
+в LT-08.2, вход и bootstrap-проверка сессии — в LT-09.1, а выход, истечение
+сессии/блокировка и полный сброс приватного состояния — в LT-09.2
+(EPIC E-03, WP-08/WP-09).
 
 Выбранный toolchain, точные версии и политика lock-файла закреплены в
 [ADR-0001. Frontend toolchain WiseWay](docs/ADR-0001-frontend-toolchain.md).
@@ -35,14 +39,350 @@ Lock-файл коммитится; повторная установка не �
 | Команда | Назначение |
 |---|---|
 | `npm run dev` | Запускает dev-сервер Vite (по умолчанию `http://localhost:5173`). |
-| `npm run build` | Production-сборка Vite в `frontend/dist`. |
+| `npm run build` | Production-сборка Vite в `frontend/dist` (real-режим). |
+| `npm run build:browser` | Сборка для браузерных проверок: `vite build --mode browser`, загружает `.env.browser` (`VITE_API_MODE=mock`). |
 | `npm run preview` | Локальный просмотр собранного `frontend/dist` (по умолчанию `http://localhost:4173`). |
 | `npm run typecheck` | Проверка типов `tsc --noEmit` без эмита. |
 | `npm run lint` | ESLint 9 (flat config) по проекту. |
 | `npm run test` | Unit/component smoke-тесты: Vitest + Testing Library в jsdom. |
-| `npm run test:browser` | Browser smoke-тест Playwright; сначала выполняет `npm run build`. |
+| `npm run test:browser` | Browser smoke-тесты Playwright: сначала `npm run build:browser`, затем `playwright test` на канале `msedge`. |
 | `npm run generate:api` | Генерация `src/api/generated/schema.ts` и `openapi.json` из `contracts/openapi/wiseway-v1.yaml`. |
 | `npm run generate:api:check` | Перегенерация во временный каталог и сравнение с закоммиченными артефактами (проверка «без diff»). |
+
+## Оболочка и навигация разделов (LT-08.1)
+
+`src/App.tsx` рендерит `AppShell` из `src/app/`. Оболочка состоит из заголовка
+`WiseWay`, навигации по разделам и области содержимого. Разделы идут строго в
+порядке ТЗ §4 и не содержат лишних функций/dashboard:
+
+1. «Поиск» — стартовый раздел;
+2. «Справочники»;
+3. «Очередь сортировки»;
+4. «Карантин»;
+5. «Журнал».
+
+Навигация — `<nav aria-label="Разделы приложения">` с нативными `<button>`;
+активный раздел отмечен `aria-current="page"` и выделен не только цветом.
+Управление доступно мышью и клавиатурой: `Tab` доходит до каждого раздела,
+`Enter`/`Space` активируют, фокус обозначен видимым `:focus-visible` контуром
+(NFR-01). Все пользовательские подписи — на русском.
+
+Ещё не реализованные разделы показывают честную заглушку «Раздел ещё не
+реализован» с описанием будущего содержимого и не изображают рабочий продукт
+(без выдуманных результатов, итогов и счётчиков). Логика поиска, справочников,
+очереди, карантина и журнала в этот leaf не входит.
+
+### Память вместо URL и storage
+
+Активный раздел хранится только в состоянии React текущей вкладки. Переход
+между разделами:
+
+- не выполняет сетевых запросов (ни `fetch`, ни `XMLHttpRequest`);
+- не пишет в `location`/URL, `history.state`, `localStorage`,
+  `sessionStorage` и cookie.
+
+Перезагрузка или закрытие вкладки очищают состояние, потому что оно нигде не
+персистится. Это соответствует SRCH-18 и FE §4: поиск при переходах живёт
+только в памяти вкладки.
+
+### Реестр сброса приватного состояния
+
+`src/app/private-state-registry.ts` — общий модульный in-memory реестр, которым
+пользуются последующие листья (logout/истечение сессии/смена пользователя):
+
+```ts
+import {
+  registerPrivateStateReset,
+  resetPrivateState,
+} from '@/app/index'
+
+const unsubscribe = registerPrivateStateReset(() => {
+  // очистить приватное состояние: поиск, списки, выбранные файлы и т. п.
+})
+
+resetPrivateState() // вызовет все зарегистрированные сбросы ровно один раз
+unsubscribe() // после этого сброс больше не вызывается
+```
+
+Гарантии: `resetPrivateState()` вызывает каждую зарегистрированную функцию ровно
+один раз за вызов; исключение внутри одного сброса не мешает остальным; снятые
+подписки не вызываются; реестр не выполняет сетевых запросов и ничего не
+персистит. Сам `AppShell` в реестр не регистрируется — это оставлено
+auth/session-листу (LT-09.2).
+
+> Примечание для Windows: из-за регистронезависимой файловой системы импорт
+> `@/app` может конфликтовать с `src/App.tsx`. В коде используется явный путь
+> `@/app/index` (и `./app/index` из `App.tsx`).
+
+## Визуальный foundation (LT-E03-VR1)
+
+`src/styles/foundation.css` — небольшой reusable visual-слой для всего
+приложения (E-04+). Он импортируется первым в `src/main.tsx`, до
+`./app/shell.css` и `./features/auth/auth.css`, поэтому задаёт базовый reset,
+токены и общие примитивы, которые прикладные стили только потребляют.
+
+Токены (`:root`, префикс `--ww-`):
+
+- типографика: системный стек `--ww-font-sans` (без внешних/CDN-шрифтов),
+  `--ww-font-mono`, размеры `--ww-font-size-*`, `--ww-line-height-*`,
+  `--ww-font-weight-*`;
+- нейтральные цвета: `--ww-color-bg`, `--ww-color-surface`,
+  `--ww-color-surface-muted`, `--ww-color-surface-sunken`,
+  `--ww-color-border(-strong)`, `--ww-color-text(-muted/-subtle)`;
+- один спокойный акцент: `--ww-color-accent`, `--ww-color-accent-hover`,
+  `--ww-color-accent-active`, `--ww-color-accent-soft`, `--ww-color-on-accent`;
+- статусы: `--ww-color-error-*`, `--ww-color-warning-*`, `--ww-color-info-*`,
+  `--ww-color-success-*`;
+- шкала отступов `--ww-space-1…8`, радиусы `--ww-radius-*`, минимальные тени
+  `--ww-shadow-*` и единый контур фокуса `--ww-focus-ring-*`.
+
+Общие примитивы (классы `ww-*`): `.ww-button` с модификаторами
+`--primary`/`--secondary`/`--ghost`; `.ww-field`/`.ww-label`/`.ww-input`;
+`.ww-surface`/`.ww-card`; `.ww-badge`; `.ww-alert`/`.ww-alert--error` и
+`.ww-status`; навигационные вкладки `.ww-nav__*`; пустое состояние `.ww-empty`.
+Компонентные классы (`.app-shell__*`, `.login-form__*`, `.session-*`,
+`.logout-control__*`) сохраняют свои имена и добавляют только layout, а
+палитра/типографика/состояния берутся из токенов и примитивов. Внешние
+design-фреймворки, шрифты и сетевые ресурсы не используются.
+
+Проверка согласованности: `tests/app/visual-foundation.test.ts` — токены,
+примитивы, единый `:focus-visible`, потребление токенов оболочкой и входом и
+порядок импорта стилей.
+
+## App API-клиент, сессия и app-config (LT-08.2)
+
+### Переключатель транспорта real/mock
+
+`src/app/app-api.ts` — единственная app-level фабрика клиента:
+
+```ts
+import { createAppApiClient } from '@/app/index'
+
+const api = createAppApiClient()
+```
+
+Режим выбирается на этапе сборки по `import.meta.env.VITE_API_MODE`:
+
+- точное значение `mock` → `createApiClient({ mode: 'mock', fetch: createMockFetch() })`;
+- любое другое значение, включая отсутствие переменной, → `createApiClient({ mode: 'real' })`.
+
+Молчаливого отката в mock нет: опечатка/пустое значение означает `real`.
+Переменная не задана по умолчанию, поэтому dev/build работают в `real`-режиме.
+Для mock-демонстрации: `VITE_API_MODE=mock npm run dev`. UI-компоненты не
+создают транспорт напрямую — клиент передаётся через `AppConfigProvider`
+(далее — через app-level провайдеры).
+
+### Присутствие сессии
+
+`src/app/session-state.ts` — минимальный in-memory контейнер
+`anonymous | authenticated` (`getSessionStatus`, `subscribeSessionStatus`,
+`markAuthenticated`, `markAnonymous`, `resetSessionState`) и серверной сессии
+(`getAuthenticatedSession`, `getAuthenticatedActor`). `markAuthenticated(session)`
+сохраняет только серверные `actor` (user_id, login, display_name, role) и
+`expires_at`; CSRF-токен в контейнере НЕ дублируется и остаётся в
+`src/api/session-context.ts`. Пароль сюда не попадает вообще. Контейнер ничего
+не персистит и не делает запросов. `src/app/roles.ts` (`roleLabel`) —
+единственное место перевода машинной роли `WORKER|ADMIN` в русскую подпись
+(«Рабочий»/«Администратор»); сам enum в state/transport не меняется.
+`useAuthenticatedSession()` (`src/app/use-session.ts`) отдаёт сессию в UI.
+Контейнер зарегистрирован в общем реестре LT-08.1, поэтому
+`resetPrivateState()` возвращает его в `anonymous` и очищает actor.
+
+### Загрузка app-config без выдуманных значений
+
+`src/app/app-config-context.tsx` (`AppConfigProvider`, `useAppConfig`) и
+`src/app/app-config-store.ts` загружают `GET /app-config` **только** при
+`authenticated`-сессии. Пока пользователь анонимен, состояние — `idle` и
+запросов нет (ложный `401` не провоцируется).
+
+Состояния: `idle`, `loading`, `ready`, `error`. Пределы, TTL, poll-интервалы и
+`display_timezone` не хардкодятся и не подставляются по умолчанию: они
+приходят только из ответа сервера. При ошибке сохраняется безопасное русское
+сообщение, доступен безопасный `request_id` и кнопка «Повторить»; `config`
+остаётся `null`, выдуманные пределы/пояс не используются. Поздний ответ
+устаревшего запроса игнорируется, а `resetPrivateState()`/logout очищают
+конфигурацию и возвращают провайдер в `idle`.
+
+```tsx
+import {
+  AppConfigProvider,
+  createAppApiClient,
+  useAppConfig,
+} from '@/app/index'
+
+function Screen() {
+  const { status, config, error, reload } = useAppConfig()
+  // config.display_timezone / config.search_result_limit / config.max_batch_items
+  // и остальные поля берутся только из ответа сервера.
+  return null
+}
+
+const api = createAppApiClient() // единственное место создания транспорта
+
+<AppConfigProvider client={api}>
+  <Screen />
+</AppConfigProvider>
+```
+
+## Вход и bootstrap-проверка сессии (LT-09.1)
+
+`src/features/auth/` реализует русский экран входа и проверку сессии при старте
+(`AUTH-01…05`, FE §4 «Вход», API §2/§3/§11, Q-001). Композиция —
+`AuthGate` в `src/App.tsx`; защищённая оболочка монтируется только после
+подтверждённой серверной сессии.
+
+### Bootstrap-состояния
+
+`session-bootstrap-store.ts` + `use-session-bootstrap.ts` вызывают `GET /session`
+ДО показа оболочки и различают четыре состояния:
+
+| Состояние | Условие | Что показывается |
+|---|---|---|
+| `checking` | запрос `GET /session` в полёте | «Проверка сессии…» |
+| `anonymous` | `401 UNAUTHENTICATED` | экран входа |
+| `authenticated` | `200 Session` | оболочка `AppShell` + загрузка app-config |
+| `unavailable` | сетевой сбой, 5xx/403, нечитаемый код | безопасное русское сообщение и «Повторить» |
+
+`unavailable` НЕ считается анонимностью и НЕ показывает форму входа: сбой сети
+или сервиса не выдаётся за выход из сессии. Поздний ответ устаревшего запроса
+отбрасывается по счётчику `sequence`.
+
+### Успешный вход
+
+`LoginScreen` отправляет ровно `{login, password}` на `POST /auth/login` (без
+`actor_id` и лишних полей). При `200 Session`:
+
+- `setCsrfToken(session.csrf_token)` — токен уходит в in-memory
+  `src/api/session-context.ts` и не дублируется в app-состоянии;
+- `markAuthenticated({actor, expires_at})` — actor берётся ТОЛЬКО из ответа
+  сервера;
+- пароль немедленно удаляется из поля ввода и нигде не хранится;
+- показывается оболочка со стартовым пустым разделом «Поиск», именем
+  пользователя и русской подписью роли.
+
+### Различение ошибок
+
+| Ответ | Состояние формы |
+|---|---|
+| `401 LOGIN_FAILED` | одно общее русское сообщение «Неверный логин или пароль.»; какое поле неверно — не раскрывается; введённый логин сохраняется; сессия не очищается |
+| сетевой сбой / `5xx` | безопасное сообщение о недоступности и кнопка «Повторить»; не выдаётся за неверные credentials |
+| `401 UNAUTHENTICATED` (bootstrap) | анонимная сессия → экран входа |
+
+Кнопка входа недоступна с явной русской причиной, пока логин и пароль не
+заполнены. Саморегистрация и сброс пароля через почту отсутствуют.
+
+### Безопасность и отсутствие персистирования
+
+- Пароль живёт только в DOM-поле (`useRef`), не попадает в React-состояние,
+  URL, `history.state`, `localStorage`, `sessionStorage`, cookie и логи;
+  после успешного входа поле очищается.
+- CSRF-токен и actor хранятся только в памяти вкладки; перезагрузка начинает
+  bootstrap заново.
+- `actor_id` никогда не добавляется в запросы: автора определяет серверная
+  сессия (`AUTH-02`).
+
+### Mock-режим браузерных проверок
+
+`npm run test:browser` сначала собирает приложение через `npm run build:browser`
+(`vite build --mode browser`), которая загружает `frontend/.env.browser` с
+`VITE_API_MODE=mock`. Приложение работает против schema-valid mocks
+(`src/mocks/**`), а не настоящего backend.
+
+В mock-сборке доступен тестовый шов `globalThis.__WISEWAY_TEST_FETCH__`: если
+он задан функцией, mock-fetch заменяется ею. Playwright использует шов, чтобы
+воспроизвести `503` на `GET /session` и проверить состояние `unavailable`.
+В real-режиме шов игнорируется. Проверки: `tests/browser/smoke.spec.ts` —
+анонимный старт, неверный пароль, вход `worker.one`/`admin.one`, навигация,
+недоступность сессии, выход обратно на экран входа и перезагрузка без
+сохранения локального состояния.
+
+## Выход, истечение сессии и сброс приватного состояния (LT-09.2)
+
+`src/features/auth/logout.ts`, `use-logout.ts`, `logout-control.tsx` и
+`auth-lifecycle.ts` реализуют выход, обработку `401 UNAUTHENTICATED` и полный
+сброс приватного состояния (`AUTH-03`, API §2/§3/§11, FE §4, Q-002/003/030).
+
+### Кнопка выхода
+
+При аутентифицированной сессии в шапке `AppShell` показывается доступная
+русская кнопка «Выйти» (нативные `<button>`, видимый фокус, `aria-busy` во
+время запроса). Успешный `204`:
+
+1. очищает CSRF, ожидающие `Idempotency-Key` и poll-реестр через
+   существующий `clearSession()`;
+2. помечает сессию анонимной и вызывает `resetPrivateState()` (поиск,
+   черновики, выбор, preview, session — всё, что зарегистрировано);
+3. реактивно показывает экран входа: `AuthGate` подписан на `session-state`,
+   полной перезагрузки страницы нет.
+
+`POST /auth/logout` отправляется с пустым телом, CSRF-токеном через общий
+транспорт и **без** `Idempotency-Key` (операция его не объявляет). Актор из
+сессии не подменяется, серверная партия не отменяется: UI не делает ни
+`cancel`, ни `actor`-запросов.
+
+### `401 UNAUTHENTICATED` и истечение/блокировка
+
+Транспорт для `401` с кодом `UNAUTHENTICATED` вызывает `emitUnauthorized()`,
+который уже очистил CSRF/idempotency/polls. Слушатель `installUnauthorizedReset()`
+добавляет `resetPrivateState()`, а переход сессии в `anonymous` переводит
+bootstrap-снимок в `anonymous` и отменяет поздние ответы проверки. Поэтому
+`401` из любого вызова очищает приватный контекст и показывает вход без
+дублирования очистки. `401 LOGIN_FAILED` формы входа сессию не трогает.
+
+### Неизвестный исход выхода
+
+`POST /auth/logout` не повторяется автоматически (неидемпотентная CSRF-мутация
+исключена из retry-политики). При сетевом сбое/таймауте/`5xx` клиент не
+считает выход ни успешным, ни провалившимся, а перечитывает `GET /session`:
+
+- сессия активна → сессия сохраняется, показывается русское сообщение и кнопка
+  «Повторить выход»;
+- `401 UNAUTHENTICATED` → выход считается состоявшимся (очистка + вход);
+- проверка тоже недоступна → успех не заявляется, показывается повтор.
+
+`403 CSRF_FAILED`/`FORBIDDEN` также не повторяется автоматически: сессия
+сохраняется, доступен только явный повтор. Ложное «вы вышли» невозможно.
+
+### Сброс приватного состояния и принятая партия
+
+`resetPrivateState()` (`src/app/private-state-registry.ts`) вызывается на
+logout, `401` и смене пользователя и очищает каждое зарегистрированное
+приватное состояние; `session-state` уже зарегистрирован и возвращается в
+`anonymous`. Поздний успешный ответ прежней сессии не восстанавливает
+очищенное состояние: `session-bootstrap-store.completeLogout()` увеличивает
+`sequence` и отбрасывает устаревшие ответы. Уже принятая серверная партия
+продолжает выполняться с первоначальным автором — UI её не отменяет и не
+меняет автора.
+
+### Память и секреты
+
+CSRF-токен, actor и приватное состояние живут только в памяти вкладки.
+Перезагрузка/закрытие вкладки начинают bootstrap заново и показывают вход,
+если серверная сессия не подтверждена. Ничего не пишется в URL, `history.state`,
+`localStorage`, `sessionStorage` и cookie; пароль остаётся только в DOM-поле и
+удаляется после входа.
+
+## Единые форматы (дата/размер/количество)
+
+`src/shared/format.ts` — чистые функции без React и без хардкода timezone
+(FE §4, Q-042):
+
+| Функция | Контракт |
+|---|---|
+| `formatDateTime(instant, timeZone)` | `ДД.ММ.ГГГГ ЧЧ:ММ` в заданном IANA-поясе, без секунд и суффикса зоны; используются явные числовые части `Intl.DateTimeFormat`, а строка собирается вручную |
+| `formatSize(bytes)` | десятичные B/KB/MB/GB/TB с делителем 1000, максимум один дробный знак (точка, как в golden Q-042: `1.5 KB`, `4.1 KB`); единицы остаются латиницей |
+| `formatCount(count)` | точное целое без научной нотации и разделителей групп |
+
+`display_timezone` всегда передаётся из `AppConfig`; значение по умолчанию не
+подставляется. Единица размера выбирается по величине, затем значение
+округляется до одного знака (`999999 B → 1000 KB`, `1000000 B → 1 MB`).
+Невалидный вход (битая дата, неизвестный пояс, `NaN`, `±Infinity`,
+отрицательный размер) даёт нейтральный прочерк `—`.
+
+Форматтеры размера и даты кросс-проверяются тестом против независимого
+golden-корпуса `fixtures/synthetic/search_expectations.json` (`format_samples`,
+Q-042): каждый `size`/`date` пример должен совпасть с literal-значением
+фикстуры.
 
 ## Генерация API-типов и клиента из OpenAPI
 
@@ -1007,7 +1347,18 @@ frontend/
     check-generated.mjs       проверка повторной генерации без diff
   src/
     main.tsx            точка входа React
-    App.tsx             минимальный placeholder (без экранов продукта)
+    App.tsx             композиция: AppConfigProvider + AppShell
+    app/
+      AppShell.tsx      русская оболочка и навигация по разделам
+      sections.ts       состав/порядок разделов
+      shell.css         стили оболочки, состояний config и фокуса
+      private-state-registry.ts  общий реестр сброса приватного состояния
+      session-state.ts  in-memory контейнер присутствия сессии (LT-08.2)
+      app-api.ts        единая фабрика API-клиента real/mock (LT-08.2)
+      app-config-store.ts  загрузка GET /app-config без выдуманных значений
+      app-config-context.tsx  AppConfigProvider и useAppConfig
+    shared/
+      format.ts         дата-время/размер/количество (FE §4, Q-042)
     features/{auth,search,dictionaries,sorting,quarantine,audit}/
     api/
       generated/        generated-артефакты (schema.ts, openapi.json,
@@ -1076,7 +1427,13 @@ frontend/
                         AuditStore, updates/actors lookup
         errors.ts       объявленные ошибки query/updates/actors
   tests/
-    App.test.tsx        component smoke-тест
+    App.test.tsx        component smoke-тест и отсутствие запроса конфигурации
+    app/app-shell.test.tsx  состав/навигация оболочки LT-08.1
+    app/private-state-registry.test.ts  реестр сброса LT-08.1
+    app/session-state.test.ts  контейнер присутствия сессии LT-08.2
+    app/app-api.test.ts  переключатель real/mock LT-08.2
+    app/app-config.test.tsx  загрузка app-config, ошибка/повтор, сброс
+    shared/format.test.ts  форматы даты/размера/количества
     api/client.test.ts  runtime-проверки запросов клиента A/B/C
     api/transport.test.ts  состав Request, CSRF/Idempotency/401/403/request_id
     api/idempotency.test.ts  key/body lifecycle, retry/complete, session cleanup
@@ -1137,6 +1494,17 @@ npx playwright install chromium
 умолчанию слушает только IPv6-loopback `::1`, из-за чего probe Playwright по
 `127.0.0.1` получал `connection refused`. Привязка сервера и `baseURL` к одному
 адресу делает browser-тест детерминированным при повторных запусках и в CI.
+
+Browser smoke-тест (`tests/browser/smoke.spec.ts`) проверяет:
+
+- отображение русской оболочки (`WiseWay`, навигация «Разделы приложения»,
+  стартовый раздел «Поиск»);
+- переключение разделов мышью и клавиатурой (`Tab` + `Enter`/`Space`);
+- отсутствие запроса `GET /app-config`, пока пользователь анонимен (запрос
+  перехватывается через `page.route`).
+
+Проверки app-level клиента, контейнера сессии, провайдера `app-config` и
+форматов — `npm run test` (файлы `tests/app/*` и `tests/shared/format.test.ts`).
 
 ## Проверки (V-C)
 
