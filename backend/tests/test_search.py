@@ -77,6 +77,21 @@ class SearchTests(unittest.TestCase):
             },
         )
 
+    def test_modified_at_sort_normalizes_fractional_utc_precision_and_keeps_path_ties(self) -> None:
+        whole_a = item("whole-a", "Archive/Atlas/Orion_2031/Reports/a.txt")
+        whole_b = item("whole-b", "Archive/Atlas/Orion_2031/Reports/b.txt")
+        later = item("fraction", "Archive/Atlas/Orion_2031/Reports/c.txt")
+        whole_a["modified_at"] = "2026-01-01T00:00:00Z"
+        whole_b["modified_at"] = "2026-01-01T00:00:00.000000Z"
+        later["modified_at"] = "2026-01-01T00:00:00.001Z"
+        rows = [later, whole_b, whole_a]
+
+        ascending = search(ROOT, rows, request("txt", sort={"field": "MODIFIED_AT", "direction": "ASC"}))
+        descending = search(ROOT, rows, request("txt", sort={"field": "MODIFIED_AT", "direction": "DESC"}))
+
+        self.assertEqual([row["item_id"] for row in ascending["items"]], ["whole-a", "whole-b", "fraction"])
+        self.assertEqual([row["item_id"] for row in descending["items"]], ["fraction", "whole-a", "whole-b"])
+
     def test_build_item_marks_first_bad_level_and_does_not_guess_children(self) -> None:
         value = item("bad", "Archive/Atlas/UnknownProject/Reports/lost.pdf")
         self.assertEqual(value["structure_status"], "UNRECOGNIZED")

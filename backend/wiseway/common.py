@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -26,6 +27,24 @@ def utc(value=None):
 
 def timestamp(value):
     return datetime.fromisoformat(value.replace("Z", "+00:00")).timestamp()
+
+
+_UTC_INSTANT = re.compile(r"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d+))?Z")
+
+
+def instant_sort_key(value: str) -> str:
+    """Return a lexical UTC key preserving the complete RFC3339 fraction.
+
+    The public timestamp remains untouched. Equivalent spellings (``Z`` and
+    ``.000Z``) tie, while every non-zero fraction follows its whole second.
+    """
+    match = _UTC_INSTANT.fullmatch(value) if isinstance(value, str) else None
+    if match is None:
+        raise ValueError("Timestamp must be RFC3339 UTC")
+    # Validate calendar values without using a float or truncating fractions
+    # longer than Python's microsecond representation.
+    datetime.strptime(match.group(1), "%Y-%m-%dT%H:%M:%S")
+    return match.group(1) + "." + (match.group(2) or "").rstrip("0")
 
 
 def digest(value):

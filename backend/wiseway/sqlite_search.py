@@ -14,7 +14,7 @@ import sqlite3
 from time import monotonic
 from typing import Any, Iterable
 
-from .common import ApiError, utc
+from .common import ApiError, instant_sort_key, utc
 from .search import (
     RANKING_PROFILE_VERSION,
     _NATURAL_CHUNKS,
@@ -132,8 +132,8 @@ def add_items(tx, generation_id: str, rows: Iterable[dict[str, Any]]) -> int:
     for item in rows:
         body = json.dumps(item, ensure_ascii=False, separators=(",", ":"))
         cursor = tx.connection.execute(
-            "INSERT INTO search_items(generation_id,item_no,item_id,body,filename_key,path_key,relative_path,modified_at,size_bytes) "
-            "VALUES(?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO search_items(generation_id,item_no,item_id,body,filename_key,path_key,relative_path,modified_at,modified_key,size_bytes) "
+            "VALUES(?,?,?,?,?,?,?,?,?,?)",
             (
                 generation_id,
                 next_no,
@@ -143,6 +143,7 @@ def add_items(tx, generation_id: str, rows: Iterable[dict[str, Any]]) -> int:
                 _natural_blob(item["location"]["relative_path"]),
                 item["location"]["relative_path"],
                 item["modified_at"],
+                instant_sort_key(item["modified_at"]),
                 item["size_bytes"],
             ),
         )
@@ -444,7 +445,7 @@ class SqlSearchIndex:
         if field == "NAME":
             return f"filename_key {direction},path_key ASC,relative_path COLLATE BINARY ASC,item_id COLLATE BINARY ASC"
         if field == "MODIFIED_AT":
-            return f"modified_at {direction},path_key ASC,relative_path COLLATE BINARY ASC,item_id COLLATE BINARY ASC"
+            return f"modified_key {direction},path_key ASC,relative_path COLLATE BINARY ASC,item_id COLLATE BINARY ASC"
         if field == "SIZE":
             return f"size_bytes {direction},path_key ASC,relative_path COLLATE BINARY ASC,item_id COLLATE BINARY ASC"
         raise _error("INVALID_QUERY", "Неизвестная сортировка", 400)

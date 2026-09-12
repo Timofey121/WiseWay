@@ -15,7 +15,7 @@ import re
 from types import MappingProxyType
 from typing import Any
 
-from .common import ApiError
+from .common import ApiError, instant_sort_key
 
 
 RANKING_PROFILE_VERSION = "ranking-demo-1"
@@ -461,7 +461,7 @@ def _sort_rows(rows: list[tuple[dict[str, Any], int]], sort: dict[str, Any]) -> 
         rows.sort(key=lambda pair: _natural_key(pair[0]["filename"]), reverse=direction == "DESC")
     elif field == "MODIFIED_AT":
         rows.sort(key=lambda pair: _path_tie(pair[0]))
-        rows.sort(key=lambda pair: pair[0]["modified_at"], reverse=direction == "DESC")
+        rows.sort(key=lambda pair: instant_sort_key(pair[0]["modified_at"]), reverse=direction == "DESC")
     elif field == "SIZE":
         rows.sort(key=lambda pair: _path_tie(pair[0]))
         rows.sort(key=lambda pair: pair[0]["size_bytes"], reverse=direction == "DESC")

@@ -12,7 +12,7 @@ import ssl
 from time import monotonic
 from urllib.parse import urlsplit
 
-from .common import ApiError
+from .common import ApiError, instant_sort_key
 from .search import (
     RANKING_PROFILE_VERSION,
     _facet_from_groups,
@@ -30,6 +30,8 @@ MAX_RESPONSE = 16 * 1024 * 1024
 DEFAULT_BULK_TARGET = 12 * 1024 * 1024
 MAX_DEPTH = 64
 _MAX_SCORE_PROBE_THRESHOLD = 10_000
+SEARCH_FORMAT = "wiseway-search-3"
+LEGACY_SEARCH_FORMAT = "wiseway-search-2"
 
 
 def unavailable():
@@ -198,7 +200,7 @@ class OpenSearch:
 
     def create(self, name, *, shards=8, config_hash="contract-v1"):
         body = mapping(shards)
-        body["mappings"]["_meta"] = {"config_hash": config_hash, "format": "wiseway-search-2"}
+        body["mappings"]["_meta"] = {"config_hash": config_hash, "format": SEARCH_FORMAT}
         response = self.request("PUT", "/" + index_name(name), body)
         if response.get("acknowledged") is not True or response.get("shards_acknowledged") is not True:
             raise unavailable()
@@ -212,7 +214,7 @@ class OpenSearch:
             value = self.request("GET", f"/{name}/_mapping")
         if value.get(name, {}).get("mappings", {}).get("_meta") != {
             "config_hash": config_hash,
-            "format": "wiseway-search-2",
+            "format": SEARCH_FORMAT,
         }:
             raise ValueError("Search index configuration mismatch")
 
@@ -294,6 +296,7 @@ def mapping(shards=8):
     )
     for name in ("id", "path", "name_key", "path_key", "modified"):
         props[name].update(index=False, doc_values=True)
+    props["modified_key"] = {"type": "keyword", "index": False, "doc_values": True}
     props["marker_ids"]["doc_values"] = False
     props.update({f"f{n}": {"type": "keyword", "index": False, "doc_values": True} for n in range(MAX_DEPTH)})
     props.update(size={"type": "long"}, deleted={"type": "boolean", "doc_values": False})
@@ -325,6 +328,7 @@ def document(item):
         "path": path,
         "size": item["size_bytes"],
         "modified": item["modified_at"],
+        "modified_key": instant_sort_key(item["modified_at"]),
         "deleted": False,
         "name_key": _natural_blob(item["filename"]).hex(),
         "path_key": _natural_blob(path).hex(),
@@ -401,7 +405,7 @@ def candidate_dsl(text, selected, *, exact_name=False):
     return {"bool": {"filter": filters}}
 
 
-def _sort(order):
+def _sort(order, *, modified_field="modified"):
     field, direction = order.get("field"), order.get("direction")
     if (
         direction not in {"ASC", "DESC"}
@@ -413,7 +417,12 @@ def _sort(order):
     tail = [{name: direction.lower() if field == "PATH" else "asc"} for name in ("path_key", "path", "id")]
     if field == "PATH":
         return tail
-    primary = {"RELEVANCE": "_score", "NAME": "name_key", "MODIFIED_AT": "modified", "SIZE": "size"}[field]
+    primary = {
+        "RELEVANCE": "_score",
+        "NAME": "name_key",
+        "MODIFIED_AT": modified_field,
+        "SIZE": "size",
+    }[field]
     return [{primary: direction.lower()}, *tail]
 
 
@@ -567,7 +576,12 @@ class SearchSnapshot:
         has_text = bool(parsed.terms or parsed.phrases)
         if request.get("sort", {}).get("field") == "RELEVANCE" and not has_text:
             raise ApiError("INVALID_QUERY", "RELEVANCE требует непустой текст", 400)
-        ordering = _sort(request.get("sort", {}))
+        ordering = _sort(
+            request.get("sort", {}),
+            modified_field="modified_key"
+            if self.manifest.get("_search_format") == SEARCH_FORMAT
+            else "modified",
+        )
         idle = not selected and not has_text
         text = request.get("query_text", "")
         marker_ids = request.get("selected_marker_ids", [])

@@ -30,6 +30,20 @@ def monitor(
     # from making the watcher stop another workload.
     client_info, search_info = _inspect(client, run), _inspect(search, run)
     client_id, search_id = client_info["Id"], search_info["Id"]
+
+    def inspect_running(identity):
+        try:
+            return _inspect(identity, run)
+        except subprocess.TimeoutExpired:
+            # Docker Desktop may stall briefly while the host is under load.
+            # Retry one read, with a fresh independent host-space check first.
+            # Repeated failure, a stop signal or low space still stops the test.
+            available = free_bytes(path)
+            print(json.dumps({"inspect_timeout": identity, "host_free_bytes": available}), flush=True)
+            if available < min_free_bytes or stop.is_set():
+                raise
+            return _inspect(identity, run)
+
     client_finished = False
     code = 1
     try:
@@ -50,7 +64,7 @@ def monitor(
             if not search_info["State"]["Running"]:
                 raise RuntimeError("Capacity search engine stopped before its client")
             stop.wait(interval)
-            client_info, search_info = _inspect(client_id, run), _inspect(search_id, run)
+            client_info, search_info = inspect_running(client_id), inspect_running(search_id)
     finally:
         # Quiesce merges as well as imports. Retained volumes/checkpoints are
         # never deleted. Stop search even if stopping the client fails.

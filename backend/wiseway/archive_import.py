@@ -11,9 +11,16 @@ import stat
 from threading import Event
 from time import monotonic
 
-from .common import ApiError, digest, public, timestamp, uid, utc
+from .common import ApiError, digest, instant_sort_key, public, uid, utc
 from .indexer import _index_lock
-from .opensearch import DEFAULT_BULK_TARGET, BulkBatchBuilder, _complete, document
+from .opensearch import (
+    DEFAULT_BULK_TARGET,
+    LEGACY_SEARCH_FORMAT,
+    SEARCH_FORMAT,
+    BulkBatchBuilder,
+    _complete,
+    document,
+)
 from .search import build_item, compile_schema
 
 MAX_LINE = 256 * 1024
@@ -63,7 +70,7 @@ def _record(value, root, mode, *, compiled_schema=None):
         r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z", modified
     ):
         raise ValueError("modified_at must be UTC")
-    timestamp(modified)
+    instant_sort_key(modified)
     return document(
         build_item(
             root["root_id"],
@@ -272,6 +279,7 @@ class ArchiveImporter:
                             "_index_name": job["index_name"],
                             "_pit_id": pit,
                             "_schema": current_root["_schema"],
+                            "_search_format": SEARCH_FORMAT,
                             "_import_generation": job["generation"],
                         },
                     )
@@ -315,6 +323,8 @@ class ArchiveImporter:
                     old.get("_storage") != "opensearch" or old["root"]["index_generation"] != base
                 ):
                     raise ValueError("Delta base is not the current OpenSearch generation")
+                if mode == "delta" and old.get("_search_format", LEGACY_SEARCH_FORMAT) != SEARCH_FORMAT:
+                    raise ValueError("Legacy OpenSearch index requires a full import before delta updates")
                 if (
                     mode == "delta"
                     and db.execute(

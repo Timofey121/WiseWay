@@ -132,6 +132,46 @@ def test_sqlite_index_preserves_unicode_decimal_natural_order_and_empty_facet_pr
     assert actual == search(ROOT, rows, body)
 
 
+def test_sqlite_modified_at_sort_matches_fractional_utc_oracle_and_keeps_path_ties(tmp_path):
+    from wiseway.search import DEMO_SCHEMAS, build_item
+
+    rows = []
+    for item_id, filename, modified_at in (
+        ("whole-b", "b.txt", "2026-01-01T00:00:00.000000Z"),
+        ("fraction", "c.txt", "2026-01-01T00:00:00.001Z"),
+        ("whole-a", "a.txt", "2026-01-01T00:00:00Z"),
+    ):
+        rows.append(
+            build_item(
+                ROOT["root_id"],
+                ROOT["display_prefix"],
+                f"Archive/Atlas/Orion_2031/Reports/{filename}",
+                1,
+                modified_at,
+                DEMO_SCHEMAS[ROOT["schema_set_version"]],
+                item_id,
+            )
+        )
+    store, generation = _index(tmp_path, rows)
+    for direction, expected in (
+        ("ASC", ["whole-a", "whole-b", "fraction"]),
+        ("DESC", ["fraction", "whole-a", "whole-b"]),
+    ):
+        body = {
+            "request_state_id": "fractional-utc",
+            "root_id": ROOT["root_id"],
+            "schema_set_version": ROOT["schema_set_version"],
+            "selected_marker_ids": [],
+            "query_text": "txt",
+            "sort": {"field": "MODIFIED_AT", "direction": direction},
+            "facet_prefix": "",
+        }
+        with store.transaction(write=False) as tx:
+            actual = SqlSearchIndex(tx, generation).search(ROOT, body)
+        assert actual == search(ROOT, rows, body)
+        assert [item["item_id"] for item in actual["items"]] == expected
+
+
 def test_generation_activation_and_contentless_fts_cleanup(tmp_path):
     items = build_items(golden())
     first, second = "sql-first", "sql-second"

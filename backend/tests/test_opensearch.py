@@ -6,7 +6,7 @@ import pytest
 
 from test_search_golden import ROOT, build_items, golden, request
 from wiseway.search import DEMO_SCHEMAS, facet, search
-from wiseway.opensearch import OpenSearch, SearchSnapshot, document, mapping, query_dsl
+from wiseway.opensearch import SEARCH_FORMAT, OpenSearch, SearchSnapshot, _sort, document, mapping, query_dsl
 
 
 def test_compact_document_preserves_tokens_and_limits():
@@ -21,8 +21,15 @@ def test_compact_document_preserves_tokens_and_limits():
     for field in ("id", "path", "name_key", "path_key", "modified", "f0", "f63"):
         assert properties[field]["index"] is False
         assert properties[field]["doc_values"] is True
+    assert properties["modified_key"] == {"type": "keyword", "index": False, "doc_values": True}
     with pytest.raises(ValueError):
         mapping(0)
+
+
+def test_modified_at_sort_field_is_explicitly_compatible_with_legacy_snapshots():
+    order = {"field": "MODIFIED_AT", "direction": "DESC"}
+    assert _sort(order)[0] == {"modified": "desc"}
+    assert _sort(order, modified_field="modified_key")[0] == {"modified_key": "desc"}
 
 
 def test_new_physical_index_uses_path_sort_and_omits_unused_doc_values(engine, indexed):
@@ -71,7 +78,13 @@ def indexed(engine):
         pit = engine.publish(name)
         pits.append(pit)
         return SearchSnapshot(
-            engine, {"root": root, "_pit_id": pit, "_schema": DEMO_SCHEMAS["schema-demo-1"]}
+            engine,
+            {
+                "root": root,
+                "_pit_id": pit,
+                "_schema": DEMO_SCHEMAS["schema-demo-1"],
+                "_search_format": SEARCH_FORMAT,
+            },
         ), name
 
     yield create
@@ -133,6 +146,43 @@ def test_all_orders_unicode_and_top_k(indexed, monkeypatch):
                         sort={"field": field, "direction": direction},
                     )
                     assert snapshot.search(request_body, 7) == search(root, rows, request_body, 7)
+
+
+def test_real_engine_modified_at_sort_normalizes_fractional_utc_precision(indexed):
+    from wiseway.search import build_item
+
+    rows = [
+        build_item(
+            ROOT["root_id"],
+            ROOT["display_prefix"],
+            f"Archive/Atlas/Orion_2031/Reports/{filename}",
+            1,
+            modified_at,
+            DEMO_SCHEMAS[ROOT["schema_set_version"]],
+            item_id,
+        )
+        for item_id, filename, modified_at in (
+            ("whole-b", "b.txt", "2026-01-01T00:00:00.000000Z"),
+            ("fraction", "c.txt", "2026-01-01T00:00:00.001Z"),
+            ("whole-a", "a.txt", "2026-01-01T00:00:00Z"),
+        )
+    ]
+    snapshot, _ = indexed(rows)
+    for direction, expected in (
+        ("ASC", ["whole-a", "whole-b", "fraction"]),
+        ("DESC", ["fraction", "whole-a", "whole-b"]),
+    ):
+        body = request(
+            {
+                "id": f"fractional-modified-{direction.lower()}",
+                "query": "txt",
+                "sort": {"field": "MODIFIED_AT", "direction": direction},
+            },
+            {},
+        )
+        actual = snapshot.search(body)
+        assert actual == search(ROOT, rows, body)
+        assert [item["item_id"] for item in actual["items"]] == expected
 
 
 @pytest.mark.parametrize(

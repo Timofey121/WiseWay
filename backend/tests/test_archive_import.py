@@ -98,6 +98,44 @@ def test_delta_requires_current_base_and_keeps_tombstone(configured, tmp_path):
         ctx.close()
 
 
+def test_import_preserves_rfc3339_fractional_precision_in_private_sort_key(configured, tmp_path):
+    ctx, engine = Context(configured), Engine()
+    try:
+        result = ArchiveImporter(ctx, engine).run(
+            root_id(ctx),
+            source(
+                tmp_path / "fraction.ndjson",
+                [{**row(), "modified_at": "2026-01-01T00:00:00.000000001Z"}],
+            ),
+        )
+        assert engine.docs[result["index"]]["file-1"][0]["modified_key"].endswith(".000000001")
+    finally:
+        ctx.close()
+
+
+def test_legacy_opensearch_snapshot_requires_full_import_before_delta(configured, tmp_path):
+    ctx, engine = Context(configured), Engine()
+    try:
+        root = root_id(ctx)
+        importer = ArchiveImporter(ctx, engine)
+        first = importer.run(root, source(tmp_path / "initial.ndjson", [row()]))
+        with ctx.store.transaction() as tx:
+            legacy = tx.require("index", root)
+            legacy.pop("_search_format")
+            tx.put("index", root, legacy)
+
+        with pytest.raises(ValueError, match="full import"):
+            importer.run(
+                root,
+                source(tmp_path / "delta.ndjson", [row("changed")]),
+                mode="delta",
+                base_generation=first["generation"],
+            )
+        assert "changed" not in engine.docs[first["index"]]
+    finally:
+        ctx.close()
+
+
 def test_changed_source_cannot_resume_partial_import(configured, tmp_path):
     ctx, engine = Context(configured), Engine()
     try:
