@@ -7,6 +7,8 @@
 
 import { describe, expect, it } from 'vitest'
 
+import searchExpectations from '@fixtures/synthetic/search_expectations.json'
+
 import {
   formatCount,
   formatDateTime,
@@ -69,7 +71,7 @@ describe('formatSize — десятичные B/KB/MB/GB/TB по 1000', () => {
     expect(formatSize(0)).toBe('0 B')
     expect(formatSize(999)).toBe('999 B')
     expect(formatSize(1000)).toBe('1 KB')
-    expect(formatSize(1500)).toBe('1,5 KB')
+    expect(formatSize(1500)).toBe('1.5 KB')
     expect(formatSize(999999)).toBe('1000 KB')
     expect(formatSize(1000000)).toBe('1 MB')
     expect(formatSize(1e9)).toBe('1 GB')
@@ -77,9 +79,9 @@ describe('formatSize — десятичные B/KB/MB/GB/TB по 1000', () => {
   })
 
   it('показывает не более одного дробного знака', () => {
-    expect(formatSize(1234567)).toBe('1,2 MB')
+    expect(formatSize(1234567)).toBe('1.2 MB')
     expect(formatSize(1048576)).toBe('1 MB')
-    expect(formatSize(2500)).toBe('2,5 KB')
+    expect(formatSize(2500)).toBe('2.5 KB')
   })
 
   it('не переходит за старшую единицу TB', () => {
@@ -113,5 +115,90 @@ describe('formatCount — точное целое без научной нота
     expect(formatCount(Number.NaN)).toBe(INVALID_COUNT_TEXT)
     expect(formatCount(Number.POSITIVE_INFINITY)).toBe(INVALID_COUNT_TEXT)
     expect(formatCount(Number.NEGATIVE_INFINITY)).toBe(INVALID_COUNT_TEXT)
+  })
+})
+
+// Кросс-проверка с независимым golden-корпусом Q-042: UI-хелперы обязаны
+// совпадать с literal-значениями `fixtures/synthetic/search_expectations.json`
+// (`format_samples`), а не только с локальными ожиданиями этого теста. Фикстура
+// только читается и не изменяется.
+
+interface GoldenSizeCase {
+  bytes: number
+  expected: string
+}
+
+interface GoldenDateCase {
+  instant: string
+  timezone: string
+  expected: string
+}
+
+interface GoldenFormatSample {
+  kind: string
+  scenario_id: string
+  cases: readonly unknown[]
+}
+
+const goldenFormatSamples = (
+  searchExpectations as unknown as {
+    format_samples: readonly GoldenFormatSample[]
+  }
+).format_samples
+
+const goldenSizeSamples = goldenFormatSamples.filter(
+  (sample) => sample.kind === 'size',
+)
+const goldenDateSamples = goldenFormatSamples.filter(
+  (sample) => sample.kind === 'date',
+)
+
+describe('форматы — golden Q-042 из fixtures/synthetic', () => {
+  it('не оставляет необработанных kind в format_samples', () => {
+    const handledKinds = new Set(['size', 'date'])
+    const unhandled = [
+      ...new Set(
+        goldenFormatSamples
+          .map((sample) => sample.kind)
+          .filter((kind) => !handledKinds.has(kind)),
+      ),
+    ]
+    // `display_path` — копирование строки, а не формат размера/даты; новых
+    // форматов здесь быть не должно.
+    expect(unhandled).toEqual(['display_path'])
+  })
+
+  it('formatSize совпадает со всеми size-примерами golden', () => {
+    const cases = goldenSizeSamples.flatMap((sample) =>
+      sample.cases.map((raw) => ({
+        scenarioId: sample.scenario_id,
+        item: raw as GoldenSizeCase,
+      })),
+    )
+
+    expect(cases.length).toBeGreaterThan(0)
+    for (const { scenarioId, item } of cases) {
+      expect(
+        formatSize(item.bytes),
+        `${scenarioId}: ${item.bytes} B`,
+      ).toBe(item.expected)
+    }
+  })
+
+  it('formatDateTime совпадает со всеми date-примерами golden', () => {
+    const cases = goldenDateSamples.flatMap((sample) =>
+      sample.cases.map((raw) => ({
+        scenarioId: sample.scenario_id,
+        item: raw as GoldenDateCase,
+      })),
+    )
+
+    expect(cases.length).toBeGreaterThan(0)
+    for (const { scenarioId, item } of cases) {
+      expect(
+        formatDateTime(item.instant, item.timezone),
+        `${scenarioId}: ${item.instant} ${item.timezone}`,
+      ).toBe(item.expected)
+    }
   })
 })

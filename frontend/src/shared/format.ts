@@ -85,7 +85,8 @@ export function formatDateTime(instant: string, timeZone: string): string {
  * Форматирует размер в байтах десятичными единицами B/KB/MB/GB/TB (делитель
  * 1000) максимум с одним дробным знаком. Единица выбирается по величине
  * значения, затем значение округляется до одного знака; дробная часть
- * разделяется запятой (русская презентация), единицы остаются латиницей.
+ * разделяется точкой (как в независимых golden-значениях Q-042:
+ * `1.5 KB`, `4.1 KB`), единицы остаются латиницей.
  * Например `999999 B` → `1000 KB`, `1000000 B` → `1 MB`.
  *
  * Невалидный вход (не число, `NaN`, `±Infinity`, отрицательное) даёт
@@ -146,6 +147,5 @@ function roundToSingleDecimal(value: number): number {
 
 function formatDecimal(value: number): string {
   const fixed = value.toFixed(1)
-  const trimmed = fixed.endsWith('.0') ? fixed.slice(0, -2) : fixed
-  return trimmed.replace('.', ',')
+  return fixed.endsWith('.0') ? fixed.slice(0, -2) : fixed
 }
