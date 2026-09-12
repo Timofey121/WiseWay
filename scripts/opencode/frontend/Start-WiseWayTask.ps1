@@ -221,40 +221,32 @@ finally {
 Set-Location $WorktreePath
 
 $Prompt = @"
-Запускаем frontend Execution Unit $TargetId.
+Start frontend Execution Unit $TargetId.
 
-Это уже созданная launcher'ом feature branch/worktree для выбранного
-Execution Unit.
+This feature branch/worktree has already been created by the launcher for the selected Execution Unit.
 
-Сначала прочитай:
+First read:
 1. AGENTS.md
 2. .opencode/rules/frontend.md
 3. docs/progress/FRONTEND_BACKLOG.md
-4. только релевантные выбранному target документы docs/team и части публичного
-   OpenAPI-контракта.
+4. Only the docs/team documents and public OpenAPI sections relevant to the selected target.
 
-Сверь backlog с фактическим состоянием репозитория и Git.
+Reconcile the backlog with the actual repository and Git state.
 
-Выполни весь выбранный Execution Unit $TargetId согласно текущему frontend
-execution workflow.
+Execute the entire selected frontend Execution Unit $TargetId according to the current frontend execution workflow.
 
-Автономно проходи все dependency-ready Work Packages и executable leaf tasks
-внутри выбранного target.
+Autonomously process all dependency-ready Work Packages and executable leaf tasks inside the selected target.
 
-Для нового leaf используй fresh frontend/worker child session.
-Каждый вызов frontend/reviewer должен быть fresh.
+For every new leaf, use a fresh frontend/worker child session.
+Every frontend/reviewer invocation must use a fresh child session.
 
-Не останавливайся между leaf или Work Packages без настоящего blocker или
-необходимого человеческого решения.
+Do not stop between leaves or Work Packages unless there is a real blocker or a required human decision.
 
-Не выполняй второй полный semantic review после reviewer PASS только для
-перестраховки.
+Do not perform a second full semantic review after reviewer PASS merely for reassurance.
 
-После всех внутренних Work Package reviews проведи final Execution Unit review
-и полную применимую verification.
+After all internal Work Package reviews, perform the final Execution Unit review and all applicable full verification.
 
-Доведи выбранный target до READY_FOR_HUMAN_REVIEW либо точно зафиксируй
-реальный blocker, если дальнейший dependency-safe progress невозможен.
+Bring the selected target to READY_FOR_HUMAN_REVIEW, or precisely record a real blocker if no further dependency-safe progress is possible.
 "@
 
 Write-Host ""
