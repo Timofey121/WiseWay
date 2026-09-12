@@ -1,0 +1,103 @@
+/* Оболочка WiseWay. Целевая среда — настольный браузер от 1280×720;
+   при меньшей ширине допускается прокрутка (NFR-01). */
+
+.app-shell {
+  box-sizing: border-box;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 24px;
+  max-width: 1600px;
+  color: #1f2933;
+  background: #f5f7fa;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    Arial,
+    sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.app-shell__header {
+  margin-bottom: 16px;
+}
+
+.app-shell__title {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.app-shell__subtitle {
+  margin: 4px 0 0;
+  color: #52606d;
+}
+
+.app-shell__nav {
+  border-bottom: 1px solid #cbd2d9;
+  margin-bottom: 24px;
+}
+
+.app-shell__nav-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-shell__nav-button {
+  appearance: none;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  color: #1f2933;
+  cursor: pointer;
+  font: inherit;
+  padding: 10px 16px;
+}
+
+.app-shell__nav-button:hover {
+  background: #e4e7eb;
+}
+
+/* Активный раздел выделяется не только цветом: рамкой и жирным начертанием. */
+.app-shell__nav-button[aria-current='page'] {
+  background: #ffffff;
+  border-color: #cbd2d9;
+  font-weight: 700;
+  color: #0b4f9e;
+}
+
+/* Видимый индикатор фокуса для клавиатуры (NFR-01). */
+.app-shell__nav-button:focus-visible {
+  outline: 3px solid #0b4f9e;
+  outline-offset: 2px;
+}
+
+.app-shell__content {
+  background: #ffffff;
+  border: 1px solid #cbd2d9;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.app-section__heading {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.app-section__status {
+  margin: 0 0 8px;
+  font-weight: 700;
+  color: #8a4b08;
+}
+
+.app-section__description {
+  margin: 0;
+  color: #52606d;
+}

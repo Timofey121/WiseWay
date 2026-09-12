@@ -337,11 +337,13 @@ WP-07 package completion: commits `3d45665`, `bfa0f33`, `bac5715`, `fe300eb`, `f
 
 ## EPIC E-03 — Оболочка и сессия
 
-Status: TODO. Scope: FE-03; AUTH-01…05, SRCH-18, TZ §4, NFR-01/05.
+Status: IN_PROGRESS. Scope: FE-03; AUTH-01…05, SRCH-18, TZ §4, NFR-01/05.
+
+Execution baseline 12.09.2026: branch `feat/e-03`, HEAD `9daad51` (= `origin/main` после merge PR #2 E-02), чистое рабочее дерево; `frontend/` содержит scaffold E-02 (transport WP-05, mocks WP-06/07), продуктовых экранов E-03 нет. Dependencies WP-08 (WP-05, WP-06) удовлетворены фактическим состоянием. WP-08 → WP-09 последовательно; external backend не требуется (mock pass). По D-09 push выполняет только пользователь; orchestrator делает локальные reviewed checkpoints, VERIFIED не зависит от push. Рекурсивная декомпозиция E-03 не предписана (§4A её не содержит); leaf LT-08.1/08.2/09.1/09.2 исполняются как есть.
 
 ### WP-08 — Оболочка и app-config
 
-- **Status:** TODO. **Parent:** E-03. **Dependencies:** WP-05, WP-06.
+- **Status:** IN_PROGRESS. **Parent:** E-03. **Dependencies:** WP-05, WP-06.
 - **Goal:** одна русская оболочка разделов с настройками сервера.
 - **Sources of truth:** TZ §4/12; FE §4 navigation; API §3 AppConfig; Q-004/042/043.
 - **Acceptance criteria:** нет dashboard/лишних функций; старт — пустой поиск; навигация не search/mutations; limits/timezone не зашиты в components; G-2/5.
@@ -350,8 +352,10 @@ Status: TODO. Scope: FE-03; AUTH-01…05, SRCH-18, TZ §4, NFR-01/05.
 
 | Leaf ID | Status | Dependencies | Goal | Конкретные sources of truth | Acceptance criteria | Verification expectations |
 |---|---|---|---|---|---|---|
-| LT-08.1 | TODO | WP-06 | Доступные разделы без скрытых действий | TZ §3/4, SRCH-18/NFR-01; FE §4 navigation; Q-042 | Поиск/справочники/очередь/карантин/журнал; shell/focus/keyboard; старт поиск, память без URL/storage; переходы не search/mutations; общий reset private state для LT-09.2; accounts UI не нужен | V-C/V-M навигации/focus/network; незавершённые экраны не изображают рабочий продукт |
-| LT-08.2 | TODO | LT-08.1, LT-05.1 | Config и единые форматы | OAS getAppConfig/AppConfig/Count/Instant; API §3; SRCH-16, TZ §12; Q-042 | Config loading/error без фиктивных defaults; N/query/batch/TTL/polls из config; даты ДД.ММ.ГГГГ ЧЧ:ММ в display_timezone, B…TB по 1000 ≤1 знака; целые bytes точны; demo timezone не корпоративное решение | V-C 0/1000/границы единиц/Count/timezone/разные config; V-M форматов |
+| LT-08.1 | VERIFIED | WP-06 | Доступные разделы без скрытых действий | TZ §3/4, SRCH-18/NFR-01; FE §4 navigation; Q-042 | Поиск/справочники/очередь/карантин/журнал; shell/focus/keyboard; старт поиск, память без URL/storage; переходы не search/mutations; общий reset private state для LT-09.2; accounts UI не нужен | V-C/V-M навигации/focus/network; незавершённые экраны не изображают рабочий продукт |
+| LT-08.2 | IN_PROGRESS | LT-08.1, LT-05.1 | Config и единые форматы | OAS getAppConfig/AppConfig/Count/Instant; API §3; SRCH-16, TZ §12; Q-042 | Config loading/error без фиктивных defaults; N/query/batch/TTL/polls из config; даты ДД.ММ.ГГГГ ЧЧ:ММ в display_timezone, B…TB по 1000 ≤1 знака; целые bytes точны; demo timezone не корпоративное решение | V-C 0/1000/границы единиц/Count/timezone/разные config; V-M форматов |
+
+LT-08.1 completion: создана русская оболочка `frontend/src/app/` (`sections.ts`, `AppShell.tsx`, `shell.css`, `index.ts`) и модульный in-memory реестр приватного состояния `private-state-registry.ts` (`registerPrivateStateReset`/`resetPrivateState`); `App.tsx`/`main.tsx` подключены к оболочке. Ровно пять разделов в порядке «Поиск», «Справочники», «Очередь сортировки», «Карантин», «Журнал»; старт — «Поиск»; навигация клавиатурой/мышью (`nav` + нативные кнопки, `aria-current="page"`, видимый `:focus-visible`), честные заглушки «Раздел ещё не реализован» без выдуманных данных; активный раздел только в React-state, без router/URL/history/storage/cookie и без сети при переключении. Добавлена dev-зависимость `@testing-library/user-event@14.6.1` (точный пин) для реальной клавиатурной активации. Независимый LEAF reviewer — PASS: `typecheck`/`lint`/`build` exit 0, `npm test` 610 PASS (23 файла; +15 к 595), собственный probe подтвердил ноль fetch/XHR и отсутствие записи в URL/history/storage при навигации, а также контракт реестра; `git diff --check` PASS. `contracts/**`, generated client, `frontend/src/api/**`, `frontend/src/mocks/**`, `fixtures/**`, root `tests/**` и control plane не изменялись. Non-blocking: focus-visible проверен статически/CSS в jsdom, не в реальном браузере (перенесено на browser-проверки LT-08.2); `Set`-реестр не различает повторную регистрацию одной и той же ссылки; `aria-current="page"` для in-app разделов допустим. M/A/E NOT_RUN.
 
 ### WP-09 — Вход и прекращение контекста
 

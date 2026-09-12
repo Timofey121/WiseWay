@@ -1,0 +1,80 @@
+import { useCallback, useMemo, useState } from 'react'
+
+import {
+  appSections,
+  defaultSectionId,
+  notImplementedStatus,
+  type AppSection,
+  type AppSectionId,
+} from './sections'
+
+function SectionPlaceholder({ section }: { section: AppSection }) {
+  const headingId = `section-${section.id}-heading`
+
+  return (
+    <section className="app-section" aria-labelledby={headingId}>
+      <h2 id={headingId} className="app-section__heading">
+        {section.label}
+      </h2>
+      <p className="app-section__status">{notImplementedStatus}</p>
+      <p className="app-section__description">{section.description}</p>
+    </section>
+  )
+}
+
+/**
+ * Русская оболочка приложения с навигацией по разделам.
+ *
+ * Активный раздел хранится только в состоянии React текущей вкладки: он не
+ * пишется в URL, history state, browser storage или cookie. Переключение
+ * раздела не выполняет сетевых запросов. До реализации входа стартовым
+ * разделом всегда является «Поиск».
+ */
+export function AppShell() {
+  const [activeSectionId, setActiveSectionId] =
+    useState<AppSectionId>(defaultSectionId)
+
+  const activeSection = useMemo(
+    () =>
+      appSections.find((section) => section.id === activeSectionId) ??
+      appSections[0],
+    [activeSectionId],
+  )
+
+  const handleSelect = useCallback((sectionId: AppSectionId) => {
+    setActiveSectionId(sectionId)
+  }, [])
+
+  return (
+    <div className="app-shell">
+      <header className="app-shell__header">
+        <h1 className="app-shell__title">WiseWay</h1>
+        <p className="app-shell__subtitle">Поиск и сортировка файлов</p>
+      </header>
+
+      <nav className="app-shell__nav" aria-label="Разделы приложения">
+        <ul className="app-shell__nav-list">
+          {appSections.map((section) => {
+            const isActive = section.id === activeSectionId
+            return (
+              <li key={section.id} className="app-shell__nav-item">
+                <button
+                  type="button"
+                  className="app-shell__nav-button"
+                  aria-current={isActive ? 'page' : undefined}
+                  onClick={() => handleSelect(section.id)}
+                >
+                  {section.label}
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      </nav>
+
+      <main className="app-shell__content">
+        <SectionPlaceholder section={activeSection} />
+      </main>
+    </div>
+  )
+}
