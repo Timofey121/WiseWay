@@ -9,7 +9,9 @@ targets/dictionaries/симуляции/публикации/очереди/вы
 LT-07.1a/LT-07.1b/LT-07.1c/LT-07.2a/LT-07.2b/LT-07.2c) и карантина/возврата
 (LT-07.3a).
 Продуктовые экраны появятся в следующих leaf-задачах; русская оболочка с
-навигацией по разделам добавлена в LT-08.1 (EPIC E-03, WP-08).
+навигацией по разделам добавлена в LT-08.1, а app-level клиент с переключателем
+real/mock, контейнер сессии, загрузка `app-config` и единые форматы —
+в LT-08.2 (EPIC E-03, WP-08).
 
 Выбранный toolchain, точные версии и политика lock-файла закреплены в
 [ADR-0001. Frontend toolchain WiseWay](docs/ADR-0001-frontend-toolchain.md).
@@ -109,6 +111,91 @@ auth/session-листу (LT-09.2).
 > `@/app` может конфликтовать с `src/App.tsx`. В коде используется явный путь
 > `@/app/index` (и `./app/index` из `App.tsx`).
 
+## App API-клиент, сессия и app-config (LT-08.2)
+
+### Переключатель транспорта real/mock
+
+`src/app/app-api.ts` — единственная app-level фабрика клиента:
+
+```ts
+import { createAppApiClient } from '@/app/index'
+
+const api = createAppApiClient()
+```
+
+Режим выбирается на этапе сборки по `import.meta.env.VITE_API_MODE`:
+
+- точное значение `mock` → `createApiClient({ mode: 'mock', fetch: createMockFetch() })`;
+- любое другое значение, включая отсутствие переменной, → `createApiClient({ mode: 'real' })`.
+
+Молчаливого отката в mock нет: опечатка/пустое значение означает `real`.
+Переменная не задана по умолчанию, поэтому dev/build работают в `real`-режиме.
+Для mock-демонстрации: `VITE_API_MODE=mock npm run dev`. UI-компоненты не
+создают транспорт напрямую — клиент передаётся через `AppConfigProvider`
+(далее — через app-level провайдеры).
+
+### Присутствие сессии
+
+`src/app/session-state.ts` — минимальный in-memory контейнер
+`anonymous | authenticated` (`getSessionStatus`, `subscribeSessionStatus`,
+`markAuthenticated`, `markAnonymous`, `resetSessionState`). Он не хранит
+токены и учётные данные (CSRF остаётся в `src/api/session-context.ts`), ничего
+не персистит и не делает запросов. Контейнер зарегистрирован в общем реестре
+LT-08.1, поэтому `resetPrivateState()` возвращает его в `anonymous`. Драйвером
+будет LT-09.1 (login/session/logout).
+
+### Загрузка app-config без выдуманных значений
+
+`src/app/app-config-context.tsx` (`AppConfigProvider`, `useAppConfig`) и
+`src/app/app-config-store.ts` загружают `GET /app-config` **только** при
+`authenticated`-сессии. Пока пользователь анонимен, состояние — `idle` и
+запросов нет (ложный `401` не провоцируется).
+
+Состояния: `idle`, `loading`, `ready`, `error`. Пределы, TTL, poll-интервалы и
+`display_timezone` не хардкодятся и не подставляются по умолчанию: они
+приходят только из ответа сервера. При ошибке сохраняется безопасное русское
+сообщение, доступен безопасный `request_id` и кнопка «Повторить»; `config`
+остаётся `null`, выдуманные пределы/пояс не используются. Поздний ответ
+устаревшего запроса игнорируется, а `resetPrivateState()`/logout очищают
+конфигурацию и возвращают провайдер в `idle`.
+
+```tsx
+import {
+  AppConfigProvider,
+  createAppApiClient,
+  useAppConfig,
+} from '@/app/index'
+
+function Screen() {
+  const { status, config, error, reload } = useAppConfig()
+  // config.display_timezone / config.search_result_limit / config.max_batch_items
+  // и остальные поля берутся только из ответа сервера.
+  return null
+}
+
+const api = createAppApiClient() // единственное место создания транспорта
+
+<AppConfigProvider client={api}>
+  <Screen />
+</AppConfigProvider>
+```
+
+## Единые форматы (дата/размер/количество)
+
+`src/shared/format.ts` — чистые функции без React и без хардкода timezone
+(FE §4, Q-042):
+
+| Функция | Контракт |
+|---|---|
+| `formatDateTime(instant, timeZone)` | `ДД.ММ.ГГГГ ЧЧ:ММ` в заданном IANA-поясе, без секунд и суффикса зоны; используются явные числовые части `Intl.DateTimeFormat`, а строка собирается вручную |
+| `formatSize(bytes)` | десятичные B/KB/MB/GB/TB с делителем 1000, максимум один дробный знак (запятая); единицы остаются латиницей |
+| `formatCount(count)` | точное целое без научной нотации и разделителей групп |
+
+`display_timezone` всегда передаётся из `AppConfig`; значение по умолчанию не
+подставляется. Единица размера выбирается по величине, затем значение
+округляется до одного знака (`999999 B → 1000 KB`, `1000000 B → 1 MB`).
+Невалидный вход (битая дата, неизвестный пояс, `NaN`, `±Infinity`,
+отрицательный размер) даёт нейтральный прочерк `—`.
 
 ## Генерация API-типов и клиента из OpenAPI
 
@@ -1073,7 +1160,18 @@ frontend/
     check-generated.mjs       проверка повторной генерации без diff
   src/
     main.tsx            точка входа React
-    App.tsx             минимальный placeholder (без экранов продукта)
+    App.tsx             композиция: AppConfigProvider + AppShell
+    app/
+      AppShell.tsx      русская оболочка и навигация по разделам
+      sections.ts       состав/порядок разделов
+      shell.css         стили оболочки, состояний config и фокуса
+      private-state-registry.ts  общий реестр сброса приватного состояния
+      session-state.ts  in-memory контейнер присутствия сессии (LT-08.2)
+      app-api.ts        единая фабрика API-клиента real/mock (LT-08.2)
+      app-config-store.ts  загрузка GET /app-config без выдуманных значений
+      app-config-context.tsx  AppConfigProvider и useAppConfig
+    shared/
+      format.ts         дата-время/размер/количество (FE §4, Q-042)
     features/{auth,search,dictionaries,sorting,quarantine,audit}/
     api/
       generated/        generated-артефакты (schema.ts, openapi.json,
@@ -1142,7 +1240,13 @@ frontend/
                         AuditStore, updates/actors lookup
         errors.ts       объявленные ошибки query/updates/actors
   tests/
-    App.test.tsx        component smoke-тест
+    App.test.tsx        component smoke-тест и отсутствие запроса конфигурации
+    app/app-shell.test.tsx  состав/навигация оболочки LT-08.1
+    app/private-state-registry.test.ts  реестр сброса LT-08.1
+    app/session-state.test.ts  контейнер присутствия сессии LT-08.2
+    app/app-api.test.ts  переключатель real/mock LT-08.2
+    app/app-config.test.tsx  загрузка app-config, ошибка/повтор, сброс
+    shared/format.test.ts  форматы даты/размера/количества
     api/client.test.ts  runtime-проверки запросов клиента A/B/C
     api/transport.test.ts  состав Request, CSRF/Idempotency/401/403/request_id
     api/idempotency.test.ts  key/body lifecycle, retry/complete, session cleanup
@@ -1203,6 +1307,17 @@ npx playwright install chromium
 умолчанию слушает только IPv6-loopback `::1`, из-за чего probe Playwright по
 `127.0.0.1` получал `connection refused`. Привязка сервера и `baseURL` к одному
 адресу делает browser-тест детерминированным при повторных запусках и в CI.
+
+Browser smoke-тест (`tests/browser/smoke.spec.ts`) проверяет:
+
+- отображение русской оболочки (`WiseWay`, навигация «Разделы приложения»,
+  стартовый раздел «Поиск»);
+- переключение разделов мышью и клавиатурой (`Tab` + `Enter`/`Space`);
+- отсутствие запроса `GET /app-config`, пока пользователь анонимен (запрос
+  перехватывается через `page.route`).
+
+Проверки app-level клиента, контейнера сессии, провайдера `app-config` и
+форматов — `npm run test` (файлы `tests/app/*` и `tests/shared/format.test.ts`).
 
 ## Проверки (V-C)
 

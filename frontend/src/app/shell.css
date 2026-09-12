@@ -101,3 +101,58 @@
   margin: 0;
   color: #52606d;
 }
+
+/* Состояния загрузки/ошибки app-config. Ошибка обозначена текстом и рамкой, а
+   не только цветом; кнопка «Повторить» доступна с клавиатуры. */
+
+.app-config-status {
+  margin: 0 0 16px;
+  color: #52606d;
+}
+
+.app-config-error {
+  margin: 0 0 16px;
+  padding: 16px;
+  border: 1px solid #b44d12;
+  border-left-width: 6px;
+  border-radius: 6px;
+  background: #fff4ed;
+}
+
+.app-config-error__title {
+  margin: 0 0 8px;
+  font-weight: 700;
+  color: #8a2c0d;
+}
+
+.app-config-error__message,
+.app-config-error__request {
+  margin: 0 0 8px;
+}
+
+.app-config-error__request {
+  color: #52606d;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 14px;
+}
+
+.app-config-error__retry {
+  appearance: none;
+  border: 1px solid #0b4f9e;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #0b4f9e;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 8px 16px;
+}
+
+.app-config-error__retry:hover {
+  background: #e8f0fb;
+}
+
+.app-config-error__retry:focus-visible {
+  outline: 3px solid #0b4f9e;
+  outline-offset: 2px;
+}
