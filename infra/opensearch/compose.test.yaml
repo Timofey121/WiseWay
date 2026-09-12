@@ -1,0 +1,25 @@
+# Isolated synthetic integration tests only. Never expose this service publicly.
+name: wiseway-search-test
+services:
+  search:
+    image: opensearchproject/opensearch:3.8.0@sha256:bcc1797519726ceb6d651d4a3e60b7c30da91793914a8dfe75fd441d4f641509
+    environment:
+      discovery.type: single-node
+      DISABLE_SECURITY_PLUGIN: "true"
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      OPENSEARCH_JAVA_OPTS: -Xms768m -Xmx768m
+    ports: ["127.0.0.1:${WISEWAY_TEST_SEARCH_PORT:-19200}:9200"]
+    mem_limit: 3g
+    cpus: 2
+    pids_limit: 512
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    volumes: ["search-data:/usr/share/opensearch/data"]
+    healthcheck:
+      test: [CMD-SHELL, "curl --fail --silent http://localhost:9200/_cluster/health >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+volumes:
+  search-data:

@@ -1,11 +1,69 @@
+# IDE and operating-system files
 .idea/
+.vscode/
+.DS_Store
+
+# Local workflow tools and private task notes
+/.opencode/
+/opencode.json
+/scripts/opencode/
+/AGENTS.md
+/.agents/
+/.orchestra/
+
+# Local and process documentation
+/docs/team/
+/docs/progress/
+/docs/local/
+/docs/reports/
+/frontend/docs/
+/backend/VALIDATION.md
+
+# Python
+.venv/
 .venv-contract/
 __pycache__/
 *.py[cod]
-.DS_Store
-fixtures/synthetic/inventory.json
-docs/*
-!docs/team/
-!docs/team/**
-!docs/progress/
-!docs/progress/**
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# Frontend
+node_modules/
+coverage/
+playwright-report/
+test-results/
+.vite/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+!**/.env.example
+!/frontend/.env.browser
+*.pem
+*.key
+/infra/opensearch/secrets/
+
+# Runtime state and generated reports
+.wiseway/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.prof
+*.log
+.coverage*
+htmlcov/
+/backups/
+/.wiseway-ops.lock
+/requirements-ci.txt
+/build-requirements-ci.txt
+/trivy-image-report.json
+/trivy-gateway-report.json
+/archive-data/
+/search-data/
+*.ndjson
+!/backend/tests/fixtures/*.ndjson
+/fixtures/synthetic/inventory.json

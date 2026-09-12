@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "Wise Way API",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "summary": "Иерархический поиск и ручная сортировка файлов Wise Way.",
     "description": "Контракт синтетической демоверсии Wise Way.\nОбщие бизнес-правила и границы реализации: [semantics.md](../semantics.md)."
   },
@@ -86,6 +86,12 @@
                 "$ref": "#/components/headers/NoStore"
               }
             }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
@@ -293,7 +299,7 @@
                 "examples": {
                   "demo": {
                     "value": {
-                      "api_contract_version": "1.0.0",
+                      "api_contract_version": "1.1.0",
                       "display_timezone": "Europe/Moscow",
                       "search_result_limit": 100,
                       "max_batch_items": 1000,
@@ -7832,7 +7838,10 @@
           "LOGIN_SUCCEEDED",
           "LOGIN_FAILED",
           "LOGOUT",
-          "ACCOUNT_BLOCKED"
+          "ACCOUNT_BLOCKED",
+          "ACCOUNT_CREATED",
+          "ACCOUNT_UNBLOCKED",
+          "PASSWORD_CHANGED"
         ]
       },
       "AuditResult": {
@@ -8141,7 +8150,10 @@
                     "LOGIN_SUCCEEDED",
                     "LOGIN_FAILED",
                     "LOGOUT",
-                    "ACCOUNT_BLOCKED"
+                    "ACCOUNT_BLOCKED",
+                    "ACCOUNT_CREATED",
+                    "ACCOUNT_UNBLOCKED",
+                    "PASSWORD_CHANGED"
                   ]
                 }
               }
@@ -8168,7 +8180,10 @@
                   "enum": [
                     "LOGIN_SUCCEEDED",
                     "LOGOUT",
-                    "ACCOUNT_BLOCKED"
+                    "ACCOUNT_BLOCKED",
+                    "ACCOUNT_CREATED",
+                    "ACCOUNT_UNBLOCKED",
+                    "PASSWORD_CHANGED"
                   ]
                 }
               }

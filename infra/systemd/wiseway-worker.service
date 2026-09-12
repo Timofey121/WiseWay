@@ -1,0 +1,27 @@
+[Unit]
+Description=Wise Way file worker
+After=network-online.target wiseway-api.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=wiseway
+Group=wiseway
+UMask=0077
+WorkingDirectory=/opt/wiseway
+EnvironmentFile=/etc/wiseway/wiseway.env
+ExecStart=/opt/wiseway/.venv/bin/wiseway worker
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/wiseway /srv/wiseway/sandbox
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+LockPersonality=true
+MemoryDenyWriteExecute=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,6 +1,6 @@
 """Canonical expectations derived from the WiseWay specifications.
 
-These constants encode the accepted public contract (``docs/team/02_API_CONTRACT.md``)
+These constants encode the accepted public contract (``contracts/openapi/wiseway-v1.yaml``)
 so that the executable verifier can detect structural drift.  They describe
 *what the contract must look like*, not new business behaviour.
 """
@@ -71,7 +71,7 @@ COMPANY_ID_SCHEMA = {"$ref": "#/components/schemas/Id"}
 # (includes success and every declared error).  This is a regression baseline
 # taken from the accepted contract, not read back from the runtime document.
 EXPECTED_RESPONSE_STATUSES: Dict[str, frozenset] = {
-    "getHealth": frozenset({"200", "500", "503"}),
+    "getHealth": frozenset({"200", "403", "422", "500", "503"}),
     "login": frozenset({"200", "401", "403", "422", "429", "500", "503"}),
     "getSession": frozenset({"200", "401", "403", "422", "429", "500", "503"}),
     "logout": frozenset({"204", "401", "403", "422", "429", "500", "503"}),

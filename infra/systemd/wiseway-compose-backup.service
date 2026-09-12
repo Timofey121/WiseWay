@@ -1,0 +1,12 @@
+[Unit]
+Description=Wise Way coordinated offline snapshot
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+UMask=0077
+WorkingDirectory=/opt/wiseway
+ExecStart=/bin/sh -c 'exec /usr/bin/python3 /opt/wiseway/infra/scripts/compose_ops.py snapshot snapshot-$$(date -u +%%Y%%m%%dT%%H%%M%%SZ)'
+TimeoutStartSec=30min
+NoNewPrivileges=true

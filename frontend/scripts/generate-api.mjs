@@ -1,6 +1,6 @@
 // Воспроизводимая генерация артефактов из единственного публичного OAS.
 //
-// Источник: `contracts/openapi/wiseway-v1.yaml` (OpenAPI 3.1.1, version 1.0.0).
+// Источник: `contracts/openapi/wiseway-v1.yaml` (OpenAPI 3.1.1).
 // Результат:
 //   - `src/api/generated/schema.ts`        — TypeScript-типы (openapi-typescript 7);
 //   - `src/api/generated/openapi.json`     — машинно-читаемый JSON OAS для runtime-mocks;

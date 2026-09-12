@@ -1235,7 +1235,7 @@ export interface components {
         /** @enum {string} */
         AuditCategory: "BUSINESS" | "SYSTEM";
         /** @enum {string} */
-        AuditAction: "DICTIONARY_CREATED" | "DRAFT_SAVED" | "DICTIONARY_SIMULATED" | "DICTIONARY_PUBLISHED" | "DICTIONARY_RESTORED" | "BATCH_ACCEPTED" | "FILE_ATTEMPT_STARTED" | "FILE_ATTEMPT_FINISHED" | "QUARANTINE_RETURNED" | "RECOVERY_REQUIRED" | "LOGIN_SUCCEEDED" | "LOGIN_FAILED" | "LOGOUT" | "ACCOUNT_BLOCKED";
+        AuditAction: "DICTIONARY_CREATED" | "DRAFT_SAVED" | "DICTIONARY_SIMULATED" | "DICTIONARY_PUBLISHED" | "DICTIONARY_RESTORED" | "BATCH_ACCEPTED" | "FILE_ATTEMPT_STARTED" | "FILE_ATTEMPT_FINISHED" | "QUARANTINE_RETURNED" | "RECOVERY_REQUIRED" | "LOGIN_SUCCEEDED" | "LOGIN_FAILED" | "LOGOUT" | "ACCOUNT_BLOCKED" | "ACCOUNT_CREATED" | "ACCOUNT_UNBLOCKED" | "PASSWORD_CHANGED";
         /** @enum {string} */
         AuditResult: "SUCCESS" | "ISSUE" | "FAILED";
         AuditQueryRequest: {
@@ -1789,6 +1789,8 @@ export interface operations {
                     "application/json": components["schemas"]["HealthResponse"];
                 };
             };
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
             500: components["responses"]["InternalError"];
             503: components["responses"]["ServiceUnavailable"];
         };
