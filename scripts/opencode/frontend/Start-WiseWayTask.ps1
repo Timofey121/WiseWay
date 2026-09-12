@@ -204,8 +204,9 @@ $($DirtyState -join "`n")
     Write-Host ""
 
     & git worktree add `
-        $WorktreePath `
+        --no-track `
         -b $BranchName `
+        $WorktreePath `
         origin/main
 
     Require-LastExitCode "git worktree add"
