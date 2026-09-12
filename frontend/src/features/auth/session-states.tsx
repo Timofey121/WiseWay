@@ -11,7 +11,7 @@ import type { SessionBootstrapError } from './session-bootstrap-store'
 export function SessionCheckingScreen() {
   return (
     <main className="session-screen" aria-busy="true">
-      <p className="session-screen__status" role="status">
+      <p className="session-screen__status ww-status" role="status">
         Проверка сессии…
       </p>
     </main>
@@ -33,11 +33,14 @@ export function SessionUnavailableScreen({
 }: SessionUnavailableScreenProps) {
   return (
     <main className="session-screen">
-      <div className="session-unavailable" role="alert">
-        <h1 className="session-unavailable__title">
+      <div
+        className="session-unavailable ww-alert ww-alert--error"
+        role="alert"
+      >
+        <h1 className="session-unavailable__title ww-alert__title">
           Не удалось проверить сессию
         </h1>
-        <p className="session-unavailable__message">
+        <p className="session-unavailable__message ww-alert__message">
           {error?.message ??
             'Сервис временно недоступен. Повторите попытку позже.'}
         </p>
@@ -48,7 +51,7 @@ export function SessionUnavailableScreen({
         ) : null}
         <button
           type="button"
-          className="session-unavailable__retry"
+          className="session-unavailable__retry ww-button ww-button--secondary"
           onClick={onRetry}
         >
           Повторить

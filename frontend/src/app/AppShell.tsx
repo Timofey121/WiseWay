@@ -14,11 +14,17 @@ function SectionPlaceholder({ section }: { section: AppSection }) {
   const headingId = `section-${section.id}-heading`
 
   return (
-    <section className="app-section" aria-labelledby={headingId}>
+    <section className="app-section ww-empty" aria-labelledby={headingId}>
+      <div
+        className="app-section__indicator ww-empty__indicator"
+        aria-hidden="true"
+      />
       <h2 id={headingId} className="app-section__heading">
         {section.label}
       </h2>
-      <p className="app-section__status">{notImplementedStatus}</p>
+      <p className="app-section__status ww-badge ww-badge--info">
+        {notImplementedStatus}
+      </p>
       <p className="app-section__description">{section.description}</p>
     </section>
   )
@@ -61,23 +67,28 @@ export function AppShell({ headerActions }: AppShellProps = {}) {
       <header className="app-shell__header">
         <div className="app-shell__header-row">
           <div className="app-shell__brand">
-            <h1 className="app-shell__title">WiseWay</h1>
-            <p className="app-shell__subtitle">Поиск и сортировка файлов</p>
+            <span className="app-shell__brand-mark" aria-hidden="true" />
+            <div className="app-shell__brand-text">
+              <h1 className="app-shell__title">WiseWay</h1>
+              <p className="app-shell__subtitle">Поиск и сортировка файлов</p>
+            </div>
           </div>
-          {headerActions ? (
-            <div className="app-shell__header-actions">{headerActions}</div>
+          {session || headerActions ? (
+            <div className="app-shell__header-actions">
+              {session ? (
+                <div className="app-shell__user">
+                  <span className="app-shell__user-name">
+                    {session.actor.display_name}
+                  </span>
+                  <span className="app-shell__user-role ww-badge">
+                    {roleLabel(session.actor.role)}
+                  </span>
+                </div>
+              ) : null}
+              {headerActions}
+            </div>
           ) : null}
         </div>
-        {session ? (
-          <p className="app-shell__user">
-            <span className="app-shell__user-name">
-              {session.actor.display_name}
-            </span>
-            <span className="app-shell__user-role">
-              {roleLabel(session.actor.role)}
-            </span>
-          </p>
-        ) : null}
       </header>
 
       <nav className="app-shell__nav" aria-label="Разделы приложения">
@@ -88,7 +99,7 @@ export function AppShell({ headerActions }: AppShellProps = {}) {
               <li key={section.id} className="app-shell__nav-item">
                 <button
                   type="button"
-                  className="app-shell__nav-button"
+                  className="ww-nav__button app-shell__nav-button"
                   aria-current={isActive ? 'page' : undefined}
                   onClick={() => handleSelect(section.id)}
                 >

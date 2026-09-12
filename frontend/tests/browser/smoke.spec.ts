@@ -30,8 +30,36 @@ test('без сессии показывает экран входа, а не о
   await expect(page.getByLabel('Логин')).toBeVisible()
   await expect(page.getByLabel('Пароль')).toBeVisible()
   await expect(
+    page.getByText('Введите логин и пароль.', { exact: true }),
+  ).toBeVisible()
+  await expect(
     page.getByRole('navigation', { name: 'Разделы приложения' }),
   ).toHaveCount(0)
+})
+
+test('карточка входа центрирована относительно viewport 1280×720', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 720 })
+  await page.goto('/')
+
+  const card = page.getByRole('form', { name: 'Вход в WiseWay' })
+  await expect(card).toBeVisible()
+
+  const viewport = await page.evaluate(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  }))
+  const box = await card.boundingBox()
+  expect(box).not.toBeNull()
+  if (!box) {
+    return
+  }
+
+  const centerX = box.x + box.width / 2
+  const centerY = box.y + box.height / 2
+  expect(Math.abs(centerX - viewport.width / 2)).toBeLessThanOrEqual(2)
+  expect(Math.abs(centerY - viewport.height / 2)).toBeLessThanOrEqual(2)
 })
 
 test('неверный пароль даёт общее сообщение и сохраняет логин', async ({

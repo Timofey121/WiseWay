@@ -70,6 +70,18 @@ afterEach(() => {
   Reflect.deleteProperty(document, 'cookie')
 })
 
+describe('LoginScreen — вводная подсказка', () => {
+  it('показывает ровно «Введите логин и пароль.»', () => {
+    const { client } = createCapturingClient()
+    render(<LoginScreen client={client} onAuthenticated={vi.fn()} />)
+
+    expect(screen.getByText('Введите логин и пароль.')).toBeVisible()
+    expect(
+      screen.queryByText('Введите локальный логин и пароль.'),
+    ).not.toBeInTheDocument()
+  })
+})
+
 describe('LoginScreen — доступность кнопки входа', () => {
   it('недоступна с русской причиной, пока поля пусты, и включается после заполнения', async () => {
     const user = userEvent.setup()

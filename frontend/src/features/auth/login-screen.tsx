@@ -116,7 +116,7 @@ export function LoginScreen({ client, onAuthenticated }: LoginScreenProps) {
   return (
     <main className="login-screen">
       <form
-        className="login-form"
+        className="login-form ww-card"
         onSubmit={handleSubmit}
         aria-labelledby={`${loginInputId}-title`}
         noValidate
@@ -124,15 +124,15 @@ export function LoginScreen({ client, onAuthenticated }: LoginScreenProps) {
         <h1 id={`${loginInputId}-title`} className="login-form__title">
           Вход в WiseWay
         </h1>
-        <p className="login-form__intro">Введите локальный логин и пароль.</p>
+        <p className="login-form__intro">Введите логин и пароль.</p>
 
         <div className="login-form__field">
-          <label className="login-form__label" htmlFor={loginInputId}>
+          <label className="login-form__label ww-label" htmlFor={loginInputId}>
             Логин
           </label>
           <input
             id={loginInputId}
-            className="login-form__input"
+            className="login-form__input ww-input"
             name="login"
             type="text"
             autoComplete="username"
@@ -151,12 +151,12 @@ export function LoginScreen({ client, onAuthenticated }: LoginScreenProps) {
         </div>
 
         <div className="login-form__field">
-          <label className="login-form__label" htmlFor={passwordInputId}>
+          <label className="login-form__label ww-label" htmlFor={passwordInputId}>
             Пароль
           </label>
           <input
             id={passwordInputId}
-            className="login-form__input"
+            className="login-form__input ww-input"
             name="password"
             type="password"
             autoComplete="current-password"
@@ -176,7 +176,7 @@ export function LoginScreen({ client, onAuthenticated }: LoginScreenProps) {
 
         <button
           type="submit"
-          className="login-form__submit"
+          className="login-form__submit ww-button ww-button--primary"
           disabled={!canSubmit}
           aria-describedby={disabledReason ? reasonId : undefined}
         >
@@ -191,12 +191,12 @@ export function LoginScreen({ client, onAuthenticated }: LoginScreenProps) {
 
         {status === 'login_failed' ? (
           <div
-            className="login-form__error"
+            className="login-form__error ww-alert ww-alert--error"
             role="alert"
             tabIndex={-1}
             ref={alertRef}
           >
-            <p className="login-form__error-message">
+            <p className="login-form__error-message ww-alert__message">
               Неверный логин или пароль.
             </p>
           </div>
@@ -204,18 +204,18 @@ export function LoginScreen({ client, onAuthenticated }: LoginScreenProps) {
 
         {status === 'unavailable' ? (
           <div
-            className="login-form__error"
+            className="login-form__error ww-alert ww-alert--error"
             role="alert"
             tabIndex={-1}
             ref={alertRef}
           >
-            <p className="login-form__error-message">
+            <p className="login-form__error-message ww-alert__message">
               {errorMessage ??
                 'Не удалось связаться с сервером. Повторите попытку позже.'}
             </p>
             <button
               type="button"
-              className="login-form__retry"
+              className="login-form__retry ww-button ww-button--secondary"
               onClick={() => {
                 void performLogin()
               }}

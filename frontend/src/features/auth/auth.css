@@ -1,257 +1,97 @@
 /* Экран входа и состояния bootstrap-проверки сессии WiseWay.
-   Целевая среда — настольный браузер от 1280×720 (NFR-01). Ошибки обозначены
-   текстом и рамкой, а не только цветом; фокус виден с клавиатуры. */
+   Целевая среда — настольный браузер от 1280×720 (NFR-01). Стили потребляют
+   общий foundation (`src/styles/foundation.css`) и общие примитивы; вход и
+   оболочка используют одну визуальную систему. Ошибки обозначены текстом,
+   рамкой и заголовком, а не только цветом; фокус виден с клавиатуры. */
 
-.session-screen {
+/* Экран входа и состояния сессии центрируются в viewport. */
+.session-screen,
+.login-screen {
   box-sizing: border-box;
   min-height: 100vh;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: 64px 24px;
-  color: #1f2933;
-  background: #f5f7fa;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    Arial,
-    sans-serif;
-  font-size: 16px;
-  line-height: 1.5;
+  padding: var(--ww-space-8) var(--ww-space-6);
 }
 
 .session-screen__status {
-  margin: 0;
-  color: #52606d;
-  font-size: 18px;
+  font-size: var(--ww-font-size-lg);
 }
 
 .session-unavailable {
   width: 100%;
   max-width: 520px;
-  padding: 24px;
-  border: 1px solid #b44d12;
-  border-left-width: 6px;
-  border-radius: 8px;
-  background: #fff4ed;
-}
-
-.session-unavailable__title {
-  margin: 0 0 12px;
-  font-size: 22px;
-  color: #8a2c0d;
-}
-
-.session-unavailable__message,
-.session-unavailable__request {
-  margin: 0 0 12px;
 }
 
 .session-unavailable__request {
-  color: #52606d;
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 14px;
+  color: var(--ww-color-text-muted);
+  font-family: var(--ww-font-mono);
+  font-size: var(--ww-font-size-sm);
 }
 
 .session-unavailable__retry {
-  appearance: none;
-  border: 1px solid #0b4f9e;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #0b4f9e;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
-  padding: 8px 16px;
+  align-self: flex-start;
+  margin-top: var(--ww-space-1);
 }
 
-.session-unavailable__retry:hover {
-  background: #e8f0fb;
-}
-
-.session-unavailable__retry:focus-visible {
-  outline: 3px solid #0b4f9e;
-  outline-offset: 2px;
-}
-
+/* Компактная карточка входа в общей системе. */
 .login-form {
-  box-sizing: border-box;
   width: 100%;
-  max-width: 420px;
-  padding: 32px;
-  border: 1px solid #cbd2d9;
-  border-radius: 8px;
-  background: #ffffff;
+  max-width: 400px;
+  padding: var(--ww-space-8);
 }
 
 .login-form__title {
-  margin: 0 0 8px;
-  font-size: 26px;
-  line-height: 1.2;
+  font-size: var(--ww-font-size-2xl);
+  font-weight: var(--ww-font-weight-bold);
+  line-height: var(--ww-line-height-tight);
 }
 
 .login-form__intro {
-  margin: 0 0 24px;
-  color: #52606d;
+  margin: var(--ww-space-2) 0 var(--ww-space-6);
+  color: var(--ww-color-text-muted);
 }
 
 .login-form__field {
-  margin-bottom: 16px;
-}
-
-.login-form__label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: 700;
-}
-
-.login-form__input {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #9aa5b1;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #1f2933;
-  font: inherit;
-}
-
-.login-form__input:focus-visible {
-  outline: 3px solid #0b4f9e;
-  outline-offset: 2px;
-}
-
-.login-form__input:disabled {
-  background: #e4e7eb;
-  color: #7b8794;
+  margin-bottom: var(--ww-space-4);
 }
 
 .login-form__submit {
-  appearance: none;
   width: 100%;
-  margin-top: 8px;
-  border: 1px solid #0b4f9e;
-  border-radius: 6px;
-  background: #0b4f9e;
-  color: #ffffff;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
-  padding: 12px 16px;
-}
-
-.login-form__submit:hover:not(:disabled) {
-  background: #093f7e;
-}
-
-.login-form__submit:focus-visible {
-  outline: 3px solid #0b4f9e;
-  outline-offset: 2px;
-}
-
-.login-form__submit:disabled {
-  border-color: #9aa5b1;
-  background: #cbd2d9;
-  color: #52606d;
-  cursor: not-allowed;
+  margin-top: var(--ww-space-2);
 }
 
 .login-form__reason {
-  margin: 8px 0 0;
-  color: #52606d;
-  font-size: 14px;
+  margin: var(--ww-space-2) 0 0;
+  color: var(--ww-color-text-muted);
+  font-size: var(--ww-font-size-sm);
 }
 
 .login-form__error {
-  margin-top: 16px;
-  padding: 12px 16px;
-  border: 1px solid #b44d12;
-  border-left-width: 6px;
-  border-radius: 6px;
-  background: #fff4ed;
-}
-
-.login-form__error:focus-visible {
-  outline: 3px solid #0b4f9e;
-  outline-offset: 2px;
+  margin-top: var(--ww-space-4);
 }
 
 .login-form__error-message {
-  margin: 0;
-  color: #8a2c0d;
-  font-weight: 700;
+  font-weight: var(--ww-font-weight-semibold);
 }
 
 .login-form__retry {
-  appearance: none;
-  margin-top: 12px;
-  border: 1px solid #0b4f9e;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #0b4f9e;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
-  padding: 8px 16px;
+  align-self: flex-start;
+  margin-top: var(--ww-space-1);
 }
 
-.login-form__retry:hover {
-  background: #e8f0fb;
-}
-
-.login-form__retry:focus-visible {
-  outline: 3px solid #0b4f9e;
-  outline-offset: 2px;
-}
-
-/* Управление выходом в шапке оболочки. Неизвестный исход обозначен текстом и
-   рамкой, а не только цветом; фокус виден с клавиатуры (NFR-01). */
+/* Управление выходом в шапке оболочки. Неизвестный исход обозначен текстом,
+   рамкой и заголовком, а не только цветом; фокус виден с клавиатуры (NFR-01). */
 
 .logout-control {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 8px;
-}
-
-.logout-control__button {
-  appearance: none;
-  border: 1px solid #0b4f9e;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #0b4f9e;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
-  padding: 8px 16px;
-}
-
-.logout-control__button:hover:not(:disabled) {
-  background: #e8f0fb;
-}
-
-.logout-control__button:focus-visible {
-  outline: 3px solid #0b4f9e;
-  outline-offset: 2px;
-}
-
-.logout-control__button:disabled {
-  border-color: #9aa5b1;
-  color: #52606d;
-  cursor: not-allowed;
+  gap: var(--ww-space-2);
 }
 
 .logout-control__message {
   max-width: 320px;
-  margin: 0;
-  padding: 8px 12px;
-  border: 1px solid #b44d12;
-  border-left-width: 6px;
-  border-radius: 6px;
-  background: #fff4ed;
-  color: #8a2c0d;
-  font-size: 14px;
   text-align: left;
 }

@@ -23,7 +23,7 @@ export function LogoutControl({ client }: LogoutControlProps) {
     <div className="logout-control">
       <button
         type="button"
-        className="logout-control__button"
+        className="logout-control__button ww-button ww-button--secondary"
         onClick={logout}
         disabled={isLoggingOut}
         aria-busy={isLoggingOut}
@@ -31,7 +31,10 @@ export function LogoutControl({ client }: LogoutControlProps) {
         {isLoggingOut ? 'Выход…' : isRetry ? 'Повторить выход' : 'Выйти'}
       </button>
       {message ? (
-        <p className="logout-control__message" role="alert">
+        <p
+          className="logout-control__message ww-alert ww-alert--error"
+          role="alert"
+        >
           {message}
         </p>
       ) : null}

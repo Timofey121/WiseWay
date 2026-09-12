@@ -114,6 +114,41 @@ auth/session-листу (LT-09.2).
 > `@/app` может конфликтовать с `src/App.tsx`. В коде используется явный путь
 > `@/app/index` (и `./app/index` из `App.tsx`).
 
+## Визуальный foundation (LT-E03-VR1)
+
+`src/styles/foundation.css` — небольшой reusable visual-слой для всего
+приложения (E-04+). Он импортируется первым в `src/main.tsx`, до
+`./app/shell.css` и `./features/auth/auth.css`, поэтому задаёт базовый reset,
+токены и общие примитивы, которые прикладные стили только потребляют.
+
+Токены (`:root`, префикс `--ww-`):
+
+- типографика: системный стек `--ww-font-sans` (без внешних/CDN-шрифтов),
+  `--ww-font-mono`, размеры `--ww-font-size-*`, `--ww-line-height-*`,
+  `--ww-font-weight-*`;
+- нейтральные цвета: `--ww-color-bg`, `--ww-color-surface`,
+  `--ww-color-surface-muted`, `--ww-color-surface-sunken`,
+  `--ww-color-border(-strong)`, `--ww-color-text(-muted/-subtle)`;
+- один спокойный акцент: `--ww-color-accent`, `--ww-color-accent-hover`,
+  `--ww-color-accent-active`, `--ww-color-accent-soft`, `--ww-color-on-accent`;
+- статусы: `--ww-color-error-*`, `--ww-color-warning-*`, `--ww-color-info-*`,
+  `--ww-color-success-*`;
+- шкала отступов `--ww-space-1…8`, радиусы `--ww-radius-*`, минимальные тени
+  `--ww-shadow-*` и единый контур фокуса `--ww-focus-ring-*`.
+
+Общие примитивы (классы `ww-*`): `.ww-button` с модификаторами
+`--primary`/`--secondary`/`--ghost`; `.ww-field`/`.ww-label`/`.ww-input`;
+`.ww-surface`/`.ww-card`; `.ww-badge`; `.ww-alert`/`.ww-alert--error` и
+`.ww-status`; навигационные вкладки `.ww-nav__*`; пустое состояние `.ww-empty`.
+Компонентные классы (`.app-shell__*`, `.login-form__*`, `.session-*`,
+`.logout-control__*`) сохраняют свои имена и добавляют только layout, а
+палитра/типографика/состояния берутся из токенов и примитивов. Внешние
+design-фреймворки, шрифты и сетевые ресурсы не используются.
+
+Проверка согласованности: `tests/app/visual-foundation.test.ts` — токены,
+примитивы, единый `:focus-visible`, потребление токенов оболочкой и входом и
+порядок импорта стилей.
+
 ## App API-клиент, сессия и app-config (LT-08.2)
 
 ### Переключатель транспорта real/mock

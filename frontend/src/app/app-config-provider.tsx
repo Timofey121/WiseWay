@@ -61,16 +61,18 @@ export function AppConfigProvider({ children, client }: AppConfigProviderProps) 
   return (
     <AppConfigContext.Provider value={value}>
       {snapshot.status === 'loading' ? (
-        <p className="app-config-status" role="status">
+        <p className="app-config-status ww-status" role="status">
           Загрузка настроек приложения…
         </p>
       ) : null}
       {snapshot.status === 'error' && snapshot.error ? (
-        <div className="app-config-error" role="alert">
-          <p className="app-config-error__title">
+        <div className="app-config-error ww-alert ww-alert--error" role="alert">
+          <p className="app-config-error__title ww-alert__title">
             Не удалось загрузить настройки приложения
           </p>
-          <p className="app-config-error__message">{snapshot.error.message}</p>
+          <p className="app-config-error__message ww-alert__message">
+            {snapshot.error.message}
+          </p>
           {snapshot.error.requestId ? (
             <p className="app-config-error__request">
               Идентификатор запроса: {snapshot.error.requestId}
@@ -78,7 +80,7 @@ export function AppConfigProvider({ children, client }: AppConfigProviderProps) 
           ) : null}
           <button
             type="button"
-            className="app-config-error__retry"
+            className="app-config-error__retry ww-button ww-button--secondary"
             onClick={store.reload}
           >
             Повторить

@@ -1,195 +1,173 @@
 /* Оболочка WiseWay. Целевая среда — настольный браузер от 1280×720;
-   при меньшей ширине допускается прокрутка (NFR-01). */
+   при меньшей ширине допускается прокрутка (NFR-01).
+
+   Стили потребляют общий foundation (`src/styles/foundation.css`): палитра,
+   типографика, отступы, радиусы и состояния не дублируются. Оболочка —
+   колонка на всю высоту viewport: шапка, вкладки-навигация и рабочая
+   поверхность контента, которая заполняет оставшуюся высоту. */
 
 .app-shell {
   box-sizing: border-box;
   min-height: 100vh;
-  margin: 0 auto;
-  padding: 24px;
   max-width: 1600px;
-  color: #1f2933;
-  background: #f5f7fa;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    Arial,
-    sans-serif;
-  font-size: 16px;
-  line-height: 1.5;
+  margin: 0 auto;
+  padding: var(--ww-space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ww-space-5);
 }
 
 .app-shell__header {
-  margin-bottom: 16px;
+  padding: var(--ww-space-4) var(--ww-space-5);
+  background: var(--ww-color-surface);
+  border: 1px solid var(--ww-color-border);
+  border-radius: var(--ww-radius-lg);
+  box-shadow: var(--ww-shadow-sm);
 }
 
 .app-shell__header-row {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--ww-space-4);
 }
 
 .app-shell__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--ww-space-3);
+  min-width: 0;
+}
+
+/* Декоративный знак бренда: без текста и внешних ресурсов. */
+.app-shell__brand-mark {
+  position: relative;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ww-radius-md);
+  background: var(--ww-color-accent);
+}
+
+.app-shell__brand-mark::after {
+  content: '';
+  position: absolute;
+  inset: 11px;
+  border: 2px solid var(--ww-color-on-accent);
+  border-radius: var(--ww-radius-sm);
+}
+
+.app-shell__brand-text {
   min-width: 0;
 }
 
 .app-shell__header-actions {
   display: flex;
-  align-items: flex-start;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ww-space-3);
 }
 
 .app-shell__title {
-  margin: 0;
-  font-size: 28px;
-  line-height: 1.2;
+  font-size: var(--ww-font-size-xl);
+  font-weight: var(--ww-font-weight-bold);
+  line-height: var(--ww-line-height-tight);
 }
 
 .app-shell__subtitle {
-  margin: 4px 0 0;
-  color: #52606d;
+  margin-top: 2px;
+  color: var(--ww-color-text-muted);
+  font-size: var(--ww-font-size-sm);
 }
 
 .app-shell__user {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 8px;
-  margin: 8px 0 0;
+  align-items: center;
+  gap: var(--ww-space-2);
 }
 
 .app-shell__user-name {
-  font-weight: 700;
-}
-
-.app-shell__user-role {
-  padding: 2px 8px;
-  border: 1px solid #9aa5b1;
-  border-radius: 999px;
-  color: #52606d;
-  font-size: 14px;
+  font-weight: var(--ww-font-weight-semibold);
 }
 
 .app-shell__nav {
-  border-bottom: 1px solid #cbd2d9;
-  margin-bottom: 24px;
+  border-bottom: 1px solid var(--ww-color-border);
 }
 
 .app-shell__nav-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--ww-space-1);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.app-shell__nav-button {
-  appearance: none;
-  border: 1px solid transparent;
-  border-bottom: none;
-  border-radius: 6px 6px 0 0;
-  background: transparent;
-  color: #1f2933;
-  cursor: pointer;
-  font: inherit;
-  padding: 10px 16px;
-}
-
-.app-shell__nav-button:hover {
-  background: #e4e7eb;
-}
-
-/* Активный раздел выделяется не только цветом: рамкой и жирным начертанием. */
-.app-shell__nav-button[aria-current='page'] {
-  background: #ffffff;
-  border-color: #cbd2d9;
-  font-weight: 700;
-  color: #0b4f9e;
+.app-shell__nav-item {
+  display: flex;
 }
 
 /* Видимый индикатор фокуса для клавиатуры (NFR-01). */
 .app-shell__nav-button:focus-visible {
-  outline: 3px solid #0b4f9e;
-  outline-offset: 2px;
+  outline: var(--ww-focus-ring-width) solid var(--ww-focus-ring-color);
+  outline-offset: var(--ww-focus-ring-offset);
 }
 
+/* Рабочая поверхность контента заполняет оставшуюся высоту, чтобы не
+   оставалось большого пустого серого полотна. */
 .app-shell__content {
-  background: #ffffff;
-  border: 1px solid #cbd2d9;
-  border-radius: 8px;
-  padding: 24px;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+  padding: var(--ww-space-6);
+  background: var(--ww-color-surface);
+  border: 1px solid var(--ww-color-border);
+  border-radius: var(--ww-radius-lg);
+  box-shadow: var(--ww-shadow-sm);
+}
+
+.app-section {
+  max-width: 640px;
 }
 
 .app-section__heading {
-  margin: 0 0 8px;
-  font-size: 22px;
+  font-size: var(--ww-font-size-xl);
+  font-weight: var(--ww-font-weight-bold);
+  line-height: var(--ww-line-height-tight);
 }
 
 .app-section__status {
-  margin: 0 0 8px;
-  font-weight: 700;
-  color: #8a4b08;
+  align-self: flex-start;
 }
 
 .app-section__description {
-  margin: 0;
-  color: #52606d;
+  color: var(--ww-color-text-muted);
 }
 
-/* Состояния загрузки/ошибки app-config. Ошибка обозначена текстом и рамкой, а
-   не только цветом; кнопка «Повторить» доступна с клавиатуры. */
+/* Состояния загрузки/ошибки app-config. Ошибка обозначена текстом, рамкой и
+   заголовком, а не только цветом; кнопка «Повторить» доступна с клавиатуры. */
 
 .app-config-status {
-  margin: 0 0 16px;
-  color: #52606d;
+  max-width: 1600px;
+  margin: var(--ww-space-4) auto 0;
+  padding: 0 var(--ww-space-6);
 }
 
 .app-config-error {
-  margin: 0 0 16px;
-  padding: 16px;
-  border: 1px solid #b44d12;
-  border-left-width: 6px;
-  border-radius: 6px;
-  background: #fff4ed;
-}
-
-.app-config-error__title {
-  margin: 0 0 8px;
-  font-weight: 700;
-  color: #8a2c0d;
-}
-
-.app-config-error__message,
-.app-config-error__request {
-  margin: 0 0 8px;
+  max-width: 1600px;
+  margin: var(--ww-space-4) auto 0;
 }
 
 .app-config-error__request {
-  color: #52606d;
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 14px;
+  color: var(--ww-color-text-muted);
+  font-family: var(--ww-font-mono);
+  font-size: var(--ww-font-size-sm);
 }
 
 .app-config-error__retry {
-  appearance: none;
-  border: 1px solid #0b4f9e;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #0b4f9e;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
-  padding: 8px 16px;
-}
-
-.app-config-error__retry:hover {
-  background: #e8f0fb;
-}
-
-.app-config-error__retry:focus-visible {
-  outline: 3px solid #0b4f9e;
-  outline-offset: 2px;
+  align-self: flex-start;
+  margin-top: var(--ww-space-1);
 }
