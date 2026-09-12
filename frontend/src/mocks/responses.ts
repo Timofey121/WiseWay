@@ -18,9 +18,22 @@ export const MOCK_MODE = 'mock' as const
 /** Заголовок, помечающий ответ как выданный mock-инфраструктурой. */
 export const MOCK_MARKER_HEADER = 'X-WiseWay-Mock'
 
+/** Статус единственного контрактного сценария, требующего `Retry-After`. */
+const RATE_LIMITED_STATUS = 429
+
+/** Контрактный заголовок `components.headers.RetryAfter`. */
+export const RETRY_AFTER_HEADER = 'Retry-After'
+
+/**
+ * Контрактное значение `Retry-After` первой версии OAS: delta-seconds
+ * (`^[0-9]+$`), совпадающее с примером `components.headers.RetryAfter`.
+ */
+export const RETRY_AFTER_SECONDS = '30'
+
 function responseHeaders(
   requestId: string,
   json: boolean,
+  status: number,
 ): Record<string, string> {
   const headers: Record<string, string> = {
     'X-Request-ID': requestId,
@@ -29,6 +42,11 @@ function responseHeaders(
   }
   if (json) {
     headers['Content-Type'] = 'application/json'
+  }
+  // 429 в OAS отображается только на `RateLimited`, поэтому `Retry-After`
+  // добавляется здесь, в едином общем пути, и не дублируется в handlers.
+  if (status === RATE_LIMITED_STATUS) {
+    headers[RETRY_AFTER_HEADER] = RETRY_AFTER_SECONDS
   }
   return headers
 }
@@ -41,7 +59,7 @@ export function jsonResponse(
 ): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: responseHeaders(requestId, true),
+    headers: responseHeaders(requestId, true, status),
   })
 }
 
@@ -49,7 +67,7 @@ export function jsonResponse(
 export function noContentResponse(requestId: string): Response {
   return new Response(null, {
     status: 204,
-    headers: responseHeaders(requestId, false),
+    headers: responseHeaders(requestId, false, 204),
   })
 }
 

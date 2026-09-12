@@ -36,7 +36,12 @@ export type {
   QuarantineGate,
   SearchFreshnessProfile,
 } from './controller'
-export { MOCK_MODE, MOCK_MARKER_HEADER } from './responses'
+export {
+  MOCK_MARKER_HEADER,
+  MOCK_MODE,
+  RETRY_AFTER_HEADER,
+  RETRY_AFTER_SECONDS,
+} from './responses'
 export {
   declaredSearchErrors,
   isSearchErrorCode,

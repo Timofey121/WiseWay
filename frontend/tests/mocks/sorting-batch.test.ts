@@ -25,6 +25,7 @@ import {
   getCannedBatchPage1,
   getCannedBatchPages,
   isBatchErrorDeclaredForOperation,
+  RETRY_AFTER_HEADER,
 } from '@/mocks'
 import {
   createMockFetch,
@@ -1102,6 +1103,7 @@ describe('mock batch: 401/403/422 и управляемые ошибки', () =>
     controller.failNext('getSortingBatch', 'SERVICE_UNAVAILABLE')
     const first = await mockFetch(getBatchRequest('batch-atlas-sorted'))
     expect(first.status).toBe(503)
+    expect(first.headers.get(RETRY_AFTER_HEADER)).toBeNull()
     const error = await readError(first)
     expect(error.error.code).toBe('SERVICE_UNAVAILABLE')
     expect(error.error.retryable).toBe(true)
@@ -1115,6 +1117,7 @@ describe('mock batch: 401/403/422 и управляемые ошибки', () =>
     controller.failNext('listSortingBatches', 'RATE_LIMITED')
     const limited = await mockFetch(listRequest(ATLAS))
     expect(limited.status).toBe(429)
+    expect(limited.headers.get(RETRY_AFTER_HEADER)).toMatch(/^[0-9]+$/)
     expect((await readError(limited)).error.code).toBe('RATE_LIMITED')
   })
 

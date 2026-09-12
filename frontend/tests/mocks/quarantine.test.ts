@@ -25,6 +25,7 @@ import {
   declaredQuarantineErrors,
   isQuarantineErrorDeclaredForOperation,
   quarantineErrorCodesByOperation,
+  RETRY_AFTER_HEADER,
 } from '@/mocks'
 import {
   createMockFetch,
@@ -763,6 +764,7 @@ describe('mock quarantine: 401/403/404/422 и управляемые ошибк�
     controller.failNext('listQuarantineItems', 'SERVICE_UNAVAILABLE')
     const first = await mockFetch(listRequest(ATLAS))
     expect(first.status).toBe(503)
+    expect(first.headers.get(RETRY_AFTER_HEADER)).toBeNull()
     const error = await readError(first)
     expect(error.error.code).toBe('SERVICE_UNAVAILABLE')
     expect(error.error.retryable).toBe(true)
@@ -776,6 +778,7 @@ describe('mock quarantine: 401/403/404/422 и управляемые ошибк�
     controller.failNext('listQuarantineItems', 'RATE_LIMITED')
     const limited = await mockFetch(listRequest(ATLAS))
     expect(limited.status).toBe(429)
+    expect(limited.headers.get(RETRY_AFTER_HEADER)).toMatch(/^[0-9]+$/)
     expect((await readError(limited)).error.code).toBe('RATE_LIMITED')
   })
 
