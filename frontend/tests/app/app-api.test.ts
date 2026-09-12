@@ -2,7 +2,8 @@
 //
 // `createApiClient` подменяется шпионом, чтобы точно проверить аргументы
 // выбора транспорта: mock-режим обязан получить `createMockFetch()`, а
-// real-режим — только `{ mode: 'real' }` (без молчаливой подмены на mock).
+// real-режим — режим `real` без `fetch` (без молчаливой подмены на mock).
+// Абсолютный `baseUrl` текущего origin передаётся в обоих режимах.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -57,13 +58,25 @@ describe('createAppApiClient — транспорт по режиму', () => {
     createAppApiClient('real')
 
     expect(createApiClientMock).toHaveBeenCalledTimes(1)
-    expect(createApiClientMock.mock.calls[0][0]).toEqual({ mode: 'real' })
+    const [options] = createApiClientMock.mock.calls[0]
+    expect(options.mode).toBe('real')
+    expect(options.fetch).toBeUndefined()
   })
 
   it('по умолчанию (VITE_API_MODE не задан) — real', () => {
     createAppApiClient()
 
-    expect(createApiClientMock).toHaveBeenCalledWith({ mode: 'real' })
+    expect(createApiClientMock).toHaveBeenCalledTimes(1)
+    const [options] = createApiClientMock.mock.calls[0]
+    expect(options.mode).toBe('real')
+    expect(options.fetch).toBeUndefined()
+  })
+
+  it('передаёт абсолютный baseUrl текущего origin', () => {
+    createAppApiClient('real')
+
+    const [options] = createApiClientMock.mock.calls[0]
+    expect(options.baseUrl).toBe(`${window.location.origin}/api/v1`)
   })
 
   it('VITE_API_MODE=mock переключает на mock', () => {

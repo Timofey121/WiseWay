@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 
-import { AppConfigProvider, AppShell, createAppApiClient } from './app/index'
+import { AppConfigProvider, createAppApiClient } from './app/index'
+import { AuthGate } from './features/auth/index'
 
 export default function App() {
   // Единственное место создания app-level транспорта: режим real/mock
@@ -9,7 +10,7 @@ export default function App() {
 
   return (
     <AppConfigProvider client={api}>
-      <AppShell />
+      <AuthGate client={api} />
     </AppConfigProvider>
   )
 }

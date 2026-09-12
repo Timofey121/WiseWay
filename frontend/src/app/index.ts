@@ -18,9 +18,14 @@ export {
 } from './private-state-registry'
 export {
   createAppApiClient,
+  readTestFetchOverride,
   resolveAppApiMode,
+  TEST_FETCH_GLOBAL,
+  type AppApiFetch,
   type AppApiMode,
 } from './app-api'
+export { roleLabel, type UserRole } from './roles'
+export { useAuthenticatedSession } from './use-session'
 export {
   AppConfigProvider,
   type AppConfigProviderProps,
@@ -35,10 +40,15 @@ export type {
   AppConfigStatus,
 } from './app-config-store'
 export {
+  getAuthenticatedActor,
+  getAuthenticatedSession,
   getSessionStatus,
   markAnonymous,
   markAuthenticated,
   resetSessionState,
   subscribeSessionStatus,
+  type AuthenticatedSession,
+  type SessionActor,
+  type SessionRole,
   type SessionStatus,
 } from './session-state'

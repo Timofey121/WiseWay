@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 
+import { roleLabel } from './roles'
 import {
   appSections,
   defaultSectionId,
@@ -7,6 +8,7 @@ import {
   type AppSection,
   type AppSectionId,
 } from './sections'
+import { useAuthenticatedSession } from './use-session'
 
 function SectionPlaceholder({ section }: { section: AppSection }) {
   const headingId = `section-${section.id}-heading`
@@ -33,6 +35,7 @@ function SectionPlaceholder({ section }: { section: AppSection }) {
 export function AppShell() {
   const [activeSectionId, setActiveSectionId] =
     useState<AppSectionId>(defaultSectionId)
+  const session = useAuthenticatedSession()
 
   const activeSection = useMemo(
     () =>
@@ -50,6 +53,16 @@ export function AppShell() {
       <header className="app-shell__header">
         <h1 className="app-shell__title">WiseWay</h1>
         <p className="app-shell__subtitle">Поиск и сортировка файлов</p>
+        {session ? (
+          <p className="app-shell__user">
+            <span className="app-shell__user-name">
+              {session.actor.display_name}
+            </span>
+            <span className="app-shell__user-role">
+              {roleLabel(session.actor.role)}
+            </span>
+          </p>
+        ) : null}
       </header>
 
       <nav className="app-shell__nav" aria-label="Разделы приложения">

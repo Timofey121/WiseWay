@@ -6,11 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:browser": "vite build --mode browser",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:browser": "npm run build && playwright test",
+    "test:browser": "npm run build:browser && playwright test",
     "generate:api": "node scripts/generate-api.mjs",
     "generate:api:check": "node scripts/check-generated.mjs"
   },

@@ -35,6 +35,26 @@
   color: #52606d;
 }
 
+.app-shell__user {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin: 8px 0 0;
+}
+
+.app-shell__user-name {
+  font-weight: 700;
+}
+
+.app-shell__user-role {
+  padding: 2px 8px;
+  border: 1px solid #9aa5b1;
+  border-radius: 999px;
+  color: #52606d;
+  font-size: 14px;
+}
+
 .app-shell__nav {
   border-bottom: 1px solid #cbd2d9;
   margin-bottom: 24px;

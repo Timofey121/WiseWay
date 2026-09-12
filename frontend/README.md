@@ -9,9 +9,9 @@ targets/dictionaries/симуляции/публикации/очереди/вы
 LT-07.1a/LT-07.1b/LT-07.1c/LT-07.2a/LT-07.2b/LT-07.2c) и карантина/возврата
 (LT-07.3a).
 Продуктовые экраны появятся в следующих leaf-задачах; русская оболочка с
-навигацией по разделам добавлена в LT-08.1, а app-level клиент с переключателем
+навигацией по разделам добавлена в LT-08.1, app-level клиент с переключателем
 real/mock, контейнер сессии, загрузка `app-config` и единые форматы —
-в LT-08.2 (EPIC E-03, WP-08).
+в LT-08.2, а вход и bootstrap-проверка сессии — в LT-09.1 (EPIC E-03, WP-08/WP-09).
 
 Выбранный toolchain, точные версии и политика lock-файла закреплены в
 [ADR-0001. Frontend toolchain WiseWay](docs/ADR-0001-frontend-toolchain.md).
@@ -37,12 +37,13 @@ Lock-файл коммитится; повторная установка не �
 | Команда | Назначение |
 |---|---|
 | `npm run dev` | Запускает dev-сервер Vite (по умолчанию `http://localhost:5173`). |
-| `npm run build` | Production-сборка Vite в `frontend/dist`. |
+| `npm run build` | Production-сборка Vite в `frontend/dist` (real-режим). |
+| `npm run build:browser` | Сборка для браузерных проверок: `vite build --mode browser`, загружает `.env.browser` (`VITE_API_MODE=mock`). |
 | `npm run preview` | Локальный просмотр собранного `frontend/dist` (по умолчанию `http://localhost:4173`). |
 | `npm run typecheck` | Проверка типов `tsc --noEmit` без эмита. |
 | `npm run lint` | ESLint 9 (flat config) по проекту. |
 | `npm run test` | Unit/component smoke-тесты: Vitest + Testing Library в jsdom. |
-| `npm run test:browser` | Browser smoke-тест Playwright; сначала выполняет `npm run build`. |
+| `npm run test:browser` | Browser smoke-тесты Playwright: сначала `npm run build:browser`, затем `playwright test` на канале `msedge`. |
 | `npm run generate:api` | Генерация `src/api/generated/schema.ts` и `openapi.json` из `contracts/openapi/wiseway-v1.yaml`. |
 | `npm run generate:api:check` | Перегенерация во временный каталог и сравнение с закоммиченными артефактами (проверка «без diff»). |
 
@@ -138,11 +139,17 @@ const api = createAppApiClient()
 
 `src/app/session-state.ts` — минимальный in-memory контейнер
 `anonymous | authenticated` (`getSessionStatus`, `subscribeSessionStatus`,
-`markAuthenticated`, `markAnonymous`, `resetSessionState`). Он не хранит
-токены и учётные данные (CSRF остаётся в `src/api/session-context.ts`), ничего
-не персистит и не делает запросов. Контейнер зарегистрирован в общем реестре
-LT-08.1, поэтому `resetPrivateState()` возвращает его в `anonymous`. Драйвером
-будет LT-09.1 (login/session/logout).
+`markAuthenticated`, `markAnonymous`, `resetSessionState`) и серверной сессии
+(`getAuthenticatedSession`, `getAuthenticatedActor`). `markAuthenticated(session)`
+сохраняет только серверные `actor` (user_id, login, display_name, role) и
+`expires_at`; CSRF-токен в контейнере НЕ дублируется и остаётся в
+`src/api/session-context.ts`. Пароль сюда не попадает вообще. Контейнер ничего
+не персистит и не делает запросов. `src/app/roles.ts` (`roleLabel`) —
+единственное место перевода машинной роли `WORKER|ADMIN` в русскую подпись
+(«Рабочий»/«Администратор»); сам enum в state/transport не меняется.
+`useAuthenticatedSession()` (`src/app/use-session.ts`) отдаёт сессию в UI.
+Контейнер зарегистрирован в общем реестре LT-08.1, поэтому
+`resetPrivateState()` возвращает его в `anonymous` и очищает actor.
 
 ### Загрузка app-config без выдуманных значений
 
@@ -179,6 +186,77 @@ const api = createAppApiClient() // единственное место созд
   <Screen />
 </AppConfigProvider>
 ```
+
+## Вход и bootstrap-проверка сессии (LT-09.1)
+
+`src/features/auth/` реализует русский экран входа и проверку сессии при старте
+(`AUTH-01…05`, FE §4 «Вход», API §2/§3/§11, Q-001). Композиция —
+`AuthGate` в `src/App.tsx`; защищённая оболочка монтируется только после
+подтверждённой серверной сессии.
+
+### Bootstrap-состояния
+
+`session-bootstrap-store.ts` + `use-session-bootstrap.ts` вызывают `GET /session`
+ДО показа оболочки и различают четыре состояния:
+
+| Состояние | Условие | Что показывается |
+|---|---|---|
+| `checking` | запрос `GET /session` в полёте | «Проверка сессии…» |
+| `anonymous` | `401 UNAUTHENTICATED` | экран входа |
+| `authenticated` | `200 Session` | оболочка `AppShell` + загрузка app-config |
+| `unavailable` | сетевой сбой, 5xx/403, нечитаемый код | безопасное русское сообщение и «Повторить» |
+
+`unavailable` НЕ считается анонимностью и НЕ показывает форму входа: сбой сети
+или сервиса не выдаётся за выход из сессии. Поздний ответ устаревшего запроса
+отбрасывается по счётчику `sequence`.
+
+### Успешный вход
+
+`LoginScreen` отправляет ровно `{login, password}` на `POST /auth/login` (без
+`actor_id` и лишних полей). При `200 Session`:
+
+- `setCsrfToken(session.csrf_token)` — токен уходит в in-memory
+  `src/api/session-context.ts` и не дублируется в app-состоянии;
+- `markAuthenticated({actor, expires_at})` — actor берётся ТОЛЬКО из ответа
+  сервера;
+- пароль немедленно удаляется из поля ввода и нигде не хранится;
+- показывается оболочка со стартовым пустым разделом «Поиск», именем
+  пользователя и русской подписью роли.
+
+### Различение ошибок
+
+| Ответ | Состояние формы |
+|---|---|
+| `401 LOGIN_FAILED` | одно общее русское сообщение «Неверный логин или пароль.»; какое поле неверно — не раскрывается; введённый логин сохраняется; сессия не очищается |
+| сетевой сбой / `5xx` | безопасное сообщение о недоступности и кнопка «Повторить»; не выдаётся за неверные credentials |
+| `401 UNAUTHENTICATED` (bootstrap) | анонимная сессия → экран входа |
+
+Кнопка входа недоступна с явной русской причиной, пока логин и пароль не
+заполнены. Саморегистрация и сброс пароля через почту отсутствуют.
+
+### Безопасность и отсутствие персистирования
+
+- Пароль живёт только в DOM-поле (`useRef`), не попадает в React-состояние,
+  URL, `history.state`, `localStorage`, `sessionStorage`, cookie и логи;
+  после успешного входа поле очищается.
+- CSRF-токен и actor хранятся только в памяти вкладки; перезагрузка начинает
+  bootstrap заново.
+- `actor_id` никогда не добавляется в запросы: автора определяет серверная
+  сессия (`AUTH-02`).
+
+### Mock-режим браузерных проверок
+
+`npm run test:browser` сначала собирает приложение через `npm run build:browser`
+(`vite build --mode browser`), которая загружает `frontend/.env.browser` с
+`VITE_API_MODE=mock`. Приложение работает против schema-valid mocks
+(`src/mocks/**`), а не настоящего backend.
+
+В mock-сборке доступен тестовый шов `globalThis.__WISEWAY_TEST_FETCH__`: если
+он задан функцией, mock-fetch заменяется ею. Playwright использует шов, чтобы
+воспроизвести `503` на `GET /session` и проверить состояние `unavailable`.
+В real-режиме шов игнорируется. Проверки: `tests/browser/smoke.spec.ts` —
+анонимный старт, неверный пароль, вход `worker.one`/`admin.one`, навигация и
+недоступность сессии.
 
 ## Единые форматы (дата/размер/количество)
 
