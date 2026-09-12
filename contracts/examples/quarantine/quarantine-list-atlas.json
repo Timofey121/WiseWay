@@ -1,0 +1,27 @@
+{
+  "items": [
+    {
+      "quarantine_id": "quarantine-atlas-batch-tech-quarantine",
+      "revision": 1,
+      "item_id": "batch-tech-quarantine",
+      "company_id": "company-demo-atlas",
+      "filename": "batch-tech-quarantine.tar.gz",
+      "location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "_quarantine/atlas/attempt-batch-atlas-technical-batch-tech-quarantine/batch-tech-quarantine.tar.gz",
+        "display_path": "DEMO:/SandboxRoot/_quarantine/atlas/attempt-batch-atlas-technical-batch-tech-quarantine/batch-tech-quarantine.tar.gz"
+      },
+      "original_location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Reports/batch-tech-quarantine.tar.gz",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/batch-tech-quarantine.tar.gz"
+      },
+      "reason_code": "TECHNICAL_ERROR",
+      "quarantined_at": "2031-05-10T09:40:03Z",
+      "source_attempt_id": "attempt-batch-atlas-technical-batch-tech-quarantine",
+      "recovery_operation_id": null,
+      "can_return": true
+    }
+  ],
+  "next_cursor": null
+}

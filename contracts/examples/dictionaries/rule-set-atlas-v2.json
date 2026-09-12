@@ -1,0 +1,14 @@
+{
+  "rule_set_id": "rule-set-atlas-v2",
+  "company_id": "company-demo-atlas",
+  "members": [
+    {
+      "dictionary_id": "dictionary-atlas-general",
+      "version_id": "version-atlas-general-v2"
+    },
+    {
+      "dictionary_id": "dictionary-atlas-invoices",
+      "version_id": "version-atlas-invoices-v1"
+    }
+  ]
+}

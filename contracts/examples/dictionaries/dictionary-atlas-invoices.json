@@ -1,0 +1,54 @@
+{
+  "dictionary_id": "dictionary-atlas-invoices",
+  "company_id": "company-demo-atlas",
+  "name": "Счета Atlas",
+  "description": "Синтетические правила счетов Atlas.",
+  "draft": {
+    "draft_revision": 1,
+    "rules": [
+      {
+        "rule_id": "rule-atlas-invoices-invoice",
+        "priority": 10,
+        "match_field": "BASENAME",
+        "mask": "*invoice*",
+        "target_stem": "Invoice",
+        "target": {
+          "root_id": "root-demo-atlas",
+          "relative_directory": "Archive/Atlas/Orion_2031/Invoices"
+        }
+      },
+      {
+        "rule_id": "rule-atlas-invoices-pdf",
+        "priority": 100,
+        "match_field": "RELATIVE_PATH",
+        "mask": "Archive/Atlas/Orion_2031/Reports/*.pdf",
+        "target_stem": "Report",
+        "target": {
+          "root_id": "root-demo-atlas",
+          "relative_directory": "Archive/Atlas/Orion_2031/Reports"
+        }
+      },
+      {
+        "rule_id": "rule-atlas-invoices-upper",
+        "priority": 100,
+        "match_field": "RELATIVE_PATH",
+        "mask": "Archive/Atlas/Orion_2031/Data/*.TXT",
+        "target_stem": "Invoice",
+        "target": {
+          "root_id": "root-demo-atlas",
+          "relative_directory": "Archive/Atlas/Orion_2031/Data"
+        }
+      }
+    ],
+    "based_on_version_id": "version-atlas-invoices-v1"
+  },
+  "active_version_id": "version-atlas-invoices-v1",
+  "versions_count": 1,
+  "updated_at": "2031-05-10T09:31:00Z",
+  "updated_by": {
+    "user_id": "user-demo-worker-2",
+    "login": "worker.two",
+    "display_name": "Пётр Сменов",
+    "role": "WORKER"
+  }
+}

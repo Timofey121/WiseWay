@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "ROOT_NOT_READY",
+    "message": "Выбранный корень сейчас не опубликован для поиска.",
+    "request_id": "request-q010-root-not-ready",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

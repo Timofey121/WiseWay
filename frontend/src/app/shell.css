@@ -1,0 +1,173 @@
+/* Оболочка WiseWay. Целевая среда — настольный браузер от 1280×720;
+   при меньшей ширине допускается прокрутка (NFR-01).
+
+   Стили потребляют общий foundation (`src/styles/foundation.css`): палитра,
+   типографика, отступы, радиусы и состояния не дублируются. Оболочка —
+   колонка на всю высоту viewport: шапка, вкладки-навигация и рабочая
+   поверхность контента, которая заполняет оставшуюся высоту. */
+
+.app-shell {
+  box-sizing: border-box;
+  min-height: 100vh;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: var(--ww-space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ww-space-5);
+}
+
+.app-shell__header {
+  padding: var(--ww-space-4) var(--ww-space-5);
+  background: var(--ww-color-surface);
+  border: 1px solid var(--ww-color-border);
+  border-radius: var(--ww-radius-lg);
+  box-shadow: var(--ww-shadow-sm);
+}
+
+.app-shell__header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ww-space-4);
+}
+
+.app-shell__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--ww-space-3);
+  min-width: 0;
+}
+
+/* Декоративный знак бренда: без текста и внешних ресурсов. */
+.app-shell__brand-mark {
+  position: relative;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ww-radius-md);
+  background: var(--ww-color-accent);
+}
+
+.app-shell__brand-mark::after {
+  content: '';
+  position: absolute;
+  inset: 11px;
+  border: 2px solid var(--ww-color-on-accent);
+  border-radius: var(--ww-radius-sm);
+}
+
+.app-shell__brand-text {
+  min-width: 0;
+}
+
+.app-shell__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ww-space-3);
+}
+
+.app-shell__title {
+  font-size: var(--ww-font-size-xl);
+  font-weight: var(--ww-font-weight-bold);
+  line-height: var(--ww-line-height-tight);
+}
+
+.app-shell__subtitle {
+  margin-top: 2px;
+  color: var(--ww-color-text-muted);
+  font-size: var(--ww-font-size-sm);
+}
+
+.app-shell__user {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ww-space-2);
+}
+
+.app-shell__user-name {
+  font-weight: var(--ww-font-weight-semibold);
+}
+
+.app-shell__nav {
+  border-bottom: 1px solid var(--ww-color-border);
+}
+
+.app-shell__nav-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ww-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-shell__nav-item {
+  display: flex;
+}
+
+/* Видимый индикатор фокуса для клавиатуры (NFR-01). */
+.app-shell__nav-button:focus-visible {
+  outline: var(--ww-focus-ring-width) solid var(--ww-focus-ring-color);
+  outline-offset: var(--ww-focus-ring-offset);
+}
+
+/* Рабочая поверхность контента заполняет оставшуюся высоту, чтобы не
+   оставалось большого пустого серого полотна. */
+.app-shell__content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+  padding: var(--ww-space-6);
+  background: var(--ww-color-surface);
+  border: 1px solid var(--ww-color-border);
+  border-radius: var(--ww-radius-lg);
+  box-shadow: var(--ww-shadow-sm);
+}
+
+.app-section {
+  max-width: 640px;
+}
+
+.app-section__heading {
+  font-size: var(--ww-font-size-xl);
+  font-weight: var(--ww-font-weight-bold);
+  line-height: var(--ww-line-height-tight);
+}
+
+.app-section__status {
+  align-self: flex-start;
+}
+
+.app-section__description {
+  color: var(--ww-color-text-muted);
+}
+
+/* Состояния загрузки/ошибки app-config. Ошибка обозначена текстом, рамкой и
+   заголовком, а не только цветом; кнопка «Повторить» доступна с клавиатуры. */
+
+.app-config-status {
+  max-width: 1600px;
+  margin: var(--ww-space-4) auto 0;
+  padding: 0 var(--ww-space-6);
+}
+
+.app-config-error {
+  max-width: 1600px;
+  margin: var(--ww-space-4) auto 0;
+}
+
+.app-config-error__request {
+  color: var(--ww-color-text-muted);
+  font-family: var(--ww-font-mono);
+  font-size: var(--ww-font-size-sm);
+}
+
+.app-config-error__retry {
+  align-self: flex-start;
+  margin-top: var(--ww-space-1);
+}

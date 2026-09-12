@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "DICTIONARY_NAME_CONFLICT",
+    "message": "Справочник с таким названием уже существует в компании.",
+    "request_id": "request-demo-1",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

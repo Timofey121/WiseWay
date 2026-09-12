@@ -1,0 +1,1090 @@
+{
+  "fixture_set": "wiseway-rule-target-expectations",
+  "version": "1.0.0",
+  "seed": "wiseway-demo-seed-2031",
+  "contract_version": "1.0.0",
+  "corpus_version": "1.2.0",
+  "target_display_prefix": "DEMO:/SandboxRoot",
+  "notes": "LT-03.2a finite rule-input => target/name/reason oracle plus target resolver oracles. Every expected value is literal data; no matcher is implemented. target_stem/suffix are recorded only to trace the DICT-05 concatenation invariant.",
+  "actors": {
+    "worker-one": "user-demo-worker-1",
+    "worker-two": "user-demo-worker-2",
+    "admin-one": "user-demo-admin-1"
+  },
+  "companies": [
+    { "company_id": "company-demo-atlas", "name": "Atlas", "incoming_source_ids": ["incoming-demo-atlas"] },
+    { "company_id": "company-demo-nova", "name": "Nova", "incoming_source_ids": ["incoming-demo-nova"] }
+  ],
+  "target_directories": [
+    {
+      "target_id": "target-atlas-reports",
+      "company_id": "company-demo-atlas",
+      "root_id": "root-demo-atlas",
+      "relative_directory": "Archive/Atlas/Orion_2031/Reports"
+    },
+    {
+      "target_id": "target-atlas-reports-text",
+      "company_id": "company-demo-atlas",
+      "root_id": "root-demo-atlas",
+      "relative_directory": "Archive/Atlas/Orion_2031/Reports/Text"
+    },
+    {
+      "target_id": "target-atlas-invoices",
+      "company_id": "company-demo-atlas",
+      "root_id": "root-demo-atlas",
+      "relative_directory": "Archive/Atlas/Orion_2031/Invoices"
+    },
+    {
+      "target_id": "target-atlas-data",
+      "company_id": "company-demo-atlas",
+      "root_id": "root-demo-atlas",
+      "relative_directory": "Archive/Atlas/Orion_2031/Data"
+    },
+    {
+      "target_id": "target-atlas-polaris-data",
+      "company_id": "company-demo-atlas",
+      "root_id": "root-demo-atlas",
+      "relative_directory": "Archive/Atlas/Polaris_2030/Data"
+    },
+    {
+      "target_id": "target-nova-north-reports",
+      "company_id": "company-demo-nova",
+      "root_id": "root-demo-nova",
+      "relative_directory": "Archive/Nova/Orion_2031/North/Reports"
+    },
+    {
+      "target_id": "target-nova-north-data",
+      "company_id": "company-demo-nova",
+      "root_id": "root-demo-nova",
+      "relative_directory": "Archive/Nova/Orion_2031/North/Data"
+    },
+    {
+      "target_id": "target-nova-south-data",
+      "company_id": "company-demo-nova",
+      "root_id": "root-demo-nova",
+      "relative_directory": "Archive/Nova/Orion_2031/South/Data"
+    },
+    {
+      "target_id": "target-nova-polaris-reports",
+      "company_id": "company-demo-nova",
+      "root_id": "root-demo-nova",
+      "relative_directory": "Archive/Nova/Polaris_2030/North/Reports"
+    }
+  ],
+  "versions": [
+    {
+      "version_id": "version-atlas-general-v1",
+      "dictionary_id": "dictionary-atlas-general",
+      "version_number": 1,
+      "role": "published",
+      "rules": [
+        { "rule_id": "rule-atlas-general-readme", "priority": 50, "match_field": "BASENAME", "mask": "README", "target_id": "target-atlas-data", "target_stem": "Readme" },
+        { "rule_id": "rule-atlas-general-env", "priority": 50, "match_field": "BASENAME", "mask": ".env", "target_id": "target-atlas-data", "target_stem": "EnvFile" },
+        { "rule_id": "rule-atlas-general-namedot", "priority": 50, "match_field": "BASENAME", "mask": "name.", "target_id": "target-atlas-data", "target_stem": "Named" },
+        { "rule_id": "rule-atlas-general-archive", "priority": 60, "match_field": "BASENAME", "mask": "*.tar.gz", "target_id": "target-atlas-reports", "target_stem": "Archive" }
+      ]
+    },
+    {
+      "version_id": "version-atlas-invoices-v1",
+      "dictionary_id": "dictionary-atlas-invoices",
+      "version_number": 1,
+      "role": "published",
+      "rules": [
+        { "rule_id": "rule-atlas-invoices-invoice", "priority": 10, "match_field": "BASENAME", "mask": "*invoice*", "target_id": "target-atlas-invoices", "target_stem": "Invoice" },
+        { "rule_id": "rule-atlas-invoices-pdf", "priority": 100, "match_field": "RELATIVE_PATH", "mask": "Archive/Atlas/Orion_2031/Reports/*.pdf", "target_id": "target-atlas-reports", "target_stem": "Report" },
+        { "rule_id": "rule-atlas-invoices-upper", "priority": 100, "match_field": "RELATIVE_PATH", "mask": "Archive/Atlas/Orion_2031/Data/*.TXT", "target_id": "target-atlas-data", "target_stem": "Invoice" }
+      ]
+    },
+    {
+      "version_id": "version-nova-general-v1",
+      "dictionary_id": "dictionary-nova-general",
+      "version_number": 1,
+      "role": "published",
+      "rules": [
+        { "rule_id": "rule-nova-general-report", "priority": 100, "match_field": "RELATIVE_PATH", "mask": "Archive/Nova/Orion_2031/North/Reports/*", "target_id": "target-nova-north-reports", "target_stem": "NovaReport" },
+        { "rule_id": "rule-nova-general-data", "priority": 50, "match_field": "BASENAME", "mask": "*.xlsx", "target_id": "target-nova-south-data", "target_stem": "NovaData" }
+      ]
+    },
+    {
+      "version_id": "version-atlas-whole-field-v1",
+      "dictionary_id": "dictionary-atlas-invoices",
+      "version_number": 2,
+      "role": "scenario",
+      "rules": [
+        { "rule_id": "rule-atlas-whole-invoice", "priority": 10, "match_field": "BASENAME", "mask": "invoice", "target_id": "target-atlas-invoices", "target_stem": "Invoice" }
+      ]
+    },
+    {
+      "version_id": "version-atlas-no-fallback-v1",
+      "dictionary_id": "dictionary-atlas-general",
+      "version_number": 2,
+      "role": "scenario",
+      "rules": [
+        { "rule_id": "rule-atlas-nofb-basename", "priority": 10, "match_field": "BASENAME", "mask": "*orion*", "target_id": "target-atlas-data", "target_stem": "BasenameHit" },
+        { "rule_id": "rule-atlas-nofb-relative", "priority": 20, "match_field": "RELATIVE_PATH", "mask": "*orion*", "target_id": "target-atlas-reports", "target_stem": "RelativeHit" }
+      ]
+    },
+    {
+      "version_id": "version-atlas-star-zero-multi-v1",
+      "dictionary_id": "dictionary-atlas-general",
+      "version_number": 3,
+      "role": "scenario",
+      "rules": [
+        { "rule_id": "rule-atlas-star-base", "priority": 100, "match_field": "BASENAME", "mask": "Atlas*Reports", "target_id": "target-atlas-data", "target_stem": "StarBase" }
+      ]
+    },
+    {
+      "version_id": "version-atlas-star-cross-slash-v1",
+      "dictionary_id": "dictionary-atlas-invoices",
+      "version_number": 3,
+      "role": "scenario",
+      "rules": [
+        { "rule_id": "rule-atlas-cross-slash", "priority": 100, "match_field": "RELATIVE_PATH", "mask": "Archive*Reports/*", "target_id": "target-atlas-reports", "target_stem": "CrossSlash" }
+      ]
+    },
+    {
+      "version_id": "version-atlas-star-cross-slash-neg-v1",
+      "dictionary_id": "dictionary-atlas-invoices",
+      "version_number": 10,
+      "role": "scenario",
+      "rules": [
+        { "rule_id": "rule-atlas-cross-slash-trailing", "priority": 100, "match_field": "RELATIVE_PATH", "mask": "Archive*Reports", "target_id": "target-atlas-reports", "target_stem": "TrailingOnly" }
+      ]
+    },
+    {
+      "version_id": "version-atlas-question-v1",
+      "dictionary_id": "dictionary-atlas-invoices",
+      "version_number": 4,
+      "role": "scenario",
+      "rules": [
+        { "rule_id": "rule-atlas-question", "priority": 100, "match_field": "BASENAME", "mask": "Report?.pdf", "target_id": "target-atlas-reports", "target_stem": "QMark" }
+      ]
+    },
+    {
+      "version_id": "version-atlas-slash-case-v1",
+      "dictionary_id": "dictionary-atlas-invoices",
+      "version_number": 5,
+      "role": "scenario",
+      "rules": [
+        { "rule_id": "rule-atlas-slash-norm", "priority": 100, "match_field": "RELATIVE_PATH", "mask": "Archive\\Atlas\\Orion_2031\\Reports\\*.pdf", "target_id": "target-atlas-reports", "target_stem": "SlashNorm" },
+        { "rule_id": "rule-atlas-casefold", "priority": 100, "match_field": "BASENAME", "mask": "CAFÉ.PDF", "target_id": "target-atlas-data", "target_stem": "CaseFold" }
+      ]
+    },
+    {
+      "version_id": "version-atlas-priority-v1",
+      "dictionary_id": "dictionary-atlas-invoices",
+      "version_number": 6,
+      "role": "scenario",
+      "rules": [
+        { "rule_id": "rule-atlas-priority-1", "priority": 1, "match_field": "BASENAME", "mask": "*priority*", "target_id": "target-atlas-data", "target_stem": "PriorityOne" },
+        { "rule_id": "rule-atlas-priority-1000", "priority": 1000, "match_field": "BASENAME", "mask": "*priority*", "target_id": "target-atlas-reports", "target_stem": "PriorityThousand" }
+      ]
+    },
+    {
+      "version_id": "version-atlas-eq-same-general-v1",
+      "dictionary_id": "dictionary-atlas-general",
+      "version_number": 4,
+      "role": "scenario",
+      "rules": [
+        { "rule_id": "rule-atlas-eq-same-general", "priority": 100, "match_field": "BASENAME", "mask": "*shared*", "target_id": "target-atlas-reports", "target_stem": "SharedSame" }
+      ]
+    },
+    {
+      "version_id": "version-atlas-eq-same-invoices-v1",
+      "dictionary_id": "dictionary-atlas-invoices",
+      "version_number": 7,
+      "role": "scenario",
+      "rules": [
+        { "rule_id": "rule-atlas-eq-same-invoices", "priority": 100, "match_field": "BASENAME", "mask": "*shared*", "target_id": "target-atlas-reports", "target_stem": "SharedSame" }
+      ]
+    },
+    {
+      "version_id": "version-atlas-eq-diff-general-v1",
+      "dictionary_id": "dictionary-atlas-general",
+      "version_number": 5,
+      "role": "scenario",
+      "rules": [
+        { "rule_id": "rule-atlas-eq-diff-general", "priority": 100, "match_field": "BASENAME", "mask": "*shared*", "target_id": "target-atlas-reports", "target_stem": "SharedDiff" }
+      ]
+    },
+    {
+      "version_id": "version-atlas-eq-diff-invoices-v1",
+      "dictionary_id": "dictionary-atlas-invoices",
+      "version_number": 8,
+      "role": "scenario",
+      "rules": [
+        { "rule_id": "rule-atlas-eq-diff-invoices", "priority": 100, "match_field": "BASENAME", "mask": "*shared*", "target_id": "target-atlas-invoices", "target_stem": "SharedDiff" }
+      ]
+    },
+    {
+      "version_id": "version-atlas-dotted-stem-v1",
+      "dictionary_id": "dictionary-atlas-invoices",
+      "version_number": 9,
+      "role": "scenario",
+      "rules": [
+        { "rule_id": "rule-atlas-dotted-stem", "priority": 100, "match_field": "BASENAME", "mask": "report.v2.pdf", "target_id": "target-atlas-reports", "target_stem": "Final.Report" }
+      ]
+    }
+  ],
+  "dictionaries": [
+    { "dictionary_id": "dictionary-atlas-general", "company_id": "company-demo-atlas", "name": "Общие правила Atlas", "description": "Синтетические общие правила Atlas.", "active_version_id": "version-atlas-general-v1", "updated_by": "worker-one", "updated_at": "2031-05-10T09:30:00Z" },
+    { "dictionary_id": "dictionary-atlas-invoices", "company_id": "company-demo-atlas", "name": "Счета Atlas", "description": "Синтетические правила счетов Atlas.", "active_version_id": "version-atlas-invoices-v1", "updated_by": "worker-two", "updated_at": "2031-05-10T09:31:00Z" },
+    { "dictionary_id": "dictionary-nova-general", "company_id": "company-demo-nova", "name": "Общие правила Nova", "description": "Синтетические общие правила Nova.", "active_version_id": "version-nova-general-v1", "updated_by": "worker-one", "updated_at": "2031-05-10T09:32:00Z" }
+  ],
+  "rule_sets": [
+    { "rule_set_id": "rule-set-atlas-published", "company_id": "company-demo-atlas", "role": "published", "members": [ { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-general-v1" }, { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-invoices-v1" } ] },
+    { "rule_set_id": "rule-set-nova-published", "company_id": "company-demo-nova", "role": "published", "members": [ { "dictionary_id": "dictionary-nova-general", "version_id": "version-nova-general-v1" } ] },
+    { "rule_set_id": "rule-set-atlas-whole-field", "company_id": "company-demo-atlas", "role": "scenario", "members": [ { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-whole-field-v1" } ] },
+    { "rule_set_id": "rule-set-atlas-no-fallback", "company_id": "company-demo-atlas", "role": "scenario", "members": [ { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-no-fallback-v1" } ] },
+    { "rule_set_id": "rule-set-atlas-star-zero-multi", "company_id": "company-demo-atlas", "role": "scenario", "members": [ { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-star-zero-multi-v1" } ] },
+    { "rule_set_id": "rule-set-atlas-star-cross-slash", "company_id": "company-demo-atlas", "role": "scenario", "members": [ { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-star-cross-slash-v1" } ] },
+    { "rule_set_id": "rule-set-atlas-star-cross-slash-neg", "company_id": "company-demo-atlas", "role": "scenario", "members": [ { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-star-cross-slash-neg-v1" } ] },
+    { "rule_set_id": "rule-set-atlas-question", "company_id": "company-demo-atlas", "role": "scenario", "members": [ { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-question-v1" } ] },
+    { "rule_set_id": "rule-set-atlas-slash-case", "company_id": "company-demo-atlas", "role": "scenario", "members": [ { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-slash-case-v1" } ] },
+    { "rule_set_id": "rule-set-atlas-priority", "company_id": "company-demo-atlas", "role": "scenario", "members": [ { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-priority-v1" } ] },
+    { "rule_set_id": "rule-set-atlas-eq-same", "company_id": "company-demo-atlas", "role": "scenario", "members": [ { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-eq-same-general-v1" }, { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-eq-same-invoices-v1" } ] },
+    { "rule_set_id": "rule-set-atlas-eq-diff", "company_id": "company-demo-atlas", "role": "scenario", "members": [ { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-eq-diff-general-v1" }, { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-eq-diff-invoices-v1" } ] },
+    { "rule_set_id": "rule-set-atlas-dotted-stem", "company_id": "company-demo-atlas", "role": "scenario", "members": [ { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-dotted-stem-v1" } ] }
+  ],
+  "sources": {
+    "src-atlas-archive": { "item_id": "file-atlas-type-archive", "corpus_item_id": "file-atlas-type-archive", "item_revision": 3, "company_id": "company-demo-atlas", "filename": "archive.tar.gz", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/archive.tar.gz", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/archive.tar.gz" } },
+    "src-atlas-env": { "item_id": "file-atlas-type-env", "corpus_item_id": "file-atlas-type-env", "item_revision": 3, "company_id": "company-demo-atlas", "filename": ".env", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/.env", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/.env" } },
+    "src-atlas-readme": { "item_id": "file-atlas-type-noext", "corpus_item_id": "file-atlas-type-noext", "item_revision": 3, "company_id": "company-demo-atlas", "filename": "README", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/README", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/README" } },
+    "src-atlas-namedot": { "item_id": "file-atlas-type-namedot", "corpus_item_id": "file-atlas-type-namedot", "item_revision": 3, "company_id": "company-demo-atlas", "filename": "name.", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/name.", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/name." } },
+    "src-atlas-upper": { "item_id": "file-atlas-type-upper", "corpus_item_id": "file-atlas-type-upper", "item_revision": 3, "company_id": "company-demo-atlas", "filename": "invoice.TXT", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/invoice.TXT", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/invoice.TXT" } },
+    "src-atlas-tail-text": { "item_id": "file-atlas-tail-text", "corpus_item_id": "file-atlas-tail-text", "item_revision": 4, "company_id": "company-demo-atlas", "filename": "summary-text.pdf", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Reports/Text/summary-text.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/Text/summary-text.pdf" } },
+    "src-atlas-arbitrary": { "item_id": "file-atlas-type-arbitrary", "corpus_item_id": "file-atlas-type-arbitrary", "item_revision": 3, "company_id": "company-demo-atlas", "filename": "data.bin", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/data.bin", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/data.bin" } },
+    "src-nova-both": { "item_id": "file-nova-q007-both", "corpus_item_id": "file-nova-q007-both", "item_revision": 2, "company_id": "company-demo-nova", "filename": "atlas.txt", "location": { "root_id": "root-demo-nova", "relative_path": "Archive/Nova/Orion_2031/North/Reports/atlas.txt", "display_path": "DEMO:/SandboxRoot/Archive/Nova/Orion_2031/North/Reports/atlas.txt" } },
+    "src-nova-south": { "item_id": "file-nova-south-data", "corpus_item_id": "file-nova-south-data", "item_revision": 2, "company_id": "company-demo-nova", "filename": "nova-south.xlsx", "location": { "root_id": "root-demo-nova", "relative_path": "Archive/Nova/Orion_2031/South/Data/nova-south.xlsx", "display_path": "DEMO:/SandboxRoot/Archive/Nova/Orion_2031/South/Data/nova-south.xlsx" } },
+    "src-exact-invoice": { "item_id": "src-rule-exact-invoice", "item_revision": 1, "company_id": "company-demo-atlas", "filename": "invoice", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/invoice", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/invoice" } },
+    "src-substring-invoice": { "item_id": "src-rule-substring-invoice", "item_revision": 1, "company_id": "company-demo-atlas", "filename": "my-invoice.txt", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/my-invoice.txt", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/my-invoice.txt" } },
+    "src-orion-path-only": { "item_id": "src-rule-orion-path-only", "item_revision": 1, "company_id": "company-demo-atlas", "filename": "Main.pdf", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/Main.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/Main.pdf" } },
+    "src-star-zero": { "item_id": "src-rule-star-zero", "item_revision": 1, "company_id": "company-demo-atlas", "filename": "AtlasReports", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/AtlasReports", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/AtlasReports" } },
+    "src-star-multi": { "item_id": "src-rule-star-multi", "item_revision": 1, "company_id": "company-demo-atlas", "filename": "Atlas-Orion-Reports", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/Atlas-Orion-Reports", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/Atlas-Orion-Reports" } },
+    "src-cross-slash": { "item_id": "src-rule-cross-slash", "item_revision": 1, "company_id": "company-demo-atlas", "filename": "summary.pdf", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Reports/summary.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/summary.pdf" } },
+    "src-qmark-one": { "item_id": "src-rule-qmark-one", "item_revision": 1, "company_id": "company-demo-atlas", "filename": "Report1.pdf", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/Report1.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/Report1.pdf" } },
+    "src-qmark-zero": { "item_id": "src-rule-qmark-zero", "item_revision": 1, "company_id": "company-demo-atlas", "filename": "Report.pdf", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/Report.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/Report.pdf" } },
+    "src-qmark-two": { "item_id": "src-rule-qmark-two", "item_revision": 1, "company_id": "company-demo-atlas", "filename": "Report12.pdf", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/Report12.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/Report12.pdf" } },
+    "src-slash-backslash": { "item_id": "src-rule-slash-backslash", "item_revision": 1, "company_id": "company-demo-atlas", "filename": "slash.pdf", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Reports/slash.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/slash.pdf" } },
+    "src-casefold-composed": { "item_id": "src-rule-casefold-composed", "item_revision": 1, "company_id": "company-demo-atlas", "filename": "café.pdf", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/café.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/café.pdf" } },
+    "src-casefold-decomposed": { "item_id": "src-rule-casefold-decomposed", "item_revision": 1, "company_id": "company-demo-atlas", "filename": "cafe\u0301.pdf", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/cafe\u0301.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/cafe\u0301.pdf" } },
+    "src-priority": { "item_id": "src-rule-priority", "item_revision": 1, "company_id": "company-demo-atlas", "filename": "priority-file.pdf", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/priority-file.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/priority-file.pdf" } },
+    "src-shared": { "item_id": "src-rule-shared", "item_revision": 1, "company_id": "company-demo-atlas", "filename": "shared-file.pdf", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/shared-file.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/shared-file.pdf" } },
+    "src-dotted": { "item_id": "src-rule-dotted", "item_revision": 1, "company_id": "company-demo-atlas", "filename": "report.v2.pdf", "location": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/report.v2.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/report.v2.pdf" } }
+  },
+  "rule_scenarios": [
+    {
+      "scenario_id": "RULE-Q015-ARCHIVE-GZ",
+      "q_ids": ["Q-015"],
+      "parameters": ["BASENAME", "*.tar.gz", "archive.tar.gz", "last suffix .gz"],
+      "rule_set_id": "rule-set-atlas-published",
+      "source_id": "src-atlas-archive",
+      "expected": {
+        "matched_rule_refs": [ { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-general-v1", "rule_id": "rule-atlas-general-archive" } ],
+        "selected_rule": { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-general-v1", "rule_id": "rule-atlas-general-archive" },
+        "predicted_state": "WILL_MOVE",
+        "reason_code": null,
+        "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Reports/Archive.gz", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/Archive.gz" },
+        "target_basename": "Archive.gz",
+        "final_stem": "Archive",
+        "suffix": ".gz"
+      },
+      "reason": "archive.tar.gz has last suffix .gz; fixed stem Archive plus .gz gives Archive.gz."
+    },
+    {
+      "scenario_id": "RULE-Q015-ENV-NO-SUFFIX",
+      "q_ids": ["Q-015"],
+      "parameters": ["BASENAME", ".env", "no extension"],
+      "rule_set_id": "rule-set-atlas-published",
+      "source_id": "src-atlas-env",
+      "expected": {
+        "matched_rule_refs": [ { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-general-v1", "rule_id": "rule-atlas-general-env" } ],
+        "selected_rule": { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-general-v1", "rule_id": "rule-atlas-general-env" },
+        "predicted_state": "WILL_MOVE",
+        "reason_code": null,
+        "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/EnvFile", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/EnvFile" },
+        "target_basename": "EnvFile",
+        "final_stem": "EnvFile",
+        "suffix": ""
+      },
+      "reason": ".env has no extension; the whole-field mask .env matches and the fixed stem has no suffix."
+    },
+    {
+      "scenario_id": "RULE-Q015-README-NO-SUFFIX",
+      "q_ids": ["Q-015"],
+      "parameters": ["BASENAME", "README", "no extension"],
+      "rule_set_id": "rule-set-atlas-published",
+      "source_id": "src-atlas-readme",
+      "expected": {
+        "matched_rule_refs": [ { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-general-v1", "rule_id": "rule-atlas-general-readme" } ],
+        "selected_rule": { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-general-v1", "rule_id": "rule-atlas-general-readme" },
+        "predicted_state": "WILL_MOVE",
+        "reason_code": null,
+        "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/Readme", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/Readme" },
+        "target_basename": "Readme",
+        "final_stem": "Readme",
+        "suffix": ""
+      },
+      "reason": "README is a whole-field exact mask and has no extension; the result is the fixed stem alone."
+    },
+    {
+      "scenario_id": "RULE-Q015-NAMEDOT-NO-SUFFIX",
+      "q_ids": ["Q-015"],
+      "parameters": ["BASENAME", "name.", "no extension"],
+      "rule_set_id": "rule-set-atlas-published",
+      "source_id": "src-atlas-namedot",
+      "expected": {
+        "matched_rule_refs": [ { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-general-v1", "rule_id": "rule-atlas-general-namedot" } ],
+        "selected_rule": { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-general-v1", "rule_id": "rule-atlas-general-namedot" },
+        "predicted_state": "WILL_MOVE",
+        "reason_code": null,
+        "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/Named", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/Named" },
+        "target_basename": "Named",
+        "final_stem": "Named",
+        "suffix": ""
+      },
+      "reason": "name. has a trailing dot but no extension suffix; the fixed stem is used alone."
+    },
+    {
+      "scenario_id": "RULE-Q015-UPPER-TXT-SMALLER-WINS",
+      "q_ids": ["Q-015"],
+      "parameters": ["BASENAME", "RELATIVE_PATH", "priority 10 vs 100", ".TXT case preserved"],
+      "rule_set_id": "rule-set-atlas-published",
+      "source_id": "src-atlas-upper",
+      "expected": {
+        "matched_rule_refs": [
+          { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-invoices-v1", "rule_id": "rule-atlas-invoices-invoice" },
+          { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-invoices-v1", "rule_id": "rule-atlas-invoices-upper" }
+        ],
+        "selected_rule": { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-invoices-v1", "rule_id": "rule-atlas-invoices-invoice" },
+        "predicted_state": "WILL_MOVE",
+        "reason_code": null,
+        "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Invoices/Invoice.TXT", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Invoices/Invoice.TXT" },
+        "target_basename": "Invoice.TXT",
+        "final_stem": "Invoice",
+        "suffix": ".TXT"
+      },
+      "reason": "invoice.TXT matches *invoice* (priority 10) and Data/*.TXT (priority 100); the smaller priority wins and the .TXT suffix keeps its original case."
+    },
+    {
+      "scenario_id": "RULE-Q015-CROSS-SLASH",
+      "q_ids": ["Q-015"],
+      "parameters": ["RELATIVE_PATH", "* crosses separator", "Reports/*.pdf"],
+      "rule_set_id": "rule-set-atlas-published",
+      "source_id": "src-atlas-tail-text",
+      "expected": {
+        "matched_rule_refs": [ { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-invoices-v1", "rule_id": "rule-atlas-invoices-pdf" } ],
+        "selected_rule": { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-invoices-v1", "rule_id": "rule-atlas-invoices-pdf" },
+        "predicted_state": "WILL_MOVE",
+        "reason_code": null,
+        "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Reports/Report.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/Report.pdf" },
+        "target_basename": "Report.pdf",
+        "final_stem": "Report",
+        "suffix": ".pdf"
+      },
+      "reason": "The * in Reports/*.pdf crosses the slash before Text; the file matches the relative path and lands directly under Reports."
+    },
+    {
+      "scenario_id": "RULE-Q015-NO-SCENARIO",
+      "q_ids": ["Q-015"],
+      "parameters": ["no matching rule", "NO_SCENARIO"],
+      "rule_set_id": "rule-set-atlas-published",
+      "source_id": "src-atlas-arbitrary",
+      "expected": {
+        "matched_rule_refs": [],
+        "selected_rule": null,
+        "predicted_state": "WILL_MANUAL_REVIEW",
+        "reason_code": "NO_SCENARIO",
+        "target": null,
+        "target_basename": null,
+        "final_stem": null,
+        "suffix": null
+      },
+      "reason": "data.bin matches no published Atlas rule; without a scenario the file goes to manual review and no target is planned."
+    },
+    {
+      "scenario_id": "RULE-Q015-NOVA-RELATIVE",
+      "q_ids": ["Q-015"],
+      "parameters": ["RELATIVE_PATH", "Nova", "North/Reports/*"],
+      "rule_set_id": "rule-set-nova-published",
+      "source_id": "src-nova-both",
+      "expected": {
+        "matched_rule_refs": [ { "dictionary_id": "dictionary-nova-general", "version_id": "version-nova-general-v1", "rule_id": "rule-nova-general-report" } ],
+        "selected_rule": { "dictionary_id": "dictionary-nova-general", "version_id": "version-nova-general-v1", "rule_id": "rule-nova-general-report" },
+        "predicted_state": "WILL_MOVE",
+        "reason_code": null,
+        "target": { "root_id": "root-demo-nova", "relative_path": "Archive/Nova/Orion_2031/North/Reports/NovaReport.txt", "display_path": "DEMO:/SandboxRoot/Archive/Nova/Orion_2031/North/Reports/NovaReport.txt" },
+        "target_basename": "NovaReport.txt",
+        "final_stem": "NovaReport",
+        "suffix": ".txt"
+      },
+      "reason": "Nova rule set sees only Nova targets; the North/Reports relative mask matches and the .txt suffix is preserved."
+    },
+    {
+      "scenario_id": "RULE-Q015-NOVA-XLSX",
+      "q_ids": ["Q-015"],
+      "parameters": ["BASENAME", "*.xlsx", "Nova"],
+      "rule_set_id": "rule-set-nova-published",
+      "source_id": "src-nova-south",
+      "expected": {
+        "matched_rule_refs": [ { "dictionary_id": "dictionary-nova-general", "version_id": "version-nova-general-v1", "rule_id": "rule-nova-general-data" } ],
+        "selected_rule": { "dictionary_id": "dictionary-nova-general", "version_id": "version-nova-general-v1", "rule_id": "rule-nova-general-data" },
+        "predicted_state": "WILL_MOVE",
+        "reason_code": null,
+        "target": { "root_id": "root-demo-nova", "relative_path": "Archive/Nova/Orion_2031/South/Data/NovaData.xlsx", "display_path": "DEMO:/SandboxRoot/Archive/Nova/Orion_2031/South/Data/NovaData.xlsx" },
+        "target_basename": "NovaData.xlsx",
+        "final_stem": "NovaData",
+        "suffix": ".xlsx"
+      },
+      "reason": "The *.xlsx basename rule matches the South/Data file and the fixed stem receives the .xlsx suffix."
+    },
+    {
+      "scenario_id": "RULE-Q015-WHOLE-EXACT-MATCH",
+      "q_ids": ["Q-015"],
+      "parameters": ["BASENAME", "whole-field", "invoice"],
+      "rule_set_id": "rule-set-atlas-whole-field",
+      "source_id": "src-exact-invoice",
+      "expected": {
+        "matched_rule_refs": [ { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-whole-field-v1", "rule_id": "rule-atlas-whole-invoice" } ],
+        "selected_rule": { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-whole-field-v1", "rule_id": "rule-atlas-whole-invoice" },
+        "predicted_state": "WILL_MOVE",
+        "reason_code": null,
+        "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Invoices/Invoice", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Invoices/Invoice" },
+        "target_basename": "Invoice",
+        "final_stem": "Invoice",
+        "suffix": ""
+      },
+      "reason": "The mask invoice matches the whole basename invoice; no extension is present so the fixed stem is used alone."
+    },
+    {
+      "scenario_id": "RULE-Q015-SUBSTRING-NEEDS-STARS",
+      "q_ids": ["Q-015"],
+      "parameters": ["BASENAME", "whole-field", "substring requires *"],
+      "rule_set_id": "rule-set-atlas-whole-field",
+      "source_id": "src-substring-invoice",
+      "expected": {
+        "matched_rule_refs": [],
+        "selected_rule": null,
+        "predicted_state": "WILL_MANUAL_REVIEW",
+        "reason_code": "NO_SCENARIO",
+        "target": null,
+        "target_basename": null,
+        "final_stem": null,
+        "suffix": null
+      },
+      "reason": "The mask invoice is applied to the whole field, so my-invoice.txt does not match; a substring needs * on both sides."
+    },
+    {
+      "scenario_id": "RULE-Q015-BASENAME-NO-FALLBACK",
+      "q_ids": ["Q-015"],
+      "parameters": ["BASENAME vs RELATIVE_PATH", "no fallback"],
+      "rule_set_id": "rule-set-atlas-no-fallback",
+      "source_id": "src-orion-path-only",
+      "expected": {
+        "matched_rule_refs": [ { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-no-fallback-v1", "rule_id": "rule-atlas-nofb-relative" } ],
+        "selected_rule": { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-no-fallback-v1", "rule_id": "rule-atlas-nofb-relative" },
+        "predicted_state": "WILL_MOVE",
+        "reason_code": null,
+        "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Reports/RelativeHit.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/RelativeHit.pdf" },
+        "target_basename": "RelativeHit.pdf",
+        "final_stem": "RelativeHit",
+        "suffix": ".pdf"
+      },
+      "reason": "The BASENAME *orion* rule cannot see Orion_2031 in the directory chain, so it does not fall back; only the RELATIVE_PATH rule matches Main.pdf."
+    },
+    {
+      "scenario_id": "RULE-Q015-STAR-ZERO",
+      "q_ids": ["Q-015"],
+      "parameters": ["BASENAME", "* zero characters", "Atlas*Reports"],
+      "rule_set_id": "rule-set-atlas-star-zero-multi",
+      "source_id": "src-star-zero",
+      "expected": {
+        "matched_rule_refs": [ { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-star-zero-multi-v1", "rule_id": "rule-atlas-star-base" } ],
+        "selected_rule": { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-star-zero-multi-v1", "rule_id": "rule-atlas-star-base" },
+        "predicted_state": "WILL_MOVE",
+        "reason_code": null,
+        "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/StarBase", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/StarBase" },
+        "target_basename": "StarBase",
+        "final_stem": "StarBase",
+        "suffix": ""
+      },
+      "reason": "* matches zero characters, so AtlasReports matches Atlas*Reports."
+    },
+    {
+      "scenario_id": "RULE-Q015-STAR-MULTI",
+      "q_ids": ["Q-015"],
+      "parameters": ["BASENAME", "* many characters", "Atlas*Reports"],
+      "rule_set_id": "rule-set-atlas-star-zero-multi",
+      "source_id": "src-star-multi",
+      "expected": {
+        "matched_rule_refs": [ { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-star-zero-multi-v1", "rule_id": "rule-atlas-star-base" } ],
+        "selected_rule": { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-star-zero-multi-v1", "rule_id": "rule-atlas-star-base" },
+        "predicted_state": "WILL_MOVE",
+        "reason_code": null,
+        "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/StarBase", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/StarBase" },
+        "target_basename": "StarBase",
+        "final_stem": "StarBase",
+        "suffix": ""
+      },
+      "reason": "* matches the -Orion- run, so Atlas-Orion-Reports also matches Atlas*Reports."
+    },
+    {
+      "scenario_id": "RULE-Q015-STAR-CROSS-SLASH",
+      "q_ids": ["Q-015"],
+      "parameters": ["RELATIVE_PATH", "* crosses separator", "Archive*Reports/*"],
+      "rule_set_id": "rule-set-atlas-star-cross-slash",
+      "source_id": "src-cross-slash",
+      "expected": {
+        "matched_rule_refs": [ { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-star-cross-slash-v1", "rule_id": "rule-atlas-cross-slash" } ],
+        "selected_rule": { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-star-cross-slash-v1", "rule_id": "rule-atlas-cross-slash" },
+        "predicted_state": "WILL_MOVE",
+        "reason_code": null,
+        "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Reports/CrossSlash.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/CrossSlash.pdf" },
+        "target_basename": "CrossSlash.pdf",
+        "final_stem": "CrossSlash",
+        "suffix": ".pdf"
+      },
+      "reason": "The mask is applied to the whole relative path including the basename. In Archive*Reports/* the first * crosses the separators up to the Reports directory and the trailing /* matches summary.pdf, so the cross-slash positive holds."
+    },
+    {
+      "scenario_id": "RULE-Q015-STAR-CROSS-SLASH-TRAILING-NO-MATCH",
+      "q_ids": ["Q-015"],
+      "parameters": ["RELATIVE_PATH", "* does not match a basename", "trailing-only Archive*Reports"],
+      "rule_set_id": "rule-set-atlas-star-cross-slash-neg",
+      "source_id": "src-cross-slash",
+      "expected": {
+        "matched_rule_refs": [],
+        "selected_rule": null,
+        "predicted_state": "WILL_MANUAL_REVIEW",
+        "reason_code": "NO_SCENARIO",
+        "target": null,
+        "target_basename": null,
+        "final_stem": null,
+        "suffix": null
+      },
+      "reason": "Archive*Reports requires the whole field to end with Reports; the field ends with summary.pdf, so the trailing-only mask does not match and the cross-slash wildcard must not be anchored at the end."
+    },
+    {
+      "scenario_id": "RULE-Q015-QUESTION-ONE",
+      "q_ids": ["Q-015"],
+      "parameters": ["BASENAME", "? exactly one character", "Report?.pdf"],
+      "rule_set_id": "rule-set-atlas-question",
+      "source_id": "src-qmark-one",
+      "expected": {
+        "matched_rule_refs": [ { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-question-v1", "rule_id": "rule-atlas-question" } ],
+        "selected_rule": { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-question-v1", "rule_id": "rule-atlas-question" },
+        "predicted_state": "WILL_MOVE",
+        "reason_code": null,
+        "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Reports/QMark.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/QMark.pdf" },
+        "target_basename": "QMark.pdf",
+        "final_stem": "QMark",
+        "suffix": ".pdf"
+      },
+      "reason": "? matches exactly one character, so Report1.pdf matches Report?.pdf."
+    },
+    {
+      "scenario_id": "RULE-Q015-QUESTION-ZERO",
+      "q_ids": ["Q-015"],
+      "parameters": ["BASENAME", "? does not match zero characters", "Report?.pdf"],
+      "rule_set_id": "rule-set-atlas-question",
+      "source_id": "src-qmark-zero",
+      "expected": {
+        "matched_rule_refs": [],
+        "selected_rule": null,
+        "predicted_state": "WILL_MANUAL_REVIEW",
+        "reason_code": "NO_SCENARIO",
+        "target": null,
+        "target_basename": null,
+        "final_stem": null,
+        "suffix": null
+      },
+      "reason": "? requires exactly one character, so Report.pdf does not match Report?.pdf."
+    },
+    {
+      "scenario_id": "RULE-Q015-QUESTION-TWO",
+      "q_ids": ["Q-015"],
+      "parameters": ["BASENAME", "? does not match two characters", "Report?.pdf"],
+      "rule_set_id": "rule-set-atlas-question",
+      "source_id": "src-qmark-two",
+      "expected": {
+        "matched_rule_refs": [],
+        "selected_rule": null,
+        "predicted_state": "WILL_MANUAL_REVIEW",
+        "reason_code": "NO_SCENARIO",
+        "target": null,
+        "target_basename": null,
+        "final_stem": null,
+        "suffix": null
+      },
+      "reason": "? requires exactly one character, so Report12.pdf does not match Report?.pdf."
+    },
+    {
+      "scenario_id": "RULE-Q015-SLASH-VARIANTS",
+      "q_ids": ["Q-015"],
+      "parameters": ["RELATIVE_PATH", "slash normalization", "backslash mask vs slash path"],
+      "rule_set_id": "rule-set-atlas-slash-case",
+      "source_id": "src-slash-backslash",
+      "expected": {
+        "matched_rule_refs": [ { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-slash-case-v1", "rule_id": "rule-atlas-slash-norm" } ],
+        "selected_rule": { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-slash-case-v1", "rule_id": "rule-atlas-slash-norm" },
+        "predicted_state": "WILL_MOVE",
+        "reason_code": null,
+        "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Reports/SlashNorm.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/SlashNorm.pdf" },
+        "target_basename": "SlashNorm.pdf",
+        "final_stem": "SlashNorm",
+        "suffix": ".pdf"
+      },
+      "reason": "Both mask and match value slashes are normalized to \\ for the matcher, so the backslash mask matches the canonical slash path."
+    },
+    {
+      "scenario_id": "RULE-Q015-CASEFOLD-MATCH",
+      "q_ids": ["Q-015"],
+      "parameters": ["BASENAME", "case-insensitive", "CAFÉ.PDF"],
+      "rule_set_id": "rule-set-atlas-slash-case",
+      "source_id": "src-casefold-composed",
+      "expected": {
+        "matched_rule_refs": [ { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-slash-case-v1", "rule_id": "rule-atlas-casefold" } ],
+        "selected_rule": { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-slash-case-v1", "rule_id": "rule-atlas-casefold" },
+        "predicted_state": "WILL_MOVE",
+        "reason_code": null,
+        "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/CaseFold.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/CaseFold.pdf" },
+        "target_basename": "CaseFold.pdf",
+        "final_stem": "CaseFold",
+        "suffix": ".pdf"
+      },
+      "reason": "Matching is case-insensitive, so CAFÉ.PDF matches the composed café.pdf; the .pdf suffix keeps its original lower-case form."
+    },
+    {
+      "scenario_id": "RULE-Q015-CASEFOLD-NO-NFC",
+      "q_ids": ["Q-015"],
+      "parameters": ["BASENAME", "casefold does not normalize Unicode", "decomposed é"],
+      "rule_set_id": "rule-set-atlas-slash-case",
+      "source_id": "src-casefold-decomposed",
+      "expected": {
+        "matched_rule_refs": [],
+        "selected_rule": null,
+        "predicted_state": "WILL_MANUAL_REVIEW",
+        "reason_code": "NO_SCENARIO",
+        "target": null,
+        "target_basename": null,
+        "final_stem": null,
+        "suffix": null
+      },
+      "reason": "casefold does not apply NFC/NFKC, so the decomposed e + combining acute accent is not the composed é and does not match CAFÉ.PDF."
+    },
+    {
+      "scenario_id": "RULE-Q015-PRIORITY-1-1000",
+      "q_ids": ["Q-015", "Q-018"],
+      "parameters": ["priority 1 and 1000", "smaller wins"],
+      "rule_set_id": "rule-set-atlas-priority",
+      "source_id": "src-priority",
+      "expected": {
+        "matched_rule_refs": [
+          { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-priority-v1", "rule_id": "rule-atlas-priority-1" },
+          { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-priority-v1", "rule_id": "rule-atlas-priority-1000" }
+        ],
+        "selected_rule": { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-priority-v1", "rule_id": "rule-atlas-priority-1" },
+        "predicted_state": "WILL_MOVE",
+        "reason_code": null,
+        "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Data/PriorityOne.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/PriorityOne.pdf" },
+        "target_basename": "PriorityOne.pdf",
+        "final_stem": "PriorityOne",
+        "suffix": ".pdf"
+      },
+      "reason": "Both rules match priority-file.pdf; priority 1 is applied before priority 1000, so the larger numeric priority does not win."
+    },
+    {
+      "scenario_id": "RULE-Q018-EQ-SAME-TARGET",
+      "q_ids": ["Q-018"],
+      "parameters": ["equal minimal priority", "same final target", "stable dictionary_id then rule_id"],
+      "rule_set_id": "rule-set-atlas-eq-same",
+      "source_id": "src-shared",
+      "expected": {
+        "matched_rule_refs": [
+          { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-eq-same-general-v1", "rule_id": "rule-atlas-eq-same-general" },
+          { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-eq-same-invoices-v1", "rule_id": "rule-atlas-eq-same-invoices" }
+        ],
+        "selected_rule": { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-eq-same-general-v1", "rule_id": "rule-atlas-eq-same-general" },
+        "predicted_state": "WILL_MOVE",
+        "reason_code": null,
+        "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Reports/SharedSame.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/SharedSame.pdf" },
+        "target_basename": "SharedSame.pdf",
+        "final_stem": "SharedSame",
+        "suffix": ".pdf"
+      },
+      "reason": "Equal minimal priority with the same final target is not a conflict; attribution is stable by dictionary_id then rule_id, so dictionary-atlas-general wins."
+    },
+    {
+      "scenario_id": "RULE-Q018-EQ-DIFF-TARGET-CONFLICT",
+      "q_ids": ["Q-018"],
+      "parameters": ["equal minimal priority", "different final targets", "RULE_CONFLICT"],
+      "rule_set_id": "rule-set-atlas-eq-diff",
+      "source_id": "src-shared",
+      "expected": {
+        "matched_rule_refs": [
+          { "dictionary_id": "dictionary-atlas-general", "version_id": "version-atlas-eq-diff-general-v1", "rule_id": "rule-atlas-eq-diff-general" },
+          { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-eq-diff-invoices-v1", "rule_id": "rule-atlas-eq-diff-invoices" }
+        ],
+        "selected_rule": null,
+        "predicted_state": "WILL_MANUAL_REVIEW",
+        "reason_code": "RULE_CONFLICT",
+        "target": null,
+        "target_basename": null,
+        "final_stem": null,
+        "suffix": null
+      },
+      "reason": "Two matched rules share the minimal priority but plan different final targets (Reports vs Invoices), which is a conflict; no rule is selected and the row goes to manual review."
+    },
+    {
+      "scenario_id": "RULE-Q015-DOTTED-STEM-LAST-SUFFIX",
+      "q_ids": ["Q-015"],
+      "parameters": ["BASENAME", "last suffix only", "dotted target stem"],
+      "rule_set_id": "rule-set-atlas-dotted-stem",
+      "source_id": "src-dotted",
+      "expected": {
+        "matched_rule_refs": [ { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-dotted-stem-v1", "rule_id": "rule-atlas-dotted-stem" } ],
+        "selected_rule": { "dictionary_id": "dictionary-atlas-invoices", "version_id": "version-atlas-dotted-stem-v1", "rule_id": "rule-atlas-dotted-stem" },
+        "predicted_state": "WILL_MOVE",
+        "reason_code": null,
+        "target": { "root_id": "root-demo-atlas", "relative_path": "Archive/Atlas/Orion_2031/Reports/Final.Report.pdf", "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/Final.Report.pdf" },
+        "target_basename": "Final.Report.pdf",
+        "final_stem": "Final.Report",
+        "suffix": ".pdf"
+      },
+      "reason": "Only the last suffix .pdf is taken from report.v2.pdf; the fixed stem keeps its own dot, giving Final.Report.pdf."
+    }
+  ],
+  "target_scenarios": [
+    {
+      "scenario_id": "TARGET-Q044-RESOLVE-ATLAS-REPORTS",
+      "q_ids": ["Q-044", "Q-015"],
+      "parameters": ["allowed target", "Atlas", "existing directory"],
+      "operation": "resolveTargetDirectory",
+      "company_id": "company-demo-atlas",
+      "request": { "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports" },
+      "expected": { "outcome": "RESOLVED", "target_id": "target-atlas-reports" },
+      "reason": "The displayed synthetic path is a configured existing Atlas target and resolves to its logical root and relative directory."
+    },
+    {
+      "scenario_id": "TARGET-Q015-RESOLVE-ATLAS-INVOICES",
+      "q_ids": ["Q-015"],
+      "parameters": ["allowed target", "Atlas", "manual entry"],
+      "operation": "resolveTargetDirectory",
+      "company_id": "company-demo-atlas",
+      "request": { "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Invoices" },
+      "expected": { "outcome": "RESOLVED", "target_id": "target-atlas-invoices" },
+      "reason": "A second configured Atlas directory resolves without creating anything."
+    },
+    {
+      "scenario_id": "TARGET-Q044-RESOLVE-NOVA-NORTH",
+      "q_ids": ["Q-044"],
+      "parameters": ["allowed target", "Nova", "existing directory"],
+      "operation": "resolveTargetDirectory",
+      "company_id": "company-demo-nova",
+      "request": { "display_path": "DEMO:/SandboxRoot/Archive/Nova/Orion_2031/North/Reports" },
+      "expected": { "outcome": "RESOLVED", "target_id": "target-nova-north-reports" },
+      "reason": "The Nova company resolves only its own configured directory."
+    },
+    {
+      "scenario_id": "TARGET-Q044-MISSING-DIRECTORY",
+      "q_ids": ["Q-044"],
+      "parameters": ["non-existent directory", "INVALID_TARGET"],
+      "operation": "resolveTargetDirectory",
+      "company_id": "company-demo-atlas",
+      "request": { "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/NoSuchDir" },
+      "expected": { "outcome": "REJECTED", "status": 422, "code": "INVALID_TARGET" },
+      "reason": "The path is under the allowed root but no configured directory exists; the resolver must not create it."
+    },
+    {
+      "scenario_id": "TARGET-Q044-PATH-OUTSIDE-ROOT",
+      "q_ids": ["Q-044"],
+      "parameters": ["root escape", "PATH_OUTSIDE_ROOT"],
+      "operation": "resolveTargetDirectory",
+      "company_id": "company-demo-atlas",
+      "request": { "display_path": "DEMO:/OtherSandbox/Archive/Atlas" },
+      "expected": { "outcome": "REJECTED", "status": 422, "code": "PATH_OUTSIDE_ROOT" },
+      "reason": "A DEMO path with a prefix other than the allowed DEMO:/SandboxRoot is outside the permitted root."
+    },
+    {
+      "scenario_id": "TARGET-Q044-INVALID-RELATIVE-PATH",
+      "q_ids": ["Q-044"],
+      "parameters": ["malformed relative path", "VALIDATION_ERROR"],
+      "operation": "resolveTargetDirectory",
+      "company_id": "company-demo-atlas",
+      "request": { "display_path": "DEMO:/SandboxRoot/Archive/Atlas//Reports" },
+      "expected": { "outcome": "REJECTED", "status": 422, "code": "VALIDATION_ERROR" },
+      "reason": "An empty path segment is not a valid RelativeDirectory; the request is rejected as a validation error."
+    },
+    {
+      "scenario_id": "TARGET-Q044-ARBITRARY-COMPUTER-PATH",
+      "q_ids": ["Q-044"],
+      "parameters": ["arbitrary computer path", "INVALID_TARGET"],
+      "operation": "resolveTargetDirectory",
+      "company_id": "company-demo-atlas",
+      "request": { "display_path": "C:/Windows/System32" },
+      "expected": { "outcome": "REJECTED", "status": 422, "code": "INVALID_TARGET" },
+      "reason": "Only the synthetic DEMO:/SandboxRoot scheme is accepted; a physical computer path is not an allowed target."
+    },
+    {
+      "scenario_id": "TARGET-Q044-WRONG-COMPANY-TARGET",
+      "q_ids": ["Q-044"],
+      "parameters": ["target belongs to another company", "INVALID_TARGET"],
+      "operation": "resolveTargetDirectory",
+      "company_id": "company-demo-nova",
+      "request": { "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports" },
+      "expected": { "outcome": "REJECTED", "status": 422, "code": "INVALID_TARGET" },
+      "reason": "The Atlas target is not configured for Nova; the server checks the company scope before accepting the target."
+    }
+  ],
+  "invalid_rule_cases": [
+    {
+      "case_id": "RULE-INVALID-MASK-DOUBLE-STAR",
+      "q_ids": ["Q-015"],
+      "parameters": ["** rejected", "schema-invalid"],
+      "operation": "replaceDictionaryDraft",
+      "company_id": "company-demo-atlas",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "rule": { "rule_id": "rule-invalid-mask-double-star", "priority": 10, "match_field": "BASENAME", "mask": "a**b", "target": { "root_id": "root-demo-atlas", "relative_directory": "Archive/Atlas/Orion_2031/Data" }, "target_stem": "Bad" },
+      "reason": "The Rule.mask schema pattern rejects **; it is not a second spelling of *."
+    },
+    {
+      "case_id": "RULE-INVALID-MASK-EMPTY",
+      "q_ids": ["Q-015"],
+      "parameters": ["empty mask", "schema-invalid"],
+      "operation": "replaceDictionaryDraft",
+      "company_id": "company-demo-atlas",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "rule": { "rule_id": "rule-invalid-mask-empty", "priority": 10, "match_field": "BASENAME", "mask": "", "target": { "root_id": "root-demo-atlas", "relative_directory": "Archive/Atlas/Orion_2031/Data" }, "target_stem": "Bad" },
+      "reason": "mask has minLength 1, so an empty mask is rejected."
+    },
+    {
+      "case_id": "RULE-INVALID-MASK-LENGTH",
+      "q_ids": ["Q-015"],
+      "parameters": ["mask longer than 512", "schema-invalid"],
+      "operation": "replaceDictionaryDraft",
+      "company_id": "company-demo-atlas",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "rule": { "rule_id": "rule-invalid-mask-length", "priority": 10, "match_field": "BASENAME", "mask": { "$repeat": { "char": "a", "count": 513 } }, "target": { "root_id": "root-demo-atlas", "relative_directory": "Archive/Atlas/Orion_2031/Data" }, "target_stem": "Bad" },
+      "reason": "mask has maxLength 512, so a 513 character mask is rejected."
+    },
+    {
+      "case_id": "RULE-INVALID-PRIORITY-ZERO",
+      "q_ids": ["Q-015"],
+      "parameters": ["priority below 1", "schema-invalid"],
+      "operation": "replaceDictionaryDraft",
+      "company_id": "company-demo-atlas",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "rule": { "rule_id": "rule-invalid-priority-zero", "priority": 0, "match_field": "BASENAME", "mask": "*x*", "target": { "root_id": "root-demo-atlas", "relative_directory": "Archive/Atlas/Orion_2031/Data" }, "target_stem": "Bad" },
+      "reason": "priority must be between 1 and 1000."
+    },
+    {
+      "case_id": "RULE-INVALID-PRIORITY-1001",
+      "q_ids": ["Q-015"],
+      "parameters": ["priority above 1000", "schema-invalid"],
+      "operation": "replaceDictionaryDraft",
+      "company_id": "company-demo-atlas",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "rule": { "rule_id": "rule-invalid-priority-1001", "priority": 1001, "match_field": "BASENAME", "mask": "*x*", "target": { "root_id": "root-demo-atlas", "relative_directory": "Archive/Atlas/Orion_2031/Data" }, "target_stem": "Bad" },
+      "reason": "priority must be between 1 and 1000."
+    },
+    {
+      "case_id": "RULE-INVALID-STEM-EMPTY",
+      "q_ids": ["Q-015"],
+      "parameters": ["empty target_stem", "schema-invalid"],
+      "operation": "replaceDictionaryDraft",
+      "company_id": "company-demo-atlas",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "rule": { "rule_id": "rule-invalid-stem-empty", "priority": 10, "match_field": "BASENAME", "mask": "*x*", "target": { "root_id": "root-demo-atlas", "relative_directory": "Archive/Atlas/Orion_2031/Data" }, "target_stem": "" },
+      "reason": "target_stem has minLength 1, so an empty fixed stem is rejected."
+    },
+    {
+      "case_id": "RULE-INVALID-STEM-LENGTH",
+      "q_ids": ["Q-015"],
+      "parameters": ["target_stem longer than 200", "schema-invalid"],
+      "operation": "replaceDictionaryDraft",
+      "company_id": "company-demo-atlas",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "rule": { "rule_id": "rule-invalid-stem-length", "priority": 10, "match_field": "BASENAME", "mask": "*x*", "target": { "root_id": "root-demo-atlas", "relative_directory": "Archive/Atlas/Orion_2031/Data" }, "target_stem": { "$repeat": { "char": "a", "count": 201 } } },
+      "reason": "target_stem has maxLength 200; the server does not truncate it automatically."
+    },
+    {
+      "case_id": "RULE-INVALID-STEM-SLASH",
+      "q_ids": ["Q-015"],
+      "parameters": ["separator in target_stem", "schema-invalid"],
+      "operation": "replaceDictionaryDraft",
+      "company_id": "company-demo-atlas",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "rule": { "rule_id": "rule-invalid-stem-slash", "priority": 10, "match_field": "BASENAME", "mask": "*x*", "target": { "root_id": "root-demo-atlas", "relative_directory": "Archive/Atlas/Orion_2031/Data" }, "target_stem": "a/b" },
+      "reason": "target_stem must not contain a path separator."
+    },
+    {
+      "case_id": "RULE-INVALID-STEM-BACKSLASH",
+      "q_ids": ["Q-015"],
+      "parameters": ["backslash in target_stem", "schema-invalid"],
+      "operation": "replaceDictionaryDraft",
+      "company_id": "company-demo-atlas",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "rule": { "rule_id": "rule-invalid-stem-backslash", "priority": 10, "match_field": "BASENAME", "mask": "*x*", "target": { "root_id": "root-demo-atlas", "relative_directory": "Archive/Atlas/Orion_2031/Data" }, "target_stem": "a\\b" },
+      "reason": "target_stem must not contain a backslash separator."
+    },
+    {
+      "case_id": "RULE-INVALID-STEM-CONTROL",
+      "q_ids": ["Q-015"],
+      "parameters": ["control character in target_stem", "schema-invalid"],
+      "operation": "replaceDictionaryDraft",
+      "company_id": "company-demo-atlas",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "rule": { "rule_id": "rule-invalid-stem-control", "priority": 10, "match_field": "BASENAME", "mask": "*x*", "target": { "root_id": "root-demo-atlas", "relative_directory": "Archive/Atlas/Orion_2031/Data" }, "target_stem": "a\u0007b" },
+      "reason": "target_stem must not contain control characters."
+    },
+    {
+      "case_id": "RULE-INVALID-MATCH-FIELD",
+      "q_ids": ["Q-015"],
+      "parameters": ["unknown match_field", "schema-invalid"],
+      "operation": "replaceDictionaryDraft",
+      "company_id": "company-demo-atlas",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "rule": { "rule_id": "rule-invalid-match-field", "priority": 10, "match_field": "PATH", "mask": "*x*", "target": { "root_id": "root-demo-atlas", "relative_directory": "Archive/Atlas/Orion_2031/Data" }, "target_stem": "Bad" },
+      "reason": "match_field must be BASENAME or RELATIVE_PATH; switching to another field is not supported."
+    },
+    {
+      "case_id": "RULE-INVALID-MISSING-TARGET",
+      "q_ids": ["Q-015"],
+      "parameters": ["missing required target", "schema-invalid"],
+      "operation": "replaceDictionaryDraft",
+      "company_id": "company-demo-atlas",
+      "schema_rejected": true,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "rule": { "rule_id": "rule-invalid-missing-target", "priority": 10, "match_field": "BASENAME", "mask": "*x*", "target_stem": "Bad" },
+      "reason": "target is required; a rule without a canonical target reference is rejected."
+    },
+    {
+      "case_id": "RULE-INVALID-MASK-REGEX",
+      "q_ids": ["Q-015"],
+      "parameters": ["regex-like mask", "domain rejection"],
+      "operation": "replaceDictionaryDraft",
+      "company_id": "company-demo-atlas",
+      "schema_rejected": false,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "rule": { "rule_id": "rule-invalid-mask-regex", "priority": 10, "match_field": "BASENAME", "mask": "^.*\\.pdf$", "target": { "root_id": "root-demo-atlas", "relative_directory": "Archive/Atlas/Orion_2031/Data" }, "target_stem": "Bad" },
+      "reason": "The mask language is not a regex; a regex expression is not a supported mask and is rejected at the domain level (the JSON Schema cannot express this)."
+    },
+    {
+      "case_id": "RULE-INVALID-MASK-HIDDEN-OR",
+      "q_ids": ["Q-015"],
+      "parameters": ["hidden OR mask", "domain rejection"],
+      "operation": "replaceDictionaryDraft",
+      "company_id": "company-demo-atlas",
+      "schema_rejected": false,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "rule": { "rule_id": "rule-invalid-mask-or", "priority": 10, "match_field": "BASENAME", "mask": "a|b", "target": { "root_id": "root-demo-atlas", "relative_directory": "Archive/Atlas/Orion_2031/Data" }, "target_stem": "Bad" },
+      "reason": "There is no OR operator; a mask containing a hidden OR is not supported and is rejected at the domain level."
+    },
+    {
+      "case_id": "RULE-INVALID-MASK-ESCAPED-WILDCARD",
+      "q_ids": ["Q-015"],
+      "parameters": ["escaped wildcard", "domain rejection"],
+      "operation": "replaceDictionaryDraft",
+      "company_id": "company-demo-atlas",
+      "schema_rejected": false,
+      "expected": { "status": 422, "code": "VALIDATION_ERROR" },
+      "rule": { "rule_id": "rule-invalid-mask-escape", "priority": 10, "match_field": "BASENAME", "mask": "\\*literal", "target": { "root_id": "root-demo-atlas", "relative_directory": "Archive/Atlas/Orion_2031/Data" }, "target_stem": "Bad" },
+      "reason": "Wildcard escaping is not supported; the backslash-star escape is rejected at the domain level."
+    },
+    {
+      "case_id": "RULE-INVALID-TARGET-MISSING-DIR",
+      "q_ids": ["Q-015", "Q-044"],
+      "parameters": ["target not in allowlist", "domain rejection", "INVALID_TARGET"],
+      "operation": "replaceDictionaryDraft",
+      "company_id": "company-demo-atlas",
+      "schema_rejected": false,
+      "expected": { "status": 422, "code": "INVALID_TARGET" },
+      "rule": { "rule_id": "rule-invalid-target-missing-dir", "priority": 10, "match_field": "BASENAME", "mask": "*x*", "target": { "root_id": "root-demo-atlas", "relative_directory": "Archive/Atlas/Orion_2031/NoSuchDir" }, "target_stem": "Bad" },
+      "reason": "The rule is schema-valid but the target directory is not configured for the company; the server rejects it and does not create the directory."
+    },
+    {
+      "case_id": "RULE-INVALID-TARGET-OTHER-COMPANY",
+      "q_ids": ["Q-044"],
+      "parameters": ["target of another company", "domain rejection", "INVALID_TARGET"],
+      "operation": "replaceDictionaryDraft",
+      "company_id": "company-demo-nova",
+      "schema_rejected": false,
+      "expected": { "status": 422, "code": "INVALID_TARGET" },
+      "rule": { "rule_id": "rule-invalid-target-other-company", "priority": 10, "match_field": "BASENAME", "mask": "*x*", "target": { "root_id": "root-demo-atlas", "relative_directory": "Archive/Atlas/Orion_2031/Data" }, "target_stem": "Bad" },
+      "reason": "A Nova rule may only reference Nova targets; the server checks the company scope before accepting the target."
+    }
+  ],
+  "coverage": {
+    "Q-015": [
+      "RULE-Q015-ARCHIVE-GZ",
+      "RULE-Q015-ENV-NO-SUFFIX",
+      "RULE-Q015-README-NO-SUFFIX",
+      "RULE-Q015-NAMEDOT-NO-SUFFIX",
+      "RULE-Q015-UPPER-TXT-SMALLER-WINS",
+      "RULE-Q015-CROSS-SLASH",
+      "RULE-Q015-NO-SCENARIO",
+      "RULE-Q015-NOVA-RELATIVE",
+      "RULE-Q015-NOVA-XLSX",
+      "RULE-Q015-WHOLE-EXACT-MATCH",
+      "RULE-Q015-SUBSTRING-NEEDS-STARS",
+      "RULE-Q015-BASENAME-NO-FALLBACK",
+      "RULE-Q015-STAR-ZERO",
+      "RULE-Q015-STAR-MULTI",
+      "RULE-Q015-STAR-CROSS-SLASH",
+      "RULE-Q015-STAR-CROSS-SLASH-TRAILING-NO-MATCH",
+      "RULE-Q015-QUESTION-ONE",
+      "RULE-Q015-QUESTION-ZERO",
+      "RULE-Q015-QUESTION-TWO",
+      "RULE-Q015-SLASH-VARIANTS",
+      "RULE-Q015-CASEFOLD-MATCH",
+      "RULE-Q015-CASEFOLD-NO-NFC",
+      "RULE-Q015-PRIORITY-1-1000",
+      "RULE-Q015-DOTTED-STEM-LAST-SUFFIX",
+      "TARGET-Q015-RESOLVE-ATLAS-INVOICES",
+      "TARGET-Q044-RESOLVE-ATLAS-REPORTS",
+      "RULE-INVALID-MASK-DOUBLE-STAR",
+      "RULE-INVALID-MASK-EMPTY",
+      "RULE-INVALID-MASK-LENGTH",
+      "RULE-INVALID-PRIORITY-ZERO",
+      "RULE-INVALID-PRIORITY-1001",
+      "RULE-INVALID-STEM-EMPTY",
+      "RULE-INVALID-STEM-LENGTH",
+      "RULE-INVALID-STEM-SLASH",
+      "RULE-INVALID-STEM-BACKSLASH",
+      "RULE-INVALID-STEM-CONTROL",
+      "RULE-INVALID-MATCH-FIELD",
+      "RULE-INVALID-MISSING-TARGET",
+      "RULE-INVALID-MASK-REGEX",
+      "RULE-INVALID-MASK-HIDDEN-OR",
+      "RULE-INVALID-MASK-ESCAPED-WILDCARD",
+      "RULE-INVALID-TARGET-MISSING-DIR"
+    ],
+    "Q-018": [
+      "RULE-Q015-PRIORITY-1-1000",
+      "RULE-Q018-EQ-SAME-TARGET",
+      "RULE-Q018-EQ-DIFF-TARGET-CONFLICT"
+    ],
+    "Q-044": [
+      "TARGET-Q044-RESOLVE-ATLAS-REPORTS",
+      "TARGET-Q044-RESOLVE-NOVA-NORTH",
+      "TARGET-Q044-MISSING-DIRECTORY",
+      "TARGET-Q044-PATH-OUTSIDE-ROOT",
+      "TARGET-Q044-INVALID-RELATIVE-PATH",
+      "TARGET-Q044-ARBITRARY-COMPUTER-PATH",
+      "TARGET-Q044-WRONG-COMPANY-TARGET",
+      "RULE-INVALID-TARGET-MISSING-DIR",
+      "RULE-INVALID-TARGET-OTHER-COMPANY"
+    ]
+  }
+}

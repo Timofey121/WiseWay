@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "STALE_SIMULATION",
+    "message": "Результат теста устарел. Выполните проверку повторно.",
+    "request_id": "request-demo-1",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

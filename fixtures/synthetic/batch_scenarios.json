@@ -1,0 +1,2499 @@
+{
+  "fixture_set": "wiseway-batch-scenarios",
+  "version": "1.0.0",
+  "seed": "wiseway-demo-seed-2031",
+  "contract_version": "1.0.0",
+  "corpus_version": "1.2.0",
+  "batch_fixture": "batch_outcomes.json",
+  "preview_fixture": "preview_preflight.json",
+  "rule_fixture": "rule_expectations.json",
+  "target_display_prefix": "DEMO:/SandboxRoot",
+  "notes": "LT-03.4b finite operational retry/overlap/restart scenario oracle. Every scenario is a concrete, finite sequence of request bodies, UUID Idempotency-Key values, actors, instants, logical fault labels and synchronization barriers with exact expected batch/attempt IDs, outcomes, placements and audit phase/action IDs. It reuses the accepted LT-03.4a batches and placements and the LT-03.3b preflight/error payloads wherever a scenario matches them, and declares isolated new batches/selections only where a distinct actor, snapshot or RuleSet is required. No matcher, executor, filesystem writer, recovery engine, concurrency primitive or live restart is implemented: fault points and barriers are logical labels, durable intent phases are declared, and every expected result is a static requirement, not measured evidence. HTTP refusals before a batch use only the error codes the OAS operation declares; per-file results after acceptance are Outcome state/reason pairs.",
+  "constants": {
+    "snapshot_ttl_seconds": 300,
+    "preview_ttl_seconds": 300,
+    "batch_page_limit": 100,
+    "idempotency_key_format": "uuid",
+    "idempotency_key_scope": [
+      "user_id",
+      "operation",
+      "body_hash"
+    ],
+    "replay_after_dependency_expiry_allowed": true,
+    "new_key_creates_new_attempt": true
+  },
+  "actors": {
+    "worker1": "user-demo-worker-1",
+    "worker2": "user-demo-worker-2",
+    "admin": "user-demo-admin-1"
+  },
+  "companies": {
+    "atlas": {
+      "company_id": "company-demo-atlas",
+      "root_id": "root-demo-atlas",
+      "manual_review_directory": "_manual_review/atlas",
+      "quarantine_directory": "_quarantine/atlas"
+    },
+    "nova": {
+      "company_id": "company-demo-nova",
+      "root_id": "root-demo-nova",
+      "manual_review_directory": "_manual_review/nova",
+      "quarantine_directory": "_quarantine/nova"
+    }
+  },
+  "isolated_selections": [
+    {
+      "selection_id": "selection-overlap-worker1",
+      "owner": "worker1",
+      "company": "atlas",
+      "mode": "EXPLICIT",
+      "q_ids": [
+        "Q-028"
+      ],
+      "snapshot": {
+        "selection_id": "selection-overlap-worker1",
+        "company_id": "company-demo-atlas",
+        "mode": "EXPLICIT",
+        "selected_count": 2,
+        "created_at": "2031-05-10T09:50:00Z",
+        "expires_at": "2031-05-10T09:55:00Z",
+        "queue_generation": "queue-generation-atlas-120"
+      },
+      "members": [
+        {
+          "item_id": "overlap-shared-pdf",
+          "item_revision": 1,
+          "filename": "overlap-shared.pdf",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Reports/overlap-shared.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/overlap-shared.pdf"
+          },
+          "size_bytes": 2048,
+          "modified_at": "2031-05-10T09:45:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "overlap-winner-safe-txt",
+          "item_revision": 1,
+          "filename": "overlap-winner-safe.TXT",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Data/overlap-winner-safe.TXT",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/overlap-winner-safe.TXT"
+          },
+          "size_bytes": 1024,
+          "modified_at": "2031-05-10T09:45:01Z",
+          "source_ready": true
+        }
+      ]
+    },
+    {
+      "selection_id": "selection-overlap-worker2",
+      "owner": "worker2",
+      "company": "atlas",
+      "mode": "EXPLICIT",
+      "q_ids": [
+        "Q-028",
+        "Q-029"
+      ],
+      "snapshot": {
+        "selection_id": "selection-overlap-worker2",
+        "company_id": "company-demo-atlas",
+        "mode": "EXPLICIT",
+        "selected_count": 2,
+        "created_at": "2031-05-10T09:50:00Z",
+        "expires_at": "2031-05-10T09:55:00Z",
+        "queue_generation": "queue-generation-atlas-120"
+      },
+      "members": [
+        {
+          "item_id": "overlap-shared-pdf",
+          "item_revision": 1,
+          "filename": "overlap-shared.pdf",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Reports/overlap-shared.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/overlap-shared.pdf"
+          },
+          "size_bytes": 2048,
+          "modified_at": "2031-05-10T09:45:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "overlap-loser-readme",
+          "item_revision": 1,
+          "filename": "README",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Incoming/atlas/README",
+            "display_path": "DEMO:/SandboxRoot/Incoming/atlas/README"
+          },
+          "size_bytes": 512,
+          "modified_at": "2031-05-10T09:45:02Z",
+          "source_ready": true
+        }
+      ]
+    },
+    {
+      "selection_id": "selection-batch-atlas-retry",
+      "owner": "worker1",
+      "company": "atlas",
+      "mode": "EXPLICIT",
+      "q_ids": [
+        "Q-029"
+      ],
+      "snapshot": {
+        "selection_id": "selection-batch-atlas-retry",
+        "company_id": "company-demo-atlas",
+        "mode": "EXPLICIT",
+        "selected_count": 1,
+        "created_at": "2031-05-10T09:56:00Z",
+        "expires_at": "2031-05-10T10:01:00Z",
+        "queue_generation": "queue-generation-atlas-120"
+      },
+      "members": [
+        {
+          "item_id": "retry-invoice-pdf",
+          "item_revision": 1,
+          "filename": "invoice-retry.pdf",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Data/invoice-retry.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/invoice-retry.pdf"
+          },
+          "size_bytes": 1024,
+          "modified_at": "2031-05-10T09:55:00Z",
+          "source_ready": true
+        }
+      ]
+    }
+  ],
+  "isolated_batches": [
+    {
+      "batch_id": "batch-overlap-winner",
+      "q_ids": [
+        "Q-028",
+        "Q-030"
+      ],
+      "selection": {
+        "isolated": "selection-overlap-worker1"
+      },
+      "execution_mode": "DIRECT",
+      "preview_id": null,
+      "rule_set_id": "rule-set-atlas-published",
+      "owner": "worker1",
+      "status": "COMPLETED",
+      "created_at": "2031-05-10T09:50:29Z",
+      "started_at": "2031-05-10T09:50:30Z",
+      "finished_at": "2031-05-10T09:50:40Z",
+      "selected_count": 2,
+      "completed_count": 2,
+      "counts": {
+        "sorted": 2,
+        "manual_review": 0,
+        "requires_decision": 0,
+        "quarantined": 0,
+        "skipped": 0,
+        "recovery_required": 0
+      },
+      "reason": "Overlap winner: worker1 atomically claims the shared file and moves both its shared and independent safe item; the claim does not change the shared content revision.",
+      "pages": [
+        {
+          "page_id": "batch-overlap-winner-page1",
+          "next_cursor": null,
+          "rows": [
+            {
+              "item_id": "overlap-shared-pdf",
+              "item_revision": 1,
+              "state": "SORTED",
+              "reason_code": null,
+              "matched_rule": {
+                "dictionary_id": "dictionary-atlas-invoices",
+                "version_id": "version-atlas-invoices-v1",
+                "rule_id": "rule-atlas-invoices-pdf"
+              },
+              "planned_target": "auto",
+              "actual": "planned",
+              "started_at": "2031-05-10T09:50:32Z",
+              "finished_at": "2031-05-10T09:50:35Z"
+            },
+            {
+              "item_id": "overlap-winner-safe-txt",
+              "item_revision": 1,
+              "state": "SORTED",
+              "reason_code": null,
+              "matched_rule": {
+                "dictionary_id": "dictionary-atlas-invoices",
+                "version_id": "version-atlas-invoices-v1",
+                "rule_id": "rule-atlas-invoices-upper"
+              },
+              "planned_target": "auto",
+              "actual": "planned",
+              "started_at": "2031-05-10T09:50:32Z",
+              "finished_at": "2031-05-10T09:50:34Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "batch_id": "batch-overlap-loser",
+      "q_ids": [
+        "Q-028",
+        "Q-030",
+        "Q-029"
+      ],
+      "selection": {
+        "isolated": "selection-overlap-worker2"
+      },
+      "execution_mode": "DIRECT",
+      "preview_id": null,
+      "rule_set_id": "rule-set-atlas-published",
+      "owner": "worker2",
+      "status": "COMPLETED_WITH_ISSUES",
+      "created_at": "2031-05-10T09:50:30Z",
+      "started_at": "2031-05-10T09:50:31Z",
+      "finished_at": "2031-05-10T09:50:40Z",
+      "selected_count": 2,
+      "completed_count": 2,
+      "counts": {
+        "sorted": 1,
+        "manual_review": 0,
+        "requires_decision": 0,
+        "quarantined": 0,
+        "skipped": 1,
+        "recovery_required": 0
+      },
+      "reason": "Overlap loser: worker2 sees the shared file already claimed, performs no second move for it (SKIPPED/ALREADY_PROCESSING) and still sorts its independent safe item.",
+      "pages": [
+        {
+          "page_id": "batch-overlap-loser-page1",
+          "next_cursor": null,
+          "rows": [
+            {
+              "item_id": "overlap-shared-pdf",
+              "item_revision": 1,
+              "state": "SKIPPED",
+              "reason_code": "ALREADY_PROCESSING",
+              "matched_rule": {
+                "dictionary_id": "dictionary-atlas-invoices",
+                "version_id": "version-atlas-invoices-v1",
+                "rule_id": "rule-atlas-invoices-pdf"
+              },
+              "planned_target": "auto",
+              "actual": "null",
+              "started_at": "2031-05-10T09:50:33Z",
+              "finished_at": "2031-05-10T09:50:34Z"
+            },
+            {
+              "item_id": "overlap-loser-readme",
+              "item_revision": 1,
+              "state": "SORTED",
+              "reason_code": null,
+              "matched_rule": {
+                "dictionary_id": "dictionary-atlas-general",
+                "version_id": "version-atlas-general-v1",
+                "rule_id": "rule-atlas-general-readme"
+              },
+              "planned_target": "auto",
+              "actual": "planned",
+              "started_at": "2031-05-10T09:50:33Z",
+              "finished_at": "2031-05-10T09:50:34Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "batch_id": "batch-atlas-retry",
+      "q_ids": [
+        "Q-029"
+      ],
+      "selection": {
+        "isolated": "selection-batch-atlas-retry"
+      },
+      "execution_mode": "DIRECT",
+      "preview_id": null,
+      "rule_set_id": "rule-set-atlas-published",
+      "owner": "worker1",
+      "status": "COMPLETED",
+      "created_at": "2031-05-10T09:56:30Z",
+      "started_at": "2031-05-10T09:56:31Z",
+      "finished_at": "2031-05-10T09:56:35Z",
+      "selected_count": 1,
+      "completed_count": 1,
+      "counts": {
+        "sorted": 1,
+        "manual_review": 0,
+        "requires_decision": 0,
+        "quarantined": 0,
+        "skipped": 0,
+        "recovery_required": 0
+      },
+      "reason": "A corrected manual retry after the failed preflight uses a new Idempotency-Key and a new selection and therefore produces a new batch and a new attempt.",
+      "pages": [
+        {
+          "page_id": "batch-atlas-retry-page1",
+          "next_cursor": null,
+          "rows": [
+            {
+              "item_id": "retry-invoice-pdf",
+              "item_revision": 1,
+              "state": "SORTED",
+              "reason_code": null,
+              "matched_rule": {
+                "dictionary_id": "dictionary-atlas-invoices",
+                "version_id": "version-atlas-invoices-v1",
+                "rule_id": "rule-atlas-invoices-invoice"
+              },
+              "planned_target": "auto",
+              "actual": "planned",
+              "started_at": "2031-05-10T09:56:32Z",
+              "finished_at": "2031-05-10T09:56:33Z"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "batch_errors": [
+    {
+      "error_id": "BS-ERR-IDEMPOTENCY-KEY-REUSED",
+      "operation": "createSortingBatch",
+      "status": 409,
+      "code": "IDEMPOTENCY_KEY_REUSED",
+      "message": "Идемпотентный ключ уже связан с другим телом запроса.",
+      "request_id": "request-demo-batch-04",
+      "operation_id": null,
+      "retryable": false,
+      "field_errors": [],
+      "reason": "API §2/§8: the same user/operation/key with a different body must be rejected before a second batch is created."
+    }
+  ],
+  "scenarios": [
+    {
+      "scenario_id": "SCN-IDEM-REPLAY-DIRECT",
+      "category": "IDEMPOTENCY",
+      "q_ids": [
+        "Q-029",
+        "Q-030"
+      ],
+      "title": "Lost response then replay after snapshot expiry returns the same DIRECT batch",
+      "reason": "API §2: the existing-key check runs before the dependency-expiry check, so a lost 202 recovers the original durable batch without a second attempt even after the snapshot TTL passed.",
+      "actor": "worker1",
+      "key_id": "KEY-IDEM-DIRECT",
+      "idempotency_key": "11111111-1111-4111-8111-111111111111",
+      "operation": "createSortingBatch",
+      "body": {
+        "selection_id": "selection-atlas-allmatching-120",
+        "execution_mode": "DIRECT"
+      },
+      "fault": {
+        "fault_id": "FAULT-RESPONSE-LOST-DIRECT",
+        "kind": "response_lost",
+        "at": "2031-05-10T09:35:00Z",
+        "setup": "Logical: the server durably accepts the batch and returns 202, but the client never observes the response and issues no automatic retry.",
+        "no_outside_access": true
+      },
+      "accepted_batch_id": "batch-atlas-direct-fresh",
+      "replays": [
+        {
+          "replay_id": "REPLAY-DIRECT-AFTER-LOSS",
+          "at": "2031-05-10T09:35:05Z",
+          "timing": "before_dependency_expiry",
+          "same_key": true,
+          "same_user": true,
+          "same_body": true,
+          "expected": {
+            "http": 202,
+            "result": "BATCH",
+            "batch_id": "batch-atlas-direct-fresh",
+            "same_batch": true,
+            "new_attempts": 0
+          }
+        },
+        {
+          "replay_id": "REPLAY-DIRECT-AFTER-SNAPSHOT-EXPIRY",
+          "at": "2031-05-10T09:40:00Z",
+          "timing": "after_snapshot_expiry",
+          "same_key": true,
+          "same_user": true,
+          "same_body": true,
+          "expected": {
+            "http": 202,
+            "result": "BATCH",
+            "batch_id": "batch-atlas-direct-fresh",
+            "same_batch": true,
+            "new_attempts": 0
+          }
+        }
+      ],
+      "expected_audit": [
+        "AUD-BATCH-ACCEPT-DIRECT"
+      ]
+    },
+    {
+      "scenario_id": "SCN-IDEM-REPLAY-PREVIEWED",
+      "category": "IDEMPOTENCY",
+      "q_ids": [
+        "Q-029",
+        "Q-030"
+      ],
+      "title": "Lost response then replay after preview expiry returns the same PREVIEWED batch",
+      "reason": "API §2: a PREVIEWED batch is recovered with the original key even after the preview TTL passed; the key check precedes STALE_PREVIEW evaluation.",
+      "actor": "worker1",
+      "key_id": "KEY-IDEM-PREVIEWED",
+      "idempotency_key": "22222222-2222-4222-8222-222222222222",
+      "operation": "createSortingBatch",
+      "body": {
+        "selection_id": "selection-atlas-allmatching-120",
+        "execution_mode": "PREVIEWED",
+        "preview_id": "preview-atlas-allmatching-120"
+      },
+      "fault": {
+        "fault_id": "FAULT-RESPONSE-LOST-PREVIEWED",
+        "kind": "response_lost",
+        "at": "2031-05-10T09:35:00Z",
+        "setup": "Logical: the durable PREVIEWED acceptance is not observed by the client; no second preview is created.",
+        "no_outside_access": true
+      },
+      "accepted_batch_id": "batch-atlas-previewed-fresh",
+      "replays": [
+        {
+          "replay_id": "REPLAY-PREVIEWED-AFTER-LOSS",
+          "at": "2031-05-10T09:35:05Z",
+          "timing": "before_dependency_expiry",
+          "same_key": true,
+          "same_user": true,
+          "same_body": true,
+          "expected": {
+            "http": 202,
+            "result": "BATCH",
+            "batch_id": "batch-atlas-previewed-fresh",
+            "same_batch": true,
+            "new_attempts": 0
+          }
+        },
+        {
+          "replay_id": "REPLAY-PREVIEWED-AFTER-PREVIEW-EXPIRY",
+          "at": "2031-05-10T09:40:00Z",
+          "timing": "after_preview_expiry",
+          "same_key": true,
+          "same_user": true,
+          "same_body": true,
+          "expected": {
+            "http": 202,
+            "result": "BATCH",
+            "batch_id": "batch-atlas-previewed-fresh",
+            "same_batch": true,
+            "new_attempts": 0
+          }
+        }
+      ],
+      "expected_audit": [
+        "AUD-BATCH-ACCEPT-PREVIEWED"
+      ]
+    },
+    {
+      "scenario_id": "SCN-IDEM-MODIFIED-BODY",
+      "category": "IDEMPOTENCY",
+      "q_ids": [
+        "Q-029"
+      ],
+      "title": "Same key with a modified body is 409 IDEMPOTENCY_KEY_REUSED",
+      "reason": "API §2/§8: the key is bound to the user, operation and body hash; a different body with the same key must not create or return a batch.",
+      "actor": "worker1",
+      "key_id": "KEY-IDEM-DIRECT",
+      "idempotency_key": "11111111-1111-4111-8111-111111111111",
+      "operation": "createSortingBatch",
+      "original_body": {
+        "selection_id": "selection-atlas-allmatching-120",
+        "execution_mode": "DIRECT"
+      },
+      "original_batch_id": "batch-atlas-direct-fresh",
+      "modified_body": {
+        "selection_id": "selection-atlas-allmatching-120",
+        "execution_mode": "PREVIEWED",
+        "preview_id": "preview-atlas-allmatching-120"
+      },
+      "expected": {
+        "http": 409,
+        "result": "ERROR",
+        "code": "IDEMPOTENCY_KEY_REUSED",
+        "error_id": "BS-ERR-IDEMPOTENCY-KEY-REUSED",
+        "same_key": true,
+        "body_modified": true,
+        "batch_created": false,
+        "new_attempts": 0
+      },
+      "expected_audit": [
+        "AUD-BATCH-ACCEPT-DIRECT"
+      ]
+    },
+    {
+      "scenario_id": "SCN-IDEM-DIFFERENT-USER-SCOPE",
+      "category": "IDEMPOTENCY",
+      "q_ids": [
+        "Q-029",
+        "Q-030"
+      ],
+      "title": "The same key string is a separate scope for another user",
+      "reason": "API §2: the key is bound to user_id, so another user reusing the same string is not IDEMPOTENCY_KEY_REUSED and gets that user's own batch.",
+      "key_id": "KEY-IDEM-DIRECT",
+      "idempotency_key": "11111111-1111-4111-8111-111111111111",
+      "operation": "createSortingBatch",
+      "original_actor": "worker1",
+      "original_body": {
+        "selection_id": "selection-atlas-allmatching-120",
+        "execution_mode": "DIRECT"
+      },
+      "original_batch_id": "batch-atlas-direct-fresh",
+      "scoped_actor": "worker2",
+      "scoped_body": {
+        "selection_id": "selection-overlap-worker2",
+        "execution_mode": "DIRECT"
+      },
+      "scoped_batch_id": "batch-overlap-loser",
+      "expected": {
+        "http": 202,
+        "result": "BATCH",
+        "separate_scope": true,
+        "idempotency_conflict": false,
+        "same_key_string": true,
+        "batch_id": "batch-overlap-loser"
+      },
+      "replay": {
+        "replay_id": "REPLAY-SCOPE-WORKER2",
+        "at": "2031-05-10T09:51:10Z",
+        "same_key": true,
+        "same_user": true,
+        "same_body": true,
+        "expected": {
+          "http": 202,
+          "result": "BATCH",
+          "batch_id": "batch-overlap-loser",
+          "same_batch": true,
+          "new_attempts": 0
+        }
+      },
+      "expected_audit": [
+        "AUD-BATCH-ACCEPT-DIRECT",
+        "AUD-BATCH-ACCEPT-OVERLAP-LOSER"
+      ]
+    },
+    {
+      "scenario_id": "SCN-MANUAL-RETRY-NEW-KEY",
+      "category": "IDEMPOTENCY",
+      "q_ids": [
+        "Q-029"
+      ],
+      "title": "A corrected manual retry uses a new key and produces a new attempt",
+      "reason": "QUEUE-09/API §2: a new manual run after an error condition uses a new key; it is not a replay of the failed request and must not reuse the old attempt.",
+      "actor": "worker1",
+      "operation": "createSortingBatch",
+      "first": {
+        "key_id": "KEY-RETRY-OLD",
+        "idempotency_key": "55555555-5555-4555-8555-555555555555",
+        "body": {
+          "selection_id": "selection-atlas-allmatching-120",
+          "execution_mode": "DIRECT"
+        },
+        "expected": {
+          "http": 409,
+          "result": "ERROR",
+          "code": "SELECTION_CHANGED",
+          "error_id": "PF-ERR-BATCH-CHANGED",
+          "batch_created": false,
+          "attempts": []
+        }
+      },
+      "retry": {
+        "key_id": "KEY-RETRY-NEW",
+        "idempotency_key": "66666666-6666-4666-8666-666666666666",
+        "body": {
+          "selection_id": "selection-batch-atlas-retry",
+          "execution_mode": "DIRECT"
+        },
+        "expected": {
+          "http": 202,
+          "result": "BATCH",
+          "batch_id": "batch-atlas-retry",
+          "new_key": true,
+          "new_attempt": true,
+          "attempts": [
+            "attempt-batch-atlas-retry-retry-invoice-pdf"
+          ]
+        }
+      },
+      "expected_audit": [
+        "AUD-BATCH-ACCEPT-RETRY",
+        "AUD-ATTEMPT-RETRY-FINISH"
+      ]
+    },
+    {
+      "scenario_id": "SCN-OVERLAP-TWO-ACTORS",
+      "category": "OVERLAP",
+      "q_ids": [
+        "Q-028",
+        "Q-030"
+      ],
+      "title": "Two actors overlap on one item plus independent safe items",
+      "reason": "QUEUE-07/API §8: an atomic claim permits at most one real execution; the loser records SKIPPED/ALREADY_PROCESSING with no second move while both independent safe items continue. The claim does not change the content revision.",
+      "shared_item_id": "overlap-shared-pdf",
+      "winner": {
+        "actor": "worker1",
+        "batch_id": "batch-overlap-winner",
+        "selection_id": "selection-overlap-worker1",
+        "claim_at": "2031-05-10T09:50:32Z",
+        "body": {
+          "selection_id": "selection-overlap-worker1",
+          "execution_mode": "DIRECT"
+        }
+      },
+      "loser": {
+        "actor": "worker2",
+        "batch_id": "batch-overlap-loser",
+        "selection_id": "selection-overlap-worker2",
+        "claim_at": "2031-05-10T09:50:33Z",
+        "body": {
+          "selection_id": "selection-overlap-worker2",
+          "execution_mode": "DIRECT"
+        }
+      },
+      "independent_safe_items": {
+        "winner": [
+          "overlap-winner-safe-txt"
+        ],
+        "loser": [
+          "overlap-loser-readme"
+        ]
+      },
+      "synchronization": {
+        "barrier_id": "BARRIER-CLAIM-WINNER-FIRST",
+        "label": "synchronized-overlap",
+        "before": "winner_claim",
+        "after": "loser_attempt",
+        "at": "2031-05-10T09:50:32Z",
+        "setup": "Logical temporal barrier: the winner claim is committed before the loser attempt, so the loser must observe the active claim."
+      },
+      "expected": {
+        "shared_claim_count": 1,
+        "winner_shared_state": "SORTED",
+        "loser_shared_state": "SKIPPED",
+        "loser_shared_reason": "ALREADY_PROCESSING",
+        "loser_shared_actual_location": null,
+        "second_move": false,
+        "content_revision_unchanged_by_claim": true,
+        "winner_safe_state": "SORTED",
+        "loser_safe_state": "SORTED",
+        "loser_batch_status": "COMPLETED_WITH_ISSUES",
+        "winner_batch_status": "COMPLETED"
+      },
+      "expected_audit": [
+        "AUD-BATCH-ACCEPT-OVERLAP-WINNER",
+        "AUD-BATCH-ACCEPT-OVERLAP-LOSER",
+        "AUD-ATTEMPT-WINNER-SHARED-START",
+        "AUD-ATTEMPT-WINNER-SHARED-FINISH",
+        "AUD-ATTEMPT-LOSER-SHARED-START",
+        "AUD-ATTEMPT-LOSER-SHARED-FINISH"
+      ]
+    },
+    {
+      "scenario_id": "SCN-SOURCE-CHANGE-BEFORE-AFTER",
+      "category": "SOURCE_CHANGE",
+      "q_ids": [
+        "Q-028",
+        "Q-029"
+      ],
+      "title": "A source change is a pre-batch refusal before acceptance and a per-file skip after it",
+      "reason": "API §8: changed sources reject DIRECT (SELECTION_CHANGED) and stale PREVIEWED (STALE_PREVIEW) before any batch or file operation; after durable acceptance the old identity is not moved and the file returns to WAITING_READY.",
+      "before_acceptance": [
+        {
+          "ref": "PF-DIRECT-SOURCE-CHANGED",
+          "execution_mode": "DIRECT",
+          "http": 409,
+          "code": "SELECTION_CHANGED",
+          "batch_created": false,
+          "file_operations": false
+        },
+        {
+          "ref": "PF-PREVIEWED-SOURCE-CHANGED",
+          "execution_mode": "PREVIEWED",
+          "http": 409,
+          "code": "STALE_PREVIEW",
+          "batch_created": false,
+          "file_operations": false
+        }
+      ],
+      "after_acceptance": {
+        "batch_id": "batch-atlas-technical",
+        "item_id": "batch-tech-skip-changed",
+        "state": "SKIPPED",
+        "reason_code": "SOURCE_CHANGED",
+        "actual_location": null,
+        "mutation": "none",
+        "expected_queue_status": "WAITING_READY",
+        "return_to_waiting_ready": true
+      },
+      "faults": [
+        {
+          "fault_id": "FAULT-SOURCE-CHANGED-BEFORE",
+          "kind": "source_changed_before_acceptance",
+          "at": "2031-05-10T09:34:59Z",
+          "setup": "Logical: the source revision changes after the snapshot/preview and before the batch request; the server rechecks before acceptance.",
+          "no_outside_access": true
+        },
+        {
+          "fault_id": "FAULT-SOURCE-CHANGED-AFTER",
+          "kind": "source_changed_after_acceptance",
+          "at": "2031-05-10T09:40:02Z",
+          "setup": "Logical: the source changes after durable acceptance and before the per-file operation; no operation is performed with the old identity.",
+          "no_outside_access": true
+        }
+      ],
+      "expected_audit": [
+        "AUD-ATTEMPT-SKIP-CHANGED-START",
+        "AUD-ATTEMPT-SKIP-CHANGED-FINISH"
+      ]
+    },
+    {
+      "scenario_id": "SCN-LOGOUT-RELOAD-CONTINUE",
+      "category": "CONTINUATION",
+      "q_ids": [
+        "Q-030"
+      ],
+      "title": "Logout, reload and a new viewer keep the accepted batch and its author",
+      "reason": "AUTH-03/QUEUE-08: an accepted batch keeps running with its original author after logout/reload, is readable by a new viewer, and cannot be cancelled or recreated by that viewer.",
+      "accepted_batch_id": "batch-atlas-direct-fresh",
+      "author": "worker1",
+      "new_viewer": "worker2",
+      "steps": [
+        {
+          "step_id": "STEP-LOGOUT",
+          "kind": "LOGOUT",
+          "actor": "worker1",
+          "at": "2031-05-10T09:36:00Z",
+          "expected": {
+            "http": 204,
+            "session_ended": true,
+            "batch_cancelled": false
+          }
+        },
+        {
+          "step_id": "STEP-RELOAD-READ",
+          "kind": "READ",
+          "actor": "worker2",
+          "at": "2031-05-10T09:36:10Z",
+          "operation": "getSortingBatch",
+          "expected": {
+            "http": 200,
+            "batch_id": "batch-atlas-direct-fresh",
+            "author": "worker1",
+            "author_unchanged": true
+          }
+        },
+        {
+          "step_id": "STEP-LIST",
+          "kind": "READ",
+          "actor": "worker2",
+          "at": "2031-05-10T09:36:11Z",
+          "operation": "listSortingBatches",
+          "expected": {
+            "http": 200,
+            "contains_batch": "batch-atlas-direct-fresh"
+          }
+        },
+        {
+          "step_id": "STEP-CANCEL-ABSENT",
+          "kind": "ABSENT_OPERATION",
+          "actor": "worker2",
+          "at": "2031-05-10T09:36:12Z",
+          "expected": {
+            "cancel_operation_available": false,
+            "new_viewer_is_author": false,
+            "batch_cancelled": false,
+            "new_batch_created": false
+          }
+        }
+      ],
+      "expected_audit": [
+        "AUD-BATCH-ACCEPT-DIRECT",
+        "AUD-LOGOUT-SYSTEM"
+      ]
+    },
+    {
+      "scenario_id": "SCN-LATE-TARGET-AFTER-PREFLIGHT",
+      "category": "LATE_TARGET",
+      "q_ids": [
+        "Q-032"
+      ],
+      "title": "A target that appears after acceptance keeps the source and the existing object",
+      "reason": "FILE-01/02/08/API §8: the per-file move is no-replace; a target created after the plan is fixed yields REQUIRES_DECISION/TARGET_OCCUPIED, leaves the source in incoming and never overwrites the existing object.",
+      "after_acceptance_of": "batch-atlas-hetero",
+      "fault": {
+        "fault_id": "FAULT-TARGET-CREATED-AFTER-PREFLIGHT",
+        "kind": "target_created_after_preflight",
+        "at": "2031-05-10T09:37:02Z",
+        "setup": "Logical: an unrelated operation creates the planned target after the plan is fixed and before the per-file move.",
+        "no_outside_access": true
+      },
+      "outcome": {
+        "batch_id": "batch-atlas-hetero",
+        "item_id": "preview-atlas-occupied-report",
+        "state": "REQUIRES_DECISION",
+        "reason_code": "TARGET_OCCUPIED"
+      },
+      "existing_object_id": "existing-atlas-report-target",
+      "expected": {
+        "move_no_replace": true,
+        "existing_unchanged": true,
+        "source_preserved": true,
+        "actual_location_equals_source": true,
+        "replacement_button": false
+      },
+      "expected_audit": [
+        "AUD-ATTEMPT-LATE-TARGET-FINISH"
+      ]
+    },
+    {
+      "scenario_id": "SCN-DUPLICATE-TARGET-REVERSED",
+      "category": "DUPLICATE_TARGET",
+      "q_ids": [
+        "Q-031"
+      ],
+      "title": "Reversing the input order does not select a duplicate-target winner",
+      "reason": "FILE-03/QUEUE-10: every participant of a shared still-free canonical target gets REQUIRES_DECISION/TARGET_OCCUPIED; processing order never selects a winner and the independent safe file still passes.",
+      "batch_id": "batch-atlas-hetero",
+      "group_id": "DUP-batch-atlas-hetero-invoice",
+      "runs": [
+        {
+          "run_id": "RUN-AB",
+          "input_order": [
+            "preview-atlas-invoice-a",
+            "preview-atlas-invoice-b"
+          ]
+        },
+        {
+          "run_id": "RUN-BA",
+          "input_order": [
+            "preview-atlas-invoice-b",
+            "preview-atlas-invoice-a"
+          ]
+        }
+      ],
+      "independent_safe_file": "preview-atlas-move-upper",
+      "expected": {
+        "all_participants": "REQUIRES_DECISION",
+        "all_reasons": "TARGET_OCCUPIED",
+        "winner": null,
+        "source_checksums_unchanged": true,
+        "independent_safe_state": "SORTED"
+      },
+      "expected_audit": [
+        "AUD-ATTEMPT-DUP-A-FINISH",
+        "AUD-ATTEMPT-DUP-B-FINISH"
+      ]
+    },
+    {
+      "scenario_id": "SCN-RESTART-THREE-POINTS",
+      "category": "RESTART",
+      "q_ids": [
+        "Q-040"
+      ],
+      "title": "Durable intent across restart before mutation, after proven commit and when ambiguous",
+      "reason": "FILE-09/API §8: intent/phases are persisted before the file action; a proven outcome is recovered without a second move, while an ambiguous placement stays RECOVERY_REQUIRED with no blind retry. These are declared durable-intent requirements, not live restart evidence.",
+      "live_evidence": false,
+      "points": [
+        {
+          "point_id": "RESTART-BEFORE-MUTATION",
+          "batch_id": "batch-atlas-direct-fresh",
+          "phase": "accepted_before_file_operation",
+          "durable_intent": [
+            "INTENT_RECORDED"
+          ],
+          "expected": {
+            "intent_survives_restart": true,
+            "final_results": 1,
+            "second_move": false,
+            "blind_retry": false,
+            "replay_returns_same_batch": true
+          }
+        },
+        {
+          "point_id": "RESTART-AFTER-PROVEN-COMMIT",
+          "batch_id": "batch-atlas-sorted",
+          "phase": "confirmed_move",
+          "durable_intent": [
+            "INTENT_RECORDED",
+            "PHASE_PREPARED",
+            "PHASE_APPLIED",
+            "PHASE_CONFIRMED"
+          ],
+          "expected": {
+            "intent_survives_restart": true,
+            "final_results": 1,
+            "second_move": false,
+            "blind_retry": false,
+            "proven_outcome_recovered": true
+          }
+        },
+        {
+          "point_id": "RESTART-AMBIGUOUS",
+          "batch_id": "batch-atlas-technical",
+          "phase": "ambiguous",
+          "durable_intent": [
+            "INTENT_RECORDED",
+            "PHASE_PREPARED"
+          ],
+          "expected": {
+            "intent_survives_restart": true,
+            "final_results": "RECOVERY_REQUIRED",
+            "blind_retry": false,
+            "registered_operation_id": true,
+            "finished_at": null
+          }
+        }
+      ],
+      "ambiguous_outcomes": [
+        "batch-tech-recovery-unknown",
+        "batch-tech-recovery-known"
+      ],
+      "expected_audit": [
+        "AUD-RECOVERY-REQUIRED"
+      ]
+    },
+    {
+      "scenario_id": "SCN-CONTAINMENT-Q044",
+      "category": "CONTAINMENT",
+      "q_ids": [
+        "Q-044"
+      ],
+      "title": "Containment, foreign scope, invalid path and link replacement use only declared errors",
+      "reason": "FILE-08/API §11: before a batch the server refuses unknown/foreign/invalid targets with the error codes the operation declares; after acceptance a link replacement is a per-file outcome. Every fault is a logical setup, never access outside the synthetic sandbox.",
+      "no_outside_access": true,
+      "before_batch": [
+        {
+          "case_id": "CONT-UNKNOWN-SELECTION",
+          "operation": "createSortingBatch",
+          "fault_setup": "Logical: a syntactically valid but unknown selection id is used by an authenticated worker.",
+          "no_outside_access": true,
+          "expected": {
+            "http": 404,
+            "result": "ERROR",
+            "code": "NOT_FOUND",
+            "error_ref": "PF-ERR-BATCH-NOT-FOUND",
+            "batch_created": false,
+            "file_operations": false
+          },
+          "request": {
+            "selection_id": "selection-unknown",
+            "execution_mode": "DIRECT"
+          }
+        },
+        {
+          "case_id": "CONT-FOREIGN-USER-SELECTION",
+          "operation": "createSortingBatch",
+          "fault_setup": "Logical: another authenticated user uses a selection bound to a different user_id.",
+          "no_outside_access": true,
+          "expected": {
+            "http": 403,
+            "result": "ERROR",
+            "code": "FORBIDDEN",
+            "error_ref": "PF-ERR-BATCH-FORBIDDEN",
+            "batch_created": false,
+            "file_operations": false
+          },
+          "request": {
+            "selection_id": "selection-overlap-worker1",
+            "execution_mode": "DIRECT"
+          }
+        },
+        {
+          "case_id": "CONT-INVALID-TARGET",
+          "operation": "resolveTargetDirectory",
+          "fault_setup": "Logical: a display path under the allowed root points at a directory that is not in the configured target list.",
+          "no_outside_access": true,
+          "expected": {
+            "http": 422,
+            "result": "ERROR",
+            "code": "INVALID_TARGET",
+            "target_scenario": "TARGET-Q044-MISSING-DIRECTORY",
+            "batch_created": false
+          },
+          "request": {
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/NoSuchDir"
+          }
+        },
+        {
+          "case_id": "CONT-PATH-OUTSIDE-ROOT",
+          "operation": "resolveTargetDirectory",
+          "fault_setup": "Logical: a display path with a prefix other than the allowed sandbox root.",
+          "no_outside_access": true,
+          "expected": {
+            "http": 422,
+            "result": "ERROR",
+            "code": "PATH_OUTSIDE_ROOT",
+            "target_scenario": "TARGET-Q044-PATH-OUTSIDE-ROOT",
+            "batch_created": false
+          },
+          "request": {
+            "display_path": "DEMO:/OtherSandbox/Archive/Atlas"
+          }
+        },
+        {
+          "case_id": "CONT-INVALID-RELATIVE-PATH",
+          "operation": "resolveTargetDirectory",
+          "fault_setup": "Logical: a malformed relative path with an empty segment.",
+          "no_outside_access": true,
+          "expected": {
+            "http": 422,
+            "result": "ERROR",
+            "code": "VALIDATION_ERROR",
+            "target_scenario": "TARGET-Q044-INVALID-RELATIVE-PATH",
+            "batch_created": false
+          },
+          "request": {
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas//Reports"
+          }
+        },
+        {
+          "case_id": "CONT-FOREIGN-COMPANY-SELECTION",
+          "operation": "createSortingBatch",
+          "fault_setup": "Logical: an authenticated Atlas worker uses a selection/preview pair that belongs to another company.",
+          "request": {
+            "selection_id": "selection-preview-nova-foreign",
+            "execution_mode": "PREVIEWED",
+            "preview_id": "preview-nova-foreign"
+          },
+          "no_outside_access": true,
+          "expected": {
+            "http": 409,
+            "result": "ERROR",
+            "code": "INVALID_STATE",
+            "error_ref": "PF-ERR-BATCH-INVALID-STATE",
+            "batch_created": false,
+            "file_operations": false
+          }
+        },
+        {
+          "case_id": "CONT-FOREIGN-COMPANY-TARGET",
+          "operation": "resolveTargetDirectory",
+          "fault_setup": "Logical: a display path resolves to a configured target of another company.",
+          "request": {
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports"
+          },
+          "no_outside_access": true,
+          "expected": {
+            "http": 422,
+            "result": "ERROR",
+            "code": "INVALID_TARGET",
+            "target_scenario": "TARGET-Q044-WRONG-COMPANY-TARGET",
+            "batch_created": false
+          }
+        }
+      ],
+      "after_batch": [
+        {
+          "case_id": "CONT-LINK-REPLACEMENT-CONFIRMED",
+          "operation": "createSortingBatch",
+          "fault_setup": "Logical: a link replaces the source between the identity check and the move; the server detects the identity mismatch and performs only a confirmed containment move inside the sandbox.",
+          "no_outside_access": true,
+          "expected": {
+            "http": 200,
+            "result": "OUTCOME",
+            "outcome": {
+              "batch_id": "batch-atlas-technical",
+              "item_id": "batch-tech-quarantine",
+              "state": "QUARANTINED",
+              "reason_code": "TECHNICAL_ERROR"
+            },
+            "outside_access": false,
+            "blind_retry": false
+          }
+        },
+        {
+          "case_id": "CONT-LINK-REPLACEMENT-AMBIGUOUS",
+          "operation": "createSortingBatch",
+          "fault_setup": "Logical: a link swap makes the placement ambiguous and no safe containment is proven.",
+          "no_outside_access": true,
+          "exact_recovery_available": false,
+          "expected": {
+            "http": 200,
+            "result": "OUTCOME",
+            "outcome": {
+              "batch_id": "batch-atlas-technical",
+              "item_id": "batch-tech-recovery-known",
+              "state": "RECOVERY_REQUIRED",
+              "reason_code": "RECOVERY_REQUIRED"
+            },
+            "outside_access": false,
+            "blind_retry": false,
+            "invented_outcome": false
+          }
+        }
+      ],
+      "expected_audit": [
+        "AUD-ATTEMPT-QUARANTINE-FINISH",
+        "AUD-RECOVERY-REQUIRED"
+      ]
+    }
+  ],
+  "audit_expectations": [
+    {
+      "audit_id": "AUD-BATCH-ACCEPT-DIRECT",
+      "scenario_id": "SCN-IDEM-REPLAY-DIRECT",
+      "phase": "ACCEPT",
+      "action": "BATCH_ACCEPTED",
+      "category": "BUSINESS",
+      "result": "SUCCESS",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-01",
+      "operation_id": "batch-atlas-direct-fresh",
+      "source_attempt_id": null,
+      "batch_id": "batch-atlas-direct-fresh",
+      "attempt_id": null,
+      "item_id": null,
+      "unique_key": "batch-atlas-direct-fresh:accepted",
+      "occurred_at": "2031-05-10T09:35:00Z"
+    },
+    {
+      "audit_id": "AUD-BATCH-ACCEPT-PREVIEWED",
+      "scenario_id": "SCN-IDEM-REPLAY-PREVIEWED",
+      "phase": "ACCEPT",
+      "action": "BATCH_ACCEPTED",
+      "category": "BUSINESS",
+      "result": "SUCCESS",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-02",
+      "operation_id": "batch-atlas-previewed-fresh",
+      "source_attempt_id": null,
+      "batch_id": "batch-atlas-previewed-fresh",
+      "attempt_id": null,
+      "item_id": null,
+      "unique_key": "batch-atlas-previewed-fresh:accepted",
+      "occurred_at": "2031-05-10T09:35:00Z"
+    },
+    {
+      "audit_id": "AUD-BATCH-ACCEPT-OVERLAP-WINNER",
+      "scenario_id": "SCN-OVERLAP-TWO-ACTORS",
+      "phase": "ACCEPT",
+      "action": "BATCH_ACCEPTED",
+      "category": "BUSINESS",
+      "result": "SUCCESS",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-10",
+      "operation_id": "batch-overlap-winner",
+      "source_attempt_id": null,
+      "batch_id": "batch-overlap-winner",
+      "attempt_id": null,
+      "item_id": null,
+      "unique_key": "batch-overlap-winner:accepted",
+      "occurred_at": "2031-05-10T09:50:29Z"
+    },
+    {
+      "audit_id": "AUD-BATCH-ACCEPT-OVERLAP-LOSER",
+      "scenario_id": "SCN-OVERLAP-TWO-ACTORS",
+      "phase": "ACCEPT",
+      "action": "BATCH_ACCEPTED",
+      "category": "BUSINESS",
+      "result": "SUCCESS",
+      "actor": "worker2",
+      "request_id": "request-demo-batch-11",
+      "operation_id": "batch-overlap-loser",
+      "source_attempt_id": null,
+      "batch_id": "batch-overlap-loser",
+      "attempt_id": null,
+      "item_id": null,
+      "unique_key": "batch-overlap-loser:accepted",
+      "occurred_at": "2031-05-10T09:50:30Z"
+    },
+    {
+      "audit_id": "AUD-ATTEMPT-WINNER-SHARED-START",
+      "scenario_id": "SCN-OVERLAP-TWO-ACTORS",
+      "phase": "ATTEMPT_START",
+      "action": "FILE_ATTEMPT_STARTED",
+      "category": "BUSINESS",
+      "result": "SUCCESS",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-10",
+      "operation_id": "attempt-batch-overlap-winner-overlap-shared-pdf",
+      "source_attempt_id": null,
+      "batch_id": "batch-overlap-winner",
+      "attempt_id": "attempt-batch-overlap-winner-overlap-shared-pdf",
+      "item_id": "overlap-shared-pdf",
+      "unique_key": "attempt-batch-overlap-winner-overlap-shared-pdf:started",
+      "occurred_at": "2031-05-10T09:50:32Z"
+    },
+    {
+      "audit_id": "AUD-ATTEMPT-WINNER-SHARED-FINISH",
+      "scenario_id": "SCN-OVERLAP-TWO-ACTORS",
+      "phase": "ATTEMPT_FINISH",
+      "action": "FILE_ATTEMPT_FINISHED",
+      "category": "BUSINESS",
+      "result": "SUCCESS",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-10",
+      "operation_id": "attempt-batch-overlap-winner-overlap-shared-pdf",
+      "source_attempt_id": null,
+      "batch_id": "batch-overlap-winner",
+      "attempt_id": "attempt-batch-overlap-winner-overlap-shared-pdf",
+      "item_id": "overlap-shared-pdf",
+      "unique_key": "attempt-batch-overlap-winner-overlap-shared-pdf:finished",
+      "occurred_at": "2031-05-10T09:50:35Z"
+    },
+    {
+      "audit_id": "AUD-ATTEMPT-LOSER-SHARED-START",
+      "scenario_id": "SCN-OVERLAP-TWO-ACTORS",
+      "phase": "ATTEMPT_START",
+      "action": "FILE_ATTEMPT_STARTED",
+      "category": "BUSINESS",
+      "result": "SUCCESS",
+      "actor": "worker2",
+      "request_id": "request-demo-batch-11",
+      "operation_id": "attempt-batch-overlap-loser-overlap-shared-pdf",
+      "source_attempt_id": null,
+      "batch_id": "batch-overlap-loser",
+      "attempt_id": "attempt-batch-overlap-loser-overlap-shared-pdf",
+      "item_id": "overlap-shared-pdf",
+      "unique_key": "attempt-batch-overlap-loser-overlap-shared-pdf:started",
+      "occurred_at": "2031-05-10T09:50:33Z"
+    },
+    {
+      "audit_id": "AUD-ATTEMPT-LOSER-SHARED-FINISH",
+      "scenario_id": "SCN-OVERLAP-TWO-ACTORS",
+      "phase": "ATTEMPT_FINISH",
+      "action": "FILE_ATTEMPT_FINISHED",
+      "category": "BUSINESS",
+      "result": "ISSUE",
+      "actor": "worker2",
+      "request_id": "request-demo-batch-11",
+      "operation_id": "attempt-batch-overlap-loser-overlap-shared-pdf",
+      "source_attempt_id": null,
+      "batch_id": "batch-overlap-loser",
+      "attempt_id": "attempt-batch-overlap-loser-overlap-shared-pdf",
+      "item_id": "overlap-shared-pdf",
+      "unique_key": "attempt-batch-overlap-loser-overlap-shared-pdf:finished",
+      "occurred_at": "2031-05-10T09:50:34Z"
+    },
+    {
+      "audit_id": "AUD-BATCH-ACCEPT-RETRY",
+      "scenario_id": "SCN-MANUAL-RETRY-NEW-KEY",
+      "phase": "ACCEPT",
+      "action": "BATCH_ACCEPTED",
+      "category": "BUSINESS",
+      "result": "SUCCESS",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-12",
+      "operation_id": "batch-atlas-retry",
+      "source_attempt_id": null,
+      "batch_id": "batch-atlas-retry",
+      "attempt_id": null,
+      "item_id": null,
+      "unique_key": "batch-atlas-retry:accepted",
+      "occurred_at": "2031-05-10T09:56:30Z"
+    },
+    {
+      "audit_id": "AUD-ATTEMPT-RETRY-FINISH",
+      "scenario_id": "SCN-MANUAL-RETRY-NEW-KEY",
+      "phase": "ATTEMPT_FINISH",
+      "action": "FILE_ATTEMPT_FINISHED",
+      "category": "BUSINESS",
+      "result": "SUCCESS",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-12",
+      "operation_id": "attempt-batch-atlas-retry-retry-invoice-pdf",
+      "source_attempt_id": null,
+      "batch_id": "batch-atlas-retry",
+      "attempt_id": "attempt-batch-atlas-retry-retry-invoice-pdf",
+      "item_id": "retry-invoice-pdf",
+      "unique_key": "attempt-batch-atlas-retry-retry-invoice-pdf:finished",
+      "occurred_at": "2031-05-10T09:56:33Z"
+    },
+    {
+      "audit_id": "AUD-ATTEMPT-SKIP-CHANGED-START",
+      "scenario_id": "SCN-SOURCE-CHANGE-BEFORE-AFTER",
+      "phase": "ATTEMPT_START",
+      "action": "FILE_ATTEMPT_STARTED",
+      "category": "BUSINESS",
+      "result": "SUCCESS",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-13",
+      "operation_id": "attempt-batch-atlas-technical-batch-tech-skip-changed",
+      "source_attempt_id": null,
+      "batch_id": "batch-atlas-technical",
+      "attempt_id": "attempt-batch-atlas-technical-batch-tech-skip-changed",
+      "item_id": "batch-tech-skip-changed",
+      "unique_key": "attempt-batch-atlas-technical-batch-tech-skip-changed:started",
+      "occurred_at": "2031-05-10T09:40:02Z"
+    },
+    {
+      "audit_id": "AUD-ATTEMPT-SKIP-CHANGED-FINISH",
+      "scenario_id": "SCN-SOURCE-CHANGE-BEFORE-AFTER",
+      "phase": "ATTEMPT_FINISH",
+      "action": "FILE_ATTEMPT_FINISHED",
+      "category": "BUSINESS",
+      "result": "ISSUE",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-13",
+      "operation_id": "attempt-batch-atlas-technical-batch-tech-skip-changed",
+      "source_attempt_id": null,
+      "batch_id": "batch-atlas-technical",
+      "attempt_id": "attempt-batch-atlas-technical-batch-tech-skip-changed",
+      "item_id": "batch-tech-skip-changed",
+      "unique_key": "attempt-batch-atlas-technical-batch-tech-skip-changed:finished",
+      "occurred_at": "2031-05-10T09:40:03Z"
+    },
+    {
+      "audit_id": "AUD-LOGOUT-SYSTEM",
+      "scenario_id": "SCN-LOGOUT-RELOAD-CONTINUE",
+      "phase": "SESSION",
+      "action": "LOGOUT",
+      "category": "SYSTEM",
+      "result": "SUCCESS",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-14",
+      "operation_id": null,
+      "source_attempt_id": null,
+      "batch_id": null,
+      "attempt_id": null,
+      "item_id": null,
+      "unique_key": "user-demo-worker-1:logout:2031-05-10T09:36:00Z",
+      "occurred_at": "2031-05-10T09:36:00Z"
+    },
+    {
+      "audit_id": "AUD-ATTEMPT-LATE-TARGET-FINISH",
+      "scenario_id": "SCN-LATE-TARGET-AFTER-PREFLIGHT",
+      "phase": "ATTEMPT_FINISH",
+      "action": "FILE_ATTEMPT_FINISHED",
+      "category": "BUSINESS",
+      "result": "ISSUE",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-15",
+      "operation_id": "attempt-batch-atlas-hetero-preview-atlas-occupied-report",
+      "source_attempt_id": null,
+      "batch_id": "batch-atlas-hetero",
+      "attempt_id": "attempt-batch-atlas-hetero-preview-atlas-occupied-report",
+      "item_id": "preview-atlas-occupied-report",
+      "unique_key": "attempt-batch-atlas-hetero-preview-atlas-occupied-report:finished",
+      "occurred_at": "2031-05-10T09:37:03Z"
+    },
+    {
+      "audit_id": "AUD-ATTEMPT-DUP-A-FINISH",
+      "scenario_id": "SCN-DUPLICATE-TARGET-REVERSED",
+      "phase": "ATTEMPT_FINISH",
+      "action": "FILE_ATTEMPT_FINISHED",
+      "category": "BUSINESS",
+      "result": "ISSUE",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-16",
+      "operation_id": "attempt-batch-atlas-hetero-preview-atlas-invoice-a",
+      "source_attempt_id": null,
+      "batch_id": "batch-atlas-hetero",
+      "attempt_id": "attempt-batch-atlas-hetero-preview-atlas-invoice-a",
+      "item_id": "preview-atlas-invoice-a",
+      "unique_key": "attempt-batch-atlas-hetero-preview-atlas-invoice-a:finished",
+      "occurred_at": "2031-05-10T09:37:03Z"
+    },
+    {
+      "audit_id": "AUD-ATTEMPT-DUP-B-FINISH",
+      "scenario_id": "SCN-DUPLICATE-TARGET-REVERSED",
+      "phase": "ATTEMPT_FINISH",
+      "action": "FILE_ATTEMPT_FINISHED",
+      "category": "BUSINESS",
+      "result": "ISSUE",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-16",
+      "operation_id": "attempt-batch-atlas-hetero-preview-atlas-invoice-b",
+      "source_attempt_id": null,
+      "batch_id": "batch-atlas-hetero",
+      "attempt_id": "attempt-batch-atlas-hetero-preview-atlas-invoice-b",
+      "item_id": "preview-atlas-invoice-b",
+      "unique_key": "attempt-batch-atlas-hetero-preview-atlas-invoice-b:finished",
+      "occurred_at": "2031-05-10T09:37:03Z"
+    },
+    {
+      "audit_id": "AUD-RECOVERY-REQUIRED",
+      "scenario_id": "SCN-RESTART-THREE-POINTS",
+      "phase": "RECOVERY",
+      "action": "RECOVERY_REQUIRED",
+      "category": "BUSINESS",
+      "result": "ISSUE",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-17",
+      "operation_id": "recovery-batch-atlas-technical-batch-tech-recovery-unknown",
+      "source_attempt_id": "attempt-batch-atlas-technical-batch-tech-recovery-unknown",
+      "batch_id": "batch-atlas-technical",
+      "attempt_id": "attempt-batch-atlas-technical-batch-tech-recovery-unknown",
+      "item_id": "batch-tech-recovery-unknown",
+      "unique_key": "attempt-batch-atlas-technical-batch-tech-recovery-unknown:recovery",
+      "occurred_at": "2031-05-10T09:40:02Z"
+    },
+    {
+      "audit_id": "AUD-ATTEMPT-QUARANTINE-FINISH",
+      "scenario_id": "SCN-CONTAINMENT-Q044",
+      "phase": "ATTEMPT_FINISH",
+      "action": "FILE_ATTEMPT_FINISHED",
+      "category": "BUSINESS",
+      "result": "ISSUE",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-18",
+      "operation_id": "attempt-batch-atlas-technical-batch-tech-quarantine",
+      "source_attempt_id": null,
+      "batch_id": "batch-atlas-technical",
+      "attempt_id": "attempt-batch-atlas-technical-batch-tech-quarantine",
+      "item_id": "batch-tech-quarantine",
+      "unique_key": "attempt-batch-atlas-technical-batch-tech-quarantine:finished",
+      "occurred_at": "2031-05-10T09:40:03Z"
+    }
+  ],
+  "links": [
+    {
+      "link_id": "SCN-LINK-IDEM-DIRECT-BATCH",
+      "relation": "equals",
+      "source": {
+        "payload": "scenario:SCN-IDEM-REPLAY-DIRECT",
+        "path": [
+          "accepted_batch_id"
+        ]
+      },
+      "target": {
+        "payload": "batch:batch-atlas-direct-fresh",
+        "path": [
+          "batch_id"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-IDEM-DIRECT-REPLAY",
+      "relation": "equals",
+      "source": {
+        "payload": "scenario:SCN-IDEM-REPLAY-DIRECT",
+        "path": [
+          "replays",
+          1,
+          "expected",
+          "batch_id"
+        ]
+      },
+      "target": {
+        "payload": "scenario:SCN-IDEM-REPLAY-DIRECT",
+        "path": [
+          "accepted_batch_id"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-IDEM-PREVIEWED-PREVIEW",
+      "relation": "equals",
+      "source": {
+        "payload": "scenario:SCN-IDEM-REPLAY-PREVIEWED",
+        "path": [
+          "body",
+          "preview_id"
+        ]
+      },
+      "target": {
+        "payload": "batch:batch-atlas-previewed-fresh",
+        "path": [
+          "preview_id"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-IDEM-SCOPE-DISTINCT",
+      "relation": "not_equals",
+      "source": {
+        "payload": "scenario:SCN-IDEM-DIFFERENT-USER-SCOPE",
+        "path": [
+          "original_batch_id"
+        ]
+      },
+      "target": {
+        "payload": "scenario:SCN-IDEM-DIFFERENT-USER-SCOPE",
+        "path": [
+          "scoped_batch_id"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-IDEM-MODIFIED-CODE",
+      "relation": "equals",
+      "source": {
+        "payload": "scenario:SCN-IDEM-MODIFIED-BODY",
+        "path": [
+          "expected",
+          "code"
+        ]
+      },
+      "target": {
+        "payload": "error:BS-ERR-IDEMPOTENCY-KEY-REUSED",
+        "path": [
+          "error",
+          "code"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-RETRY-NEW-KEY",
+      "relation": "not_equals",
+      "source": {
+        "payload": "scenario:SCN-MANUAL-RETRY-NEW-KEY",
+        "path": [
+          "first",
+          "idempotency_key"
+        ]
+      },
+      "target": {
+        "payload": "scenario:SCN-MANUAL-RETRY-NEW-KEY",
+        "path": [
+          "retry",
+          "idempotency_key"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-RETRY-BATCH",
+      "relation": "equals",
+      "source": {
+        "payload": "scenario:SCN-MANUAL-RETRY-NEW-KEY",
+        "path": [
+          "retry",
+          "expected",
+          "batch_id"
+        ]
+      },
+      "target": {
+        "payload": "batch:batch-atlas-retry",
+        "path": [
+          "batch_id"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-RETRY-ATTEMPT",
+      "relation": "equals",
+      "source": {
+        "payload": "scenario:SCN-MANUAL-RETRY-NEW-KEY",
+        "path": [
+          "retry",
+          "expected",
+          "attempts",
+          0
+        ]
+      },
+      "target": {
+        "payload": "outcome:batch-atlas-retry:retry-invoice-pdf",
+        "path": [
+          "attempt_id"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-OVERLAP-SHARED-REVISION",
+      "relation": "equals",
+      "source": {
+        "payload": "selection_member:selection-overlap-worker1:overlap-shared-pdf",
+        "path": [
+          "item_revision"
+        ]
+      },
+      "target": {
+        "payload": "selection_member:selection-overlap-worker2:overlap-shared-pdf",
+        "path": [
+          "item_revision"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-OVERLAP-SHARED-LOCATION",
+      "relation": "equals",
+      "source": {
+        "payload": "selection_member:selection-overlap-worker1:overlap-shared-pdf",
+        "path": [
+          "location"
+        ]
+      },
+      "target": {
+        "payload": "selection_member:selection-overlap-worker2:overlap-shared-pdf",
+        "path": [
+          "location"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-OVERLAP-WINNER-REVISION",
+      "relation": "equals",
+      "source": {
+        "payload": "outcome:batch-overlap-winner:overlap-shared-pdf",
+        "path": [
+          "item_revision"
+        ]
+      },
+      "target": {
+        "payload": "outcome:batch-overlap-loser:overlap-shared-pdf",
+        "path": [
+          "item_revision"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-OVERLAP-LOSER-SKIP",
+      "relation": "equals",
+      "source": {
+        "payload": "outcome:batch-overlap-loser:overlap-shared-pdf",
+        "path": [
+          "state"
+        ]
+      },
+      "target": {
+        "payload": "scenario:SCN-OVERLAP-TWO-ACTORS",
+        "path": [
+          "expected",
+          "loser_shared_state"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-OVERLAP-LOSER-REASON",
+      "relation": "equals",
+      "source": {
+        "payload": "outcome:batch-overlap-loser:overlap-shared-pdf",
+        "path": [
+          "reason_code"
+        ]
+      },
+      "target": {
+        "payload": "scenario:SCN-OVERLAP-TWO-ACTORS",
+        "path": [
+          "expected",
+          "loser_shared_reason"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-OVERLAP-LOSER-ACTUAL-NULL",
+      "relation": "is_null",
+      "source": {
+        "payload": "outcome:batch-overlap-loser:overlap-shared-pdf",
+        "path": [
+          "actual_location"
+        ]
+      },
+      "target": {
+        "payload": "constants",
+        "path": [
+          "batch_page_limit"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-OVERLAP-LOSER-BATCH",
+      "relation": "equals",
+      "source": {
+        "payload": "scenario:SCN-OVERLAP-TWO-ACTORS",
+        "path": [
+          "loser",
+          "batch_id"
+        ]
+      },
+      "target": {
+        "payload": "batch:batch-overlap-loser",
+        "path": [
+          "batch_id"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-OVERLAP-WINNER-BATCH",
+      "relation": "equals",
+      "source": {
+        "payload": "scenario:SCN-OVERLAP-TWO-ACTORS",
+        "path": [
+          "winner",
+          "batch_id"
+        ]
+      },
+      "target": {
+        "payload": "batch:batch-overlap-winner",
+        "path": [
+          "batch_id"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-SOURCE-BEFORE-DIRECT",
+      "relation": "equals",
+      "source": {
+        "payload": "scenario:SCN-SOURCE-CHANGE-BEFORE-AFTER",
+        "path": [
+          "before_acceptance",
+          0,
+          "ref"
+        ]
+      },
+      "target": {
+        "payload": "preflight:PF-DIRECT-SOURCE-CHANGED",
+        "path": [
+          "scenario_id"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-SOURCE-BEFORE-PREVIEWED",
+      "relation": "equals",
+      "source": {
+        "payload": "scenario:SCN-SOURCE-CHANGE-BEFORE-AFTER",
+        "path": [
+          "before_acceptance",
+          1,
+          "ref"
+        ]
+      },
+      "target": {
+        "payload": "preflight:PF-PREVIEWED-SOURCE-CHANGED",
+        "path": [
+          "scenario_id"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-SOURCE-AFTER-STATE",
+      "relation": "equals",
+      "source": {
+        "payload": "outcome:batch-atlas-technical:batch-tech-skip-changed",
+        "path": [
+          "state"
+        ]
+      },
+      "target": {
+        "payload": "scenario:SCN-SOURCE-CHANGE-BEFORE-AFTER",
+        "path": [
+          "after_acceptance",
+          "state"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-SOURCE-AFTER-REASON",
+      "relation": "equals",
+      "source": {
+        "payload": "outcome:batch-atlas-technical:batch-tech-skip-changed",
+        "path": [
+          "reason_code"
+        ]
+      },
+      "target": {
+        "payload": "scenario:SCN-SOURCE-CHANGE-BEFORE-AFTER",
+        "path": [
+          "after_acceptance",
+          "reason_code"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-SOURCE-AFTER-ACTUAL-NULL",
+      "relation": "is_null",
+      "source": {
+        "payload": "outcome:batch-atlas-technical:batch-tech-skip-changed",
+        "path": [
+          "actual_location"
+        ]
+      },
+      "target": {
+        "payload": "constants",
+        "path": [
+          "batch_page_limit"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-CONTINUATION-BATCH",
+      "relation": "equals",
+      "source": {
+        "payload": "scenario:SCN-LOGOUT-RELOAD-CONTINUE",
+        "path": [
+          "accepted_batch_id"
+        ]
+      },
+      "target": {
+        "payload": "batch:batch-atlas-direct-fresh",
+        "path": [
+          "batch_id"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-CONTINUATION-AUTHOR",
+      "relation": "equals",
+      "source": {
+        "payload": "scenario:SCN-LOGOUT-RELOAD-CONTINUE",
+        "path": [
+          "steps",
+          1,
+          "expected",
+          "author"
+        ]
+      },
+      "target": {
+        "payload": "scenario:SCN-LOGOUT-RELOAD-CONTINUE",
+        "path": [
+          "author"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-LATE-TARGET-OUTCOME",
+      "relation": "equals",
+      "source": {
+        "payload": "scenario:SCN-LATE-TARGET-AFTER-PREFLIGHT",
+        "path": [
+          "outcome",
+          "state"
+        ]
+      },
+      "target": {
+        "payload": "outcome:batch-atlas-hetero:preview-atlas-occupied-report",
+        "path": [
+          "state"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-LATE-TARGET-EXISTING",
+      "relation": "equals",
+      "source": {
+        "payload": "outcome:batch-atlas-hetero:preview-atlas-occupied-report",
+        "path": [
+          "planned_target"
+        ]
+      },
+      "target": {
+        "payload": "existing_object:existing-atlas-report-target",
+        "path": [
+          "location"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-LATE-TARGET-SOURCE",
+      "relation": "equals",
+      "source": {
+        "payload": "outcome:batch-atlas-hetero:preview-atlas-occupied-report",
+        "path": [
+          "actual_location"
+        ]
+      },
+      "target": {
+        "payload": "outcome:batch-atlas-hetero:preview-atlas-occupied-report",
+        "path": [
+          "source"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-DUP-GROUP-TARGET",
+      "relation": "equals",
+      "source": {
+        "payload": "group:DUP-batch-atlas-hetero-invoice",
+        "path": [
+          "target"
+        ]
+      },
+      "target": {
+        "payload": "outcome:batch-atlas-hetero:preview-atlas-invoice-a",
+        "path": [
+          "planned_target"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-DUP-B-TARGET",
+      "relation": "equals",
+      "source": {
+        "payload": "outcome:batch-atlas-hetero:preview-atlas-invoice-a",
+        "path": [
+          "planned_target"
+        ]
+      },
+      "target": {
+        "payload": "outcome:batch-atlas-hetero:preview-atlas-invoice-b",
+        "path": [
+          "planned_target"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-DUP-A-STATE",
+      "relation": "equals",
+      "source": {
+        "payload": "outcome:batch-atlas-hetero:preview-atlas-invoice-a",
+        "path": [
+          "state"
+        ]
+      },
+      "target": {
+        "payload": "scenario:SCN-DUPLICATE-TARGET-REVERSED",
+        "path": [
+          "expected",
+          "all_participants"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-DUP-B-REASON",
+      "relation": "equals",
+      "source": {
+        "payload": "outcome:batch-atlas-hetero:preview-atlas-invoice-b",
+        "path": [
+          "reason_code"
+        ]
+      },
+      "target": {
+        "payload": "scenario:SCN-DUPLICATE-TARGET-REVERSED",
+        "path": [
+          "expected",
+          "all_reasons"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-RESTART-BEFORE",
+      "relation": "equals",
+      "source": {
+        "payload": "restart_point:RESTART-BEFORE-MUTATION",
+        "path": [
+          "batch_id"
+        ]
+      },
+      "target": {
+        "payload": "batch:batch-atlas-direct-fresh",
+        "path": [
+          "batch_id"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-RESTART-PROVEN",
+      "relation": "equals",
+      "source": {
+        "payload": "restart_point:RESTART-AFTER-PROVEN-COMMIT",
+        "path": [
+          "batch_id"
+        ]
+      },
+      "target": {
+        "payload": "batch:batch-atlas-sorted",
+        "path": [
+          "batch_id"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-RESTART-AMBIGUOUS",
+      "relation": "equals",
+      "source": {
+        "payload": "restart_point:RESTART-AMBIGUOUS",
+        "path": [
+          "batch_id"
+        ]
+      },
+      "target": {
+        "payload": "batch:batch-atlas-technical",
+        "path": [
+          "batch_id"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-RESTART-AMBIGUOUS-STATE",
+      "relation": "equals",
+      "source": {
+        "payload": "outcome:batch-atlas-technical:batch-tech-recovery-known",
+        "path": [
+          "state"
+        ]
+      },
+      "target": {
+        "payload": "restart_point:RESTART-AMBIGUOUS",
+        "path": [
+          "expected",
+          "final_results"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-CONTAINMENT-NOT-FOUND",
+      "relation": "equals",
+      "source": {
+        "payload": "containment:CONT-UNKNOWN-SELECTION",
+        "path": [
+          "expected",
+          "code"
+        ]
+      },
+      "target": {
+        "payload": "error:PF-ERR-BATCH-NOT-FOUND",
+        "path": [
+          "error",
+          "code"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-CONTAINMENT-FORBIDDEN",
+      "relation": "equals",
+      "source": {
+        "payload": "containment:CONT-FOREIGN-USER-SELECTION",
+        "path": [
+          "expected",
+          "code"
+        ]
+      },
+      "target": {
+        "payload": "error:PF-ERR-BATCH-FORBIDDEN",
+        "path": [
+          "error",
+          "code"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-CONTAINMENT-QUARANTINE",
+      "relation": "equals",
+      "source": {
+        "payload": "containment:CONT-LINK-REPLACEMENT-CONFIRMED",
+        "path": [
+          "expected",
+          "outcome",
+          "state"
+        ]
+      },
+      "target": {
+        "payload": "outcome:batch-atlas-technical:batch-tech-quarantine",
+        "path": [
+          "state"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-CONTAINMENT-RECOVERY",
+      "relation": "equals",
+      "source": {
+        "payload": "containment:CONT-LINK-REPLACEMENT-AMBIGUOUS",
+        "path": [
+          "expected",
+          "outcome",
+          "state"
+        ]
+      },
+      "target": {
+        "payload": "outcome:batch-atlas-technical:batch-tech-recovery-known",
+        "path": [
+          "state"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-AUDIT-DIRECT",
+      "relation": "equals",
+      "source": {
+        "payload": "audit:AUD-BATCH-ACCEPT-DIRECT",
+        "path": [
+          "batch_id"
+        ]
+      },
+      "target": {
+        "payload": "batch:batch-atlas-direct-fresh",
+        "path": [
+          "batch_id"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-AUDIT-LOSER-ATTEMPT",
+      "relation": "equals",
+      "source": {
+        "payload": "audit:AUD-ATTEMPT-LOSER-SHARED-FINISH",
+        "path": [
+          "attempt_id"
+        ]
+      },
+      "target": {
+        "payload": "outcome:batch-overlap-loser:overlap-shared-pdf",
+        "path": [
+          "attempt_id"
+        ]
+      }
+    },
+    {
+      "link_id": "SCN-LINK-AUDIT-RECOVERY-SOURCE",
+      "relation": "equals",
+      "source": {
+        "payload": "audit:AUD-RECOVERY-REQUIRED",
+        "path": [
+          "source_attempt_id"
+        ]
+      },
+      "target": {
+        "payload": "outcome:batch-atlas-technical:batch-tech-recovery-unknown",
+        "path": [
+          "attempt_id"
+        ]
+      }
+    }
+  ],
+  "mutations": [
+    {
+      "mutation_id": "SCN-MUT-REPLAY-NEW-ATTEMPT",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        0,
+        "replays",
+        1,
+        "expected",
+        "new_attempts"
+      ],
+      "value": 1,
+      "validator": "expectation",
+      "reason": "An idempotent replay must not create an attempt."
+    },
+    {
+      "mutation_id": "SCN-MUT-REPLAY-OTHER-BATCH",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        0,
+        "replays",
+        0,
+        "expected",
+        "batch_id"
+      ],
+      "value": "batch-atlas-sorted",
+      "validator": "expectation",
+      "reason": "A replay returns the original batch."
+    },
+    {
+      "mutation_id": "SCN-MUT-MODIFIED-BODY-ACCEPTED",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        2,
+        "expected",
+        "http"
+      ],
+      "value": 202,
+      "validator": "expectation",
+      "reason": "A modified body with the same key must be 409 IDEMPOTENCY_KEY_REUSED."
+    },
+    {
+      "mutation_id": "SCN-MUT-SCOPE-CONFLICT",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        3,
+        "expected",
+        "idempotency_conflict"
+      ],
+      "value": true,
+      "validator": "expectation",
+      "reason": "Another user is a separate key scope, not a conflict."
+    },
+    {
+      "mutation_id": "SCN-MUT-RETRY-SAME-KEY",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        4,
+        "retry",
+        "idempotency_key"
+      ],
+      "value": "55555555-5555-4555-8555-555555555555",
+      "validator": "expectation",
+      "reason": "A new manual retry uses a new key."
+    },
+    {
+      "mutation_id": "SCN-MUT-OVERLAP-LOSER-WINS",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        5,
+        "expected",
+        "loser_shared_state"
+      ],
+      "value": "SORTED",
+      "validator": "expectation",
+      "reason": "The losing run must not move the shared file."
+    },
+    {
+      "mutation_id": "SCN-MUT-OVERLAP-LOSER-MOVES",
+      "operation": "set",
+      "path": [
+        "isolated_batches",
+        1,
+        "pages",
+        0,
+        "rows",
+        0,
+        "actual"
+      ],
+      "value": "planned",
+      "validator": "expectation",
+      "reason": "A skipped per-file outcome performs no own mutation."
+    },
+    {
+      "mutation_id": "SCN-MUT-OVERLAP-DOUBLE-CLAIM",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        5,
+        "expected",
+        "shared_claim_count"
+      ],
+      "value": 2,
+      "validator": "expectation",
+      "reason": "At most one claim/real execution per file."
+    },
+    {
+      "mutation_id": "SCN-MUT-OVERLAP-REVISION-DRIFT",
+      "operation": "set",
+      "path": [
+        "isolated_batches",
+        1,
+        "pages",
+        0,
+        "rows",
+        0,
+        "item_revision"
+      ],
+      "value": 2,
+      "validator": "expectation",
+      "reason": "A claim does not change the content revision."
+    },
+    {
+      "mutation_id": "SCN-MUT-SOURCE-AFTER-MUTATION",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        6,
+        "after_acceptance",
+        "actual_location"
+      ],
+      "value": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Reports/batch-tech-skip-changed.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/batch-tech-skip-changed.pdf"
+      },
+      "validator": "expectation",
+      "reason": "A source change after acceptance performs no operation."
+    },
+    {
+      "mutation_id": "SCN-MUT-SOURCE-AFTER-QUEUE",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        6,
+        "after_acceptance",
+        "expected_queue_status"
+      ],
+      "value": "READY",
+      "validator": "expectation",
+      "reason": "A changed source returns to WAITING_READY, not READY."
+    },
+    {
+      "mutation_id": "SCN-MUT-CONTINUATION-AUTHOR",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        7,
+        "steps",
+        1,
+        "expected",
+        "author"
+      ],
+      "value": "worker2",
+      "validator": "expectation",
+      "reason": "A new viewer never becomes the batch author."
+    },
+    {
+      "mutation_id": "SCN-MUT-CONTINUATION-CANCEL",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        7,
+        "steps",
+        3,
+        "expected",
+        "cancel_operation_available"
+      ],
+      "value": true,
+      "validator": "expectation",
+      "reason": "No batch cancel operation exists in the demo contract."
+    },
+    {
+      "mutation_id": "SCN-MUT-DUP-WINNER",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        9,
+        "expected",
+        "winner"
+      ],
+      "value": "preview-atlas-invoice-a",
+      "validator": "expectation",
+      "reason": "Reversing the input order must not select a winner."
+    },
+    {
+      "mutation_id": "SCN-MUT-RESTART-BLIND-RETRY",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        10,
+        "points",
+        2,
+        "expected",
+        "blind_retry"
+      ],
+      "value": true,
+      "validator": "expectation",
+      "reason": "An ambiguous placement must not be retried blindly."
+    },
+    {
+      "mutation_id": "SCN-MUT-RESTART-AMBIGUOUS-FINAL",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        10,
+        "points",
+        2,
+        "expected",
+        "final_results"
+      ],
+      "value": "SORTED",
+      "validator": "expectation",
+      "reason": "An ambiguous outcome stays RECOVERY_REQUIRED."
+    },
+    {
+      "mutation_id": "SCN-MUT-CONTAINMENT-OUTSIDE",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        11,
+        "before_batch",
+        3,
+        "no_outside_access"
+      ],
+      "value": false,
+      "validator": "expectation",
+      "reason": "A containment fault never permits access outside the sandbox."
+    },
+    {
+      "mutation_id": "SCN-MUT-CONTAINMENT-WRONG-CODE",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        11,
+        "before_batch",
+        0,
+        "expected",
+        "code"
+      ],
+      "value": "INVALID_TARGET",
+      "validator": "expectation",
+      "reason": "createSortingBatch does not declare INVALID_TARGET for 404."
+    },
+    {
+      "mutation_id": "SCN-MUT-AUDIT-ACTION",
+      "operation": "set",
+      "path": [
+        "audit_expectations",
+        0,
+        "action"
+      ],
+      "value": "BATCH_CANCELLED",
+      "validator": "audit",
+      "reason": "AuditAction is a closed OAS enum."
+    },
+    {
+      "mutation_id": "SCN-MUT-AUDIT-DUPLICATE-KEY",
+      "operation": "set",
+      "path": [
+        "audit_expectations",
+        1,
+        "unique_key"
+      ],
+      "value": "batch-atlas-direct-fresh:accepted",
+      "validator": "audit",
+      "reason": "Unique attempt/phase keys prevent duplicate events."
+    },
+    {
+      "mutation_id": "SCN-MUT-AUDIT-SYSTEM-ACTOR-MISSING",
+      "operation": "set",
+      "path": [
+        "audit_expectations",
+        0,
+        "actor"
+      ],
+      "value": null,
+      "validator": "audit",
+      "reason": "Only a SYSTEM event may have a null actor; batch acceptance never does."
+    },
+    {
+      "mutation_id": "SCN-MUT-COVERAGE-MISSING",
+      "operation": "set",
+      "path": [
+        "coverage",
+        "Q-040"
+      ],
+      "value": [],
+      "validator": "coverage",
+      "reason": "Every required Q id has at least one scenario."
+    },
+    {
+      "mutation_id": "SCN-MUT-INVALID-KEY",
+      "operation": "set",
+      "path": [
+        "scenarios",
+        0,
+        "idempotency_key"
+      ],
+      "value": "not-a-uuid",
+      "validator": "expectation",
+      "reason": "The Idempotency-Key header is a UUID."
+    }
+  ],
+  "coverage": {
+    "Q-028": [
+      "SCN-OVERLAP-TWO-ACTORS",
+      "SCN-SOURCE-CHANGE-BEFORE-AFTER"
+    ],
+    "Q-029": [
+      "SCN-IDEM-REPLAY-DIRECT",
+      "SCN-IDEM-REPLAY-PREVIEWED",
+      "SCN-IDEM-MODIFIED-BODY",
+      "SCN-IDEM-DIFFERENT-USER-SCOPE",
+      "SCN-MANUAL-RETRY-NEW-KEY",
+      "SCN-SOURCE-CHANGE-BEFORE-AFTER"
+    ],
+    "Q-030": [
+      "SCN-IDEM-REPLAY-DIRECT",
+      "SCN-IDEM-REPLAY-PREVIEWED",
+      "SCN-IDEM-DIFFERENT-USER-SCOPE",
+      "SCN-OVERLAP-TWO-ACTORS",
+      "SCN-LOGOUT-RELOAD-CONTINUE"
+    ],
+    "Q-031": [
+      "SCN-DUPLICATE-TARGET-REVERSED"
+    ],
+    "Q-032": [
+      "SCN-LATE-TARGET-AFTER-PREFLIGHT"
+    ],
+    "Q-040": [
+      "SCN-RESTART-THREE-POINTS"
+    ],
+    "Q-044": [
+      "SCN-CONTAINMENT-Q044"
+    ]
+  }
+}

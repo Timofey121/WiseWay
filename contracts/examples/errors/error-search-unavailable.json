@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "SEARCH_UNAVAILABLE",
+    "message": "Поиск временно недоступен.",
+    "request_id": "request-auth-q003-search-503",
+    "operation_id": null,
+    "retryable": true,
+    "field_errors": []
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "CSRF_FAILED",
+    "message": "Не удалось подтвердить запрос текущей сессии.",
+    "request_id": "request-q043-csrf",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "company_id": "company-demo-atlas",
+  "mode": "EXPLICIT",
+  "items": [
+    {
+      "item_id": "queue-atlas-ready-0001",
+      "item_revision": 1
+    },
+    {
+      "item_id": "queue-atlas-ready-0101",
+      "item_revision": 1
+    },
+    {
+      "item_id": "queue-atlas-ready-0120",
+      "item_revision": 1
+    }
+  ]
+}

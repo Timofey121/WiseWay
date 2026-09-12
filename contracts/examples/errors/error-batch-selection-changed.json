@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "SELECTION_CHANGED",
+    "message": "Изменился или исчез выбранный источник. Обновите выбор.",
+    "request_id": "request-batch-source-changed",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

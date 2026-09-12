@@ -1,0 +1,31 @@
+{
+  "item_id": "file-atlas-type-archive",
+  "item_revision": 3,
+  "source": {
+    "root_id": "root-demo-atlas",
+    "relative_path": "Archive/Atlas/Orion_2031/Data/archive.tar.gz",
+    "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/archive.tar.gz"
+  },
+  "filename": "archive.tar.gz",
+  "company_id": "company-demo-atlas",
+  "predicted_state": "WILL_MOVE",
+  "reason_code": null,
+  "target": {
+    "root_id": "root-demo-atlas",
+    "relative_path": "Archive/Atlas/Orion_2031/Reports/Archive.gz",
+    "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/Archive.gz"
+  },
+  "matched_rules": [
+    {
+      "dictionary_id": "dictionary-atlas-general",
+      "version_id": "version-atlas-general-v1",
+      "rule_id": "rule-atlas-general-archive"
+    }
+  ],
+  "selected_rule": {
+    "dictionary_id": "dictionary-atlas-general",
+    "version_id": "version-atlas-general-v1",
+    "rule_id": "rule-atlas-general-archive"
+  },
+  "collision": null
+}

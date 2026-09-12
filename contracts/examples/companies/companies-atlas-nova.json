@@ -1,0 +1,18 @@
+{
+  "items": [
+    {
+      "company_id": "company-demo-atlas",
+      "name": "Atlas",
+      "incoming_source_ids": [
+        "incoming-demo-atlas"
+      ]
+    },
+    {
+      "company_id": "company-demo-nova",
+      "name": "Nova",
+      "incoming_source_ids": [
+        "incoming-demo-nova"
+      ]
+    }
+  ]
+}

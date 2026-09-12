@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "EMPTY_SELECTION",
+    "message": "Нет доступных файлов для выбранного фильтра.",
+    "request_id": "request-selection-empty",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

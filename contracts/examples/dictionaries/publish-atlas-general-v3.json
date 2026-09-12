@@ -1,0 +1,143 @@
+{
+  "dictionary": {
+    "dictionary_id": "dictionary-atlas-general",
+    "company_id": "company-demo-atlas",
+    "name": "Общие правила Atlas",
+    "description": "Синтетические общие правила Atlas.",
+    "draft": {
+      "draft_revision": 3,
+      "rules": [
+        {
+          "rule_id": "rule-atlas-general-readme",
+          "priority": 50,
+          "match_field": "BASENAME",
+          "mask": "README",
+          "target_stem": "Readme",
+          "target": {
+            "root_id": "root-demo-atlas",
+            "relative_directory": "Archive/Atlas/Orion_2031/Data"
+          }
+        },
+        {
+          "rule_id": "rule-atlas-general-env",
+          "priority": 50,
+          "match_field": "BASENAME",
+          "mask": ".env",
+          "target_stem": "EnvFile",
+          "target": {
+            "root_id": "root-demo-atlas",
+            "relative_directory": "Archive/Atlas/Orion_2031/Data"
+          }
+        },
+        {
+          "rule_id": "rule-atlas-general-namedot",
+          "priority": 50,
+          "match_field": "BASENAME",
+          "mask": "name.",
+          "target_stem": "Named",
+          "target": {
+            "root_id": "root-demo-atlas",
+            "relative_directory": "Archive/Atlas/Orion_2031/Data"
+          }
+        },
+        {
+          "rule_id": "rule-atlas-general-archive",
+          "priority": 60,
+          "match_field": "BASENAME",
+          "mask": "*.tar.gz",
+          "target_stem": "Archive",
+          "target": {
+            "root_id": "root-demo-atlas",
+            "relative_directory": "Archive/Atlas/Orion_2031/Reports"
+          }
+        }
+      ],
+      "based_on_version_id": "version-atlas-general-v1"
+    },
+    "active_version_id": "version-atlas-general-v3",
+    "versions_count": 3,
+    "updated_at": "2031-05-10T09:42:00Z",
+    "updated_by": {
+      "user_id": "user-demo-worker-1",
+      "login": "worker.one",
+      "display_name": "Иван Рабочий",
+      "role": "WORKER"
+    }
+  },
+  "published_version": {
+    "version_id": "version-atlas-general-v3",
+    "dictionary_id": "dictionary-atlas-general",
+    "version_number": 3,
+    "name": "Общие правила Atlas",
+    "description": "Синтетические общие правила Atlas.",
+    "rules": [
+      {
+        "rule_id": "rule-atlas-general-readme",
+        "priority": 50,
+        "match_field": "BASENAME",
+        "mask": "README",
+        "target_stem": "Readme",
+        "target": {
+          "root_id": "root-demo-atlas",
+          "relative_directory": "Archive/Atlas/Orion_2031/Data"
+        }
+      },
+      {
+        "rule_id": "rule-atlas-general-env",
+        "priority": 50,
+        "match_field": "BASENAME",
+        "mask": ".env",
+        "target_stem": "EnvFile",
+        "target": {
+          "root_id": "root-demo-atlas",
+          "relative_directory": "Archive/Atlas/Orion_2031/Data"
+        }
+      },
+      {
+        "rule_id": "rule-atlas-general-namedot",
+        "priority": 50,
+        "match_field": "BASENAME",
+        "mask": "name.",
+        "target_stem": "Named",
+        "target": {
+          "root_id": "root-demo-atlas",
+          "relative_directory": "Archive/Atlas/Orion_2031/Data"
+        }
+      },
+      {
+        "rule_id": "rule-atlas-general-archive",
+        "priority": 60,
+        "match_field": "BASENAME",
+        "mask": "*.tar.gz",
+        "target_stem": "Archive",
+        "target": {
+          "root_id": "root-demo-atlas",
+          "relative_directory": "Archive/Atlas/Orion_2031/Reports"
+        }
+      }
+    ],
+    "published_at": "2031-05-10T09:42:00Z",
+    "published_by": {
+      "user_id": "user-demo-worker-1",
+      "login": "worker.one",
+      "display_name": "Иван Рабочий",
+      "role": "WORKER"
+    },
+    "comment": "Публикация восстановленной версии 1.",
+    "restored_from_version_id": "version-atlas-general-v1"
+  },
+  "rule_set": {
+    "rule_set_id": "rule-set-atlas-v3",
+    "company_id": "company-demo-atlas",
+    "members": [
+      {
+        "dictionary_id": "dictionary-atlas-general",
+        "version_id": "version-atlas-general-v3"
+      },
+      {
+        "dictionary_id": "dictionary-atlas-invoices",
+        "version_id": "version-atlas-invoices-v2"
+      }
+    ]
+  }
+}

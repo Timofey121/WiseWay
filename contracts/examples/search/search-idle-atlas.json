@@ -1,0 +1,35 @@
+{
+  "request_state_id": "srch-q004-idle-atlas",
+  "mode": "IDLE",
+  "root_id": "root-demo-atlas",
+  "schema_set_version": "schema-demo-1",
+  "index_generation": "generation-demo-1",
+  "ranking_profile_version": "ranking-demo-1",
+  "applied_query_text": "",
+  "selected_markers": [],
+  "total": null,
+  "returned_count": 0,
+  "result_limit": 100,
+  "limited": false,
+  "items": [],
+  "next_facet": {
+    "level_id": "level-section",
+    "level_name": "Раздел",
+    "options": [
+      {
+        "marker_id": "marker-root-demo-atlas-archive",
+        "level_id": "level-section",
+        "level_name": "Раздел",
+        "raw_value": "Archive",
+        "display_value": "Archive",
+        "kind": "VALUE",
+        "count": 151
+      }
+    ]
+  },
+  "freshness": {
+    "indexed_at": "2031-05-10T09:30:00Z",
+    "last_successful_sync_at": "2031-05-10T09:30:00Z",
+    "status": "CURRENT"
+  }
+}

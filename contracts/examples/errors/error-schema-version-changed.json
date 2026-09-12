@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "SCHEMA_VERSION_CHANGED",
+    "message": "Схема уровней изменилась. Обновите корни и выбранные уровни.",
+    "request_id": "request-q010-schema-changed",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

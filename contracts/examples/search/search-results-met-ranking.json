@@ -1,0 +1,420 @@
+{
+  "request_state_id": "srch-q009-ranking",
+  "mode": "RESULTS",
+  "root_id": "root-demo-atlas",
+  "schema_set_version": "schema-demo-1",
+  "index_generation": "generation-demo-1",
+  "ranking_profile_version": "ranking-demo-1",
+  "applied_query_text": "met",
+  "selected_markers": [],
+  "total": 8,
+  "returned_count": 8,
+  "result_limit": 100,
+  "limited": false,
+  "items": [
+    {
+      "item_id": "file-atlas-q009-space",
+      "location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/met report.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/met report.pdf"
+      },
+      "filename": "met report.pdf",
+      "markers": [
+        {
+          "marker_id": "marker-root-demo-atlas-archive",
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "raw_value": "Archive",
+          "display_value": "Archive",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas",
+          "level_id": "level-company",
+          "level_name": "Компания",
+          "raw_value": "Atlas",
+          "display_value": "Atlas",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas-orion",
+          "level_id": "level-project",
+          "level_name": "Проект",
+          "raw_value": "Orion_2031",
+          "display_value": "Orion_2031",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas-orion-data",
+          "level_id": "level-category",
+          "level_name": "Категория",
+          "raw_value": "Data",
+          "display_value": "Data",
+          "kind": "VALUE"
+        }
+      ],
+      "extension": ".pdf",
+      "size_bytes": 1500,
+      "modified_at": "2031-05-10T09:00:00Z",
+      "structure_status": "VALID",
+      "structure_issue": null
+    },
+    {
+      "item_id": "file-atlas-q009-hyphen",
+      "location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/met-report.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/met-report.pdf"
+      },
+      "filename": "met-report.pdf",
+      "markers": [
+        {
+          "marker_id": "marker-root-demo-atlas-archive",
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "raw_value": "Archive",
+          "display_value": "Archive",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas",
+          "level_id": "level-company",
+          "level_name": "Компания",
+          "raw_value": "Atlas",
+          "display_value": "Atlas",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas-orion",
+          "level_id": "level-project",
+          "level_name": "Проект",
+          "raw_value": "Orion_2031",
+          "display_value": "Orion_2031",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas-orion-data",
+          "level_id": "level-category",
+          "level_name": "Категория",
+          "raw_value": "Data",
+          "display_value": "Data",
+          "kind": "VALUE"
+        }
+      ],
+      "extension": ".pdf",
+      "size_bytes": 1600,
+      "modified_at": "2031-05-10T09:30:00Z",
+      "structure_status": "VALID",
+      "structure_issue": null
+    },
+    {
+      "item_id": "file-atlas-q009-dot",
+      "location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/met.report.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/met.report.pdf"
+      },
+      "filename": "met.report.pdf",
+      "markers": [
+        {
+          "marker_id": "marker-root-demo-atlas-archive",
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "raw_value": "Archive",
+          "display_value": "Archive",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas",
+          "level_id": "level-company",
+          "level_name": "Компания",
+          "raw_value": "Atlas",
+          "display_value": "Atlas",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas-orion",
+          "level_id": "level-project",
+          "level_name": "Проект",
+          "raw_value": "Orion_2031",
+          "display_value": "Orion_2031",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas-orion-data",
+          "level_id": "level-category",
+          "level_name": "Категория",
+          "raw_value": "Data",
+          "display_value": "Data",
+          "kind": "VALUE"
+        }
+      ],
+      "extension": ".pdf",
+      "size_bytes": 1800,
+      "modified_at": "2031-05-10T09:30:00Z",
+      "structure_status": "VALID",
+      "structure_issue": null
+    },
+    {
+      "item_id": "file-atlas-q009-letter-digit",
+      "location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/met2report.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/met2report.pdf"
+      },
+      "filename": "met2report.pdf",
+      "markers": [
+        {
+          "marker_id": "marker-root-demo-atlas-archive",
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "raw_value": "Archive",
+          "display_value": "Archive",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas",
+          "level_id": "level-company",
+          "level_name": "Компания",
+          "raw_value": "Atlas",
+          "display_value": "Atlas",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas-orion",
+          "level_id": "level-project",
+          "level_name": "Проект",
+          "raw_value": "Orion_2031",
+          "display_value": "Orion_2031",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas-orion-data",
+          "level_id": "level-category",
+          "level_name": "Категория",
+          "raw_value": "Data",
+          "display_value": "Data",
+          "kind": "VALUE"
+        }
+      ],
+      "extension": ".pdf",
+      "size_bytes": 2100,
+      "modified_at": "2031-05-10T10:00:00Z",
+      "structure_status": "VALID",
+      "structure_issue": null
+    },
+    {
+      "item_id": "file-atlas-q009-underscore",
+      "location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/met_report.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/met_report.pdf"
+      },
+      "filename": "met_report.pdf",
+      "markers": [
+        {
+          "marker_id": "marker-root-demo-atlas-archive",
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "raw_value": "Archive",
+          "display_value": "Archive",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas",
+          "level_id": "level-company",
+          "level_name": "Компания",
+          "raw_value": "Atlas",
+          "display_value": "Atlas",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas-orion",
+          "level_id": "level-project",
+          "level_name": "Проект",
+          "raw_value": "Orion_2031",
+          "display_value": "Orion_2031",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas-orion-data",
+          "level_id": "level-category",
+          "level_name": "Категория",
+          "raw_value": "Data",
+          "display_value": "Data",
+          "kind": "VALUE"
+        }
+      ],
+      "extension": ".pdf",
+      "size_bytes": 1700,
+      "modified_at": "2031-05-10T09:30:00Z",
+      "structure_status": "VALID",
+      "structure_issue": null
+    },
+    {
+      "item_id": "file-atlas-q009-metrics",
+      "location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/metrics.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/metrics.pdf"
+      },
+      "filename": "metrics.pdf",
+      "markers": [
+        {
+          "marker_id": "marker-root-demo-atlas-archive",
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "raw_value": "Archive",
+          "display_value": "Archive",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas",
+          "level_id": "level-company",
+          "level_name": "Компания",
+          "raw_value": "Atlas",
+          "display_value": "Atlas",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas-orion",
+          "level_id": "level-project",
+          "level_name": "Проект",
+          "raw_value": "Orion_2031",
+          "display_value": "Orion_2031",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas-orion-data",
+          "level_id": "level-category",
+          "level_name": "Категория",
+          "raw_value": "Data",
+          "display_value": "Data",
+          "kind": "VALUE"
+        }
+      ],
+      "extension": ".pdf",
+      "size_bytes": 1200,
+      "modified_at": "2031-05-10T09:30:00Z",
+      "structure_status": "VALID",
+      "structure_issue": null
+    },
+    {
+      "item_id": "file-atlas-q009-backslash",
+      "location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/report-backslash.pdf",
+        "display_path": "DEMO:\\SandboxRoot\\Archive\\Atlas\\Orion_2031\\Data\\met\\report-backslash.pdf"
+      },
+      "filename": "report-backslash.pdf",
+      "markers": [
+        {
+          "marker_id": "marker-root-demo-atlas-archive",
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "raw_value": "Archive",
+          "display_value": "Archive",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas",
+          "level_id": "level-company",
+          "level_name": "Компания",
+          "raw_value": "Atlas",
+          "display_value": "Atlas",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas-orion",
+          "level_id": "level-project",
+          "level_name": "Проект",
+          "raw_value": "Orion_2031",
+          "display_value": "Orion_2031",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas-orion-data",
+          "level_id": "level-category",
+          "level_name": "Категория",
+          "raw_value": "Data",
+          "display_value": "Data",
+          "kind": "VALUE"
+        }
+      ],
+      "extension": ".pdf",
+      "size_bytes": 2000,
+      "modified_at": "2031-05-10T09:30:00Z",
+      "structure_status": "VALID",
+      "structure_issue": null
+    },
+    {
+      "item_id": "file-atlas-q009-slash",
+      "location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/report-slash.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/met/report-slash.pdf"
+      },
+      "filename": "report-slash.pdf",
+      "markers": [
+        {
+          "marker_id": "marker-root-demo-atlas-archive",
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "raw_value": "Archive",
+          "display_value": "Archive",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas",
+          "level_id": "level-company",
+          "level_name": "Компания",
+          "raw_value": "Atlas",
+          "display_value": "Atlas",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas-orion",
+          "level_id": "level-project",
+          "level_name": "Проект",
+          "raw_value": "Orion_2031",
+          "display_value": "Orion_2031",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-atlas-archive-atlas-orion-data",
+          "level_id": "level-category",
+          "level_name": "Категория",
+          "raw_value": "Data",
+          "display_value": "Data",
+          "kind": "VALUE"
+        }
+      ],
+      "extension": ".pdf",
+      "size_bytes": 1900,
+      "modified_at": "2031-05-10T09:30:00Z",
+      "structure_status": "VALID",
+      "structure_issue": null
+    }
+  ],
+  "next_facet": {
+    "level_id": "level-section",
+    "level_name": "Раздел",
+    "options": [
+      {
+        "marker_id": "marker-root-demo-atlas-archive",
+        "level_id": "level-section",
+        "level_name": "Раздел",
+        "raw_value": "Archive",
+        "display_value": "Archive",
+        "kind": "VALUE",
+        "count": 8
+      }
+    ]
+  },
+  "freshness": {
+    "indexed_at": "2031-05-10T09:30:00Z",
+    "last_successful_sync_at": "2031-05-10T09:30:00Z",
+    "status": "CURRENT"
+  }
+}

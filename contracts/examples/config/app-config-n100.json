@@ -1,0 +1,12 @@
+{
+  "api_contract_version": "1.0.0",
+  "display_timezone": "Europe/Moscow",
+  "search_result_limit": 100,
+  "max_batch_items": 1000,
+  "max_query_length": 512,
+  "preview_ttl_seconds": 300,
+  "snapshot_ttl_seconds": 300,
+  "simulation_ttl_seconds": 300,
+  "batch_poll_interval_ms": 1000,
+  "audit_poll_interval_ms": 30000
+}

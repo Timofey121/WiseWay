@@ -1,0 +1,36 @@
+{
+  "simulation_id": "simulation-atlas-general-empty",
+  "dictionary_id": "dictionary-atlas-general",
+  "draft_revision": 2,
+  "base_rule_set": {
+    "rule_set_id": "rule-set-atlas-published",
+    "company_id": "company-demo-atlas",
+    "members": [
+      {
+        "dictionary_id": "dictionary-atlas-general",
+        "version_id": "version-atlas-general-v1"
+      },
+      {
+        "dictionary_id": "dictionary-atlas-invoices",
+        "version_id": "version-atlas-invoices-v1"
+      }
+    ]
+  },
+  "ready_snapshot_id": "ready-snapshot-atlas-empty",
+  "created_at": "2031-05-10T09:36:00Z",
+  "expires_at": "2031-05-10T09:41:00Z",
+  "total": 0,
+  "counts": {
+    "will_move": 0,
+    "will_manual_review": 0,
+    "requires_decision": 0,
+    "not_ready": 0,
+    "rule_conflicts": 0,
+    "no_scenario": 0
+  },
+  "warnings": [
+    "EMPTY_READY_SET"
+  ],
+  "rows": [],
+  "next_cursor": null
+}

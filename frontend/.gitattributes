@@ -1,0 +1,6 @@
+# Generated API-артефакты создаются с переводами строк LF. Фиксируем LF в
+# рабочем дереве, чтобы `npm run generate:api` оставался байт-стабильным при
+# core.autocrlf=true и повторная генерация не давала ложный diff.
+src/api/generated/schema.ts text eol=lf
+src/api/generated/openapi.json text eol=lf
+src/api/generated/operation-meta.ts text eol=lf

@@ -1,0 +1,399 @@
+{
+  "request_state_id": "srch-q007-marker-and",
+  "mode": "RESULTS",
+  "root_id": "root-demo-nova",
+  "schema_set_version": "schema-demo-2",
+  "index_generation": "generation-demo-2",
+  "ranking_profile_version": "ranking-demo-1",
+  "applied_query_text": "atlas",
+  "selected_markers": [
+    {
+      "marker_id": "marker-root-demo-nova-archive",
+      "level_id": "level-section",
+      "level_name": "Раздел",
+      "raw_value": "Archive",
+      "display_value": "Archive",
+      "kind": "VALUE"
+    },
+    {
+      "marker_id": "marker-root-demo-nova-archive-nova",
+      "level_id": "level-company",
+      "level_name": "Компания",
+      "raw_value": "Nova",
+      "display_value": "Nova",
+      "kind": "VALUE"
+    },
+    {
+      "marker_id": "marker-root-demo-nova-archive-nova-orion",
+      "level_id": "level-project",
+      "level_name": "Проект",
+      "raw_value": "Orion_2031",
+      "display_value": "Orion_2031",
+      "kind": "VALUE"
+    },
+    {
+      "marker_id": "marker-root-demo-nova-archive-nova-orion-north",
+      "level_id": "level-area",
+      "level_name": "Область",
+      "raw_value": "North",
+      "display_value": "North",
+      "kind": "VALUE"
+    },
+    {
+      "marker_id": "marker-root-demo-nova-archive-nova-orion-north-reports",
+      "level_id": "level-category",
+      "level_name": "Категория",
+      "raw_value": "Reports",
+      "display_value": "Reports",
+      "kind": "VALUE"
+    }
+  ],
+  "total": 6,
+  "returned_count": 6,
+  "result_limit": 100,
+  "limited": false,
+  "items": [
+    {
+      "item_id": "file-nova-q008-inserted",
+      "location": {
+        "root_id": "root-demo-nova",
+        "relative_path": "Archive/Nova/Orion_2031/North/Reports/Atlas Final Main.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Nova/Orion_2031/North/Reports/Atlas Final Main.pdf"
+      },
+      "filename": "Atlas Final Main.pdf",
+      "markers": [
+        {
+          "marker_id": "marker-root-demo-nova-archive",
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "raw_value": "Archive",
+          "display_value": "Archive",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova",
+          "level_id": "level-company",
+          "level_name": "Компания",
+          "raw_value": "Nova",
+          "display_value": "Nova",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova-orion",
+          "level_id": "level-project",
+          "level_name": "Проект",
+          "raw_value": "Orion_2031",
+          "display_value": "Orion_2031",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova-orion-north",
+          "level_id": "level-area",
+          "level_name": "Область",
+          "raw_value": "North",
+          "display_value": "North",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova-orion-north-reports",
+          "level_id": "level-category",
+          "level_name": "Категория",
+          "raw_value": "Reports",
+          "display_value": "Reports",
+          "kind": "VALUE"
+        }
+      ],
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "modified_at": "2031-05-10T09:30:00Z",
+      "structure_status": "VALID",
+      "structure_issue": null
+    },
+    {
+      "item_id": "file-nova-q008-mixed",
+      "location": {
+        "root_id": "root-demo-nova",
+        "relative_path": "Archive/Nova/Orion_2031/North/Reports/Atlas-Main-Metrics.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Nova/Orion_2031/North/Reports/Atlas-Main-Metrics.pdf"
+      },
+      "filename": "Atlas-Main-Metrics.pdf",
+      "markers": [
+        {
+          "marker_id": "marker-root-demo-nova-archive",
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "raw_value": "Archive",
+          "display_value": "Archive",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova",
+          "level_id": "level-company",
+          "level_name": "Компания",
+          "raw_value": "Nova",
+          "display_value": "Nova",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova-orion",
+          "level_id": "level-project",
+          "level_name": "Проект",
+          "raw_value": "Orion_2031",
+          "display_value": "Orion_2031",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova-orion-north",
+          "level_id": "level-area",
+          "level_name": "Область",
+          "raw_value": "North",
+          "display_value": "North",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova-orion-north-reports",
+          "level_id": "level-category",
+          "level_name": "Категория",
+          "raw_value": "Reports",
+          "display_value": "Reports",
+          "kind": "VALUE"
+        }
+      ],
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "modified_at": "2031-05-10T09:30:00Z",
+      "structure_status": "VALID",
+      "structure_issue": null
+    },
+    {
+      "item_id": "file-nova-q008-atlas-main",
+      "location": {
+        "root_id": "root-demo-nova",
+        "relative_path": "Archive/Nova/Orion_2031/North/Reports/Atlas-Main.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Nova/Orion_2031/North/Reports/Atlas-Main.pdf"
+      },
+      "filename": "Atlas-Main.pdf",
+      "markers": [
+        {
+          "marker_id": "marker-root-demo-nova-archive",
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "raw_value": "Archive",
+          "display_value": "Archive",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova",
+          "level_id": "level-company",
+          "level_name": "Компания",
+          "raw_value": "Nova",
+          "display_value": "Nova",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova-orion",
+          "level_id": "level-project",
+          "level_name": "Проект",
+          "raw_value": "Orion_2031",
+          "display_value": "Orion_2031",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova-orion-north",
+          "level_id": "level-area",
+          "level_name": "Область",
+          "raw_value": "North",
+          "display_value": "North",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova-orion-north-reports",
+          "level_id": "level-category",
+          "level_name": "Категория",
+          "raw_value": "Reports",
+          "display_value": "Reports",
+          "kind": "VALUE"
+        }
+      ],
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "modified_at": "2031-05-10T09:30:00Z",
+      "structure_status": "VALID",
+      "structure_issue": null
+    },
+    {
+      "item_id": "file-nova-q008-prefix",
+      "location": {
+        "root_id": "root-demo-nova",
+        "relative_path": "Archive/Nova/Orion_2031/North/Reports/Atlas-Maintenance.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Nova/Orion_2031/North/Reports/Atlas-Maintenance.pdf"
+      },
+      "filename": "Atlas-Maintenance.pdf",
+      "markers": [
+        {
+          "marker_id": "marker-root-demo-nova-archive",
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "raw_value": "Archive",
+          "display_value": "Archive",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova",
+          "level_id": "level-company",
+          "level_name": "Компания",
+          "raw_value": "Nova",
+          "display_value": "Nova",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova-orion",
+          "level_id": "level-project",
+          "level_name": "Проект",
+          "raw_value": "Orion_2031",
+          "display_value": "Orion_2031",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova-orion-north",
+          "level_id": "level-area",
+          "level_name": "Область",
+          "raw_value": "North",
+          "display_value": "North",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova-orion-north-reports",
+          "level_id": "level-category",
+          "level_name": "Категория",
+          "raw_value": "Reports",
+          "display_value": "Reports",
+          "kind": "VALUE"
+        }
+      ],
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "modified_at": "2031-05-10T09:30:00Z",
+      "structure_status": "VALID",
+      "structure_issue": null
+    },
+    {
+      "item_id": "file-nova-q007-both",
+      "location": {
+        "root_id": "root-demo-nova",
+        "relative_path": "Archive/Nova/Orion_2031/North/Reports/atlas.txt",
+        "display_path": "DEMO:/SandboxRoot/Archive/Nova/Orion_2031/North/Reports/atlas.txt"
+      },
+      "filename": "atlas.txt",
+      "markers": [
+        {
+          "marker_id": "marker-root-demo-nova-archive",
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "raw_value": "Archive",
+          "display_value": "Archive",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova",
+          "level_id": "level-company",
+          "level_name": "Компания",
+          "raw_value": "Nova",
+          "display_value": "Nova",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova-orion",
+          "level_id": "level-project",
+          "level_name": "Проект",
+          "raw_value": "Orion_2031",
+          "display_value": "Orion_2031",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova-orion-north",
+          "level_id": "level-area",
+          "level_name": "Область",
+          "raw_value": "North",
+          "display_value": "North",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova-orion-north-reports",
+          "level_id": "level-category",
+          "level_name": "Категория",
+          "raw_value": "Reports",
+          "display_value": "Reports",
+          "kind": "VALUE"
+        }
+      ],
+      "extension": ".txt",
+      "size_bytes": 300,
+      "modified_at": "2031-05-10T09:30:00Z",
+      "structure_status": "VALID",
+      "structure_issue": null
+    },
+    {
+      "item_id": "file-nova-q008-reversed",
+      "location": {
+        "root_id": "root-demo-nova",
+        "relative_path": "Archive/Nova/Orion_2031/North/Reports/Main-Atlas.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Nova/Orion_2031/North/Reports/Main-Atlas.pdf"
+      },
+      "filename": "Main-Atlas.pdf",
+      "markers": [
+        {
+          "marker_id": "marker-root-demo-nova-archive",
+          "level_id": "level-section",
+          "level_name": "Раздел",
+          "raw_value": "Archive",
+          "display_value": "Archive",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova",
+          "level_id": "level-company",
+          "level_name": "Компания",
+          "raw_value": "Nova",
+          "display_value": "Nova",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova-orion",
+          "level_id": "level-project",
+          "level_name": "Проект",
+          "raw_value": "Orion_2031",
+          "display_value": "Orion_2031",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova-orion-north",
+          "level_id": "level-area",
+          "level_name": "Область",
+          "raw_value": "North",
+          "display_value": "North",
+          "kind": "VALUE"
+        },
+        {
+          "marker_id": "marker-root-demo-nova-archive-nova-orion-north-reports",
+          "level_id": "level-category",
+          "level_name": "Категория",
+          "raw_value": "Reports",
+          "display_value": "Reports",
+          "kind": "VALUE"
+        }
+      ],
+      "extension": ".pdf",
+      "size_bytes": 100,
+      "modified_at": "2031-05-10T09:30:00Z",
+      "structure_status": "VALID",
+      "structure_issue": null
+    }
+  ],
+  "next_facet": null,
+  "freshness": {
+    "indexed_at": "2031-05-10T09:30:00Z",
+    "last_successful_sync_at": "2031-05-10T09:30:00Z",
+    "status": "CURRENT"
+  }
+}

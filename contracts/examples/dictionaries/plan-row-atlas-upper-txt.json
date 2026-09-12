@@ -1,0 +1,36 @@
+{
+  "item_id": "file-atlas-type-upper",
+  "item_revision": 3,
+  "source": {
+    "root_id": "root-demo-atlas",
+    "relative_path": "Archive/Atlas/Orion_2031/Data/invoice.TXT",
+    "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/invoice.TXT"
+  },
+  "filename": "invoice.TXT",
+  "company_id": "company-demo-atlas",
+  "predicted_state": "WILL_MOVE",
+  "reason_code": null,
+  "target": {
+    "root_id": "root-demo-atlas",
+    "relative_path": "Archive/Atlas/Orion_2031/Invoices/Invoice.TXT",
+    "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Invoices/Invoice.TXT"
+  },
+  "matched_rules": [
+    {
+      "dictionary_id": "dictionary-atlas-invoices",
+      "version_id": "version-atlas-invoices-v1",
+      "rule_id": "rule-atlas-invoices-invoice"
+    },
+    {
+      "dictionary_id": "dictionary-atlas-invoices",
+      "version_id": "version-atlas-invoices-v1",
+      "rule_id": "rule-atlas-invoices-upper"
+    }
+  ],
+  "selected_rule": {
+    "dictionary_id": "dictionary-atlas-invoices",
+    "version_id": "version-atlas-invoices-v1",
+    "rule_id": "rule-atlas-invoices-invoice"
+  },
+  "collision": null
+}

@@ -1,0 +1,1899 @@
+{
+  "fixture_set": "wiseway-batch-outcomes",
+  "version": "1.0.0",
+  "seed": "wiseway-demo-seed-2031",
+  "contract_version": "1.0.0",
+  "corpus_version": "1.2.0",
+  "queue_fixture": "queue_selections.json",
+  "rule_fixture": "rule_expectations.json",
+  "preview_fixture": "preview_preflight.json",
+  "target_display_prefix": "DEMO:/SandboxRoot",
+  "notes": "LT-03.4a finite BatchState/OutcomeState/OutcomeReasonCode oracle. Every Batch, BatchSummary, Outcome and BatchPage is literal data bound to the frozen queue_selections selections and the complete rule_expectations rule/RuleSet/target definitions. The three accepted LT-03.3b preflight scenarios (PF-DIRECT-FRESH, PF-PREVIEWED-FRESH, PF-SAME-USER-NEW-SESSION) receive real Batch payloads; an isolated heterogeneous accepted selection without the NOT_READY member covers the remaining outcome kinds. The module cross-checks counts, attempts, placements, pagination, inventory expectations and reason/state consistency without implementing a matcher, priority resolver, executor or filesystem writer. Each batch is an independent finite scenario universe; the physical inventory contract is a logical expectation, not measured filesystem evidence.",
+  "constants": {
+    "batch_page_limit": 100,
+    "batch_poll_interval_ms": 1000
+  },
+  "actors": {
+    "worker1": "user-demo-worker-1",
+    "worker2": "user-demo-worker-2",
+    "admin": "user-demo-admin-1"
+  },
+  "companies": {
+    "atlas": {
+      "company_id": "company-demo-atlas",
+      "root_id": "root-demo-atlas",
+      "manual_review_directory": "_manual_review/atlas",
+      "quarantine_directory": "_quarantine/atlas"
+    },
+    "nova": {
+      "company_id": "company-demo-nova",
+      "root_id": "root-demo-nova",
+      "manual_review_directory": "_manual_review/nova",
+      "quarantine_directory": "_quarantine/nova"
+    }
+  },
+  "accepted_preflights": [
+    {
+      "scenario_id": "PF-DIRECT-FRESH",
+      "batch_id": "batch-atlas-direct-fresh",
+      "reason": "DIRECT accepted batch; the real Batch payload belongs to LT-03.4a."
+    },
+    {
+      "scenario_id": "PF-PREVIEWED-FRESH",
+      "batch_id": "batch-atlas-previewed-fresh",
+      "reason": "PREVIEWED accepted batch; the real Batch payload belongs to LT-03.4a."
+    },
+    {
+      "scenario_id": "PF-SAME-USER-NEW-SESSION",
+      "batch_id": "batch-atlas-same-user-session",
+      "reason": "Same user_id in a new session is accepted; the real Batch payload belongs to LT-03.4a."
+    }
+  ],
+  "selections": [
+    {
+      "selection_id": "selection-batch-atlas-hetero",
+      "owner": "worker1",
+      "company": "atlas",
+      "mode": "EXPLICIT",
+      "q_ids": [
+        "Q-031",
+        "Q-032",
+        "Q-033",
+        "Q-034",
+        "Q-035",
+        "Q-039"
+      ],
+      "snapshot": {
+        "selection_id": "selection-batch-atlas-hetero",
+        "company_id": "company-demo-atlas",
+        "mode": "EXPLICIT",
+        "selected_count": 7,
+        "created_at": "2031-05-10T09:36:30Z",
+        "expires_at": "2031-05-10T09:41:30Z",
+        "queue_generation": "queue-generation-atlas-120"
+      },
+      "members": [
+        {
+          "item_id": "preview-atlas-move-upper",
+          "item_revision": 3,
+          "filename": "invoice.TXT",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Data/invoice.TXT",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/invoice.TXT"
+          },
+          "size_bytes": 2048,
+          "modified_at": "2031-05-10T08:00:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "preview-atlas-move-readme",
+          "item_revision": 3,
+          "filename": "README",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Data/README",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/README"
+          },
+          "size_bytes": 1024,
+          "modified_at": "2031-05-10T08:01:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "preview-atlas-no-scenario",
+          "item_revision": 3,
+          "filename": "data.bin",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Data/data.bin",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/data.bin"
+          },
+          "size_bytes": 512,
+          "modified_at": "2031-05-10T08:02:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "preview-atlas-occupied-report",
+          "item_revision": 2,
+          "filename": "occupied.pdf",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Reports/occupied.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/occupied.pdf"
+          },
+          "size_bytes": 2048,
+          "modified_at": "2031-05-10T08:03:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "preview-atlas-invoice-a",
+          "item_revision": 1,
+          "filename": "invoice-a.pdf",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Data/invoice-a.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/invoice-a.pdf"
+          },
+          "size_bytes": 1024,
+          "modified_at": "2031-05-10T08:04:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "preview-atlas-invoice-b",
+          "item_revision": 1,
+          "filename": "invoice-b.pdf",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Data/invoice-b.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/invoice-b.pdf"
+          },
+          "size_bytes": 1024,
+          "modified_at": "2031-05-10T08:05:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "preview-atlas-manual-name",
+          "item_revision": 2,
+          "filename": "unmatched.bin",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Incoming/atlas/unmatched.bin",
+            "display_path": "DEMO:/SandboxRoot/Incoming/atlas/unmatched.bin"
+          },
+          "size_bytes": 100,
+          "modified_at": "2031-05-10T08:06:00Z",
+          "source_ready": true
+        }
+      ]
+    },
+    {
+      "selection_id": "selection-batch-atlas-conflict",
+      "owner": "worker1",
+      "company": "atlas",
+      "mode": "EXPLICIT",
+      "q_ids": [
+        "Q-034",
+        "Q-039"
+      ],
+      "snapshot": {
+        "selection_id": "selection-batch-atlas-conflict",
+        "company_id": "company-demo-atlas",
+        "mode": "EXPLICIT",
+        "selected_count": 1,
+        "created_at": "2031-05-10T09:37:30Z",
+        "expires_at": "2031-05-10T09:42:30Z",
+        "queue_generation": "queue-generation-atlas-120"
+      },
+      "members": [
+        {
+          "item_id": "batch-atlas-shared-file",
+          "item_revision": 1,
+          "filename": "shared-file.pdf",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Data/shared-file.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/shared-file.pdf"
+          },
+          "size_bytes": 2048,
+          "modified_at": "2031-05-10T08:08:00Z",
+          "source_ready": true
+        }
+      ]
+    },
+    {
+      "selection_id": "selection-batch-atlas-sorted",
+      "owner": "worker1",
+      "company": "atlas",
+      "mode": "EXPLICIT",
+      "q_ids": [
+        "Q-033",
+        "Q-039"
+      ],
+      "snapshot": {
+        "selection_id": "selection-batch-atlas-sorted",
+        "company_id": "company-demo-atlas",
+        "mode": "EXPLICIT",
+        "selected_count": 3,
+        "created_at": "2031-05-10T09:38:30Z",
+        "expires_at": "2031-05-10T09:43:30Z",
+        "queue_generation": "queue-generation-atlas-120"
+      },
+      "members": [
+        {
+          "item_id": "batch-atlas-sorted-invoice",
+          "item_revision": 1,
+          "filename": "batch-sorted-invoice.pdf",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Data/batch-sorted-invoice.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/batch-sorted-invoice.pdf"
+          },
+          "size_bytes": 1024,
+          "modified_at": "2031-05-10T08:11:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "batch-atlas-sorted-readme",
+          "item_revision": 1,
+          "filename": "README",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Data/README",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/README"
+          },
+          "size_bytes": 512,
+          "modified_at": "2031-05-10T08:12:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "batch-atlas-sorted-archive",
+          "item_revision": 1,
+          "filename": "batch-sorted-archive.tar.gz",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Reports/batch-sorted-archive.tar.gz",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/batch-sorted-archive.tar.gz"
+          },
+          "size_bytes": 4096,
+          "modified_at": "2031-05-10T08:13:00Z",
+          "source_ready": true
+        }
+      ]
+    },
+    {
+      "selection_id": "selection-batch-atlas-technical",
+      "owner": "worker1",
+      "company": "atlas",
+      "mode": "EXPLICIT",
+      "q_ids": [
+        "Q-036",
+        "Q-037"
+      ],
+      "snapshot": {
+        "selection_id": "selection-batch-atlas-technical",
+        "company_id": "company-demo-atlas",
+        "mode": "EXPLICIT",
+        "selected_count": 6,
+        "created_at": "2031-05-10T09:39:30Z",
+        "expires_at": "2031-05-10T09:44:30Z",
+        "queue_generation": "queue-generation-atlas-120"
+      },
+      "members": [
+        {
+          "item_id": "batch-tech-quarantine",
+          "item_revision": 1,
+          "filename": "batch-tech-quarantine.tar.gz",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Reports/batch-tech-quarantine.tar.gz",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/batch-tech-quarantine.tar.gz"
+          },
+          "size_bytes": 2048,
+          "modified_at": "2031-05-10T08:21:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "batch-tech-recovery-unknown",
+          "item_revision": 1,
+          "filename": "batch-tech-recovery-unknown.pdf",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Reports/batch-tech-recovery-unknown.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/batch-tech-recovery-unknown.pdf"
+          },
+          "size_bytes": 2048,
+          "modified_at": "2031-05-10T08:22:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "batch-tech-recovery-known",
+          "item_revision": 1,
+          "filename": "batch-tech-recovery-known.pdf",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Reports/batch-tech-recovery-known.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/batch-tech-recovery-known.pdf"
+          },
+          "size_bytes": 2048,
+          "modified_at": "2031-05-10T08:23:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "batch-tech-skip-claimed",
+          "item_revision": 1,
+          "filename": "batch-tech-skip-claimed.pdf",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Reports/batch-tech-skip-claimed.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/batch-tech-skip-claimed.pdf"
+          },
+          "size_bytes": 2048,
+          "modified_at": "2031-05-10T08:24:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "batch-tech-skip-changed",
+          "item_revision": 1,
+          "filename": "batch-tech-skip-changed.pdf",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Reports/batch-tech-skip-changed.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/batch-tech-skip-changed.pdf"
+          },
+          "size_bytes": 2048,
+          "modified_at": "2031-05-10T08:25:00Z",
+          "source_ready": true
+        },
+        {
+          "item_id": "batch-tech-skip-missing",
+          "item_revision": 1,
+          "filename": "batch-tech-skip-missing.pdf",
+          "location": {
+            "root_id": "root-demo-atlas",
+            "relative_path": "Archive/Atlas/Orion_2031/Reports/batch-tech-skip-missing.pdf",
+            "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/batch-tech-skip-missing.pdf"
+          },
+          "size_bytes": 2048,
+          "modified_at": "2031-05-10T08:26:00Z",
+          "source_ready": true
+        }
+      ]
+    }
+  ],
+  "batches": [
+    {
+      "batch_id": "batch-atlas-direct-fresh",
+      "q_ids": [
+        "Q-031",
+        "Q-032",
+        "Q-033",
+        "Q-034",
+        "Q-035",
+        "Q-036",
+        "Q-037",
+        "Q-039"
+      ],
+      "selection": {
+        "from_preview_selection": "selection-atlas-allmatching-120"
+      },
+      "execution_mode": "DIRECT",
+      "preview_id": null,
+      "rule_set_id": "rule-set-atlas-published",
+      "owner": "worker1",
+      "status": "ACCEPTED",
+      "created_at": "2031-05-10T09:35:00Z",
+      "started_at": null,
+      "finished_at": null,
+      "selected_count": 120,
+      "completed_count": 0,
+      "counts": {
+        "sorted": 0,
+        "manual_review": 0,
+        "requires_decision": 0,
+        "quarantined": 0,
+        "skipped": 0,
+        "recovery_required": 0
+      },
+      "reason": "PF-DIRECT-FRESH returns an ACCEPTED durable batch: the whole 120-item plan is durably fixed but no file has been touched yet; page 1 of 100 PENDING outcomes plus the 20-item page 2 describe the exact frozen membership.",
+      "pages": [
+        {
+          "page_id": "batch-atlas-direct-fresh-page1",
+          "next_cursor": "cursor-batch-atlas-direct-fresh-page2",
+          "rows": [
+            {
+              "$repeat_rows": {
+                "item_prefix": "queue-atlas-ready-",
+                "index_start": 1,
+                "index_end": 100,
+                "index_width": 4,
+                "item_revision": 1,
+                "state": "PENDING",
+                "reason_code": null,
+                "matched_rule": null,
+                "planned_target": null,
+                "actual": "null",
+                "started_at": null,
+                "finished_at": null
+              }
+            }
+          ]
+        },
+        {
+          "page_id": "batch-atlas-direct-fresh-page2",
+          "next_cursor": null,
+          "rows": [
+            {
+              "$repeat_rows": {
+                "item_prefix": "queue-atlas-ready-",
+                "index_start": 101,
+                "index_end": 120,
+                "index_width": 4,
+                "item_revision": 1,
+                "state": "PENDING",
+                "reason_code": null,
+                "matched_rule": null,
+                "planned_target": null,
+                "actual": "null",
+                "started_at": null,
+                "finished_at": null
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "batch_id": "batch-atlas-previewed-fresh",
+      "q_ids": [
+        "Q-031",
+        "Q-032",
+        "Q-033",
+        "Q-034",
+        "Q-035",
+        "Q-039"
+      ],
+      "selection": {
+        "from_preview_selection": "selection-atlas-allmatching-120"
+      },
+      "execution_mode": "PREVIEWED",
+      "preview_id": "preview-atlas-allmatching-120",
+      "rule_set_id": "rule-set-atlas-published",
+      "owner": "worker1",
+      "status": "RUNNING",
+      "created_at": "2031-05-10T09:35:00Z",
+      "started_at": "2031-05-10T09:35:01Z",
+      "finished_at": null,
+      "selected_count": 120,
+      "completed_count": 118,
+      "counts": {
+        "sorted": 0,
+        "manual_review": 118,
+        "requires_decision": 0,
+        "quarantined": 0,
+        "skipped": 0,
+        "recovery_required": 0
+      },
+      "reason": "PF-PREVIEWED-FRESH partial RUNNING batch: 118 NO_SCENARIO files are already moved to the flat manual review folder while one PENDING and one PROCESSING outcome remain; page 1 is full at the 100-row limit and page 2 carries the remaining 20 rows.",
+      "pages": [
+        {
+          "page_id": "batch-atlas-previewed-fresh-page1",
+          "next_cursor": "cursor-batch-atlas-previewed-fresh-page2",
+          "rows": [
+            {
+              "$repeat_rows": {
+                "item_prefix": "queue-atlas-ready-",
+                "index_start": 1,
+                "index_end": 100,
+                "index_width": 4,
+                "item_revision": 1,
+                "state": "MANUAL_REVIEW",
+                "reason_code": "NO_SCENARIO",
+                "matched_rule": null,
+                "planned_target": null,
+                "actual": "manual_review",
+                "started_at": "2031-05-10T09:35:02Z",
+                "finished_at": "2031-05-10T09:35:03Z"
+              }
+            }
+          ]
+        },
+        {
+          "page_id": "batch-atlas-previewed-fresh-page2",
+          "next_cursor": null,
+          "rows": [
+            {
+              "$repeat_rows": {
+                "item_prefix": "queue-atlas-ready-",
+                "index_start": 101,
+                "index_end": 118,
+                "index_width": 4,
+                "item_revision": 1,
+                "state": "MANUAL_REVIEW",
+                "reason_code": "NO_SCENARIO",
+                "matched_rule": null,
+                "planned_target": null,
+                "actual": "manual_review",
+                "started_at": "2031-05-10T09:35:02Z",
+                "finished_at": "2031-05-10T09:35:03Z"
+              }
+            },
+            {
+              "item_id": "queue-atlas-ready-0119",
+              "item_revision": 1,
+              "state": "PENDING",
+              "reason_code": null,
+              "matched_rule": null,
+              "planned_target": null,
+              "actual": "null",
+              "started_at": null,
+              "finished_at": null
+            },
+            {
+              "item_id": "queue-atlas-ready-0120",
+              "item_revision": 1,
+              "state": "PROCESSING",
+              "reason_code": null,
+              "matched_rule": null,
+              "planned_target": null,
+              "actual": "null",
+              "started_at": "2031-05-10T09:35:04Z",
+              "finished_at": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "batch_id": "batch-atlas-same-user-session",
+      "q_ids": [
+        "Q-031",
+        "Q-034",
+        "Q-039"
+      ],
+      "selection": {
+        "from_preview_selection": "selection-atlas-explicit-multiple"
+      },
+      "execution_mode": "DIRECT",
+      "preview_id": null,
+      "rule_set_id": "rule-set-atlas-published",
+      "owner": "worker1",
+      "status": "COMPLETED_WITH_ISSUES",
+      "created_at": "2031-05-10T09:36:00Z",
+      "started_at": "2031-05-10T09:36:01Z",
+      "finished_at": "2031-05-10T09:36:05Z",
+      "selected_count": 3,
+      "completed_count": 3,
+      "counts": {
+        "sorted": 0,
+        "manual_review": 3,
+        "requires_decision": 0,
+        "quarantined": 0,
+        "skipped": 0,
+        "recovery_required": 0
+      },
+      "reason": "PF-SAME-USER-NEW-SESSION finishes as COMPLETED_WITH_ISSUES: all three EXPLICIT off-page items have no scenario and are moved to the flat manual review folder with their unchanged basenames.",
+      "pages": [
+        {
+          "page_id": "batch-atlas-same-user-session-page1",
+          "next_cursor": null,
+          "rows": [
+            {
+              "item_id": "queue-atlas-ready-0001",
+              "item_revision": 1,
+              "state": "MANUAL_REVIEW",
+              "reason_code": "NO_SCENARIO",
+              "matched_rule": null,
+              "planned_target": null,
+              "actual": "manual_review",
+              "started_at": "2031-05-10T09:36:02Z",
+              "finished_at": "2031-05-10T09:36:03Z"
+            },
+            {
+              "item_id": "queue-atlas-ready-0101",
+              "item_revision": 1,
+              "state": "MANUAL_REVIEW",
+              "reason_code": "NO_SCENARIO",
+              "matched_rule": null,
+              "planned_target": null,
+              "actual": "manual_review",
+              "started_at": "2031-05-10T09:36:02Z",
+              "finished_at": "2031-05-10T09:36:03Z"
+            },
+            {
+              "item_id": "queue-atlas-ready-0120",
+              "item_revision": 1,
+              "state": "MANUAL_REVIEW",
+              "reason_code": "NO_SCENARIO",
+              "matched_rule": null,
+              "planned_target": null,
+              "actual": "manual_review",
+              "started_at": "2031-05-10T09:36:02Z",
+              "finished_at": "2031-05-10T09:36:03Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "batch_id": "batch-atlas-hetero",
+      "q_ids": [
+        "Q-031",
+        "Q-032",
+        "Q-033",
+        "Q-034",
+        "Q-035",
+        "Q-039"
+      ],
+      "selection": {
+        "isolated": "selection-batch-atlas-hetero"
+      },
+      "execution_mode": "DIRECT",
+      "preview_id": null,
+      "rule_set_id": "rule-set-atlas-published",
+      "owner": "worker1",
+      "status": "COMPLETED_WITH_ISSUES",
+      "created_at": "2031-05-10T09:37:00Z",
+      "started_at": "2031-05-10T09:37:01Z",
+      "finished_at": "2031-05-10T09:37:09Z",
+      "selected_count": 7,
+      "completed_count": 7,
+      "counts": {
+        "sorted": 2,
+        "manual_review": 1,
+        "requires_decision": 4,
+        "quarantined": 0,
+        "skipped": 0,
+        "recovery_required": 0
+      },
+      "reason": "Isolated heterogeneous accepted selection without the NOT_READY member: two safe renames, one NO_SCENARIO manual review, an occupied target, a duplicate plan target with no winner and an occupied manual review name. The post-acceptance source-change outcome is a separate SKIPPED scenario in batch-atlas-technical.",
+      "pages": [
+        {
+          "page_id": "batch-atlas-hetero-page1",
+          "next_cursor": null,
+          "rows": [
+            {
+              "item_id": "preview-atlas-move-upper",
+              "item_revision": 3,
+              "state": "SORTED",
+              "reason_code": null,
+              "matched_rule": {
+                "dictionary_id": "dictionary-atlas-invoices",
+                "version_id": "version-atlas-invoices-v1",
+                "rule_id": "rule-atlas-invoices-invoice"
+              },
+              "planned_target": "auto",
+              "actual": "planned",
+              "started_at": "2031-05-10T09:37:02Z",
+              "finished_at": "2031-05-10T09:37:03Z"
+            },
+            {
+              "item_id": "preview-atlas-move-readme",
+              "item_revision": 3,
+              "state": "SORTED",
+              "reason_code": null,
+              "matched_rule": {
+                "dictionary_id": "dictionary-atlas-general",
+                "version_id": "version-atlas-general-v1",
+                "rule_id": "rule-atlas-general-readme"
+              },
+              "planned_target": "auto",
+              "actual": "planned",
+              "started_at": "2031-05-10T09:37:02Z",
+              "finished_at": "2031-05-10T09:37:03Z"
+            },
+            {
+              "item_id": "preview-atlas-no-scenario",
+              "item_revision": 3,
+              "state": "MANUAL_REVIEW",
+              "reason_code": "NO_SCENARIO",
+              "matched_rule": null,
+              "planned_target": null,
+              "actual": "manual_review",
+              "started_at": "2031-05-10T09:37:02Z",
+              "finished_at": "2031-05-10T09:37:03Z"
+            },
+            {
+              "item_id": "preview-atlas-occupied-report",
+              "item_revision": 2,
+              "state": "REQUIRES_DECISION",
+              "reason_code": "TARGET_OCCUPIED",
+              "matched_rule": {
+                "dictionary_id": "dictionary-atlas-invoices",
+                "version_id": "version-atlas-invoices-v1",
+                "rule_id": "rule-atlas-invoices-pdf"
+              },
+              "planned_target": "auto",
+              "actual": "source",
+              "started_at": "2031-05-10T09:37:02Z",
+              "finished_at": "2031-05-10T09:37:03Z"
+            },
+            {
+              "item_id": "preview-atlas-invoice-a",
+              "item_revision": 1,
+              "state": "REQUIRES_DECISION",
+              "reason_code": "TARGET_OCCUPIED",
+              "matched_rule": {
+                "dictionary_id": "dictionary-atlas-invoices",
+                "version_id": "version-atlas-invoices-v1",
+                "rule_id": "rule-atlas-invoices-invoice"
+              },
+              "planned_target": "auto",
+              "actual": "source",
+              "started_at": "2031-05-10T09:37:02Z",
+              "finished_at": "2031-05-10T09:37:03Z"
+            },
+            {
+              "item_id": "preview-atlas-invoice-b",
+              "item_revision": 1,
+              "state": "REQUIRES_DECISION",
+              "reason_code": "TARGET_OCCUPIED",
+              "matched_rule": {
+                "dictionary_id": "dictionary-atlas-invoices",
+                "version_id": "version-atlas-invoices-v1",
+                "rule_id": "rule-atlas-invoices-invoice"
+              },
+              "planned_target": "auto",
+              "actual": "source",
+              "started_at": "2031-05-10T09:37:02Z",
+              "finished_at": "2031-05-10T09:37:03Z"
+            },
+            {
+              "item_id": "preview-atlas-manual-name",
+              "item_revision": 2,
+              "state": "REQUIRES_DECISION",
+              "reason_code": "MANUAL_REVIEW_NAME_OCCUPIED",
+              "matched_rule": null,
+              "planned_target": null,
+              "actual": "source",
+              "started_at": "2031-05-10T09:37:02Z",
+              "finished_at": "2031-05-10T09:37:03Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "batch_id": "batch-atlas-conflict",
+      "q_ids": [
+        "Q-034",
+        "Q-039"
+      ],
+      "selection": {
+        "isolated": "selection-batch-atlas-conflict"
+      },
+      "execution_mode": "DIRECT",
+      "preview_id": null,
+      "rule_set_id": "rule-set-atlas-eq-diff",
+      "owner": "worker1",
+      "status": "COMPLETED_WITH_ISSUES",
+      "created_at": "2031-05-10T09:38:00Z",
+      "started_at": "2031-05-10T09:38:01Z",
+      "finished_at": "2031-05-10T09:38:05Z",
+      "selected_count": 1,
+      "completed_count": 1,
+      "counts": {
+        "sorted": 0,
+        "manual_review": 1,
+        "requires_decision": 0,
+        "quarantined": 0,
+        "skipped": 0,
+        "recovery_required": 0
+      },
+      "reason": "Equal-priority RULE_CONFLICT moves the file to the flat manual review folder with the unchanged basename; it is not quarantine and no rule wins.",
+      "pages": [
+        {
+          "page_id": "batch-atlas-conflict-page1",
+          "next_cursor": null,
+          "rows": [
+            {
+              "item_id": "batch-atlas-shared-file",
+              "item_revision": 1,
+              "state": "MANUAL_REVIEW",
+              "reason_code": "RULE_CONFLICT",
+              "matched_rule": null,
+              "planned_target": null,
+              "actual": "manual_review",
+              "started_at": "2031-05-10T09:38:02Z",
+              "finished_at": "2031-05-10T09:38:03Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "batch_id": "batch-atlas-sorted",
+      "q_ids": [
+        "Q-032",
+        "Q-033"
+      ],
+      "selection": {
+        "isolated": "selection-batch-atlas-sorted"
+      },
+      "execution_mode": "DIRECT",
+      "preview_id": null,
+      "rule_set_id": "rule-set-atlas-published",
+      "owner": "worker1",
+      "status": "COMPLETED",
+      "created_at": "2031-05-10T09:39:00Z",
+      "started_at": "2031-05-10T09:39:01Z",
+      "finished_at": "2031-05-10T09:39:06Z",
+      "selected_count": 3,
+      "completed_count": 3,
+      "counts": {
+        "sorted": 3,
+        "manual_review": 0,
+        "requires_decision": 0,
+        "quarantined": 0,
+        "skipped": 0,
+        "recovery_required": 0
+      },
+      "reason": "All three safe renames succeed: COMPLETED means every outcome is SORTED and every source is gone from incoming.",
+      "pages": [
+        {
+          "page_id": "batch-atlas-sorted-page1",
+          "next_cursor": null,
+          "rows": [
+            {
+              "item_id": "batch-atlas-sorted-invoice",
+              "item_revision": 1,
+              "state": "SORTED",
+              "reason_code": null,
+              "matched_rule": {
+                "dictionary_id": "dictionary-atlas-invoices",
+                "version_id": "version-atlas-invoices-v1",
+                "rule_id": "rule-atlas-invoices-invoice"
+              },
+              "planned_target": "auto",
+              "actual": "planned",
+              "started_at": "2031-05-10T09:39:02Z",
+              "finished_at": "2031-05-10T09:39:03Z"
+            },
+            {
+              "item_id": "batch-atlas-sorted-readme",
+              "item_revision": 1,
+              "state": "SORTED",
+              "reason_code": null,
+              "matched_rule": {
+                "dictionary_id": "dictionary-atlas-general",
+                "version_id": "version-atlas-general-v1",
+                "rule_id": "rule-atlas-general-readme"
+              },
+              "planned_target": "auto",
+              "actual": "planned",
+              "started_at": "2031-05-10T09:39:02Z",
+              "finished_at": "2031-05-10T09:39:03Z"
+            },
+            {
+              "item_id": "batch-atlas-sorted-archive",
+              "item_revision": 1,
+              "state": "SORTED",
+              "reason_code": null,
+              "matched_rule": {
+                "dictionary_id": "dictionary-atlas-general",
+                "version_id": "version-atlas-general-v1",
+                "rule_id": "rule-atlas-general-archive"
+              },
+              "planned_target": "auto",
+              "actual": "planned",
+              "started_at": "2031-05-10T09:39:02Z",
+              "finished_at": "2031-05-10T09:39:03Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "batch_id": "batch-atlas-technical",
+      "q_ids": [
+        "Q-036",
+        "Q-037",
+        "Q-039"
+      ],
+      "selection": {
+        "isolated": "selection-batch-atlas-technical"
+      },
+      "execution_mode": "DIRECT",
+      "preview_id": null,
+      "rule_set_id": "rule-set-atlas-published",
+      "owner": "worker1",
+      "status": "RECOVERY_REQUIRED",
+      "created_at": "2031-05-10T09:40:00Z",
+      "started_at": "2031-05-10T09:40:01Z",
+      "finished_at": null,
+      "selected_count": 6,
+      "completed_count": 4,
+      "counts": {
+        "sorted": 0,
+        "manual_review": 0,
+        "requires_decision": 0,
+        "quarantined": 1,
+        "skipped": 3,
+        "recovery_required": 2
+      },
+      "reason": "Technical failure batch: one confirmed quarantine move, three per-file skips that perform no own mutation, and two unfinished RECOVERY_REQUIRED outcomes (unknown placement actual_location=null versus a known source whose quarantine was unavailable). The batch stays unfinished and is not terminal.",
+      "pages": [
+        {
+          "page_id": "batch-atlas-technical-page1",
+          "next_cursor": null,
+          "rows": [
+            {
+              "item_id": "batch-tech-quarantine",
+              "item_revision": 1,
+              "state": "QUARANTINED",
+              "reason_code": "TECHNICAL_ERROR",
+              "matched_rule": {
+                "dictionary_id": "dictionary-atlas-general",
+                "version_id": "version-atlas-general-v1",
+                "rule_id": "rule-atlas-general-archive"
+              },
+              "planned_target": "auto",
+              "actual": "quarantine",
+              "started_at": "2031-05-10T09:40:02Z",
+              "finished_at": "2031-05-10T09:40:03Z"
+            },
+            {
+              "item_id": "batch-tech-recovery-unknown",
+              "item_revision": 1,
+              "state": "RECOVERY_REQUIRED",
+              "reason_code": "RECOVERY_REQUIRED",
+              "matched_rule": {
+                "dictionary_id": "dictionary-atlas-invoices",
+                "version_id": "version-atlas-invoices-v1",
+                "rule_id": "rule-atlas-invoices-pdf"
+              },
+              "planned_target": "auto",
+              "actual": "null",
+              "started_at": "2031-05-10T09:40:02Z",
+              "finished_at": null
+            },
+            {
+              "item_id": "batch-tech-recovery-known",
+              "item_revision": 1,
+              "state": "RECOVERY_REQUIRED",
+              "reason_code": "RECOVERY_REQUIRED",
+              "matched_rule": {
+                "dictionary_id": "dictionary-atlas-invoices",
+                "version_id": "version-atlas-invoices-v1",
+                "rule_id": "rule-atlas-invoices-pdf"
+              },
+              "planned_target": "auto",
+              "actual": "source",
+              "started_at": "2031-05-10T09:40:02Z",
+              "finished_at": null
+            },
+            {
+              "item_id": "batch-tech-skip-claimed",
+              "item_revision": 1,
+              "state": "SKIPPED",
+              "reason_code": "ALREADY_PROCESSING",
+              "matched_rule": {
+                "dictionary_id": "dictionary-atlas-invoices",
+                "version_id": "version-atlas-invoices-v1",
+                "rule_id": "rule-atlas-invoices-pdf"
+              },
+              "planned_target": "auto",
+              "actual": "null",
+              "started_at": "2031-05-10T09:40:02Z",
+              "finished_at": "2031-05-10T09:40:03Z"
+            },
+            {
+              "item_id": "batch-tech-skip-changed",
+              "item_revision": 1,
+              "state": "SKIPPED",
+              "reason_code": "SOURCE_CHANGED",
+              "matched_rule": {
+                "dictionary_id": "dictionary-atlas-invoices",
+                "version_id": "version-atlas-invoices-v1",
+                "rule_id": "rule-atlas-invoices-pdf"
+              },
+              "planned_target": "auto",
+              "actual": "null",
+              "started_at": "2031-05-10T09:40:02Z",
+              "finished_at": "2031-05-10T09:40:03Z"
+            },
+            {
+              "item_id": "batch-tech-skip-missing",
+              "item_revision": 1,
+              "state": "SKIPPED",
+              "reason_code": "SOURCE_MISSING",
+              "matched_rule": {
+                "dictionary_id": "dictionary-atlas-invoices",
+                "version_id": "version-atlas-invoices-v1",
+                "rule_id": "rule-atlas-invoices-pdf"
+              },
+              "planned_target": "auto",
+              "actual": "null",
+              "started_at": "2031-05-10T09:40:02Z",
+              "finished_at": "2031-05-10T09:40:03Z"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "duplicate_targets": [
+    {
+      "group_id": "DUP-batch-atlas-hetero-invoice",
+      "batch_id": "batch-atlas-hetero",
+      "target": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Invoices/Invoice.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Invoices/Invoice.pdf"
+      },
+      "participants": [
+        "preview-atlas-invoice-a",
+        "preview-atlas-invoice-b"
+      ],
+      "reason": "Two selected files plan the same still-free canonical path. Every participant is REQUIRES_DECISION/TARGET_OCCUPIED; processing order selects no winner."
+    }
+  ],
+  "occupied_targets": [
+    {
+      "object_id": "existing-atlas-report-target",
+      "batch_id": "batch-atlas-hetero",
+      "item_id": "preview-atlas-occupied-report",
+      "location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Reports/Report.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/Report.pdf"
+      },
+      "content_tag": "lt034a-content-existing-atlas-report-target",
+      "unchanged": true,
+      "reason": "The existing target is never overwritten; the source stays in incoming."
+    }
+  ],
+  "manual_review_occupied": [
+    {
+      "object_id": "existing-atlas-manual-review-name",
+      "batch_id": "batch-atlas-hetero",
+      "item_id": "preview-atlas-manual-name",
+      "location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "_manual_review/atlas/unmatched.bin",
+        "display_path": "DEMO:/SandboxRoot/_manual_review/atlas/unmatched.bin"
+      },
+      "content_tag": "lt034a-content-existing-atlas-manual-review-name",
+      "unchanged": true,
+      "reason": "The flat manual review folder already holds the source basename; no suffix, replacement or subfolder is created."
+    }
+  ],
+  "inventory": {
+    "kind": "logical-inventory-expectation",
+    "note": "No file is written or read by this fixture. Content tags are deterministic logical labels derived only from the declared tag prefix and the item id; they are not measured filesystem hashes and must not be presented as proof. The inventory records only describe what a conforming backend must preserve or leave untouched.",
+    "no_file_writes": true,
+    "content_recipe": {
+      "algorithm": "logical-content-tag",
+      "seed": "wiseway-demo-seed-2031",
+      "inputs": [
+        "item_id"
+      ],
+      "tag_prefix": "lt034a-content-",
+      "description": "The content tag is the literal tag_prefix + item_id label; it is a deterministic logical marker, not bytes or a measured hash."
+    },
+    "state_rules": [
+      {
+        "state": "PENDING",
+        "reason_code": null,
+        "source_present_after": true,
+        "destination_present": false,
+        "content_conserved": null
+      },
+      {
+        "state": "PROCESSING",
+        "reason_code": null,
+        "source_present_after": true,
+        "destination_present": false,
+        "content_conserved": null
+      },
+      {
+        "state": "SORTED",
+        "reason_code": null,
+        "source_present_after": false,
+        "destination_present": true,
+        "content_conserved": true
+      },
+      {
+        "state": "MANUAL_REVIEW",
+        "reason_code": "NO_SCENARIO",
+        "source_present_after": false,
+        "destination_present": true,
+        "content_conserved": true
+      },
+      {
+        "state": "MANUAL_REVIEW",
+        "reason_code": "RULE_CONFLICT",
+        "source_present_after": false,
+        "destination_present": true,
+        "content_conserved": true
+      },
+      {
+        "state": "REQUIRES_DECISION",
+        "reason_code": "TARGET_OCCUPIED",
+        "source_present_after": true,
+        "destination_present": false,
+        "content_conserved": null
+      },
+      {
+        "state": "REQUIRES_DECISION",
+        "reason_code": "MANUAL_REVIEW_NAME_OCCUPIED",
+        "source_present_after": true,
+        "destination_present": false,
+        "content_conserved": null
+      },
+      {
+        "state": "QUARANTINED",
+        "reason_code": "TECHNICAL_ERROR",
+        "source_present_after": false,
+        "destination_present": true,
+        "content_conserved": true
+      },
+      {
+        "state": "SKIPPED",
+        "reason_code": "ALREADY_PROCESSING",
+        "source_present_after": null,
+        "destination_present": false,
+        "content_conserved": null
+      },
+      {
+        "state": "SKIPPED",
+        "reason_code": "SOURCE_CHANGED",
+        "source_present_after": null,
+        "destination_present": false,
+        "content_conserved": null
+      },
+      {
+        "state": "SKIPPED",
+        "reason_code": "SOURCE_MISSING",
+        "source_present_after": false,
+        "destination_present": false,
+        "content_conserved": null
+      },
+      {
+        "state": "RECOVERY_REQUIRED",
+        "reason_code": "RECOVERY_REQUIRED",
+        "source_present_after": null,
+        "destination_present": false,
+        "content_conserved": null
+      }
+    ]
+  },
+  "history": [
+    {
+      "page_id": "history-atlas-batches-page1",
+      "next_cursor": null,
+      "batch_ids": [
+        "batch-atlas-technical",
+        "batch-atlas-sorted",
+        "batch-atlas-conflict",
+        "batch-atlas-hetero",
+        "batch-atlas-same-user-session",
+        "batch-atlas-previewed-fresh",
+        "batch-atlas-direct-fresh"
+      ]
+    }
+  ],
+  "links": [
+    {
+      "link_id": "BATCH-LINK-DIRECT-PREFLIGHT",
+      "relation": "equals",
+      "source": {
+        "payload": "preflight:PF-DIRECT-FRESH",
+        "path": [
+          "expected",
+          "future_batch_id"
+        ]
+      },
+      "target": {
+        "payload": "batch:batch-atlas-direct-fresh",
+        "path": [
+          "batch_id"
+        ]
+      }
+    },
+    {
+      "link_id": "BATCH-LINK-DIRECT-SELECTION",
+      "relation": "equals",
+      "source": {
+        "payload": "preflight:PF-DIRECT-FRESH",
+        "path": [
+          "selection_id"
+        ]
+      },
+      "target": {
+        "payload": "batch:batch-atlas-direct-fresh",
+        "path": [
+          "selection_id"
+        ]
+      }
+    },
+    {
+      "link_id": "BATCH-LINK-PREVIEWED-PREFLIGHT",
+      "relation": "equals",
+      "source": {
+        "payload": "preflight:PF-PREVIEWED-FRESH",
+        "path": [
+          "expected",
+          "future_batch_id"
+        ]
+      },
+      "target": {
+        "payload": "batch:batch-atlas-previewed-fresh",
+        "path": [
+          "batch_id"
+        ]
+      }
+    },
+    {
+      "link_id": "BATCH-LINK-PREVIEWED-PREVIEW",
+      "relation": "equals",
+      "source": {
+        "payload": "preflight:PF-PREVIEWED-FRESH",
+        "path": [
+          "preview_id"
+        ]
+      },
+      "target": {
+        "payload": "batch:batch-atlas-previewed-fresh",
+        "path": [
+          "preview_id"
+        ]
+      }
+    },
+    {
+      "link_id": "BATCH-LINK-SESSION-PREFLIGHT",
+      "relation": "equals",
+      "source": {
+        "payload": "preflight:PF-SAME-USER-NEW-SESSION",
+        "path": [
+          "expected",
+          "future_batch_id"
+        ]
+      },
+      "target": {
+        "payload": "batch:batch-atlas-same-user-session",
+        "path": [
+          "batch_id"
+        ]
+      }
+    },
+    {
+      "link_id": "BATCH-LINK-ACTOR",
+      "relation": "equals",
+      "source": {
+        "payload": "batch:batch-atlas-direct-fresh",
+        "path": [
+          "actor",
+          "user_id"
+        ]
+      },
+      "target": {
+        "payload": "actor:worker1",
+        "path": [
+          "user_id"
+        ]
+      }
+    },
+    {
+      "link_id": "BATCH-LINK-RULESET",
+      "relation": "equals",
+      "source": {
+        "payload": "batch:batch-atlas-direct-fresh",
+        "path": [
+          "rule_set",
+          "rule_set_id"
+        ]
+      },
+      "target": {
+        "payload": "rule_set:rule-set-atlas-published",
+        "path": [
+          "rule_set_id"
+        ]
+      }
+    },
+    {
+      "link_id": "BATCH-LINK-DIRECT-MEMBERSHIP",
+      "relation": "membership_equals",
+      "source": {
+        "payload": "batch_rows:batch-atlas-direct-fresh",
+        "path": []
+      },
+      "target": {
+        "payload": "membership:selection-atlas-allmatching-120",
+        "path": []
+      }
+    },
+    {
+      "link_id": "BATCH-LINK-PREVIEWED-MEMBERSHIP",
+      "relation": "membership_equals",
+      "source": {
+        "payload": "batch_rows:batch-atlas-previewed-fresh",
+        "path": []
+      },
+      "target": {
+        "payload": "membership:selection-atlas-allmatching-120",
+        "path": []
+      }
+    },
+    {
+      "link_id": "BATCH-LINK-HETERO-MEMBERSHIP",
+      "relation": "membership_equals",
+      "source": {
+        "payload": "batch_rows:batch-atlas-hetero",
+        "path": []
+      },
+      "target": {
+        "payload": "membership:selection-batch-atlas-hetero",
+        "path": []
+      }
+    },
+    {
+      "link_id": "BATCH-LINK-SUMMARY-COUNTS",
+      "relation": "equals",
+      "source": {
+        "payload": "batch_summary:batch-atlas-hetero",
+        "path": [
+          "counts"
+        ]
+      },
+      "target": {
+        "payload": "batch:batch-atlas-hetero",
+        "path": [
+          "counts"
+        ]
+      }
+    },
+    {
+      "link_id": "BATCH-LINK-SUMMARY-ACTOR",
+      "relation": "equals",
+      "source": {
+        "payload": "batch_summary:batch-atlas-hetero",
+        "path": [
+          "actor"
+        ]
+      },
+      "target": {
+        "payload": "batch:batch-atlas-hetero",
+        "path": [
+          "actor"
+        ]
+      }
+    },
+    {
+      "link_id": "BATCH-LINK-PAGE-LIMIT",
+      "relation": "length_equals",
+      "source": {
+        "payload": "batch_page_rows:batch-atlas-direct-fresh-page1",
+        "path": []
+      },
+      "target": {
+        "payload": "constants",
+        "path": [
+          "batch_page_limit"
+        ]
+      }
+    },
+    {
+      "link_id": "BATCH-LINK-PREVIEWED-PAGE-LIMIT",
+      "relation": "length_equals",
+      "source": {
+        "payload": "batch_page_rows:batch-atlas-previewed-fresh-page1",
+        "path": []
+      },
+      "target": {
+        "payload": "constants",
+        "path": [
+          "batch_page_limit"
+        ]
+      }
+    },
+    {
+      "link_id": "BATCH-LINK-SORTED-ACTUAL-PLANNED",
+      "relation": "equals",
+      "source": {
+        "payload": "outcome:batch-atlas-sorted:batch-atlas-sorted-invoice",
+        "path": [
+          "actual_location"
+        ]
+      },
+      "target": {
+        "payload": "outcome:batch-atlas-sorted:batch-atlas-sorted-invoice",
+        "path": [
+          "planned_target"
+        ]
+      }
+    },
+    {
+      "link_id": "BATCH-LINK-OCCUPIED-SOURCE-STAYS",
+      "relation": "equals",
+      "source": {
+        "payload": "outcome:batch-atlas-hetero:preview-atlas-occupied-report",
+        "path": [
+          "actual_location"
+        ]
+      },
+      "target": {
+        "payload": "outcome:batch-atlas-hetero:preview-atlas-occupied-report",
+        "path": [
+          "source"
+        ]
+      }
+    },
+    {
+      "link_id": "BATCH-LINK-RECOVERY-UNKNOWN",
+      "relation": "not_equals",
+      "source": {
+        "payload": "outcome:batch-atlas-technical:batch-tech-recovery-unknown",
+        "path": [
+          "actual_location"
+        ]
+      },
+      "target": {
+        "payload": "outcome:batch-atlas-technical:batch-tech-recovery-known",
+        "path": [
+          "actual_location"
+        ]
+      }
+    },
+    {
+      "link_id": "BATCH-LINK-EXISTING-TARGET",
+      "relation": "equals",
+      "source": {
+        "payload": "outcome:batch-atlas-hetero:preview-atlas-occupied-report",
+        "path": [
+          "planned_target"
+        ]
+      },
+      "target": {
+        "payload": "existing_object:existing-atlas-report-target",
+        "path": [
+          "location"
+        ]
+      }
+    },
+    {
+      "link_id": "BATCH-LINK-MANUAL-NAME",
+      "relation": "equals",
+      "source": {
+        "payload": "outcome:batch-atlas-hetero:preview-atlas-manual-name",
+        "path": [
+          "actual_location"
+        ]
+      },
+      "target": {
+        "payload": "outcome:batch-atlas-hetero:preview-atlas-manual-name",
+        "path": [
+          "source"
+        ]
+      }
+    },
+    {
+      "link_id": "BATCH-LINK-MANUAL-REVIEW-BASENAME",
+      "relation": "equals",
+      "source": {
+        "payload": "inventory:batch-atlas-hetero:preview-atlas-no-scenario",
+        "path": [
+          "destination_basename"
+        ]
+      },
+      "target": {
+        "payload": "inventory:batch-atlas-hetero:preview-atlas-no-scenario",
+        "path": [
+          "source_basename"
+        ]
+      }
+    },
+    {
+      "link_id": "BATCH-LINK-CONFLICT-RULESET",
+      "relation": "equals",
+      "source": {
+        "payload": "batch:batch-atlas-conflict",
+        "path": [
+          "rule_set",
+          "rule_set_id"
+        ]
+      },
+      "target": {
+        "payload": "rule_set:rule-set-atlas-eq-diff",
+        "path": [
+          "rule_set_id"
+        ]
+      }
+    }
+  ],
+  "mutations": [
+    {
+      "mutation_id": "BATCH-MUT-STATUS-RECOVERY-MISMATCH",
+      "operation": "set",
+      "path": [
+        "batches",
+        6,
+        "status"
+      ],
+      "value": "RUNNING",
+      "validator": "payload",
+      "reason": "A batch with recovery_required outcomes must keep status RECOVERY_REQUIRED."
+    },
+    {
+      "mutation_id": "BATCH-MUT-COMPLETED-COUNT-DRIFT",
+      "operation": "set",
+      "path": [
+        "batches",
+        3,
+        "completed_count"
+      ],
+      "value": 6,
+      "validator": "payload",
+      "reason": "completed_count must equal the first five outcome counters."
+    },
+    {
+      "mutation_id": "BATCH-MUT-COMPLETED-EXCEEDS-SELECTED",
+      "operation": "set",
+      "path": [
+        "batches",
+        5,
+        "completed_count"
+      ],
+      "value": 4,
+      "validator": "payload",
+      "reason": "completed_count must not exceed selected_count."
+    },
+    {
+      "mutation_id": "BATCH-MUT-TERMINAL-NO-FINISH",
+      "operation": "set",
+      "path": [
+        "batches",
+        5,
+        "finished_at"
+      ],
+      "value": null,
+      "validator": "expectation",
+      "reason": "A COMPLETED batch must carry finished_at."
+    },
+    {
+      "mutation_id": "BATCH-MUT-RECOVERY-FINISHED",
+      "operation": "set",
+      "path": [
+        "batches",
+        6,
+        "finished_at"
+      ],
+      "value": "2031-05-10T09:40:09Z",
+      "validator": "expectation",
+      "reason": "A RECOVERY_REQUIRED batch stays unfinished."
+    },
+    {
+      "mutation_id": "BATCH-MUT-ACCEPTED-COMPLETED",
+      "operation": "set",
+      "path": [
+        "batches",
+        0,
+        "completed_count"
+      ],
+      "value": 1,
+      "validator": "payload",
+      "reason": "An ACCEPTED batch must not report completed outcomes."
+    },
+    {
+      "mutation_id": "BATCH-MUT-STATUS-UNKNOWN",
+      "operation": "set",
+      "path": [
+        "batches",
+        5,
+        "status"
+      ],
+      "value": "FINISHED",
+      "validator": "payload",
+      "reason": "BatchState is a closed enum."
+    },
+    {
+      "mutation_id": "BATCH-MUT-SORTED-NO-ACTUAL",
+      "operation": "set",
+      "path": [
+        "batches",
+        5,
+        "pages",
+        0,
+        "rows",
+        0,
+        "actual"
+      ],
+      "value": "null",
+      "validator": "payload",
+      "reason": "SORTED requires a confirmed actual_location."
+    },
+    {
+      "mutation_id": "BATCH-MUT-SORTED-TARGET-DRIFT",
+      "operation": "set",
+      "path": [
+        "batches",
+        5,
+        "pages",
+        0,
+        "rows",
+        0,
+        "planned_target"
+      ],
+      "value": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Invoices/Other.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Invoices/Other.pdf"
+      },
+      "validator": "expectation",
+      "reason": "The planned target must equal the selected rule directory + stem + last suffix."
+    },
+    {
+      "mutation_id": "BATCH-MUT-SORTED-ACTUAL-DRIFT",
+      "operation": "set",
+      "path": [
+        "batches",
+        5,
+        "pages",
+        0,
+        "rows",
+        1,
+        "actual"
+      ],
+      "value": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/Other",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/Other"
+      },
+      "validator": "expectation",
+      "reason": "A confirmed SORTED move must land exactly on its planned target."
+    },
+    {
+      "mutation_id": "BATCH-MUT-MANUAL-TARGET-PRESENT",
+      "operation": "set",
+      "path": [
+        "batches",
+        4,
+        "pages",
+        0,
+        "rows",
+        0,
+        "planned_target"
+      ],
+      "value": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Reports/Report.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/Report.pdf"
+      },
+      "validator": "expectation",
+      "reason": "Manual review has no predicted target; only the actual flat destination is resolved."
+    },
+    {
+      "mutation_id": "BATCH-MUT-MANUAL-BASENAME-CHANGED",
+      "operation": "set",
+      "path": [
+        "batches",
+        4,
+        "pages",
+        0,
+        "rows",
+        0,
+        "actual"
+      ],
+      "value": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "_manual_review/atlas/shared-file-1.pdf",
+        "display_path": "DEMO:/SandboxRoot/_manual_review/atlas/shared-file-1.pdf"
+      },
+      "validator": "expectation",
+      "reason": "Manual review preserves the full original basename."
+    },
+    {
+      "mutation_id": "BATCH-MUT-DECISION-ACTUAL-MOVED",
+      "operation": "set",
+      "path": [
+        "batches",
+        3,
+        "pages",
+        0,
+        "rows",
+        3,
+        "actual"
+      ],
+      "value": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Reports/Report.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/Report.pdf"
+      },
+      "validator": "payload",
+      "reason": "REQUIRES_DECISION keeps the source in place."
+    },
+    {
+      "mutation_id": "BATCH-MUT-SKIPPED-MISSING-ACTUAL",
+      "operation": "set",
+      "path": [
+        "batches",
+        6,
+        "pages",
+        0,
+        "rows",
+        5,
+        "actual"
+      ],
+      "value": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Reports/batch-tech-skip-missing.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/batch-tech-skip-missing.pdf"
+      },
+      "validator": "payload",
+      "reason": "A missing source must not report a location."
+    },
+    {
+      "mutation_id": "BATCH-MUT-RECOVERY-FINISHED-OUTCOME",
+      "operation": "set",
+      "path": [
+        "batches",
+        6,
+        "pages",
+        0,
+        "rows",
+        1,
+        "finished_at"
+      ],
+      "value": "2031-05-10T09:40:03Z",
+      "validator": "payload",
+      "reason": "An unfinished RECOVERY_REQUIRED outcome must keep finished_at=null."
+    },
+    {
+      "mutation_id": "BATCH-MUT-DUPLICATE-INCOMPLETE",
+      "operation": "set",
+      "path": [
+        "batches",
+        3,
+        "pages",
+        0,
+        "rows",
+        5,
+        "state"
+      ],
+      "value": "SORTED",
+      "validator": "expectation",
+      "reason": "Every duplicate-plan-target participant must stay REQUIRES_DECISION; no order winner."
+    },
+    {
+      "mutation_id": "BATCH-MUT-PAGE1-NOT-FULL",
+      "operation": "set",
+      "path": [
+        "batches",
+        0,
+        "pages",
+        0,
+        "rows",
+        0,
+        "$repeat_rows",
+        "index_end"
+      ],
+      "value": 99,
+      "validator": "expectation",
+      "reason": "The first page of a batch above the page limit must be full."
+    },
+    {
+      "mutation_id": "BATCH-MUT-MEMBERSHIP-DRIFT",
+      "operation": "set",
+      "path": [
+        "batches",
+        3,
+        "pages",
+        0,
+        "rows",
+        0,
+        "item_id"
+      ],
+      "value": "queue-atlas-ready-0001",
+      "validator": "expectation",
+      "reason": "Every outcome must belong to the frozen selection membership."
+    },
+    {
+      "mutation_id": "BATCH-MUT-REVISION-DRIFT",
+      "operation": "set",
+      "path": [
+        "batches",
+        3,
+        "pages",
+        0,
+        "rows",
+        0,
+        "item_revision"
+      ],
+      "value": 99,
+      "validator": "expectation",
+      "reason": "The outcome revision must match the frozen selection revision."
+    },
+    {
+      "mutation_id": "BATCH-MUT-HISTORY-ORDER",
+      "operation": "set",
+      "path": [
+        "history",
+        0,
+        "batch_ids",
+        0
+      ],
+      "value": "batch-atlas-direct-fresh",
+      "validator": "expectation",
+      "reason": "History is ordered created_at DESC, batch_id DESC."
+    },
+    {
+      "mutation_id": "BATCH-MUT-COUNTS-DRIFT",
+      "operation": "set",
+      "path": [
+        "batches",
+        3,
+        "counts",
+        "sorted"
+      ],
+      "value": 1,
+      "validator": "payload",
+      "reason": "Declared counts must agree with the materialized outcomes."
+    },
+    {
+      "mutation_id": "BATCH-MUT-INVENTORY-SOURCE-LEFTOVER",
+      "operation": "set",
+      "path": [
+        "inventory",
+        "state_rules",
+        2,
+        "source_present_after"
+      ],
+      "value": true,
+      "validator": "inventory",
+      "reason": "A confirmed move must not leave the source in incoming."
+    },
+    {
+      "mutation_id": "BATCH-MUT-ATTEMPT-DUPLICATE",
+      "operation": "set",
+      "path": [
+        "batches",
+        5,
+        "pages",
+        0,
+        "rows",
+        1,
+        "attempt_id"
+      ],
+      "value": "attempt-batch-atlas-sorted-batch-atlas-sorted-invoice",
+      "validator": "expectation",
+      "reason": "Attempt ids are unique."
+    }
+  ],
+  "coverage": {
+    "Q-031": [
+      "DUP-batch-atlas-hetero-invoice",
+      "batch-atlas-hetero",
+      "batch-atlas-sorted"
+    ],
+    "Q-032": [
+      "batch-atlas-hetero",
+      "existing-atlas-report-target"
+    ],
+    "Q-033": [
+      "batch-atlas-sorted",
+      "batch-atlas-hetero"
+    ],
+    "Q-034": [
+      "batch-atlas-conflict",
+      "batch-atlas-hetero"
+    ],
+    "Q-035": [
+      "batch-atlas-hetero",
+      "existing-atlas-manual-review-name"
+    ],
+    "Q-036": [
+      "batch-atlas-technical",
+      "batch-tech-quarantine"
+    ],
+    "Q-037": [
+      "batch-atlas-technical",
+      "batch-tech-recovery-unknown",
+      "batch-tech-recovery-known"
+    ],
+    "Q-039": [
+      "batch-atlas-hetero",
+      "batch-atlas-technical",
+      "batch-atlas-sorted",
+      "batch-atlas-conflict"
+    ]
+  }
+}

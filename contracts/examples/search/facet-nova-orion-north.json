@@ -1,0 +1,30 @@
+{
+  "request_state_id": "facet-q006-nova-orion-north",
+  "root_id": "root-demo-nova",
+  "schema_set_version": "schema-demo-2",
+  "index_generation": "generation-demo-2",
+  "facet": {
+    "level_id": "level-category",
+    "level_name": "Категория",
+    "options": [
+      {
+        "marker_id": "marker-root-demo-nova-archive-nova-orion-north-data",
+        "level_id": "level-category",
+        "level_name": "Категория",
+        "raw_value": "Data",
+        "display_value": "Data",
+        "kind": "VALUE",
+        "count": 1
+      },
+      {
+        "marker_id": "marker-root-demo-nova-archive-nova-orion-north-reports",
+        "level_id": "level-category",
+        "level_name": "Категория",
+        "raw_value": "Reports",
+        "display_value": "Reports",
+        "kind": "VALUE",
+        "count": 7
+      }
+    ]
+  }
+}

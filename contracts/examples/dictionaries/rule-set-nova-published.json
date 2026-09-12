@@ -1,0 +1,10 @@
+{
+  "rule_set_id": "rule-set-nova-published",
+  "company_id": "company-demo-nova",
+  "members": [
+    {
+      "dictionary_id": "dictionary-nova-general",
+      "version_id": "version-nova-general-v1"
+    }
+  ]
+}

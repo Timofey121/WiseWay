@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "INVALID_STATE",
+    "message": "Снимок или просмотр несовместимы с запросом.",
+    "request_id": "request-batch-invalid-state",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

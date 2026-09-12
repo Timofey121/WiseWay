@@ -1,0 +1,22 @@
+{
+  "return_operation_id": "return-atlas-batch-tech-quarantine",
+  "item": {
+    "item_id": "batch-tech-quarantine",
+    "item_revision": 2,
+    "company_id": "company-demo-atlas",
+    "incoming_source_id": "incoming-demo-atlas",
+    "source_name": "Atlas incoming",
+    "source": {
+      "root_id": "root-demo-atlas",
+      "relative_path": "Archive/Atlas/Orion_2031/Reports/batch-tech-quarantine.tar.gz",
+      "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/batch-tech-quarantine.tar.gz"
+    },
+    "filename": "batch-tech-quarantine.tar.gz",
+    "size_bytes": 2048,
+    "modified_at": "2031-05-10T09:45:00Z",
+    "status": "WAITING_READY",
+    "reason_code": null,
+    "selectable": false,
+    "active_attempt_id": null
+  }
+}

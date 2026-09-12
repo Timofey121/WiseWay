@@ -1,0 +1,2210 @@
+{
+  "fixture_set": "wiseway-audit-expectations",
+  "version": "1.0.0",
+  "seed": "wiseway-demo-seed-2031",
+  "contract_version": "1.0.0",
+  "corpus_version": "1.2.0",
+  "dictionary_lifecycle_fixture": "dictionary_lifecycle.json",
+  "batch_outcomes_fixture": "batch_outcomes.json",
+  "batch_scenarios_fixture": "batch_scenarios.json",
+  "quarantine_returns_fixture": "quarantine_returns.json",
+  "target_display_prefix": "DEMO:/SandboxRoot",
+  "timezone": {
+    "id": "Europe/Moscow",
+    "utc_offset": "+03:00",
+    "day": "2031-05-10",
+    "from_utc": "2031-05-09T21:00:00Z",
+    "to_utc": "2031-05-10T21:00:00Z",
+    "note": "The client converts the selected local day in app-config to the UTC half-open interval [from,to). All synthetic events fall inside 2031-05-10 UTC."
+  },
+  "notes": "LT-03.5b finite canonical audit journal oracle. It connects the actual dictionary timeline, the actual LT-03.4a accepted batches and their 260 per-file outcomes, the LT-03.4b operational/session descriptors and the LT-03.5a manual return without duplicating their values. Attempt events are expanded from the frozen outcome rows by a declarative state->event recipe (the literal range recipe) and every attempt/phase is unique. All 14 OAS AuditAction values are represented with their exact category and actor/null scope. actor=null is modelled only for an uninitiated LOGIN_FAILED; a blocked author stays in the actor filter list with the historical display-name snapshot and no blocking metadata is invented as an Actor DTO field. Query scenarios declare the literal expected ordered event ids; the module re-derives them from the declared events, filters and cursor bounds. This is an expectation, never measured audit evidence, and no journal/filter/cursor/actor-directory/HTTP transport is implemented.",
+  "constants": {
+    "query_page_limit": 100,
+    "default_page_limit": 100,
+    "updates_poll_seconds": 60,
+    "max_page_items": 100,
+    "safe_cache_control": "no-store"
+  },
+  "actors": [
+    {
+      "alias": "worker1",
+      "user_id": "user-demo-worker-1",
+      "login": "worker.one",
+      "display_name": "Иван Рабочий",
+      "display_name_at_event": "Иван Рабочий",
+      "role": "WORKER",
+      "blocked": false
+    },
+    {
+      "alias": "worker2",
+      "user_id": "user-demo-worker-2",
+      "login": "worker.two",
+      "display_name": "Пётр Сменов",
+      "display_name_at_event": "Пётр Сменов",
+      "role": "WORKER",
+      "blocked": false
+    },
+    {
+      "alias": "admin",
+      "user_id": "user-demo-admin-1",
+      "login": "admin.one",
+      "display_name": "Администратор Демо",
+      "display_name_at_event": "Администратор Демо",
+      "role": "ADMIN",
+      "blocked": false
+    },
+    {
+      "alias": "blocked_worker",
+      "user_id": "user-demo-worker-blocked",
+      "login": "blocked.one",
+      "display_name": "Заблокированный Сотрудник",
+      "display_name_at_event": "Сотрудник До Блокировки",
+      "role": "WORKER",
+      "blocked": true,
+      "note": "The account is blocked, but it authored an accessible DRAFT_SAVED event, so it stays in /audit/actors. The event carries the display-name snapshot at action time; the actor page carries the current display name. The Actor DTO has no blocking field."
+    }
+  ],
+  "companies": {
+    "atlas": {
+      "company_id": "company-demo-atlas",
+      "root_id": "root-demo-atlas"
+    },
+    "nova": {
+      "company_id": "company-demo-nova",
+      "root_id": "root-demo-nova"
+    }
+  },
+  "universes": [
+    {
+      "universe_id": "primary",
+      "kind": "primary",
+      "note": "The canonical published day: the actual dictionary timeline, the LT-03.4a accepted batches that back the quarantine return, the manual return and the session events."
+    },
+    {
+      "universe_id": "dictionary-scenario",
+      "kind": "isolated",
+      "note": "The isolated dictionary simulation universes (empty/conflict/same-target). Alternate histories, never interleaved with the primary day."
+    },
+    {
+      "universe_id": "batch-isolated",
+      "kind": "isolated",
+      "note": "The isolated LT-03.4a accepted selections (hetero/conflict/sorted). Alternate histories of the same logical files, separated from the primary day."
+    },
+    {
+      "universe_id": "overlap",
+      "kind": "isolated",
+      "note": "The two-actor claim overlap concurrency scenario of LT-03.4b."
+    },
+    {
+      "universe_id": "retry",
+      "kind": "isolated",
+      "note": "The manual new-key retry scenario of LT-03.4b."
+    }
+  ],
+  "batch_universes": {
+    "batch-atlas-direct-fresh": "primary",
+    "batch-atlas-previewed-fresh": "primary",
+    "batch-atlas-same-user-session": "primary",
+    "batch-atlas-technical": "primary",
+    "batch-atlas-hetero": "batch-isolated",
+    "batch-atlas-conflict": "batch-isolated",
+    "batch-atlas-sorted": "batch-isolated"
+  },
+  "batch_request_ids": {
+    "batch-atlas-direct-fresh": "request-demo-batch-01",
+    "batch-atlas-previewed-fresh": "request-demo-batch-02",
+    "batch-atlas-same-user-session": "request-demo-batch-03",
+    "batch-atlas-hetero": "request-demo-batch-04",
+    "batch-atlas-conflict": "request-demo-batch-05",
+    "batch-atlas-sorted": "request-demo-batch-06",
+    "batch-atlas-technical": "request-demo-batch-07"
+  },
+  "recovery_operations": {
+    "attempt-batch-atlas-technical-batch-tech-recovery-unknown": "recovery-batch-atlas-technical-batch-tech-recovery-unknown",
+    "attempt-batch-atlas-technical-batch-tech-recovery-known": "recovery-batch-atlas-technical-batch-tech-recovery-known"
+  },
+  "dictionary_actor_aliases": {
+    "worker-one": "worker1",
+    "worker-two": "worker2",
+    "admin-one": "admin"
+  },
+  "attempt_event_rules": [
+    {
+      "state": "PENDING",
+      "events": []
+    },
+    {
+      "state": "PROCESSING",
+      "events": [
+        {
+          "phase": "ATTEMPT_START",
+          "action": "FILE_ATTEMPT_STARTED",
+          "result": "SUCCESS",
+          "time_field": "started_at"
+        }
+      ]
+    },
+    {
+      "state": "SORTED",
+      "events": [
+        {
+          "phase": "ATTEMPT_START",
+          "action": "FILE_ATTEMPT_STARTED",
+          "result": "SUCCESS",
+          "time_field": "started_at"
+        },
+        {
+          "phase": "ATTEMPT_FINISH",
+          "action": "FILE_ATTEMPT_FINISHED",
+          "result": "SUCCESS",
+          "time_field": "finished_at",
+          "target": "actual_location"
+        }
+      ]
+    },
+    {
+      "state": "MANUAL_REVIEW",
+      "events": [
+        {
+          "phase": "ATTEMPT_START",
+          "action": "FILE_ATTEMPT_STARTED",
+          "result": "SUCCESS",
+          "time_field": "started_at"
+        },
+        {
+          "phase": "ATTEMPT_FINISH",
+          "action": "FILE_ATTEMPT_FINISHED",
+          "result": "ISSUE",
+          "time_field": "finished_at",
+          "target": "actual_location"
+        }
+      ]
+    },
+    {
+      "state": "REQUIRES_DECISION",
+      "events": [
+        {
+          "phase": "ATTEMPT_START",
+          "action": "FILE_ATTEMPT_STARTED",
+          "result": "SUCCESS",
+          "time_field": "started_at"
+        },
+        {
+          "phase": "ATTEMPT_FINISH",
+          "action": "FILE_ATTEMPT_FINISHED",
+          "result": "ISSUE",
+          "time_field": "finished_at"
+        }
+      ]
+    },
+    {
+      "state": "QUARANTINED",
+      "events": [
+        {
+          "phase": "ATTEMPT_START",
+          "action": "FILE_ATTEMPT_STARTED",
+          "result": "SUCCESS",
+          "time_field": "started_at"
+        },
+        {
+          "phase": "ATTEMPT_FINISH",
+          "action": "FILE_ATTEMPT_FINISHED",
+          "result": "ISSUE",
+          "time_field": "finished_at",
+          "target": "actual_location"
+        }
+      ]
+    },
+    {
+      "state": "SKIPPED",
+      "events": [
+        {
+          "phase": "ATTEMPT_START",
+          "action": "FILE_ATTEMPT_STARTED",
+          "result": "SUCCESS",
+          "time_field": "started_at"
+        },
+        {
+          "phase": "ATTEMPT_FINISH",
+          "action": "FILE_ATTEMPT_FINISHED",
+          "result": "ISSUE",
+          "time_field": "finished_at"
+        }
+      ]
+    },
+    {
+      "state": "RECOVERY_REQUIRED",
+      "events": [
+        {
+          "phase": "ATTEMPT_START",
+          "action": "FILE_ATTEMPT_STARTED",
+          "result": "SUCCESS",
+          "time_field": "started_at"
+        },
+        {
+          "phase": "RECOVERY",
+          "action": "RECOVERY_REQUIRED",
+          "result": "ISSUE",
+          "time_field": "started_at"
+        }
+      ]
+    }
+  ],
+  "dictionary_events": [
+    {
+      "event_id": "AUD-DICT-CREATE-ATLAS-CLEANUP",
+      "universe": "primary",
+      "timeline_step": "create-atlas-cleanup",
+      "action": "DICTIONARY_CREATED",
+      "result": "SUCCESS",
+      "request_id": "request-dict-demo-01",
+      "draft_revision": 0
+    },
+    {
+      "event_id": "AUD-DICT-SAVE-ATLAS-CLEANUP",
+      "universe": "primary",
+      "timeline_step": "save-atlas-cleanup",
+      "action": "DRAFT_SAVED",
+      "result": "SUCCESS",
+      "request_id": "request-dict-demo-02",
+      "draft_revision": 1
+    },
+    {
+      "event_id": "AUD-DICT-CREATE-NOVA-SCOPE",
+      "universe": "primary",
+      "timeline_step": "create-nova-scope",
+      "action": "DICTIONARY_CREATED",
+      "result": "SUCCESS",
+      "request_id": "request-dict-demo-03",
+      "draft_revision": 0
+    },
+    {
+      "event_id": "AUD-DICT-SAVE-ATLAS-GENERAL-REV2",
+      "universe": "primary",
+      "timeline_step": "save-atlas-general-rev2",
+      "action": "DRAFT_SAVED",
+      "result": "SUCCESS",
+      "request_id": "request-dict-demo-04",
+      "draft_revision": 2
+    },
+    {
+      "event_id": "AUD-DICT-SIMULATE-ATLAS-GENERAL-V2",
+      "universe": "primary",
+      "timeline_step": "simulate-atlas-general-v2-full",
+      "action": "DICTIONARY_SIMULATED",
+      "result": "SUCCESS",
+      "request_id": "request-dict-demo-05",
+      "draft_revision": 2
+    },
+    {
+      "event_id": "AUD-DICT-PUBLISH-ATLAS-GENERAL-V2",
+      "universe": "primary",
+      "timeline_step": "publish-atlas-general-v2",
+      "action": "DICTIONARY_PUBLISHED",
+      "result": "SUCCESS",
+      "request_id": "request-dict-demo-06",
+      "draft_revision": 2,
+      "comment": "Публикация проверенного черновика Atlas."
+    },
+    {
+      "event_id": "AUD-DICT-SAVE-ATLAS-INVOICES-V2",
+      "universe": "primary",
+      "timeline_step": "save-atlas-invoices-v2",
+      "action": "DRAFT_SAVED",
+      "result": "SUCCESS",
+      "request_id": "request-dict-demo-07",
+      "draft_revision": 2
+    },
+    {
+      "event_id": "AUD-DICT-SIMULATE-ATLAS-INVOICES-V2",
+      "universe": "primary",
+      "timeline_step": "simulate-atlas-invoices-v2",
+      "action": "DICTIONARY_SIMULATED",
+      "result": "SUCCESS",
+      "request_id": "request-dict-demo-08",
+      "draft_revision": 2
+    },
+    {
+      "event_id": "AUD-DICT-PUBLISH-ATLAS-INVOICES-V2",
+      "universe": "primary",
+      "timeline_step": "publish-atlas-invoices-v2",
+      "action": "DICTIONARY_PUBLISHED",
+      "result": "SUCCESS",
+      "request_id": "request-dict-demo-09",
+      "draft_revision": 2,
+      "comment": "Публикация дополнительного правила Atlas invoices."
+    },
+    {
+      "event_id": "AUD-DICT-RESTORE-ATLAS-GENERAL-V1",
+      "universe": "primary",
+      "timeline_step": "restore-atlas-general-v1",
+      "action": "DICTIONARY_RESTORED",
+      "result": "SUCCESS",
+      "request_id": "request-dict-demo-10",
+      "draft_revision": 3
+    },
+    {
+      "event_id": "AUD-DICT-SIMULATE-ATLAS-GENERAL-V3",
+      "universe": "primary",
+      "timeline_step": "simulate-atlas-general-v3-restored",
+      "action": "DICTIONARY_SIMULATED",
+      "result": "SUCCESS",
+      "request_id": "request-dict-demo-11",
+      "draft_revision": 3
+    },
+    {
+      "event_id": "AUD-DICT-PUBLISH-ATLAS-GENERAL-V3",
+      "universe": "primary",
+      "timeline_step": "publish-atlas-general-v3",
+      "action": "DICTIONARY_PUBLISHED",
+      "result": "SUCCESS",
+      "request_id": "request-dict-demo-12",
+      "draft_revision": 3,
+      "comment": "Публикация восстановленной версии 1."
+    },
+    {
+      "event_id": "AUD-DICT-MANUAL-EDIT-ATLAS-GENERAL",
+      "universe": "primary",
+      "timeline_step": "manual-edit-atlas-general",
+      "action": "DRAFT_SAVED",
+      "result": "SUCCESS",
+      "request_id": "request-dict-demo-13",
+      "draft_revision": 4
+    },
+    {
+      "event_id": "AUD-DICT-SIMULATE-ATLAS-EMPTY",
+      "universe": "dictionary-scenario",
+      "timeline_step": "simulate-atlas-empty",
+      "action": "DICTIONARY_SIMULATED",
+      "result": "SUCCESS",
+      "request_id": "request-dict-scenario-01",
+      "draft_revision": 2
+    },
+    {
+      "event_id": "AUD-DICT-SIMULATE-ATLAS-CONFLICT",
+      "universe": "dictionary-scenario",
+      "timeline_step": "simulate-atlas-conflict",
+      "action": "DICTIONARY_SIMULATED",
+      "result": "SUCCESS",
+      "request_id": "request-dict-scenario-02",
+      "draft_revision": 101
+    },
+    {
+      "event_id": "AUD-DICT-SIMULATE-ATLAS-SAME-TARGET",
+      "universe": "dictionary-scenario",
+      "timeline_step": "simulate-atlas-same-target",
+      "action": "DICTIONARY_SIMULATED",
+      "result": "SUCCESS",
+      "request_id": "request-dict-scenario-03",
+      "draft_revision": 102
+    }
+  ],
+  "explicit_events": [
+    {
+      "event_id": "AUD-LOGIN-SUCCESS-WORKER1",
+      "universe": "primary",
+      "category": "SYSTEM",
+      "action": "LOGIN_SUCCEEDED",
+      "result": "SUCCESS",
+      "actor": "worker1",
+      "occurred_at": "2031-05-10T08:30:00Z",
+      "request_id": "request-login-01"
+    },
+    {
+      "event_id": "AUD-LOGIN-SUCCESS-ADMIN",
+      "universe": "primary",
+      "category": "SYSTEM",
+      "action": "LOGIN_SUCCEEDED",
+      "result": "SUCCESS",
+      "actor": "admin",
+      "occurred_at": "2031-05-10T08:31:00Z",
+      "request_id": "request-login-02"
+    },
+    {
+      "event_id": "AUD-LOGIN-FAILED-ANONYMOUS",
+      "universe": "primary",
+      "category": "SYSTEM",
+      "action": "LOGIN_FAILED",
+      "result": "FAILED",
+      "actor": null,
+      "occurred_at": "2031-05-10T08:32:00Z",
+      "request_id": "request-login-03"
+    },
+    {
+      "event_id": "AUD-LOGIN-FAILED-KNOWN",
+      "universe": "primary",
+      "category": "SYSTEM",
+      "action": "LOGIN_FAILED",
+      "result": "FAILED",
+      "actor": "worker2",
+      "occurred_at": "2031-05-10T08:33:00Z",
+      "request_id": "request-login-04"
+    },
+    {
+      "event_id": "AUD-ACCOUNT-BLOCKED",
+      "universe": "primary",
+      "category": "SYSTEM",
+      "action": "ACCOUNT_BLOCKED",
+      "result": "SUCCESS",
+      "actor": "admin",
+      "occurred_at": "2031-05-10T08:34:00Z",
+      "request_id": "request-account-block-01"
+    },
+    {
+      "event_id": "AUD-LOGOUT-SYSTEM",
+      "universe": "primary",
+      "phase": "SESSION",
+      "category": "SYSTEM",
+      "action": "LOGOUT",
+      "result": "SUCCESS",
+      "actor": "worker1",
+      "occurred_at": "2031-05-10T09:36:00Z",
+      "request_id": "request-demo-batch-14"
+    },
+    {
+      "event_id": "AUD-LOGIN-SUCCESS-WORKER2-LATE",
+      "universe": "primary",
+      "category": "SYSTEM",
+      "action": "LOGIN_SUCCEEDED",
+      "result": "SUCCESS",
+      "actor": "worker2",
+      "occurred_at": "2031-05-10T09:58:00Z",
+      "request_id": "request-login-05"
+    },
+    {
+      "event_id": "AUD-DICT-BLOCKED-SAVE",
+      "universe": "primary",
+      "category": "BUSINESS",
+      "action": "DRAFT_SAVED",
+      "result": "SUCCESS",
+      "actor": "blocked_worker",
+      "occurred_at": "2031-05-10T08:13:00Z",
+      "request_id": "request-dict-demo-14",
+      "operation_id": "dictionary-atlas-general",
+      "company_id": "company-demo-atlas",
+      "dictionary_id": "dictionary-atlas-general"
+    },
+    {
+      "event_id": "AUD-BATCH-ACCEPT-OVERLAP-WINNER",
+      "universe": "overlap",
+      "phase": "ACCEPT",
+      "category": "BUSINESS",
+      "action": "BATCH_ACCEPTED",
+      "result": "SUCCESS",
+      "actor": "worker1",
+      "occurred_at": "2031-05-10T09:50:29Z",
+      "request_id": "request-demo-batch-10",
+      "operation_id": "batch-overlap-winner",
+      "company_id": "company-demo-atlas",
+      "batch_id": "batch-overlap-winner",
+      "rule_set_id": "rule-set-atlas-published"
+    },
+    {
+      "event_id": "AUD-BATCH-ACCEPT-OVERLAP-LOSER",
+      "universe": "overlap",
+      "phase": "ACCEPT",
+      "category": "BUSINESS",
+      "action": "BATCH_ACCEPTED",
+      "result": "SUCCESS",
+      "actor": "worker2",
+      "occurred_at": "2031-05-10T09:50:30Z",
+      "request_id": "request-demo-batch-11",
+      "operation_id": "batch-overlap-loser",
+      "company_id": "company-demo-atlas",
+      "batch_id": "batch-overlap-loser",
+      "rule_set_id": "rule-set-atlas-published"
+    },
+    {
+      "event_id": "AUD-BATCH-ACCEPT-RETRY",
+      "universe": "retry",
+      "phase": "ACCEPT",
+      "category": "BUSINESS",
+      "action": "BATCH_ACCEPTED",
+      "result": "SUCCESS",
+      "actor": "worker1",
+      "occurred_at": "2031-05-10T09:56:30Z",
+      "request_id": "request-demo-batch-12",
+      "operation_id": "batch-atlas-retry",
+      "company_id": "company-demo-atlas",
+      "batch_id": "batch-atlas-retry",
+      "rule_set_id": "rule-set-atlas-published"
+    }
+  ],
+  "return_event_ids": [
+    "AUD-QR-RETURNED-SUCCESS",
+    "AUD-QR-RETURN-RECOVERY"
+  ],
+  "isolated_events": [
+    {
+      "event_id": "AUD-ATTEMPT-WINNER-SHARED-START",
+      "universe": "overlap",
+      "batch_id": "batch-overlap-winner",
+      "item_id": "overlap-shared-pdf",
+      "phase": "ATTEMPT_START",
+      "action": "FILE_ATTEMPT_STARTED",
+      "result": "SUCCESS",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-10"
+    },
+    {
+      "event_id": "AUD-ATTEMPT-WINNER-SHARED-FINISH",
+      "universe": "overlap",
+      "batch_id": "batch-overlap-winner",
+      "item_id": "overlap-shared-pdf",
+      "phase": "ATTEMPT_FINISH",
+      "action": "FILE_ATTEMPT_FINISHED",
+      "result": "SUCCESS",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-10",
+      "target": "actual_location"
+    },
+    {
+      "event_id": "AUD-ATTEMPT-WINNER-SAFE-START",
+      "universe": "overlap",
+      "batch_id": "batch-overlap-winner",
+      "item_id": "overlap-winner-safe-txt",
+      "phase": "ATTEMPT_START",
+      "action": "FILE_ATTEMPT_STARTED",
+      "result": "SUCCESS",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-10"
+    },
+    {
+      "event_id": "AUD-ATTEMPT-WINNER-SAFE-FINISH",
+      "universe": "overlap",
+      "batch_id": "batch-overlap-winner",
+      "item_id": "overlap-winner-safe-txt",
+      "phase": "ATTEMPT_FINISH",
+      "action": "FILE_ATTEMPT_FINISHED",
+      "result": "SUCCESS",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-10",
+      "target": "actual_location"
+    },
+    {
+      "event_id": "AUD-ATTEMPT-LOSER-SHARED-START",
+      "universe": "overlap",
+      "batch_id": "batch-overlap-loser",
+      "item_id": "overlap-shared-pdf",
+      "phase": "ATTEMPT_START",
+      "action": "FILE_ATTEMPT_STARTED",
+      "result": "SUCCESS",
+      "actor": "worker2",
+      "request_id": "request-demo-batch-11"
+    },
+    {
+      "event_id": "AUD-ATTEMPT-LOSER-SHARED-FINISH",
+      "universe": "overlap",
+      "batch_id": "batch-overlap-loser",
+      "item_id": "overlap-shared-pdf",
+      "phase": "ATTEMPT_FINISH",
+      "action": "FILE_ATTEMPT_FINISHED",
+      "result": "ISSUE",
+      "actor": "worker2",
+      "request_id": "request-demo-batch-11"
+    },
+    {
+      "event_id": "AUD-ATTEMPT-LOSER-README-START",
+      "universe": "overlap",
+      "batch_id": "batch-overlap-loser",
+      "item_id": "overlap-loser-readme",
+      "phase": "ATTEMPT_START",
+      "action": "FILE_ATTEMPT_STARTED",
+      "result": "SUCCESS",
+      "actor": "worker2",
+      "request_id": "request-demo-batch-11"
+    },
+    {
+      "event_id": "AUD-ATTEMPT-LOSER-README-FINISH",
+      "universe": "overlap",
+      "batch_id": "batch-overlap-loser",
+      "item_id": "overlap-loser-readme",
+      "phase": "ATTEMPT_FINISH",
+      "action": "FILE_ATTEMPT_FINISHED",
+      "result": "SUCCESS",
+      "actor": "worker2",
+      "request_id": "request-demo-batch-11",
+      "target": "actual_location"
+    },
+    {
+      "event_id": "AUD-ATTEMPT-RETRY-START",
+      "universe": "retry",
+      "batch_id": "batch-atlas-retry",
+      "item_id": "retry-invoice-pdf",
+      "phase": "ATTEMPT_START",
+      "action": "FILE_ATTEMPT_STARTED",
+      "result": "SUCCESS",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-12"
+    },
+    {
+      "event_id": "AUD-ATTEMPT-RETRY-FINISH",
+      "universe": "retry",
+      "batch_id": "batch-atlas-retry",
+      "item_id": "retry-invoice-pdf",
+      "phase": "ATTEMPT_FINISH",
+      "action": "FILE_ATTEMPT_FINISHED",
+      "result": "SUCCESS",
+      "actor": "worker1",
+      "request_id": "request-demo-batch-12",
+      "target": "actual_location"
+    }
+  ],
+  "queries": [
+    {
+      "query_id": "AUD-Q-DAY-ATLAS",
+      "operation": "queryAuditEvents",
+      "universe": "primary",
+      "q_ids": [
+        "Q-041"
+      ],
+      "request": {
+        "company_id": "company-demo-atlas",
+        "from": "2031-05-09T21:00:00Z",
+        "to": "2031-05-10T21:00:00Z",
+        "actor_id": null,
+        "action": null,
+        "result": null,
+        "query_text": "",
+        "cursor": null,
+        "limit": 25
+      },
+      "expected": {
+        "event_ids": [
+          "AUD-QR-RETURN-RECOVERY",
+          "AUD-QR-RETURNED-SUCCESS",
+          "AUD-DICT-MANUAL-EDIT-ATLAS-GENERAL",
+          "AUD-DICT-PUBLISH-ATLAS-GENERAL-V3",
+          "AUD-DICT-SIMULATE-ATLAS-GENERAL-V3",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-missing-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-claimed-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-changed-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-quarantine-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-missing-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-claimed-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-changed-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-recovery-unknown-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-recovery-unknown-recovery",
+          "audit-attempt-batch-atlas-technical-batch-tech-recovery-known-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-recovery-known-recovery",
+          "audit-attempt-batch-atlas-technical-batch-tech-quarantine-started",
+          "audit-batch-atlas-technical-accepted",
+          "AUD-DICT-RESTORE-ATLAS-GENERAL-V1",
+          "AUD-DICT-PUBLISH-ATLAS-INVOICES-V2",
+          "AUD-DICT-SIMULATE-ATLAS-INVOICES-V2",
+          "AUD-DICT-SAVE-ATLAS-INVOICES-V2",
+          "audit-attempt-batch-atlas-same-user-session-queue-atlas-ready-0120-finished",
+          "audit-attempt-batch-atlas-same-user-session-queue-atlas-ready-0101-finished",
+          "audit-attempt-batch-atlas-same-user-session-queue-atlas-ready-0001-finished"
+        ],
+        "next_cursor": "cursor-audit-atlas-page2",
+        "newest_event_id": "AUD-QR-RETURN-RECOVERY"
+      },
+      "reason": "The Moscow day converted to UTC, company filter only, first page in occurred_at DESC then event_id DESC order.",
+      "next_cursor": "cursor-audit-atlas-page2"
+    },
+    {
+      "query_id": "AUD-Q-PRIMARY-PAGE1",
+      "operation": "queryAuditEvents",
+      "universe": "primary",
+      "q_ids": [
+        "Q-041"
+      ],
+      "request": {
+        "company_id": null,
+        "from": "2031-05-09T21:00:00Z",
+        "to": "2031-05-10T21:00:00Z",
+        "actor_id": null,
+        "action": null,
+        "result": null,
+        "query_text": "",
+        "cursor": null,
+        "limit": 25
+      },
+      "frozen_newest_event_id": "AUD-QR-RETURN-RECOVERY",
+      "expected": {
+        "event_ids": [
+          "AUD-QR-RETURN-RECOVERY",
+          "AUD-QR-RETURNED-SUCCESS",
+          "AUD-DICT-MANUAL-EDIT-ATLAS-GENERAL",
+          "AUD-DICT-PUBLISH-ATLAS-GENERAL-V3",
+          "AUD-DICT-SIMULATE-ATLAS-GENERAL-V3",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-missing-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-claimed-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-changed-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-quarantine-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-missing-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-claimed-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-changed-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-recovery-unknown-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-recovery-unknown-recovery",
+          "audit-attempt-batch-atlas-technical-batch-tech-recovery-known-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-recovery-known-recovery",
+          "audit-attempt-batch-atlas-technical-batch-tech-quarantine-started",
+          "audit-batch-atlas-technical-accepted",
+          "AUD-DICT-RESTORE-ATLAS-GENERAL-V1",
+          "AUD-DICT-PUBLISH-ATLAS-INVOICES-V2",
+          "AUD-DICT-SIMULATE-ATLAS-INVOICES-V2",
+          "AUD-DICT-SAVE-ATLAS-INVOICES-V2",
+          "audit-attempt-batch-atlas-same-user-session-queue-atlas-ready-0120-finished",
+          "audit-attempt-batch-atlas-same-user-session-queue-atlas-ready-0101-finished",
+          "audit-attempt-batch-atlas-same-user-session-queue-atlas-ready-0001-finished"
+        ],
+        "next_cursor": "cursor-audit-primary-page2",
+        "newest_event_id": "AUD-QR-RETURN-RECOVERY"
+      },
+      "reason": "First page of the whole shared journal as it stood before the late login event; the frozen upper bound is the newest event observed at cursor creation.",
+      "next_cursor": "cursor-audit-primary-page2",
+      "viewer_role": "ADMIN"
+    },
+    {
+      "query_id": "AUD-Q-PRIMARY-PAGE2",
+      "operation": "queryAuditEvents",
+      "universe": "primary",
+      "q_ids": [
+        "Q-041"
+      ],
+      "request": {
+        "company_id": null,
+        "from": "2031-05-09T21:00:00Z",
+        "to": "2031-05-10T21:00:00Z",
+        "actor_id": null,
+        "action": null,
+        "result": null,
+        "query_text": "",
+        "cursor": "cursor-audit-primary-page2",
+        "limit": 25
+      },
+      "cursor_after_event_id": "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0118-finished",
+      "frozen_newest_event_id": "AUD-QR-RETURN-RECOVERY",
+      "new_events": [
+        "AUD-LOGIN-SUCCESS-WORKER2-LATE"
+      ],
+      "expected": {
+        "event_ids": [
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0117-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0116-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0115-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0114-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0113-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0112-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0111-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0110-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0109-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0108-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0107-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0106-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0105-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0104-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0103-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0102-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0101-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0100-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0099-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0098-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0097-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0096-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0095-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0094-finished",
+          "audit-attempt-batch-atlas-previewed-fresh-queue-atlas-ready-0093-finished"
+        ],
+        "next_cursor": "cursor-audit-primary-page3",
+        "newest_event_id": "AUD-QR-RETURN-RECOVERY"
+      },
+      "reason": "The second page is pinned to the frozen upper bound; the newer login event must not appear and must not shift the page.",
+      "next_cursor": "cursor-audit-primary-page3"
+    },
+    {
+      "query_id": "AUD-Q-ACTION-BATCH-ACCEPTED",
+      "operation": "queryAuditEvents",
+      "universe": "primary",
+      "q_ids": [
+        "Q-041"
+      ],
+      "request": {
+        "company_id": null,
+        "from": "2031-05-09T21:00:00Z",
+        "to": "2031-05-10T21:00:00Z",
+        "actor_id": null,
+        "action": "BATCH_ACCEPTED",
+        "result": null,
+        "query_text": "",
+        "cursor": null,
+        "limit": 100
+      },
+      "expected": {
+        "event_ids": [
+          "audit-batch-atlas-technical-accepted",
+          "audit-batch-atlas-same-user-session-accepted",
+          "audit-batch-atlas-previewed-fresh-accepted",
+          "audit-batch-atlas-direct-fresh-accepted"
+        ],
+        "next_cursor": null,
+        "newest_event_id": "audit-batch-atlas-technical-accepted"
+      },
+      "reason": "Action filter BATCH_ACCEPTED: exactly one acceptance per primary accepted batch."
+    },
+    {
+      "query_id": "AUD-Q-ACTION-QUARANTINE-RETURNED",
+      "operation": "queryAuditEvents",
+      "universe": "primary",
+      "q_ids": [
+        "Q-029",
+        "Q-041"
+      ],
+      "request": {
+        "company_id": null,
+        "from": "2031-05-09T21:00:00Z",
+        "to": "2031-05-10T21:00:00Z",
+        "actor_id": null,
+        "action": "QUARANTINE_RETURNED",
+        "result": null,
+        "query_text": "",
+        "cursor": null,
+        "limit": 100
+      },
+      "expected": {
+        "event_ids": [
+          "AUD-QR-RETURNED-SUCCESS"
+        ],
+        "next_cursor": null,
+        "newest_event_id": "AUD-QR-RETURNED-SUCCESS"
+      },
+      "reason": "The manual return is the only QUARANTINE_RETURNED event; its operation_id equals return_operation_id."
+    },
+    {
+      "query_id": "AUD-Q-RESULT-ISSUE",
+      "operation": "queryAuditEvents",
+      "universe": "primary",
+      "q_ids": [
+        "Q-041"
+      ],
+      "request": {
+        "company_id": null,
+        "from": "2031-05-09T21:00:00Z",
+        "to": "2031-05-10T21:00:00Z",
+        "actor_id": null,
+        "action": null,
+        "result": "ISSUE",
+        "query_text": "",
+        "cursor": null,
+        "limit": 5
+      },
+      "expected": {
+        "event_ids": [
+          "AUD-QR-RETURN-RECOVERY",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-missing-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-claimed-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-changed-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-quarantine-finished"
+        ],
+        "next_cursor": "cursor-audit-issue-page2",
+        "newest_event_id": "AUD-QR-RETURN-RECOVERY"
+      },
+      "reason": "Result filter ISSUE bounded to five events: the ambiguous return recovery and the technical terminal outcomes.",
+      "next_cursor": "cursor-audit-issue-page2"
+    },
+    {
+      "query_id": "AUD-Q-ACTOR-WORKER1",
+      "operation": "queryAuditEvents",
+      "universe": "primary",
+      "q_ids": [
+        "Q-041"
+      ],
+      "request": {
+        "company_id": null,
+        "from": "2031-05-09T21:00:00Z",
+        "to": "2031-05-10T21:00:00Z",
+        "actor_id": "user-demo-worker-1",
+        "action": null,
+        "result": null,
+        "query_text": "",
+        "cursor": null,
+        "limit": 10
+      },
+      "expected": {
+        "event_ids": [
+          "AUD-QR-RETURN-RECOVERY",
+          "AUD-QR-RETURNED-SUCCESS",
+          "AUD-DICT-MANUAL-EDIT-ATLAS-GENERAL",
+          "AUD-DICT-PUBLISH-ATLAS-GENERAL-V3",
+          "AUD-DICT-SIMULATE-ATLAS-GENERAL-V3",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-missing-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-claimed-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-changed-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-quarantine-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-missing-started"
+        ],
+        "next_cursor": "cursor-audit-worker1-page2",
+        "newest_event_id": "AUD-QR-RETURN-RECOVERY"
+      },
+      "reason": "Author filter by the actor user_id (not the display name), bounded to ten events.",
+      "next_cursor": "cursor-audit-worker1-page2"
+    },
+    {
+      "query_id": "AUD-Q-COMPANY-NOVA",
+      "operation": "queryAuditEvents",
+      "universe": "primary",
+      "q_ids": [
+        "Q-041"
+      ],
+      "request": {
+        "company_id": "company-demo-nova",
+        "from": "2031-05-09T21:00:00Z",
+        "to": "2031-05-10T21:00:00Z",
+        "actor_id": null,
+        "action": null,
+        "result": null,
+        "query_text": "",
+        "cursor": null,
+        "limit": 100
+      },
+      "expected": {
+        "event_ids": [
+          "AUD-DICT-CREATE-NOVA-SCOPE"
+        ],
+        "next_cursor": null,
+        "newest_event_id": "AUD-DICT-CREATE-NOVA-SCOPE"
+      },
+      "reason": "Company filter for Nova returns only the Nova dictionary event."
+    },
+    {
+      "query_id": "AUD-Q-REPLAY-COMPANY-NOVA",
+      "operation": "queryAuditEvents",
+      "universe": "primary",
+      "q_ids": [
+        "Q-041"
+      ],
+      "request": {
+        "company_id": "company-demo-nova",
+        "from": "2031-05-09T21:00:00Z",
+        "to": "2031-05-10T21:00:00Z",
+        "actor_id": null,
+        "action": null,
+        "result": null,
+        "query_text": "",
+        "cursor": null,
+        "limit": 100
+      },
+      "expected": {
+        "event_ids": [
+          "AUD-DICT-CREATE-NOVA-SCOPE"
+        ],
+        "next_cursor": null,
+        "newest_event_id": "AUD-DICT-CREATE-NOVA-SCOPE"
+      },
+      "reason": "The same filter replayed returns the identical page."
+    },
+    {
+      "query_id": "AUD-Q-TEXT-QUARANTINE",
+      "operation": "queryAuditEvents",
+      "universe": "primary",
+      "q_ids": [
+        "Q-041"
+      ],
+      "request": {
+        "company_id": null,
+        "from": "2031-05-09T21:00:00Z",
+        "to": "2031-05-10T21:00:00Z",
+        "actor_id": null,
+        "action": null,
+        "result": null,
+        "query_text": "batch-tech-quarantine",
+        "cursor": null,
+        "limit": 100
+      },
+      "expected": {
+        "event_ids": [
+          "AUD-QR-RETURN-RECOVERY",
+          "AUD-QR-RETURNED-SUCCESS",
+          "audit-attempt-batch-atlas-technical-batch-tech-quarantine-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-quarantine-started"
+        ],
+        "next_cursor": null,
+        "newest_event_id": "AUD-QR-RETURN-RECOVERY"
+      },
+      "reason": "Text filter matches the logical display path of the quarantined attempt and the manual return; the raw search text is never stored on an event."
+    },
+    {
+      "query_id": "AUD-Q-EMPTY-WINDOW",
+      "operation": "queryAuditEvents",
+      "universe": "primary",
+      "q_ids": [
+        "Q-041"
+      ],
+      "request": {
+        "company_id": null,
+        "from": "2031-05-10T10:00:00Z",
+        "to": "2031-05-10T11:00:00Z",
+        "actor_id": null,
+        "action": null,
+        "result": null,
+        "query_text": "",
+        "cursor": null,
+        "limit": 100
+      },
+      "expected": {
+        "event_ids": [],
+        "next_cursor": null,
+        "newest_event_id": null
+      },
+      "reason": "A window with no events returns items=[], next_cursor=null and newest_event_id=null."
+    },
+    {
+      "query_id": "AUD-Q-ISOLATED-OVERLAP",
+      "operation": "queryAuditEvents",
+      "universe": "overlap",
+      "q_ids": [
+        "Q-041"
+      ],
+      "request": {
+        "company_id": null,
+        "from": "2031-05-09T21:00:00Z",
+        "to": "2031-05-10T21:00:00Z",
+        "actor_id": null,
+        "action": null,
+        "result": null,
+        "query_text": "",
+        "cursor": null,
+        "limit": 100
+      },
+      "expected": {
+        "event_ids": [
+          "AUD-ATTEMPT-WINNER-SHARED-FINISH",
+          "AUD-ATTEMPT-WINNER-SAFE-FINISH",
+          "AUD-ATTEMPT-LOSER-SHARED-FINISH",
+          "AUD-ATTEMPT-LOSER-README-FINISH",
+          "AUD-ATTEMPT-LOSER-SHARED-START",
+          "AUD-ATTEMPT-LOSER-README-START",
+          "AUD-ATTEMPT-WINNER-SHARED-START",
+          "AUD-ATTEMPT-WINNER-SAFE-START",
+          "AUD-BATCH-ACCEPT-OVERLAP-LOSER",
+          "AUD-BATCH-ACCEPT-OVERLAP-WINNER"
+        ],
+        "next_cursor": null,
+        "newest_event_id": "AUD-ATTEMPT-WINNER-SHARED-FINISH"
+      },
+      "reason": "The isolated two-actor overlap universe is queried separately and never merged into the primary day."
+    },
+    {
+      "query_id": "AUD-Q-ISOLATED-RETRY",
+      "operation": "queryAuditEvents",
+      "universe": "retry",
+      "q_ids": [
+        "Q-041"
+      ],
+      "request": {
+        "company_id": null,
+        "from": "2031-05-09T21:00:00Z",
+        "to": "2031-05-10T21:00:00Z",
+        "actor_id": null,
+        "action": null,
+        "result": null,
+        "query_text": "",
+        "cursor": null,
+        "limit": 100
+      },
+      "expected": {
+        "event_ids": [
+          "AUD-ATTEMPT-RETRY-FINISH",
+          "AUD-ATTEMPT-RETRY-START",
+          "AUD-BATCH-ACCEPT-RETRY"
+        ],
+        "next_cursor": null,
+        "newest_event_id": "AUD-ATTEMPT-RETRY-FINISH"
+      },
+      "reason": "The isolated manual-retry universe is queried separately."
+    },
+    {
+      "query_id": "AUD-Q-ISOLATED-BATCH",
+      "operation": "queryAuditEvents",
+      "universe": "batch-isolated",
+      "q_ids": [
+        "Q-041"
+      ],
+      "request": {
+        "company_id": null,
+        "from": "2031-05-09T21:00:00Z",
+        "to": "2031-05-10T21:00:00Z",
+        "actor_id": null,
+        "action": null,
+        "result": null,
+        "query_text": "",
+        "cursor": null,
+        "limit": 100
+      },
+      "expected": {
+        "event_ids": [
+          "audit-attempt-batch-atlas-sorted-batch-atlas-sorted-readme-finished",
+          "audit-attempt-batch-atlas-sorted-batch-atlas-sorted-invoice-finished",
+          "audit-attempt-batch-atlas-sorted-batch-atlas-sorted-archive-finished",
+          "audit-attempt-batch-atlas-sorted-batch-atlas-sorted-readme-started",
+          "audit-attempt-batch-atlas-sorted-batch-atlas-sorted-invoice-started",
+          "audit-attempt-batch-atlas-sorted-batch-atlas-sorted-archive-started",
+          "audit-batch-atlas-sorted-accepted",
+          "audit-attempt-batch-atlas-conflict-batch-atlas-shared-file-finished",
+          "audit-attempt-batch-atlas-conflict-batch-atlas-shared-file-started",
+          "audit-batch-atlas-conflict-accepted",
+          "audit-attempt-batch-atlas-hetero-preview-atlas-occupied-report-finished",
+          "audit-attempt-batch-atlas-hetero-preview-atlas-no-scenario-finished",
+          "audit-attempt-batch-atlas-hetero-preview-atlas-move-upper-finished",
+          "audit-attempt-batch-atlas-hetero-preview-atlas-move-readme-finished",
+          "audit-attempt-batch-atlas-hetero-preview-atlas-manual-name-finished",
+          "audit-attempt-batch-atlas-hetero-preview-atlas-invoice-b-finished",
+          "audit-attempt-batch-atlas-hetero-preview-atlas-invoice-a-finished",
+          "audit-attempt-batch-atlas-hetero-preview-atlas-occupied-report-started",
+          "audit-attempt-batch-atlas-hetero-preview-atlas-no-scenario-started",
+          "audit-attempt-batch-atlas-hetero-preview-atlas-move-upper-started",
+          "audit-attempt-batch-atlas-hetero-preview-atlas-move-readme-started",
+          "audit-attempt-batch-atlas-hetero-preview-atlas-manual-name-started",
+          "audit-attempt-batch-atlas-hetero-preview-atlas-invoice-b-started",
+          "audit-attempt-batch-atlas-hetero-preview-atlas-invoice-a-started",
+          "audit-batch-atlas-hetero-accepted"
+        ],
+        "next_cursor": null,
+        "newest_event_id": "audit-attempt-batch-atlas-sorted-batch-atlas-sorted-readme-finished"
+      },
+      "reason": "The isolated hetero/conflict/sorted accepted selections are a separate alternate history."
+    },
+    {
+      "query_id": "AUD-Q-ROLE-WORKER",
+      "operation": "queryAuditEvents",
+      "universe": "primary",
+      "viewer_role": "WORKER",
+      "q_ids": [
+        "Q-041"
+      ],
+      "next_cursor": "cursor-audit-role-worker-page2",
+      "request": {
+        "company_id": null,
+        "from": "2031-05-09T21:00:00Z",
+        "to": "2031-05-10T21:00:00Z",
+        "actor_id": null,
+        "action": null,
+        "result": null,
+        "query_text": "",
+        "cursor": null,
+        "limit": 25
+      },
+      "expected": {
+        "event_ids": [
+          "AUD-QR-RETURN-RECOVERY",
+          "AUD-QR-RETURNED-SUCCESS",
+          "AUD-DICT-MANUAL-EDIT-ATLAS-GENERAL",
+          "AUD-DICT-PUBLISH-ATLAS-GENERAL-V3",
+          "AUD-DICT-SIMULATE-ATLAS-GENERAL-V3",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-missing-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-claimed-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-changed-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-quarantine-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-missing-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-claimed-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-changed-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-recovery-unknown-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-recovery-unknown-recovery",
+          "audit-attempt-batch-atlas-technical-batch-tech-recovery-known-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-recovery-known-recovery",
+          "audit-attempt-batch-atlas-technical-batch-tech-quarantine-started",
+          "audit-batch-atlas-technical-accepted",
+          "AUD-DICT-RESTORE-ATLAS-GENERAL-V1",
+          "AUD-DICT-PUBLISH-ATLAS-INVOICES-V2",
+          "AUD-DICT-SIMULATE-ATLAS-INVOICES-V2",
+          "AUD-DICT-SAVE-ATLAS-INVOICES-V2",
+          "audit-attempt-batch-atlas-same-user-session-queue-atlas-ready-0120-finished",
+          "audit-attempt-batch-atlas-same-user-session-queue-atlas-ready-0101-finished",
+          "audit-attempt-batch-atlas-same-user-session-queue-atlas-ready-0001-finished"
+        ],
+        "next_cursor": "cursor-audit-role-worker-page2",
+        "newest_event_id": "AUD-QR-RETURN-RECOVERY"
+      },
+      "reason": "The same day and filters are visible differently by role: a WORKER only sees the shared BUSINESS journal, while an ADMIN also sees the SYSTEM journal."
+    },
+    {
+      "query_id": "AUD-Q-ROLE-ADMIN",
+      "operation": "queryAuditEvents",
+      "universe": "primary",
+      "viewer_role": "ADMIN",
+      "q_ids": [
+        "Q-041"
+      ],
+      "next_cursor": "cursor-audit-role-admin-page2",
+      "request": {
+        "company_id": null,
+        "from": "2031-05-09T21:00:00Z",
+        "to": "2031-05-10T21:00:00Z",
+        "actor_id": null,
+        "action": null,
+        "result": null,
+        "query_text": "",
+        "cursor": null,
+        "limit": 25
+      },
+      "expected": {
+        "event_ids": [
+          "AUD-LOGIN-SUCCESS-WORKER2-LATE",
+          "AUD-QR-RETURN-RECOVERY",
+          "AUD-QR-RETURNED-SUCCESS",
+          "AUD-DICT-MANUAL-EDIT-ATLAS-GENERAL",
+          "AUD-DICT-PUBLISH-ATLAS-GENERAL-V3",
+          "AUD-DICT-SIMULATE-ATLAS-GENERAL-V3",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-missing-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-claimed-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-changed-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-quarantine-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-missing-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-claimed-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-changed-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-recovery-unknown-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-recovery-unknown-recovery",
+          "audit-attempt-batch-atlas-technical-batch-tech-recovery-known-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-recovery-known-recovery",
+          "audit-attempt-batch-atlas-technical-batch-tech-quarantine-started",
+          "audit-batch-atlas-technical-accepted",
+          "AUD-DICT-RESTORE-ATLAS-GENERAL-V1",
+          "AUD-DICT-PUBLISH-ATLAS-INVOICES-V2",
+          "AUD-DICT-SIMULATE-ATLAS-INVOICES-V2",
+          "AUD-DICT-SAVE-ATLAS-INVOICES-V2",
+          "audit-attempt-batch-atlas-same-user-session-queue-atlas-ready-0120-finished",
+          "audit-attempt-batch-atlas-same-user-session-queue-atlas-ready-0101-finished"
+        ],
+        "next_cursor": "cursor-audit-role-admin-page2",
+        "newest_event_id": "AUD-LOGIN-SUCCESS-WORKER2-LATE"
+      },
+      "reason": "The same day and filters are visible differently by role: a WORKER only sees the shared BUSINESS journal, while an ADMIN also sees the SYSTEM journal."
+    },
+    {
+      "query_id": "AUD-Q-PRIMARY-DAY-ALL",
+      "operation": "queryAuditEvents",
+      "universe": "primary",
+      "q_ids": [
+        "Q-041"
+      ],
+      "next_cursor": "cursor-audit-day-all-page2",
+      "request": {
+        "company_id": null,
+        "from": "2031-05-09T21:00:00Z",
+        "to": "2031-05-10T21:00:00Z",
+        "actor_id": null,
+        "action": null,
+        "result": null,
+        "query_text": "",
+        "cursor": null,
+        "limit": 25
+      },
+      "expected": {
+        "event_ids": [
+          "AUD-LOGIN-SUCCESS-WORKER2-LATE",
+          "AUD-QR-RETURN-RECOVERY",
+          "AUD-QR-RETURNED-SUCCESS",
+          "AUD-DICT-MANUAL-EDIT-ATLAS-GENERAL",
+          "AUD-DICT-PUBLISH-ATLAS-GENERAL-V3",
+          "AUD-DICT-SIMULATE-ATLAS-GENERAL-V3",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-missing-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-claimed-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-changed-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-quarantine-finished",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-missing-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-claimed-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-skip-changed-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-recovery-unknown-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-recovery-unknown-recovery",
+          "audit-attempt-batch-atlas-technical-batch-tech-recovery-known-started",
+          "audit-attempt-batch-atlas-technical-batch-tech-recovery-known-recovery",
+          "audit-attempt-batch-atlas-technical-batch-tech-quarantine-started",
+          "audit-batch-atlas-technical-accepted",
+          "AUD-DICT-RESTORE-ATLAS-GENERAL-V1",
+          "AUD-DICT-PUBLISH-ATLAS-INVOICES-V2",
+          "AUD-DICT-SIMULATE-ATLAS-INVOICES-V2",
+          "AUD-DICT-SAVE-ATLAS-INVOICES-V2",
+          "audit-attempt-batch-atlas-same-user-session-queue-atlas-ready-0120-finished",
+          "audit-attempt-batch-atlas-same-user-session-queue-atlas-ready-0101-finished"
+        ],
+        "next_cursor": "cursor-audit-day-all-page2",
+        "newest_event_id": "AUD-LOGIN-SUCCESS-WORKER2-LATE"
+      },
+      "reason": "The fresh (unfrozen) day query re-run by the update button; it includes the late login event."
+    }
+  ],
+  "actors_pages": [
+    {
+      "page_id": "AUD-ACTORS-ALL",
+      "operation": "listAuditActors",
+      "prefix": "",
+      "limit": 100,
+      "actor_aliases": [
+        "worker1",
+        "worker2",
+        "admin",
+        "blocked_worker"
+      ],
+      "expected_user_ids": [
+        "user-demo-worker-1",
+        "user-demo-worker-2",
+        "user-demo-admin-1",
+        "user-demo-worker-blocked"
+      ],
+      "next_cursor": null,
+      "reason": "All authors of accessible events, including the blocked author, with the current display snapshot."
+    },
+    {
+      "page_id": "AUD-ACTORS-PREFIX-WORKER",
+      "operation": "listAuditActors",
+      "prefix": "worker",
+      "limit": 100,
+      "actor_aliases": [
+        "worker1",
+        "worker2"
+      ],
+      "expected_user_ids": [
+        "user-demo-worker-1",
+        "user-demo-worker-2"
+      ],
+      "next_cursor": null,
+      "reason": "Case-insensitive prefix over login/display name."
+    },
+    {
+      "page_id": "AUD-ACTORS-PREFIX-BLOCKED",
+      "operation": "listAuditActors",
+      "prefix": "blocked",
+      "limit": 100,
+      "actor_aliases": [
+        "blocked_worker"
+      ],
+      "expected_user_ids": [
+        "user-demo-worker-blocked"
+      ],
+      "next_cursor": null,
+      "reason": "The blocked author stays selectable as a filter option."
+    },
+    {
+      "page_id": "AUD-ACTORS-EMPTY",
+      "operation": "listAuditActors",
+      "prefix": "zzz",
+      "limit": 100,
+      "actor_aliases": [],
+      "expected_user_ids": [],
+      "next_cursor": null,
+      "reason": "An unmatched prefix returns an empty page with next_cursor=null."
+    }
+  ],
+  "updates_scenarios": [
+    {
+      "scenario_id": "AUD-UPDATES-AFTER-KNOWN",
+      "operation": "getAuditUpdates",
+      "after_event_id": "AUD-LOGOUT-SYSTEM",
+      "expected": {
+        "has_new_events": true
+      },
+      "reason": "A later accessible event exists after the known event."
+    },
+    {
+      "scenario_id": "AUD-UPDATES-AFTER-NEWEST",
+      "operation": "getAuditUpdates",
+      "after_event_id": "AUD-LOGIN-SUCCESS-WORKER2-LATE",
+      "expected": {
+        "has_new_events": false
+      },
+      "reason": "No accessible event is newer than the newest observed event."
+    },
+    {
+      "scenario_id": "AUD-UPDATES-NO-AFTER",
+      "operation": "getAuditUpdates",
+      "after_event_id": null,
+      "expected": {
+        "has_new_events": true
+      },
+      "reason": "Without after_event_id there is no lower bound; a non-empty journal reports new events."
+    },
+    {
+      "scenario_id": "AUD-UPDATES-NO-AFTER-EMPTY",
+      "operation": "getAuditUpdates",
+      "after_event_id": null,
+      "empty_journal": true,
+      "expected": {
+        "has_new_events": false
+      },
+      "reason": "The initial empty journal omits after_event_id and reports no new events."
+    }
+  ],
+  "no_business_scenarios": [
+    {
+      "scenario_id": "AUD-NOEVENT-SEARCH",
+      "operation": "searchFiles",
+      "before_event_count": 323,
+      "after_event_count": 323,
+      "forbidden_actions": [],
+      "expected_events": [],
+      "reason": "Searching creates no BUSINESS event and never stores the search text."
+    },
+    {
+      "scenario_id": "AUD-NOEVENT-FACET",
+      "operation": "getSearchFacet",
+      "before_event_count": 323,
+      "after_event_count": 323,
+      "forbidden_actions": [],
+      "expected_events": [],
+      "reason": "Opening a facet creates no BUSINESS event."
+    },
+    {
+      "scenario_id": "AUD-NOEVENT-NAVIGATION",
+      "operation": "listRoots",
+      "before_event_count": 323,
+      "after_event_count": 323,
+      "forbidden_actions": [],
+      "expected_events": [],
+      "reason": "Navigation creates no BUSINESS event."
+    },
+    {
+      "scenario_id": "AUD-NOEVENT-COPY",
+      "operation": "copyDisplayPath",
+      "before_event_count": 323,
+      "after_event_count": 323,
+      "forbidden_actions": [],
+      "expected_events": [],
+      "reason": "Copying a logical display path creates no BUSINESS event."
+    }
+  ],
+  "viewer_swap": {
+    "batch_id": "batch-atlas-direct-fresh",
+    "viewer": "worker2",
+    "accepted_actor": "worker1",
+    "reason": "The accepted actor is stored in the immutable event and does not change when another user reads the journal."
+  },
+  "safe_headers": {
+    "request_id": "request-audit-demo-1",
+    "cache_control": "no-store",
+    "operations": [
+      "queryAuditEvents",
+      "getAuditUpdates",
+      "listAuditActors"
+    ],
+    "error_request_id_links": [
+      "error-audit-validation",
+      "error-audit-updates-validation"
+    ]
+  },
+  "errors": [
+    {
+      "error_id": "error-audit-validation",
+      "code": "VALIDATION_ERROR",
+      "status": 422,
+      "operation": "queryAuditEvents",
+      "message": "Проверьте порядок и допустимость интервала журнала.",
+      "request_id": "request-audit-demo-1",
+      "operation_id": null,
+      "retryable": false,
+      "field_errors": [
+        {
+          "field": "from",
+          "code": "ORDER",
+          "message": "Начало интервала должно быть раньше конца."
+        }
+      ]
+    },
+    {
+      "error_id": "error-audit-updates-validation",
+      "code": "VALIDATION_ERROR",
+      "status": 422,
+      "operation": "getAuditUpdates",
+      "message": "Некорректный идентификатор события.",
+      "request_id": "request-audit-demo-1",
+      "operation_id": null,
+      "retryable": false,
+      "field_errors": []
+    },
+    {
+      "error_id": "error-audit-unauthenticated",
+      "code": "UNAUTHENTICATED",
+      "status": 401,
+      "operation": "queryAuditEvents",
+      "message": "Сессия завершена. Войдите снова.",
+      "request_id": "request-audit-demo-2",
+      "operation_id": null,
+      "retryable": false,
+      "field_errors": []
+    },
+    {
+      "error_id": "error-audit-forbidden",
+      "code": "FORBIDDEN",
+      "status": 403,
+      "operation": "listAuditActors",
+      "message": "Недостаточно прав для чтения авторов журнала.",
+      "request_id": "request-audit-demo-3",
+      "operation_id": null,
+      "retryable": false,
+      "field_errors": []
+    }
+  ],
+  "links": [
+    {
+      "link_id": "AUD-LINK-RETURN-OPERATION",
+      "relation": "equals",
+      "source": {
+        "payload": "event:AUD-QR-RETURNED-SUCCESS",
+        "path": [
+          "operation_id"
+        ]
+      },
+      "target": {
+        "payload": "return_response:QR-RETURN-SUCCESS",
+        "path": [
+          "return_operation_id"
+        ]
+      }
+    },
+    {
+      "link_id": "AUD-LINK-RETURN-SOURCE-ATTEMPT",
+      "relation": "equals",
+      "source": {
+        "payload": "event:AUD-QR-RETURNED-SUCCESS",
+        "path": [
+          "source_attempt_id"
+        ]
+      },
+      "target": {
+        "payload": "quarantine_item:QR-STATE-CONFIRMED",
+        "path": [
+          "source_attempt_id"
+        ]
+      }
+    },
+    {
+      "link_id": "AUD-LINK-RECOVERY-OPERATION",
+      "relation": "equals",
+      "source": {
+        "payload": "event:AUD-QR-RETURN-RECOVERY",
+        "path": [
+          "operation_id"
+        ]
+      },
+      "target": {
+        "payload": "error:error-quarantine-recovery-required",
+        "path": [
+          "error",
+          "operation_id"
+        ]
+      }
+    },
+    {
+      "link_id": "AUD-LINK-RECOVERY-NO-TARGET",
+      "relation": "is_null",
+      "source": {
+        "payload": "event:AUD-QR-RETURN-RECOVERY",
+        "path": [
+          "target"
+        ]
+      },
+      "target": {
+        "payload": "null_value",
+        "path": []
+      }
+    },
+    {
+      "link_id": "AUD-LINK-BATCH-ACCEPT-OPERATION",
+      "relation": "equals",
+      "source": {
+        "payload": "event:audit-batch-atlas-direct-fresh-accepted",
+        "path": [
+          "operation_id"
+        ]
+      },
+      "target": {
+        "payload": "batch:batch-atlas-direct-fresh",
+        "path": [
+          "batch_id"
+        ]
+      }
+    },
+    {
+      "link_id": "AUD-LINK-BATCH-ACCEPT-ACTOR",
+      "relation": "equals",
+      "source": {
+        "payload": "event:audit-batch-atlas-direct-fresh-accepted",
+        "path": [
+          "actor",
+          "user_id"
+        ]
+      },
+      "target": {
+        "payload": "actor_snapshot:worker1",
+        "path": [
+          "user_id"
+        ]
+      }
+    },
+    {
+      "link_id": "AUD-LINK-QUARANTINE-ATTEMPT",
+      "relation": "equals",
+      "source": {
+        "payload": "event:audit-attempt-batch-atlas-technical-batch-tech-quarantine-finished",
+        "path": [
+          "attempt_id"
+        ]
+      },
+      "target": {
+        "payload": "quarantine_item:QR-STATE-CONFIRMED",
+        "path": [
+          "source_attempt_id"
+        ]
+      }
+    },
+    {
+      "link_id": "AUD-LINK-DICT-PUBLISH-VERSION",
+      "relation": "equals",
+      "source": {
+        "payload": "event:AUD-DICT-PUBLISH-ATLAS-GENERAL-V2",
+        "path": [
+          "version_id"
+        ]
+      },
+      "target": {
+        "payload": "dictionary_version:version-atlas-general-v2",
+        "path": [
+          "version_id"
+        ]
+      }
+    },
+    {
+      "link_id": "AUD-LINK-DICT-PUBLISH-RULESET",
+      "relation": "equals",
+      "source": {
+        "payload": "event:AUD-DICT-PUBLISH-ATLAS-GENERAL-V2",
+        "path": [
+          "rule_set_id"
+        ]
+      },
+      "target": {
+        "payload": "rule_set:rule-set-atlas-v2",
+        "path": [
+          "rule_set_id"
+        ]
+      }
+    },
+    {
+      "link_id": "AUD-LINK-DICT-RESTORE-VERSION",
+      "relation": "equals",
+      "source": {
+        "payload": "event:AUD-DICT-RESTORE-ATLAS-GENERAL-V1",
+        "path": [
+          "version_id"
+        ]
+      },
+      "target": {
+        "payload": "dictionary_version:version-atlas-general-v1",
+        "path": [
+          "version_id"
+        ]
+      }
+    },
+    {
+      "link_id": "AUD-LINK-QUERY-NEWEST",
+      "relation": "equals",
+      "source": {
+        "payload": "query:AUD-Q-DAY-ATLAS",
+        "path": [
+          "newest_event_id"
+        ]
+      },
+      "target": {
+        "payload": "event:AUD-QR-RETURN-RECOVERY",
+        "path": [
+          "event_id"
+        ]
+      }
+    },
+    {
+      "link_id": "AUD-LINK-PAGE-FROZEN-NEWEST",
+      "relation": "equals",
+      "source": {
+        "payload": "query:AUD-Q-PRIMARY-PAGE2",
+        "path": [
+          "newest_event_id"
+        ]
+      },
+      "target": {
+        "payload": "query:AUD-Q-PRIMARY-PAGE1",
+        "path": [
+          "newest_event_id"
+        ]
+      }
+    },
+    {
+      "link_id": "AUD-LINK-BLOCKED-SNAPSHOT",
+      "relation": "equals",
+      "source": {
+        "payload": "event:AUD-DICT-BLOCKED-SAVE",
+        "path": [
+          "actor",
+          "display_name"
+        ]
+      },
+      "target": {
+        "payload": "actor_snapshot:blocked_worker",
+        "path": [
+          "display_name"
+        ]
+      }
+    },
+    {
+      "link_id": "AUD-LINK-BLOCKED-CURRENT",
+      "relation": "equals",
+      "source": {
+        "payload": "actors_page:AUD-ACTORS-ALL",
+        "path": [
+          "items",
+          3,
+          "display_name"
+        ]
+      },
+      "target": {
+        "payload": "actor:blocked_worker",
+        "path": [
+          "display_name"
+        ]
+      }
+    },
+    {
+      "link_id": "AUD-LINK-ERROR-REQUEST-ID",
+      "relation": "equals",
+      "source": {
+        "payload": "error:error-audit-validation",
+        "path": [
+          "error",
+          "request_id"
+        ]
+      },
+      "target": {
+        "payload": "safe_headers",
+        "path": [
+          "X-Request-ID"
+        ]
+      }
+    },
+    {
+      "link_id": "AUD-LINK-EMPTY-NEWEST",
+      "relation": "is_null",
+      "source": {
+        "payload": "query:AUD-Q-EMPTY-WINDOW",
+        "path": [
+          "newest_event_id"
+        ]
+      },
+      "target": {
+        "payload": "null_value",
+        "path": []
+      }
+    },
+    {
+      "link_id": "AUD-LINK-EMPTY-ACTORS",
+      "relation": "equals",
+      "source": {
+        "payload": "actors_page:AUD-ACTORS-EMPTY",
+        "path": [
+          "items"
+        ]
+      },
+      "target": {
+        "payload": "empty_list",
+        "path": []
+      }
+    }
+  ],
+  "mutations": [
+    {
+      "mutation_id": "AUD-MUT-COVERAGE-GAP",
+      "operation": "set",
+      "path": [
+        "coverage",
+        "Q-041"
+      ],
+      "value": [],
+      "validator": "coverage",
+      "reason": "The canonical journal must stay traced to Q-041."
+    },
+    {
+      "mutation_id": "AUD-MUT-BUSINESS-NULL-ACTOR",
+      "operation": "set",
+      "path": [
+        "explicit_events",
+        7,
+        "actor"
+      ],
+      "value": null,
+      "validator": "expectation",
+      "reason": "A BUSINESS event always has an author."
+    },
+    {
+      "mutation_id": "AUD-MUT-SYSTEM-CATEGORY",
+      "operation": "set",
+      "path": [
+        "explicit_events",
+        0,
+        "category"
+      ],
+      "value": "BUSINESS",
+      "validator": "expectation",
+      "reason": "LOGIN_SUCCEEDED is a SYSTEM event."
+    },
+    {
+      "mutation_id": "AUD-MUT-ACTORLESS-LOGOUT",
+      "operation": "set",
+      "path": [
+        "explicit_events",
+        5,
+        "actor"
+      ],
+      "value": null,
+      "validator": "expectation",
+      "reason": "Only an uninitiated LOGIN_FAILED may omit the actor; LOGOUT needs an initiator."
+    },
+    {
+      "mutation_id": "AUD-MUT-MUTATION-NULL-ACTOR",
+      "operation": "set",
+      "path": [
+        "explicit_events",
+        8,
+        "actor"
+      ],
+      "value": null,
+      "validator": "expectation",
+      "reason": "An accepted batch must never be authored by a null actor."
+    },
+    {
+      "mutation_id": "AUD-MUT-DUPLICATE-PHASE",
+      "operation": "set",
+      "path": [
+        "isolated_events",
+        1,
+        "phase"
+      ],
+      "value": "ATTEMPT_START",
+      "validator": "expectation",
+      "reason": "An attempt/phase key must be unique."
+    },
+    {
+      "mutation_id": "AUD-MUT-QUERY-UNKNOWN-ID",
+      "operation": "set",
+      "path": [
+        "queries",
+        0,
+        "expected",
+        "event_ids",
+        0
+      ],
+      "value": "audit-does-not-exist",
+      "validator": "query",
+      "reason": "A declared expected event id must resolve and match the computed page."
+    },
+    {
+      "mutation_id": "AUD-MUT-QUERY-EMPTY",
+      "operation": "set",
+      "path": [
+        "queries",
+        7,
+        "expected",
+        "event_ids"
+      ],
+      "value": [],
+      "validator": "query",
+      "reason": "A non-empty query page must not be declared empty."
+    },
+    {
+      "mutation_id": "AUD-MUT-QUERY-EXTRA",
+      "operation": "append",
+      "path": [
+        "queries",
+        7,
+        "expected",
+        "event_ids"
+      ],
+      "value": "audit-does-not-exist",
+      "validator": "query",
+      "reason": "A query page must not declare an extra event."
+    },
+    {
+      "mutation_id": "AUD-MUT-CURSOR",
+      "operation": "set",
+      "path": [
+        "queries",
+        2,
+        "expected",
+        "next_cursor"
+      ],
+      "value": "cursor-wrong",
+      "validator": "query",
+      "reason": "The cursor page must declare its true next_cursor."
+    },
+    {
+      "mutation_id": "AUD-MUT-FROZEN-BOUND",
+      "operation": "set",
+      "path": [
+        "queries",
+        2,
+        "frozen_newest_event_id"
+      ],
+      "value": null,
+      "validator": "query",
+      "reason": "Dropping the frozen upper bound would let the new event shift the page."
+    },
+    {
+      "mutation_id": "AUD-MUT-ACTORS-DROP-BLOCKED",
+      "operation": "set",
+      "path": [
+        "actors_pages",
+        0,
+        "expected_user_ids"
+      ],
+      "value": [
+        "user-demo-worker-1",
+        "user-demo-worker-2",
+        "user-demo-admin-1"
+      ],
+      "validator": "actors",
+      "reason": "A blocked author with accessible events must stay in the actor list."
+    },
+    {
+      "mutation_id": "AUD-MUT-ACTORS-UNKNOWN",
+      "operation": "set",
+      "path": [
+        "actors_pages",
+        1,
+        "actor_aliases"
+      ],
+      "value": [
+        "worker1",
+        "unknown-alias"
+      ],
+      "validator": "actors",
+      "reason": "Every listed actor alias must resolve."
+    },
+    {
+      "mutation_id": "AUD-MUT-UPDATES",
+      "operation": "set",
+      "path": [
+        "updates_scenarios",
+        0,
+        "expected",
+        "has_new_events"
+      ],
+      "value": false,
+      "validator": "updates",
+      "reason": "A later accessible event means has_new_events=true."
+    },
+    {
+      "mutation_id": "AUD-MUT-NOBUSINESS",
+      "operation": "set",
+      "path": [
+        "no_business_scenarios",
+        0,
+        "after_event_count"
+      ],
+      "value": 999,
+      "validator": "no_business",
+      "reason": "A read operation must not change the journal size."
+    },
+    {
+      "mutation_id": "AUD-MUT-HEADERS",
+      "operation": "set",
+      "path": [
+        "safe_headers",
+        "cache_control"
+      ],
+      "value": "public",
+      "validator": "headers",
+      "reason": "User audit responses must be no-store."
+    },
+    {
+      "mutation_id": "AUD-MUT-LINK",
+      "operation": "set",
+      "path": [
+        "links",
+        0,
+        "target",
+        "path"
+      ],
+      "value": [
+        "item",
+        "item_id"
+      ],
+      "validator": "link",
+      "reason": "The return audit operation_id must link return_operation_id."
+    },
+    {
+      "mutation_id": "AUD-MUT-DESCRIPTOR",
+      "operation": "set",
+      "path": [
+        "isolated_events",
+        0,
+        "action"
+      ],
+      "value": "FILE_ATTEMPT_FINISHED",
+      "validator": "descriptor",
+      "reason": "The LT-03.4b descriptor must have a canonical representative event."
+    },
+    {
+      "mutation_id": "AUD-MUT-DICT-REVISION",
+      "operation": "set",
+      "path": [
+        "dictionary_events",
+        0,
+        "draft_revision"
+      ],
+      "value": 99,
+      "validator": "expectation",
+      "reason": "The dictionary event must bind the actual timeline draft revision."
+    },
+    {
+      "mutation_id": "AUD-MUT-DICT-COMMENT",
+      "operation": "set",
+      "path": [
+        "dictionary_events",
+        5,
+        "comment"
+      ],
+      "value": "wrong",
+      "validator": "expectation",
+      "reason": "A published event must bind the publication comment."
+    },
+    {
+      "mutation_id": "AUD-MUT-RETURN-OPERATION",
+      "operation": "set",
+      "path": [
+        "return_event_ids",
+        0
+      ],
+      "value": "AUD-QR-RETURN-RECOVERY",
+      "validator": "expectation",
+      "reason": "The return lifecycle must expose the QUARANTINE_RETURNED success event."
+    },
+    {
+      "mutation_id": "AUD-MUT-PAYLOAD-INSTANT",
+      "operation": "set",
+      "path": [
+        "explicit_events",
+        0,
+        "occurred_at"
+      ],
+      "value": "not-an-instant",
+      "validator": "payload",
+      "reason": "occurred_at must be an RFC3339 UTC Instant."
+    },
+    {
+      "mutation_id": "AUD-MUT-ERROR-CODE",
+      "operation": "set",
+      "path": [
+        "errors",
+        0,
+        "code"
+      ],
+      "value": "STALE_PREVIEW",
+      "validator": "error_operation",
+      "reason": "The error code must be declared by the specific audit operation."
+    },
+    {
+      "mutation_id": "AUD-MUT-ROLE-WORKER-SYSTEM",
+      "operation": "set",
+      "path": [
+        "queries",
+        14,
+        "expected",
+        "event_ids",
+        0
+      ],
+      "value": "AUD-LOGIN-SUCCESS-WORKER1",
+      "validator": "query",
+      "reason": "A WORKER query must never return a SYSTEM event."
+    }
+  ],
+  "coverage": {
+    "Q-029": [
+      "AUD-QR-RETURNED-SUCCESS",
+      "AUD-QR-RETURN-RECOVERY",
+      "AUD-Q-ACTION-QUARANTINE-RETURNED"
+    ],
+    "Q-041": [
+      "AUD-Q-DAY-ATLAS",
+      "AUD-Q-PRIMARY-PAGE1",
+      "AUD-Q-PRIMARY-PAGE2",
+      "AUD-Q-ACTION-BATCH-ACCEPTED",
+      "AUD-Q-ACTION-QUARANTINE-RETURNED",
+      "AUD-Q-RESULT-ISSUE",
+      "AUD-Q-ACTOR-WORKER1",
+      "AUD-Q-COMPANY-NOVA",
+      "AUD-Q-REPLAY-COMPANY-NOVA",
+      "AUD-Q-TEXT-QUARANTINE",
+      "AUD-Q-EMPTY-WINDOW",
+      "AUD-Q-ISOLATED-OVERLAP",
+      "AUD-Q-ISOLATED-RETRY",
+      "AUD-Q-ISOLATED-BATCH",
+      "AUD-ACTORS-ALL",
+      "AUD-ACTORS-PREFIX-WORKER",
+      "AUD-ACTORS-PREFIX-BLOCKED",
+      "AUD-ACTORS-EMPTY",
+      "AUD-UPDATES-AFTER-KNOWN",
+      "AUD-UPDATES-AFTER-NEWEST",
+      "AUD-UPDATES-NO-AFTER",
+      "AUD-UPDATES-NO-AFTER-EMPTY",
+      "AUD-NOEVENT-SEARCH",
+      "AUD-NOEVENT-FACET",
+      "AUD-NOEVENT-NAVIGATION",
+      "AUD-NOEVENT-COPY",
+      "AUD-LOGIN-FAILED-ANONYMOUS",
+      "AUD-ACCOUNT-BLOCKED",
+      "AUD-DICT-BLOCKED-SAVE",
+      "AUD-Q-ROLE-WORKER",
+      "AUD-Q-ROLE-ADMIN",
+      "AUD-Q-PRIMARY-DAY-ALL",
+      "AUD-UPDATE-BUTTON"
+    ],
+    "Q-043": [
+      "error-audit-validation",
+      "error-audit-updates-validation",
+      "error-audit-unauthenticated",
+      "error-audit-forbidden",
+      "AUD-LINK-ERROR-REQUEST-ID"
+    ]
+  },
+  "update_button": {
+    "scenario_id": "AUD-UPDATE-BUTTON",
+    "q_ids": [
+      "Q-041"
+    ],
+    "query_id": "AUD-Q-PRIMARY-PAGE1",
+    "fresh_query_id": "AUD-Q-PRIMARY-DAY-ALL",
+    "initial_newest_event_id": "AUD-QR-RETURN-RECOVERY",
+    "new_event_id": "AUD-LOGIN-SUCCESS-WORKER2-LATE",
+    "steps": [
+      {
+        "step": 1,
+        "action": "QUERY",
+        "query_id": "AUD-Q-PRIMARY-PAGE1",
+        "observed_newest_event_id": "AUD-QR-RETURN-RECOVERY"
+      },
+      {
+        "step": 2,
+        "action": "EVENT_ARRIVES",
+        "event_id": "AUD-LOGIN-SUCCESS-WORKER2-LATE"
+      },
+      {
+        "step": 3,
+        "action": "UPDATES",
+        "after_event_id": "AUD-QR-RETURN-RECOVERY",
+        "has_new_events": true
+      },
+      {
+        "step": 4,
+        "action": "PRESS_UPDATE",
+        "query_id": "AUD-Q-PRIMARY-DAY-ALL",
+        "keeps_filter": true,
+        "resets_cursor": true
+      },
+      {
+        "step": 5,
+        "action": "UPDATES",
+        "after_event_id": "AUD-LOGIN-SUCCESS-WORKER2-LATE",
+        "has_new_events": false
+      }
+    ],
+    "reason": "Finite update-button semantics: the frozen page reports the observed newest; a later event raises the indicator; pressing update re-runs the same filter without the old cursor and surfaces the new event; the indicator then clears."
+  }
+}

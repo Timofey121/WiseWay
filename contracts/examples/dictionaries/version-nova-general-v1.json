@@ -1,0 +1,40 @@
+{
+  "version_id": "version-nova-general-v1",
+  "dictionary_id": "dictionary-nova-general",
+  "version_number": 1,
+  "name": "Общие правила Nova",
+  "description": "Синтетические общие правила Nova.",
+  "rules": [
+    {
+      "rule_id": "rule-nova-general-report",
+      "priority": 100,
+      "match_field": "RELATIVE_PATH",
+      "mask": "Archive/Nova/Orion_2031/North/Reports/*",
+      "target_stem": "NovaReport",
+      "target": {
+        "root_id": "root-demo-nova",
+        "relative_directory": "Archive/Nova/Orion_2031/North/Reports"
+      }
+    },
+    {
+      "rule_id": "rule-nova-general-data",
+      "priority": 50,
+      "match_field": "BASENAME",
+      "mask": "*.xlsx",
+      "target_stem": "NovaData",
+      "target": {
+        "root_id": "root-demo-nova",
+        "relative_directory": "Archive/Nova/Orion_2031/South/Data"
+      }
+    }
+  ],
+  "published_at": "2031-05-10T09:30:00Z",
+  "published_by": {
+    "user_id": "user-demo-worker-1",
+    "login": "worker.one",
+    "display_name": "Иван Рабочий",
+    "role": "WORKER"
+  },
+  "comment": "Синтетическая неизменяемая версия.",
+  "restored_from_version_id": null
+}

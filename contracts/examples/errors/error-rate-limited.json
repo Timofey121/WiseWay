@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "RATE_LIMITED",
+    "message": "Слишком много запросов. Повторите позже.",
+    "request_id": "request-q043-rate-limited",
+    "operation_id": null,
+    "retryable": true,
+    "field_errors": []
+  }
+}

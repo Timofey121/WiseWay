@@ -1,0 +1,230 @@
+{
+  "batch_id": "batch-atlas-hetero",
+  "company_id": "company-demo-atlas",
+  "actor": {
+    "user_id": "user-demo-worker-1",
+    "login": "worker.one",
+    "display_name": "Иван Рабочий",
+    "role": "WORKER"
+  },
+  "selection_id": "selection-batch-atlas-hetero",
+  "preview_id": null,
+  "rule_set": {
+    "rule_set_id": "rule-set-atlas-published",
+    "company_id": "company-demo-atlas",
+    "members": [
+      {
+        "dictionary_id": "dictionary-atlas-general",
+        "version_id": "version-atlas-general-v1"
+      },
+      {
+        "dictionary_id": "dictionary-atlas-invoices",
+        "version_id": "version-atlas-invoices-v1"
+      }
+    ]
+  },
+  "status": "COMPLETED_WITH_ISSUES",
+  "created_at": "2031-05-10T09:37:00Z",
+  "started_at": "2031-05-10T09:37:01Z",
+  "finished_at": "2031-05-10T09:37:09Z",
+  "selected_count": 7,
+  "completed_count": 7,
+  "counts": {
+    "sorted": 2,
+    "manual_review": 1,
+    "requires_decision": 4,
+    "quarantined": 0,
+    "skipped": 0,
+    "recovery_required": 0
+  },
+  "outcomes": [
+    {
+      "attempt_id": "attempt-batch-atlas-hetero-preview-atlas-move-upper",
+      "item_id": "preview-atlas-move-upper",
+      "item_revision": 3,
+      "state": "SORTED",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/invoice.TXT",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/invoice.TXT"
+      },
+      "planned_target": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Invoices/Invoice.TXT",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Invoices/Invoice.TXT"
+      },
+      "actual_location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Invoices/Invoice.TXT",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Invoices/Invoice.TXT"
+      },
+      "matched_rule": {
+        "dictionary_id": "dictionary-atlas-invoices",
+        "version_id": "version-atlas-invoices-v1",
+        "rule_id": "rule-atlas-invoices-invoice"
+      },
+      "started_at": "2031-05-10T09:37:02Z",
+      "finished_at": "2031-05-10T09:37:03Z"
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-hetero-preview-atlas-move-readme",
+      "item_id": "preview-atlas-move-readme",
+      "item_revision": 3,
+      "state": "SORTED",
+      "reason_code": null,
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/README",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/README"
+      },
+      "planned_target": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/Readme",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/Readme"
+      },
+      "actual_location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/Readme",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/Readme"
+      },
+      "matched_rule": {
+        "dictionary_id": "dictionary-atlas-general",
+        "version_id": "version-atlas-general-v1",
+        "rule_id": "rule-atlas-general-readme"
+      },
+      "started_at": "2031-05-10T09:37:02Z",
+      "finished_at": "2031-05-10T09:37:03Z"
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-hetero-preview-atlas-no-scenario",
+      "item_id": "preview-atlas-no-scenario",
+      "item_revision": 3,
+      "state": "MANUAL_REVIEW",
+      "reason_code": "NO_SCENARIO",
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/data.bin",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/data.bin"
+      },
+      "planned_target": null,
+      "actual_location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "_manual_review/atlas/data.bin",
+        "display_path": "DEMO:/SandboxRoot/_manual_review/atlas/data.bin"
+      },
+      "matched_rule": null,
+      "started_at": "2031-05-10T09:37:02Z",
+      "finished_at": "2031-05-10T09:37:03Z"
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-hetero-preview-atlas-occupied-report",
+      "item_id": "preview-atlas-occupied-report",
+      "item_revision": 2,
+      "state": "REQUIRES_DECISION",
+      "reason_code": "TARGET_OCCUPIED",
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Reports/occupied.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/occupied.pdf"
+      },
+      "planned_target": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Reports/Report.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/Report.pdf"
+      },
+      "actual_location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Reports/occupied.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Reports/occupied.pdf"
+      },
+      "matched_rule": {
+        "dictionary_id": "dictionary-atlas-invoices",
+        "version_id": "version-atlas-invoices-v1",
+        "rule_id": "rule-atlas-invoices-pdf"
+      },
+      "started_at": "2031-05-10T09:37:02Z",
+      "finished_at": "2031-05-10T09:37:03Z"
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-hetero-preview-atlas-invoice-a",
+      "item_id": "preview-atlas-invoice-a",
+      "item_revision": 1,
+      "state": "REQUIRES_DECISION",
+      "reason_code": "TARGET_OCCUPIED",
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/invoice-a.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/invoice-a.pdf"
+      },
+      "planned_target": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Invoices/Invoice.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Invoices/Invoice.pdf"
+      },
+      "actual_location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/invoice-a.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/invoice-a.pdf"
+      },
+      "matched_rule": {
+        "dictionary_id": "dictionary-atlas-invoices",
+        "version_id": "version-atlas-invoices-v1",
+        "rule_id": "rule-atlas-invoices-invoice"
+      },
+      "started_at": "2031-05-10T09:37:02Z",
+      "finished_at": "2031-05-10T09:37:03Z"
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-hetero-preview-atlas-invoice-b",
+      "item_id": "preview-atlas-invoice-b",
+      "item_revision": 1,
+      "state": "REQUIRES_DECISION",
+      "reason_code": "TARGET_OCCUPIED",
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/invoice-b.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/invoice-b.pdf"
+      },
+      "planned_target": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Invoices/Invoice.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Invoices/Invoice.pdf"
+      },
+      "actual_location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Archive/Atlas/Orion_2031/Data/invoice-b.pdf",
+        "display_path": "DEMO:/SandboxRoot/Archive/Atlas/Orion_2031/Data/invoice-b.pdf"
+      },
+      "matched_rule": {
+        "dictionary_id": "dictionary-atlas-invoices",
+        "version_id": "version-atlas-invoices-v1",
+        "rule_id": "rule-atlas-invoices-invoice"
+      },
+      "started_at": "2031-05-10T09:37:02Z",
+      "finished_at": "2031-05-10T09:37:03Z"
+    },
+    {
+      "attempt_id": "attempt-batch-atlas-hetero-preview-atlas-manual-name",
+      "item_id": "preview-atlas-manual-name",
+      "item_revision": 2,
+      "state": "REQUIRES_DECISION",
+      "reason_code": "MANUAL_REVIEW_NAME_OCCUPIED",
+      "source": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/atlas/unmatched.bin",
+        "display_path": "DEMO:/SandboxRoot/Incoming/atlas/unmatched.bin"
+      },
+      "planned_target": null,
+      "actual_location": {
+        "root_id": "root-demo-atlas",
+        "relative_path": "Incoming/atlas/unmatched.bin",
+        "display_path": "DEMO:/SandboxRoot/Incoming/atlas/unmatched.bin"
+      },
+      "matched_rule": null,
+      "started_at": "2031-05-10T09:37:02Z",
+      "finished_at": "2031-05-10T09:37:03Z"
+    }
+  ],
+  "next_cursor": null
+}

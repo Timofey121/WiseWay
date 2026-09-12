@@ -1,0 +1,87 @@
+{
+  "dictionary_id": "dictionary-atlas-general",
+  "company_id": "company-demo-atlas",
+  "name": "Общие правила Atlas",
+  "description": "Синтетические общие правила Atlas.",
+  "draft": {
+    "draft_revision": 2,
+    "rules": [
+      {
+        "rule_id": "rule-atlas-general-readme",
+        "priority": 50,
+        "match_field": "BASENAME",
+        "mask": "README",
+        "target_stem": "Readme",
+        "target": {
+          "root_id": "root-demo-atlas",
+          "relative_directory": "Archive/Atlas/Orion_2031/Data"
+        }
+      },
+      {
+        "rule_id": "rule-atlas-general-env",
+        "priority": 50,
+        "match_field": "BASENAME",
+        "mask": ".env",
+        "target_stem": "EnvFile",
+        "target": {
+          "root_id": "root-demo-atlas",
+          "relative_directory": "Archive/Atlas/Orion_2031/Data"
+        }
+      },
+      {
+        "rule_id": "rule-atlas-general-namedot",
+        "priority": 50,
+        "match_field": "BASENAME",
+        "mask": "name.",
+        "target_stem": "Named",
+        "target": {
+          "root_id": "root-demo-atlas",
+          "relative_directory": "Archive/Atlas/Orion_2031/Data"
+        }
+      },
+      {
+        "rule_id": "rule-atlas-general-archive",
+        "priority": 60,
+        "match_field": "BASENAME",
+        "mask": "*.tar.gz",
+        "target_stem": "Archive",
+        "target": {
+          "root_id": "root-demo-atlas",
+          "relative_directory": "Archive/Atlas/Orion_2031/Reports"
+        }
+      },
+      {
+        "rule_id": "rule-atlas-general-log",
+        "priority": 40,
+        "match_field": "BASENAME",
+        "mask": "*.log",
+        "target_stem": "Hidden",
+        "target": {
+          "root_id": "root-demo-atlas",
+          "relative_directory": "Archive/Atlas/Orion_2031/Data"
+        }
+      },
+      {
+        "rule_id": "rule-atlas-general-occupied",
+        "priority": 70,
+        "match_field": "BASENAME",
+        "mask": "*occupied*",
+        "target_stem": "Occupied",
+        "target": {
+          "root_id": "root-demo-atlas",
+          "relative_directory": "Archive/Atlas/Orion_2031/Reports"
+        }
+      }
+    ],
+    "based_on_version_id": "version-atlas-general-v1"
+  },
+  "active_version_id": "version-atlas-general-v2",
+  "versions_count": 2,
+  "updated_at": "2031-05-10T09:35:30Z",
+  "updated_by": {
+    "user_id": "user-demo-worker-1",
+    "login": "worker.one",
+    "display_name": "Иван Рабочий",
+    "role": "WORKER"
+  }
+}

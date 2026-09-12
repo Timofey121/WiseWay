@@ -1,0 +1,16 @@
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Комментарий должен содержать от 1 до 500 символов.",
+    "request_id": "request-quarantine-demo-1",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": [
+      {
+        "field": "comment",
+        "code": "LENGTH",
+        "message": "Допустимая длина комментария — от 1 до 500 символов."
+      }
+    ]
+  }
+}

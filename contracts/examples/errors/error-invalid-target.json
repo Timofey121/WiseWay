@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "INVALID_TARGET",
+    "message": "Целевой каталог отсутствует или недопустим.",
+    "request_id": "request-demo-1",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

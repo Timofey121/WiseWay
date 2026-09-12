@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "Действие недоступно.",
+    "request_id": "request-q043-forbidden",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

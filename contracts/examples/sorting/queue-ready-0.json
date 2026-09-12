@@ -1,0 +1,22 @@
+{
+  "queue_generation": "queue-generation-atlas-0",
+  "items": [],
+  "matching_count": 0,
+  "eligible_count": 0,
+  "counters": {
+    "ready": 0,
+    "processing": 0,
+    "attention": 0
+  },
+  "status_counts": [
+    {
+      "status": "DISCOVERED",
+      "count": 2
+    },
+    {
+      "status": "WAITING_READY",
+      "count": 1
+    }
+  ],
+  "next_cursor": null
+}

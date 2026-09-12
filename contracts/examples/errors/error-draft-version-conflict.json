@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "DRAFT_VERSION_CONFLICT",
+    "message": "Черновик изменён другим пользователем. Перечитайте его и сравните ввод.",
+    "request_id": "request-demo-1",
+    "operation_id": null,
+    "retryable": false,
+    "field_errors": []
+  }
+}

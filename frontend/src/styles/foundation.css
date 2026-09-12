@@ -1,0 +1,453 @@
+/* Единый visual foundation WiseWay (LT-E03-VR1).
+ *
+ * Это небольшой reusable слой для последующих E-04+: дизайн-токены, базовый
+ * reset и компактный набор общих примитивов (кнопки, поля, поверхности,
+ * бейджи, алерты/статусы, навигационные вкладки). Прикладные стили
+ * (`app/shell.css`, `features/auth/auth.css`) не заводят собственную палитру,
+ * а потребляют токены и/или общие классы, поэтому login и оболочка выглядят
+ * как одна спокойная современная admin-система.
+ *
+ * Внешние шрифты, CDN и сторонние design framework не используются: только
+ * системный стек шрифтов и локальные CSS-переменные. */
+
+:root {
+  /* --- Типографика --- */
+  --ww-font-sans:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  --ww-font-mono:
+    ui-monospace,
+    SFMono-Regular,
+    'Cascadia Mono',
+    Consolas,
+    'Liberation Mono',
+    monospace;
+  --ww-font-size-xs: 12px;
+  --ww-font-size-sm: 13px;
+  --ww-font-size-md: 14px;
+  --ww-font-size-base: 15px;
+  --ww-font-size-lg: 17px;
+  --ww-font-size-xl: 20px;
+  --ww-font-size-2xl: 26px;
+  --ww-line-height-tight: 1.25;
+  --ww-line-height-base: 1.5;
+  --ww-font-weight-normal: 400;
+  --ww-font-weight-medium: 500;
+  --ww-font-weight-semibold: 600;
+  --ww-font-weight-bold: 700;
+
+  /* --- Нейтральные цвета --- */
+  --ww-color-bg: #f2f4f7;
+  --ww-color-surface: #ffffff;
+  --ww-color-surface-muted: #f7f9fb;
+  --ww-color-surface-sunken: #eceff3;
+  --ww-color-border: #d8dee5;
+  --ww-color-border-strong: #8b95a1;
+  --ww-color-text: #1c2733;
+  --ww-color-text-muted: #5a6b7b;
+  --ww-color-text-subtle: #7d8b99;
+
+  /* --- Один спокойный акцент --- */
+  --ww-color-accent: #1f5fa8;
+  --ww-color-accent-hover: #1a4f8c;
+  --ww-color-accent-active: #153f70;
+  --ww-color-accent-soft: #e8f0fa;
+  --ww-color-accent-text: #17497f;
+  --ww-color-on-accent: #ffffff;
+
+  /* --- Статусы (ошибка/предупреждение/инфо/успех) --- */
+  --ww-color-error-bg: #fdf1ee;
+  --ww-color-error-border: #c25a3a;
+  --ww-color-error-text: #8f3416;
+  --ww-color-warning-bg: #fdf6e8;
+  --ww-color-warning-border: #b98517;
+  --ww-color-warning-text: #7a5708;
+  --ww-color-info-bg: #eaf2fb;
+  --ww-color-info-border: #4d7fb5;
+  --ww-color-info-text: #1c4f86;
+  --ww-color-success-bg: #ecf6ef;
+  --ww-color-success-border: #3f8a5b;
+  --ww-color-success-text: #23603a;
+
+  /* --- Шкала отступов --- */
+  --ww-space-1: 4px;
+  --ww-space-2: 8px;
+  --ww-space-3: 12px;
+  --ww-space-4: 16px;
+  --ww-space-5: 20px;
+  --ww-space-6: 24px;
+  --ww-space-8: 32px;
+
+  /* --- Шкала радиусов --- */
+  --ww-radius-sm: 4px;
+  --ww-radius-md: 6px;
+  --ww-radius-lg: 10px;
+  --ww-radius-pill: 999px;
+
+  /* --- Минимальные тени --- */
+  --ww-shadow-sm: 0 1px 2px rgba(18, 32, 45, 0.06);
+  --ww-shadow-md: 0 2px 8px rgba(18, 32, 45, 0.08);
+
+  /* --- Единый видимый фокус --- */
+  --ww-focus-ring-color: #1f5fa8;
+  --ww-focus-ring-width: 3px;
+  --ww-focus-ring-offset: 2px;
+}
+
+/* --- Базовый reset --- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--ww-color-bg);
+  color: var(--ww-color-text);
+  font-family: var(--ww-font-sans);
+  font-size: var(--ww-font-size-base);
+  line-height: var(--ww-line-height-base);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+
+/* --- Кнопки --- */
+.ww-button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ww-space-2);
+  border: 1px solid transparent;
+  border-radius: var(--ww-radius-md);
+  padding: var(--ww-space-2) var(--ww-space-4);
+  font: inherit;
+  font-size: var(--ww-font-size-md);
+  font-weight: var(--ww-font-weight-semibold);
+  line-height: 1.2;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.ww-button:focus-visible {
+  outline: var(--ww-focus-ring-width) solid var(--ww-focus-ring-color);
+  outline-offset: var(--ww-focus-ring-offset);
+}
+
+.ww-button:disabled {
+  cursor: not-allowed;
+}
+
+.ww-button--primary {
+  background: var(--ww-color-accent);
+  border-color: var(--ww-color-accent);
+  color: var(--ww-color-on-accent);
+}
+
+.ww-button--primary:hover:not(:disabled) {
+  background: var(--ww-color-accent-hover);
+  border-color: var(--ww-color-accent-hover);
+}
+
+.ww-button--primary:active:not(:disabled) {
+  background: var(--ww-color-accent-active);
+  border-color: var(--ww-color-accent-active);
+}
+
+.ww-button--primary:disabled {
+  background: var(--ww-color-surface-sunken);
+  border-color: var(--ww-color-border);
+  color: var(--ww-color-text-subtle);
+}
+
+.ww-button--secondary {
+  background: var(--ww-color-surface);
+  border-color: var(--ww-color-accent);
+  color: var(--ww-color-accent-text);
+}
+
+.ww-button--secondary:hover:not(:disabled) {
+  background: var(--ww-color-accent-soft);
+}
+
+.ww-button--secondary:active:not(:disabled) {
+  background: var(--ww-color-info-bg);
+}
+
+.ww-button--secondary:disabled {
+  background: var(--ww-color-surface);
+  border-color: var(--ww-color-border);
+  color: var(--ww-color-text-subtle);
+}
+
+.ww-button--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ww-color-text-muted);
+}
+
+.ww-button--ghost:hover:not(:disabled) {
+  background: var(--ww-color-surface-sunken);
+  color: var(--ww-color-text);
+}
+
+/* --- Поля ввода --- */
+.ww-field {
+  display: block;
+}
+
+.ww-field + .ww-field {
+  margin-top: var(--ww-space-4);
+}
+
+.ww-label {
+  display: block;
+  margin-bottom: var(--ww-space-2);
+  color: var(--ww-color-text);
+  font-size: var(--ww-font-size-sm);
+  font-weight: var(--ww-font-weight-semibold);
+}
+
+.ww-input {
+  display: block;
+  width: 100%;
+  padding: 9px var(--ww-space-3);
+  border: 1px solid var(--ww-color-border-strong);
+  border-radius: var(--ww-radius-md);
+  background: var(--ww-color-surface);
+  color: var(--ww-color-text);
+  font: inherit;
+  font-size: var(--ww-font-size-md);
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.ww-input::placeholder {
+  color: var(--ww-color-text-subtle);
+}
+
+.ww-input:hover:not(:disabled) {
+  border-color: var(--ww-color-text-subtle);
+}
+
+.ww-input:focus-visible {
+  outline: var(--ww-focus-ring-width) solid var(--ww-focus-ring-color);
+  outline-offset: 1px;
+  border-color: var(--ww-color-accent);
+}
+
+.ww-input:disabled {
+  background: var(--ww-color-surface-sunken);
+  color: var(--ww-color-text-subtle);
+  cursor: not-allowed;
+}
+
+/* --- Поверхности --- */
+.ww-surface {
+  background: var(--ww-color-surface);
+  border: 1px solid var(--ww-color-border);
+  border-radius: var(--ww-radius-lg);
+}
+
+.ww-card {
+  background: var(--ww-color-surface);
+  border: 1px solid var(--ww-color-border);
+  border-radius: var(--ww-radius-lg);
+  box-shadow: var(--ww-shadow-sm);
+}
+
+/* --- Бейджи --- */
+.ww-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ww-space-1);
+  padding: 2px var(--ww-space-2);
+  border: 1px solid var(--ww-color-border-strong);
+  border-radius: var(--ww-radius-pill);
+  background: var(--ww-color-surface-muted);
+  color: var(--ww-color-text-muted);
+  font-size: var(--ww-font-size-xs);
+  font-weight: var(--ww-font-weight-semibold);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.ww-badge--accent {
+  background: var(--ww-color-accent-soft);
+  border-color: var(--ww-color-accent);
+  color: var(--ww-color-accent-text);
+}
+
+.ww-badge--info {
+  background: var(--ww-color-info-bg);
+  border-color: var(--ww-color-info-border);
+  color: var(--ww-color-info-text);
+}
+
+.ww-badge--warning {
+  background: var(--ww-color-warning-bg);
+  border-color: var(--ww-color-warning-border);
+  color: var(--ww-color-warning-text);
+}
+
+/* --- Алерты и статусы --- */
+.ww-alert {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ww-space-2);
+  padding: var(--ww-space-3) var(--ww-space-4);
+  border: 1px solid var(--ww-color-info-border);
+  border-left-width: 4px;
+  border-radius: var(--ww-radius-md);
+  background: var(--ww-color-info-bg);
+  color: var(--ww-color-info-text);
+  font-size: var(--ww-font-size-md);
+}
+
+.ww-alert--error {
+  border-color: var(--ww-color-error-border);
+  border-left-color: var(--ww-color-error-border);
+  background: var(--ww-color-error-bg);
+  color: var(--ww-color-error-text);
+}
+
+.ww-alert:focus-visible {
+  outline: var(--ww-focus-ring-width) solid var(--ww-focus-ring-color);
+  outline-offset: var(--ww-focus-ring-offset);
+}
+
+.ww-alert__title {
+  font-weight: var(--ww-font-weight-bold);
+}
+
+.ww-alert__message {
+  margin: 0;
+}
+
+.ww-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ww-space-2);
+  color: var(--ww-color-text-muted);
+  font-size: var(--ww-font-size-md);
+}
+
+.ww-status::before {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ww-color-info-border);
+}
+
+.ww-status--warning::before {
+  background: var(--ww-color-warning-border);
+}
+
+/* --- Навигационные вкладки --- */
+.ww-nav__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ww-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ww-nav__item {
+  display: flex;
+}
+
+.ww-nav__button {
+  appearance: none;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid transparent;
+  border-bottom: 2px solid transparent;
+  border-radius: var(--ww-radius-md) var(--ww-radius-md) 0 0;
+  background: transparent;
+  color: var(--ww-color-text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--ww-font-size-md);
+  font-weight: var(--ww-font-weight-medium);
+  padding: var(--ww-space-2) var(--ww-space-4);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.ww-nav__button:hover:not([aria-current='page']) {
+  background: var(--ww-color-surface-sunken);
+  color: var(--ww-color-text);
+}
+
+.ww-nav__button:focus-visible {
+  outline: var(--ww-focus-ring-width) solid var(--ww-focus-ring-color);
+  outline-offset: var(--ww-focus-ring-offset);
+}
+
+/* Активная вкладка читается не только цветом: фон, рамка, нижний индикатор
+   и полужирное начертание. */
+.ww-nav__button[aria-current='page'] {
+  background: var(--ww-color-surface);
+  border-color: var(--ww-color-border);
+  border-bottom-color: var(--ww-color-accent);
+  color: var(--ww-color-accent-text);
+  font-weight: var(--ww-font-weight-bold);
+}
+
+/* --- Намеренно спроектированное пустое состояние --- */
+.ww-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ww-space-3);
+}
+
+.ww-empty__indicator {
+  position: relative;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 1px dashed var(--ww-color-border-strong);
+  border-radius: var(--ww-radius-md);
+  background: var(--ww-color-surface-muted);
+}
+
+.ww-empty__indicator::after {
+  content: '';
+  position: absolute;
+  inset: 11px;
+  border-radius: var(--ww-radius-sm);
+  background: var(--ww-color-border);
+}
